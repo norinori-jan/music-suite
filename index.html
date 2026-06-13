@@ -1,0 +1,409 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+<title>music-suite</title>
+<style>
+:root{
+  --bg:#0a0a0d;--bg2:#121217;--bg3:#1a1a22;--bg4:#22222e;
+  --bd:rgba(255,255,255,0.07);--bd2:rgba(255,255,255,0.13);
+  --tx:#eeedf8;--tx2:#8886a0;--tx3:#4a4860;
+  --acc:#7f77dd;--acc-hi:#afa9ec;--acc-bg:rgba(127,119,221,0.1);
+  --green:#1d9e75;--green-hi:#5dcaa5;--green-bg:rgba(29,158,117,0.1);
+  --amber:#ef9f27;--amber-bg:rgba(239,159,39,0.08);
+  --red:#e24b4a;--red-bg:rgba(226,75,74,0.08);
+  --ai:#a855f7;--ai-hi:#c084fc;--ai-bg:rgba(168,85,247,0.1);--ai-bd:rgba(168,85,247,0.25);
+  --r:10px;--r-lg:16px;
+}
+*{box-sizing:border-box;margin:0;padding:0;}
+html,body{min-height:100vh;background:var(--bg);color:var(--tx);font-family:'Inter','Hiragino Sans','Yu Gothic UI',sans-serif;font-size:14px;line-height:1.6;}
+
+/* ── HERO ── */
+.hero{padding:48px 24px 0;text-align:center;}
+.hero-logo{font-size:11px;font-weight:600;letter-spacing:0.18em;text-transform:uppercase;color:var(--tx3);margin-bottom:12px;}
+.hero-title{font-size:32px;font-weight:700;letter-spacing:-0.02em;color:var(--tx);margin-bottom:8px;}
+.hero-title span{color:var(--acc-hi);}
+.hero-sub{font-size:14px;color:var(--tx2);max-width:480px;margin:0 auto 40px;}
+
+/* ── APP GRID ── */
+.app-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(260px,1fr));gap:14px;max-width:900px;margin:0 auto;padding:0 24px 48px;}
+
+.app-card{
+  background:var(--bg2);border:0.5px solid var(--bd);border-radius:var(--r-lg);
+  padding:22px 22px 18px;cursor:pointer;text-decoration:none;color:inherit;
+  display:flex;flex-direction:column;gap:10px;
+  transition:border-color 0.15s,background 0.15s,transform 0.12s;
+  position:relative;overflow:hidden;
+}
+.app-card:hover{border-color:var(--bd2);background:var(--bg3);transform:translateY(-2px);}
+.app-card::before{content:'';position:absolute;top:0;left:0;right:0;height:2px;border-radius:var(--r-lg) var(--r-lg) 0 0;opacity:0;transition:opacity 0.15s;}
+.app-card:hover::before{opacity:1;}
+.app-card.vocal::before{background:var(--acc);}
+.app-card.chord::before{background:var(--green);}
+.app-card.beat::before{background:var(--amber);}
+.app-card.score::before{background:var(--ai-hi);}
+
+.card-icon{font-size:28px;line-height:1;}
+.card-name{font-size:16px;font-weight:600;letter-spacing:0.01em;}
+.card-version{font-size:10px;font-weight:600;padding:1px 6px;border-radius:20px;margin-left:6px;vertical-align:middle;}
+.vocal .card-version{background:var(--acc-bg);color:var(--acc-hi);}
+.chord .card-version{background:var(--green-bg);color:var(--green-hi);}
+.beat  .card-version{background:var(--amber-bg);color:var(--amber);}
+.score .card-version{background:var(--ai-bg);color:var(--ai-hi);}
+.card-desc{font-size:12px;color:var(--tx2);line-height:1.7;}
+.card-tags{display:flex;gap:5px;flex-wrap:wrap;}
+.card-tag{font-size:10px;padding:2px 8px;border-radius:20px;border:0.5px solid var(--bd2);color:var(--tx3);}
+.card-arrow{position:absolute;top:20px;right:20px;font-size:16px;color:var(--tx3);transition:color 0.15s,transform 0.15s;}
+.app-card:hover .card-arrow{color:var(--tx2);transform:translateX(2px);}
+
+/* ── PROJECT SECTION ── */
+.section{max-width:900px;margin:0 auto;padding:0 24px 48px;}
+.section-head{display:flex;align-items:center;justify-content:space-between;margin-bottom:14px;}
+.section-title{font-size:10px;font-weight:600;letter-spacing:0.12em;text-transform:uppercase;color:var(--tx3);}
+.btn-sm{padding:5px 12px;border:0.5px solid var(--bd2);background:none;color:var(--tx2);border-radius:var(--r);font-size:11px;cursor:pointer;transition:all 0.15s;}
+.btn-sm:hover{background:var(--bg3);color:var(--tx);}
+.btn-sm.primary{border-color:var(--acc);background:var(--acc-bg);color:var(--acc-hi);}
+
+/* ── PROJECT LIST ── */
+.project-list{display:flex;flex-direction:column;gap:6px;}
+.project-item{
+  background:var(--bg2);border:0.5px solid var(--bd);border-radius:var(--r);
+  padding:12px 16px;display:flex;align-items:center;gap:12px;
+  cursor:pointer;transition:border-color 0.15s,background 0.15s;
+}
+.project-item:hover{border-color:var(--bd2);background:var(--bg3);}
+.proj-icon{font-size:18px;flex-shrink:0;}
+.proj-info{flex:1;min-width:0;}
+.proj-name{font-size:13px;font-weight:500;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;}
+.proj-meta{font-size:11px;color:var(--tx3);}
+.proj-badges{display:flex;gap:4px;flex-shrink:0;}
+.proj-badge{font-size:10px;padding:1px 6px;border-radius:20px;border:0.5px solid var(--bd2);color:var(--tx3);}
+.proj-badge.vocal{border-color:rgba(127,119,221,0.3);color:var(--acc-hi);}
+.proj-badge.chord{border-color:rgba(29,158,117,0.3);color:var(--green-hi);}
+.proj-badge.beat {border-color:rgba(239,159,39,0.3);color:var(--amber);}
+.proj-badge.score{border-color:var(--ai-bd);color:var(--ai-hi);}
+.proj-del{width:22px;height:22px;border:none;background:none;color:var(--tx3);cursor:pointer;border-radius:4px;font-size:13px;opacity:0;transition:opacity 0.15s;}
+.project-item:hover .proj-del{opacity:1;}
+.proj-del:hover{color:var(--red);background:var(--red-bg);}
+.empty-proj{padding:24px;text-align:center;color:var(--tx3);font-size:12px;background:var(--bg2);border:0.5px solid var(--bd);border-radius:var(--r);}
+
+/* ── IMPORT DROP ── */
+.import-area{
+  border:1px dashed var(--bd2);border-radius:var(--r-lg);padding:28px;text-align:center;
+  color:var(--tx3);font-size:12px;transition:all 0.15s;cursor:pointer;
+}
+.import-area:hover,.import-area.drag-over{border-color:var(--acc);color:var(--acc-hi);background:var(--acc-bg);}
+.import-area input{display:none;}
+
+/* ── DATA FLOW ── */
+.flow-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(180px,1fr));gap:10px;}
+.flow-card{background:var(--bg2);border:0.5px solid var(--bd);border-radius:var(--r);padding:14px 16px;}
+.flow-app{font-size:11px;font-weight:600;color:var(--tx2);margin-bottom:6px;display:flex;align-items:center;gap:6px;}
+.flow-dot{width:7px;height:7px;border-radius:50%;}
+.flow-items{display:flex;flex-direction:column;gap:3px;}
+.flow-item{font-size:11px;color:var(--tx3);display:flex;align-items:center;gap:5px;}
+.flow-item::before{content:'→';color:var(--tx3);font-size:10px;}
+
+/* ── FOOTER ── */
+.footer{max-width:900px;margin:0 auto;padding:0 24px 40px;display:flex;align-items:center;justify-content:space-between;border-top:0.5px solid var(--bd);padding-top:20px;}
+.footer-logo{font-size:11px;color:var(--tx3);letter-spacing:0.1em;}
+.footer-links{display:flex;gap:12px;}
+.footer-link{font-size:11px;color:var(--tx3);text-decoration:none;transition:color 0.15s;}
+.footer-link:hover{color:var(--tx2);}
+
+/* ── TOAST ── */
+.toast{position:fixed;bottom:20px;left:50%;transform:translateX(-50%) translateY(60px);background:var(--bg3);border:0.5px solid var(--bd2);border-radius:var(--r);padding:8px 18px;font-size:12px;color:var(--tx);transition:transform 0.25s;pointer-events:none;z-index:999;}
+.toast.show{transform:translateX(-50%) translateY(0);}
+
+::-webkit-scrollbar{width:3px;}
+::-webkit-scrollbar-thumb{background:var(--bg3);border-radius:3px;}
+</style>
+</head>
+<body>
+
+<!-- HERO -->
+<div class="hero">
+  <div class="hero-logo">music-suite</div>
+  <h1 class="hero-title">思いついた音楽を<br><span>最速で形にする</span></h1>
+  <p class="hero-sub">鼻歌からコード進行、ドラムパターン、スコアまで。<br>4つのツールが共通データで連携します。</p>
+</div>
+
+<!-- APP GRID -->
+<div class="app-grid">
+
+  <a class="app-card vocal" href="apps/vocal-lab-v3.html">
+    <div class="card-icon">🎤</div>
+    <div><span class="card-name">vocal-lab</span><span class="card-version">v3 AI</span></div>
+    <div class="card-desc">鼻歌を録音してピッチ検出。AIが自動補正または3候補を提案してメロディをカード化。感情タグでスケールを制御。</div>
+    <div class="card-tags">
+      <span class="card-tag">録音</span>
+      <span class="card-tag">ピッチ検出</span>
+      <span class="card-tag">AI補正</span>
+      <span class="card-tag">候補選択</span>
+    </div>
+    <div class="card-arrow">→</div>
+  </a>
+
+  <a class="app-card chord" href="apps/chord-lab.html">
+    <div class="card-icon">🎹</div>
+    <div><span class="card-name">chord-lab</span><span class="card-version">v1</span></div>
+    <div class="card-desc">ダイアトニックパレットからコード進行を組み立て。AIが新規生成・編集。MIDI / JSON エクスポート対応。</div>
+    <div class="card-tags">
+      <span class="card-tag">コード進行</span>
+      <span class="card-tag">AI生成</span>
+      <span class="card-tag">MIDI出力</span>
+    </div>
+    <div class="card-arrow">→</div>
+  </a>
+
+  <a class="app-card beat" href="apps/beat-lab.html">
+    <div class="card-icon">🥁</div>
+    <div><span class="card-name">beat-lab</span><span class="card-version">v1</span></div>
+    <div class="card-desc">16ステップシーケンサーでドラムパターンを作成。AIがジャンル・フィール別に自動生成。MIDI書き出し対応。</div>
+    <div class="card-tags">
+      <span class="card-tag">ステップ入力</span>
+      <span class="card-tag">AI生成</span>
+      <span class="card-tag">MIDI出力</span>
+    </div>
+    <div class="card-arrow">→</div>
+  </a>
+
+  <a class="app-card score" href="apps/score-editor-v2.html">
+    <div class="card-icon">🎼</div>
+    <div><span class="card-name">score-editor</span><span class="card-version">v2</span></div>
+    <div class="card-desc">ピアノロール・ドラムグリッド・アレンジメントビューを統合。chord-lab / beat-lab の JSON を直接インポート可能。</div>
+    <div class="card-tags">
+      <span class="card-tag">ピアノロール</span>
+      <span class="card-tag">DRUM</span>
+      <span class="card-tag">AI生成</span>
+      <span class="card-tag">MIDI出力</span>
+    </div>
+    <div class="card-arrow">→</div>
+  </a>
+
+</div>
+
+<!-- PROJECT MANAGER -->
+<div class="section">
+  <div class="section-head">
+    <span class="section-title">プロジェクト</span>
+    <div style="display:flex;gap:6px;">
+      <label class="btn-sm" style="cursor:pointer;">
+        📥 JSONインポート
+        <input type="file" accept=".json" onchange="importProject(this)">
+      </label>
+    </div>
+  </div>
+  <div class="project-list" id="project-list"></div>
+  <div style="margin-top:10px;">
+    <label class="import-area" id="drop-area">
+      <input type="file" accept=".json" onchange="importProject(this)">
+      <div>📂 JSONファイルをここにドロップ</div>
+      <div style="margin-top:4px;font-size:11px;">vocal-lab / chord-lab / beat-lab のエクスポートJSONを読み込みます</div>
+    </label>
+  </div>
+</div>
+
+<!-- DATA FLOW -->
+<div class="section">
+  <div class="section-head">
+    <span class="section-title">データフロー</span>
+  </div>
+  <div class="flow-grid">
+    <div class="flow-card">
+      <div class="flow-app"><div class="flow-dot" style="background:var(--acc)"></div>vocal-lab v3</div>
+      <div class="flow-items">
+        <div class="flow-item">フレーズカード (JSON)</div>
+        <div class="flow-item">rawNotes + AI補正後</div>
+        <div class="flow-item">感情タグ付き</div>
+      </div>
+    </div>
+    <div class="flow-card">
+      <div class="flow-app"><div class="flow-dot" style="background:var(--green)"></div>chord-lab</div>
+      <div class="flow-items">
+        <div class="flow-item">コード進行 (JSON)</div>
+        <div class="flow-item">MIDI (ch1:コード / ch2:ベース)</div>
+        <div class="flow-item">score-editor へ送信</div>
+      </div>
+    </div>
+    <div class="flow-card">
+      <div class="flow-app"><div class="flow-dot" style="background:var(--amber)"></div>beat-lab</div>
+      <div class="flow-items">
+        <div class="flow-item">ドラムパターン (JSON)</div>
+        <div class="flow-item">MIDI (ch10 GMドラム)</div>
+        <div class="flow-item">score-editor へ送信</div>
+      </div>
+    </div>
+    <div class="flow-card">
+      <div class="flow-app"><div class="flow-dot" style="background:var(--ai-hi)"></div>score-editor v2</div>
+      <div class="flow-items">
+        <div class="flow-item">全トラック統合</div>
+        <div class="flow-item">MIDI (Format 1) 書き出し</div>
+        <div class="flow-item">GarageBand 連携</div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- FOOTER -->
+<div class="footer">
+  <div class="footer-logo">music-suite</div>
+  <div class="footer-links">
+    <a class="footer-link" href="apps/vocal-lab-v2.html">vocal-lab v2（旧版）</a>
+  </div>
+</div>
+
+<div class="toast" id="toast"></div>
+
+<script>
+'use strict';
+
+/* ── PROJECT STORAGE ── */
+const STORAGE_KEY = 'msuite_projects';
+
+function loadProjects() {
+  try { return JSON.parse(localStorage.getItem(STORAGE_KEY) || '[]'); }
+  catch(_) { return []; }
+}
+function saveProjects(projects) {
+  localStorage.setItem(STORAGE_KEY, JSON.stringify(projects));
+}
+
+function renderProjects() {
+  const list = document.getElementById('project-list');
+  const projects = loadProjects();
+  if (!projects.length) {
+    list.innerHTML = '<div class="empty-proj">プロジェクトがありません。各アプリのJSONエクスポートをインポートしてください。</div>';
+    return;
+  }
+  list.innerHTML = '';
+  projects.slice().reverse().forEach((p, revIdx) => {
+    const idx = projects.length - 1 - revIdx;
+    const el = document.createElement('div');
+    el.className = 'project-item';
+    const src  = p.source || detectSource(p);
+    const icon = { 'vocal-lab':'🎤', 'chord-lab':'🎹', 'beat-lab':'🥁', 'score-editor':'🎼' }[src] || '📄';
+    const date = p.updatedAt || p.exported || p.createdAt || '';
+    const dateStr = date ? new Date(date).toLocaleDateString('ja-JP',{month:'short',day:'numeric',hour:'2-digit',minute:'2-digit'}) : '';
+    const badgeClass = {'vocal-lab':'vocal','chord-lab':'chord','beat-lab':'beat','score-editor':'score'}[src] || '';
+    el.innerHTML = `
+      <div class="proj-icon">${icon}</div>
+      <div class="proj-info">
+        <div class="proj-name">${escHtml(p.name || p.projectName || '無題')}</div>
+        <div class="proj-meta">${escHtml(src)} ${dateStr ? '· '+dateStr : ''}</div>
+      </div>
+      <div class="proj-badges">
+        ${p.cards?.length ? `<span class="proj-badge vocal">${p.cards.length}フレーズ</span>` : ''}
+        ${p.chords ? `<span class="proj-badge chord">コード</span>` : ''}
+        ${p.drums?.notes?.length ? `<span class="proj-badge beat">ドラム</span>` : ''}
+        <span class="proj-badge ${badgeClass}">${escHtml(src)}</span>
+      </div>
+      <button class="proj-del" onclick="deleteProject(${idx},event)" title="削除">✕</button>
+    `;
+    el.addEventListener('click', () => openProject(p));
+    list.appendChild(el);
+  });
+}
+
+function detectSource(p) {
+  if (p.source) return p.source;
+  if (p.cards)  return 'vocal-lab';
+  if (p.chords) return 'chord-lab';
+  if (p.drums && !p.tracks) return 'beat-lab';
+  if (p.tracks) return 'score-editor';
+  return 'unknown';
+}
+
+function openProject(p) {
+  const src = detectSource(p);
+  const map = {
+    'vocal-lab':    'apps/vocal-lab-v3.html',
+    'chord-lab':    'apps/chord-lab.html',
+    'beat-lab':     'apps/beat-lab.html',
+    'score-editor': 'apps/score-editor-v2.html',
+  };
+  const url = map[src];
+  if (!url) { showToast('対応アプリが見つかりません'); return; }
+  // URLハッシュでデータを渡す（chord-lab/beat-lab/score-editor共通方式）
+  const json = JSON.stringify(p);
+  const b64  = btoa(unescape(encodeURIComponent(json)));
+  window.location.href = url + '#import=' + encodeURIComponent(b64);
+}
+
+function deleteProject(idx, e) {
+  e.stopPropagation();
+  const projects = loadProjects();
+  projects.splice(idx, 1);
+  saveProjects(projects);
+  renderProjects();
+  showToast('削除しました');
+}
+
+function importProject(input) {
+  const file = input.files[0];
+  if (!file) return;
+  const r = new FileReader();
+  r.onload = ev => {
+    try {
+      const raw = JSON.parse(ev.target.result);
+      // vocal-lab は配列（カードのリスト）として出力されるので包む
+      const data = Array.isArray(raw)
+        ? { source:'vocal-lab', name:'vocal-lab project', cards: raw, updatedAt: new Date().toISOString() }
+        : raw;
+      if (!data.name && !data.projectName) data.name = file.name.replace(/\.json$/,'');
+      const projects = loadProjects();
+      projects.push(data);
+      saveProjects(projects);
+      renderProjects();
+      showToast(`「${data.name || data.projectName || file.name}」をインポートしました`);
+    } catch(e) {
+      showToast('JSONの読み込みに失敗しました: ' + e.message);
+    }
+  };
+  r.readAsText(file);
+  input.value = '';
+}
+
+/* ── DRAG & DROP ── */
+const dropArea = document.getElementById('drop-area');
+dropArea.addEventListener('dragover', e => { e.preventDefault(); dropArea.classList.add('drag-over'); });
+dropArea.addEventListener('dragleave', () => dropArea.classList.remove('drag-over'));
+dropArea.addEventListener('drop', e => {
+  e.preventDefault();
+  dropArea.classList.remove('drag-over');
+  const file = e.dataTransfer.files[0];
+  if (!file || !file.name.endsWith('.json')) { showToast('.jsonファイルをドロップしてください'); return; }
+  const r = new FileReader();
+  r.onload = ev => {
+    try {
+      const raw = JSON.parse(ev.target.result);
+      const data = Array.isArray(raw)
+        ? { source:'vocal-lab', name: file.name.replace(/\.json$/,''), cards: raw, updatedAt: new Date().toISOString() }
+        : raw;
+      if (!data.name && !data.projectName) data.name = file.name.replace(/\.json$/,'');
+      const projects = loadProjects();
+      projects.push(data);
+      saveProjects(projects);
+      renderProjects();
+      showToast(`「${data.name || file.name}」をインポートしました`);
+    } catch(e) {
+      showToast('JSONの読み込みに失敗: ' + e.message);
+    }
+  };
+  r.readAsText(file);
+});
+
+/* ── UTILS ── */
+function escHtml(s) { return String(s||'').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;'); }
+function showToast(msg) {
+  const t = document.getElementById('toast');
+  t.textContent = msg; t.classList.add('show');
+  clearTimeout(t._t); t._t = setTimeout(() => t.classList.remove('show'), 2500);
+}
+
+/* ── INIT ── */
+renderProjects();
+</script>
+</body>
+</html>
