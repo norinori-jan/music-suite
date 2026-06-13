@@ -1,0 +1,1306 @@
+何も選択されていません 
+
+コンテンツへ
+Gmail でのスクリーン リーダーの使用
+スレッド
+自分
+（件名なし）
+ - music-suite リポジトリ構成案 全体方針 4アプリ(vocal-lab, music-lab/chord, beat-lab, score-editor)を1リポジトリ・複数HTML・共通データ一元化で統合。各アプリは単体でも動作するが、プロジェクトデータ(楽曲データ)を共通フォーマットで保存し、相互に読み込める状態にする。 ディレクトリ構造 music-suite/ ├── index.
+ 
+9:45
+15 GB 中 35% 使用済み
+利用規約 · プライバシー · プログラム ポリシー
+前回のアカウント アクティビティ: 1 分前
+詳細
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover,user-scalable=no">
+<title>BEAT//LAB</title>
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+<meta name="apple-mobile-web-app-title" content="BEAT//LAB">
+<meta name="theme-color" content="#03030a">
+<link rel="manifest" href="beat-lab-manifest.json">
+<link href="https://fonts.googleapis.com/css2?family=Space+Mono:wght@400;700&family=Unbounded:wght@400;700;900&display=swap" rel="stylesheet">
+<script src="https://cdnjs.cloudflare.com/ajax/libs/tone/14.8.49/Tone.js"></script>
+<style>
+:root{
+  --bg:#03030a; --s1:#080910; --s2:#0e0f1a; --s3:#141626;
+  --bd:rgba(255,255,255,.055); --bd2:rgba(255,255,255,.10);
+  --tx:#dde1f5; --mu:#3e4260;
+  --kick:#ff6b6b; --snare:#ffe66d; --hat:#4ecdc4; --ohat:#55efc4;
+  --crash:#a29bfe; --ride:#74b9ff; --tom1:#fd79a8; --tom2:#e17055; --perc:#feca57;
+  --acc:#55efc4; --cl:#a29bfe; --gm:#4ecdc4; --oa:#ff6b6b;
+  --r:3px;
+}
+*{box-sizing:border-box;margin:0;padding:0;-webkit-tap-highlight-color:transparent}
+html,body{height:100%;overflow:hidden;background:var(--bg);color:var(--tx);font-family:'Space Mono',monospace}
+body{display:flex;flex-direction:column}
+::-webkit-scrollbar{width:3px;height:3px}
+::-webkit-scrollbar-thumb{background:var(--bd2);border-radius:2px}
+.hidden{display:none!important}
+
+/* ── shared ── */
+.btn{
+  font-family:'Space Mono',monospace;font-size:9px;padding:5px 10px;border-radius:var(--r);
+  border:1px solid var(--bd2);background:var(--s2);color:var(--mu);cursor:pointer;
+  transition:all .12s;white-space:nowrap;user-select:none;
+}
+.btn:hover,.btn:active{color:var(--tx)}
+.btn.on{background:rgba(255,230,109,.12);border-color:rgba(255,230,109,.4);color:#ffe66d}
+.btn.pri{background:linear-gradient(135deg,var(--cl),#ffe66d);color:#07080f;border:none;font-weight:700}
+.btn.danger{color:var(--oa);border-color:rgba(255,107,107,.3)}
+.inp{
+  background:var(--s2);border:1px solid var(--bd2);color:var(--tx);
+  font-family:'Space Mono',monospace;font-size:10px;padding:5px 8px;border-radius:var(--r);outline:none;
+}
+.inp:focus{border-color:var(--cl)}
+select.inp{cursor:pointer}
+.lbl{font-size:7px;color:var(--mu);letter-spacing:.1em;text-transform:uppercase;margin-bottom:3px}
+.sep{width:1px;height:18px;background:var(--bd2);flex-shrink:0}
+
+/* ── topbar ── */
+#topbar{
+  display:flex;align-items:center;gap:8px;padding:8px 12px;
+  border-bottom:1px solid var(--bd);background:var(--bg);flex-shrink:0;flex-wrap:wrap;
+}
+.logo{
+  font-family:'Unbounded',sans-serif;font-size:12px;font-weight:900;
+  background:linear-gradient(90deg,#ff6b6b,#ffe66d);-webkit-background-clip:text;-webkit-text-fill-color:transparent;
+}
+#bpm-sl{-webkit-appearance:none;width:64px;height:3px;border-radius:2px;background:var(--bd2);outline:none}
+#bpm-sl::-webkit-slider-thumb{-webkit-appearance:none;width:13px;height:13px;border-radius:50%;background:#ffe66d;cursor:pointer}
+#bpm-val{font-size:9px;color:#ffe66d;min-width:30px}
+.tbtn{
+  width:30px;height:30px;border-radius:50%;border:1px solid var(--bd2);background:none;color:var(--tx);
+  font-size:12px;cursor:pointer;display:flex;align-items:center;justify-content:center;transition:all .15s;
+}
+.tbtn:hover{border-color:#ffe66d;color:#ffe66d}
+.tbtn.active{background:rgba(255,230,109,.15);border-color:#ffe66d;color:#ffe66d}
+
+/* ── statusbar ── */
+#statusbar{
+  padding:4px 12px;border-bottom:1px solid var(--bd);background:var(--s1);
+  font-size:8px;color:var(--mu);display:flex;align-items:center;gap:6px;flex-shrink:0;min-height:22px;
+}
+.sdot{width:5px;height:5px;border-radius:50%;background:var(--mu);flex-shrink:0}
+.sdot.ok{background:var(--acc);box-shadow:0 0 5px var(--acc)}
+.sdot.gen{background:var(--cl);animation:blink .6s infinite alternate}
+.sdot.err{background:var(--oa)}
+@keyframes blink{from{opacity:.3}to{opacity:1}}
+
+/* ── tabs ── */
+#tabs{display:flex;border-bottom:1px solid var(--bd);flex-shrink:0;overflow-x:auto}
+.tab{
+  flex:1;min-width:80px;padding:8px 10px;font-size:9px;font-family:'Unbounded',sans-serif;
+  font-weight:700;letter-spacing:.06em;text-align:center;cursor:pointer;border:none;background:none;
+  color:var(--mu);border-bottom:2px solid transparent;transition:all .15s;white-space:nowrap;
+}
+.tab.active{color:#ffe66d;border-bottom-color:#ffe66d}
+
+/* ── views ── */
+#views{flex:1;overflow:hidden;position:relative;min-height:0}
+.view{position:absolute;inset:0;overflow:hidden;display:flex;flex-direction:column}
+.view.hidden{display:none!important}
+
+/* ── STEP SEQUENCER ── */
+#view-step{display:flex;flex-direction:column;overflow:hidden}
+.step-topbar{
+  padding:6px 10px;border-bottom:1px solid var(--bd);display:flex;align-items:center;
+  gap:8px;flex-wrap:wrap;flex-shrink:0;background:var(--s1);
+}
+.step-grid-wrap{flex:1;overflow:auto}
+.step-row{display:flex;align-items:center;border-bottom:1px solid var(--bd)}
+.step-label{
+  width:96px;flex-shrink:0;padding:0 8px;font-size:9px;color:var(--mu);
+  display:flex;align-items:center;gap:6px;height:32px;border-right:1px solid var(--bd2);
+  position:sticky;left:0;background:var(--bg);z-index:5;
+}
+.step-label-dot{width:8px;height:8px;border-radius:50%;flex-shrink:0}
+.step-cells{display:flex;gap:1px;padding:1px;flex:1}
+.sc{
+  flex:1;min-width:20px;height:30px;border-radius:2px;cursor:pointer;
+  border:1px solid var(--bd);background:var(--s2);transition:all .08s;position:relative;
+}
+.sc:hover{border-color:var(--bd2)}
+.sc.beat-start{border-left:1px solid var(--bd2)}
+.sc.hit{border-color:transparent}
+.sc.hit-low{opacity:.55}
+.sc.playing-step{box-shadow:inset 0 0 0 2px #fff3}
+.sc-vel{position:absolute;bottom:0;left:0;right:0;border-radius:0 0 2px 2px}
+.beat-header{display:flex;border-bottom:1px solid var(--bd2);position:sticky;top:0;background:var(--bg);z-index:6}
+.beat-header-offset{
+  width:96px;flex-shrink:0;font-size:7px;padding:3px 8px;color:var(--mu);
+  border-right:1px solid var(--bd2);position:sticky;left:0;background:var(--bg);z-index:7;
+}
+.beat-nums{display:flex;flex:1;gap:1px;padding:1px}
+.beat-num{flex:1;min-width:20px;font-size:7px;color:var(--mu);text-align:center;padding:3px 0}
+.beat-num.bar-n{color:rgba(255,255,255,.4);font-weight:700}
+
+/* ── PATTERN LIBRARY ── */
+#view-lib{display:flex;flex-direction:column;overflow:hidden}
+.lib-topbar{
+  padding:6px 10px;border-bottom:1px solid var(--bd);display:flex;align-items:center;
+  gap:8px;flex-wrap:wrap;flex-shrink:0;background:var(--s1);
+}
+.lib-body{flex:1;overflow-y:auto;padding:10px 12px}
+.genre-section{margin-bottom:18px}
+.genre-title{
+  font-family:'Unbounded',sans-serif;font-size:10px;font-weight:700;letter-spacing:.08em;
+  color:#ffe66d;margin-bottom:8px;display:flex;align-items:center;gap:6px;
+}
+.pattern-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(140px,1fr));gap:8px}
+.pattern-card{
+  border:1px solid var(--bd2);border-radius:6px;padding:10px;cursor:pointer;
+  background:var(--s2);transition:all .15s;
+}
+.pattern-card:hover{border-color:#ffe66d;background:var(--s3)}
+.pattern-card.applied{border-color:var(--acc);background:rgba(85,239,196,.06)}
+.pattern-name{font-size:10px;font-weight:700;color:var(--tx);margin-bottom:4px}
+.pattern-meta{font-size:8px;color:var(--mu);margin-bottom:6px}
+.pattern-mini{display:flex;gap:1px;height:20px}
+.pmini-row{flex:1;display:flex;flex-direction:column;gap:1px}
+.pmini-cell{flex:1;border-radius:1px;background:var(--s3)}
+.pmini-cell.on{background:#ffe66d}
+
+/* ── AI GENERATOR ── */
+#view-ai{display:flex;overflow:hidden}
+.ai-left{
+  width:260px;flex-shrink:0;border-right:1px solid var(--bd2);
+  display:flex;flex-direction:column;overflow:hidden;background:var(--s1);
+}
+.ai-body{flex:1;overflow-y:auto;padding:10px 12px}
+.ai-sec{margin-bottom:14px}
+.ai-sec-title{font-family:'Unbounded',sans-serif;font-size:8px;color:var(--cl);letter-spacing:.1em;margin-bottom:6px}
+.model-row{display:flex;gap:3px;margin-bottom:8px}
+.mbt{
+  flex:1;text-align:center;padding:4px;font-size:8px;border-radius:2px;border:1px solid var(--bd);
+  background:none;color:var(--mu);cursor:pointer;font-family:'Unbounded',sans-serif;font-weight:700;transition:all .12s;
+}
+.mbt.act-cl{border-color:var(--cl);color:var(--cl);background:rgba(162,155,254,.1)}
+.mbt.act-gm{border-color:var(--gm);color:var(--gm);background:rgba(78,205,196,.1)}
+.mbt.act-oa{border-color:var(--oa);color:var(--oa);background:rgba(255,107,107,.1)}
+.ai-gen-btn{
+  width:100%;padding:9px;font-family:'Unbounded',sans-serif;font-size:10px;font-weight:700;letter-spacing:.05em;
+  border:none;border-radius:4px;cursor:pointer;background:linear-gradient(135deg,var(--cl),#ffe66d);
+  color:#07080f;transition:opacity .15s;
+}
+.ai-gen-btn:disabled{opacity:.35;cursor:not-allowed}
+.ai-result-card{margin-top:8px;padding:8px;background:var(--s2);border:1px solid var(--bd);border-radius:3px;font-size:9px;color:var(--mu);line-height:1.6}
+.ai-result-card.err{color:var(--oa);border-color:rgba(255,107,107,.2)}
+.ai-apply{
+  margin-top:6px;width:100%;padding:6px;border-radius:3px;border:1px solid rgba(255,230,109,.3);
+  background:rgba(255,230,109,.07);color:#ffe66d;cursor:pointer;font-size:9px;font-family:'Space Mono',monospace;
+}
+.ai-right{flex:1;overflow:auto;padding:10px 12px}
+
+/* ── EXPORT / SHARE ── */
+#view-export{display:flex;flex-direction:column;overflow:hidden}
+.export-body{flex:1;overflow-y:auto;padding:14px}
+.export-card{
+  border:1px solid var(--bd2);border-radius:6px;padding:14px;margin-bottom:12px;background:var(--s1);
+}
+.export-card-title{
+  font-family:'Unbounded',sans-serif;font-size:10px;font-weight:700;letter-spacing:.08em;
+  margin-bottom:8px;display:flex;align-items:center;gap:6px;
+}
+.export-card-desc{font-size:9px;color:var(--mu);line-height:1.7;margin-bottom:10px}
+.export-row{display:flex;gap:8px;flex-wrap:wrap}
+
+/* status colors */
+.sdot.cl{background:var(--cl)} .sdot.gm{background:var(--gm)} .sdot.oa{background:var(--oa)}
+</style>
+</head>
+<body>
+
+<!-- TOPBAR -->
+<div id="topbar">
+  <div class="logo">BEAT//LAB</div>
+  <div class="sep"></div>
+  <input class="inp" id="project-name" value="Untitled Beat" style="width:110px;font-size:9px">
+  <div class="sep"></div>
+  <span style="font-size:8px;color:var(--mu)">BPM</span>
+  <input type="range" id="bpm-sl" min="40" max="220" value="120" oninput="setBpm(this.value)">
+  <span id="bpm-val">120</span>
+  <div class="sep"></div>
+  <button class="tbtn" id="play-btn" onclick="togglePlay()">▶</button>
+  <button class="tbtn" onclick="stopPlay()">■</button>
+  <div style="flex:1"></div>
+  <button class="btn" onclick="undoA()">↩</button>
+  <button class="btn" onclick="redoA()">↪</button>
+  <button class="btn on" onclick="switchView('export')">⬇ EXPORT</button>
+</div>
+
+<!-- STATUS -->
+<div id="statusbar">
+  <div class="sdot" id="sdot"></div>
+  <span id="smsg">BEAT//LAB 起動完了 — STEP からパターンを作成してください</span>
+</div>
+
+<!-- TABS -->
+<div id="tabs">
+  <button class="tab active" id="tab-step"   onclick="switchView('step')">⊞ STEP</button>
+  <button class="tab"        id="tab-lib"    onclick="switchView('lib')">📚 PATTERNS</button>
+  <button class="tab"        id="tab-ai"     onclick="switchView('ai')">🤖 AI</button>
+  <button class="tab"        id="tab-export" onclick="switchView('export')">⬇ EXPORT</button>
+</div>
+
+<!-- VIEWS -->
+<div id="views">
+
+  <!-- ══ STEP SEQUENCER ══ -->
+  <div class="view" id="view-step">
+    <div class="step-topbar">
+      <div class="lbl" style="margin:0">小節数</div>
+      <select class="inp" id="step-bars" style="width:60px;font-size:9px" onchange="renderStepGrid()">
+        <option value="1">1</option><option value="2" selected>2</option>
+        <option value="4">4</option><option value="8">8</option>
+      </select>
+      <div class="lbl" style="margin:0">分割</div>
+      <select class="inp" id="step-div" style="width:60px;font-size:9px" onchange="renderStepGrid()">
+        <option value="8">8th</option><option value="16" selected>16th</option>
+        <option value="32">32nd</option>
+      </select>
+      <div class="lbl" style="margin:0">拍子</div>
+      <select class="inp" id="step-timesig" style="width:56px;font-size:9px" onchange="renderStepGrid()">
+        <option value="4">4/4</option><option value="3">3/4</option><option value="6">6/8</option>
+      </select>
+      <div class="sep"></div>
+      <button class="btn" onclick="clearPattern()">CLEAR</button>
+      <button class="btn" onclick="shiftPattern(-1)">◀ シフト</button>
+      <button class="btn" onclick="shiftPattern(1)">シフト ▶</button>
+      <button class="btn" onclick="duplicateBars()">⧉ 複製</button>
+      <div class="sep"></div>
+      <button class="btn" onclick="toggleSwing()" id="swing-btn">SWING OFF</button>
+    </div>
+    <div class="step-grid-wrap" id="step-grid-wrap">
+      <div id="step-grid-inner"></div>
+    </div>
+  </div>
+
+  <!-- ══ PATTERN LIBRARY ══ -->
+  <div class="view hidden" id="view-lib">
+    <div class="lib-topbar">
+      <span style="font-family:'Unbounded',sans-serif;font-size:9px;color:#ffe66d;letter-spacing:.1em">PATTERN LIBRARY</span>
+      <div class="sep"></div>
+      <span style="font-size:8px;color:var(--mu)">クリックで現在のパターンを置換</span>
+    </div>
+    <div class="lib-body" id="lib-body"></div>
+  </div>
+
+  <!-- ══ AI GENERATOR ══ -->
+  <div class="view hidden" id="view-ai">
+    <div class="ai-left">
+      <div style="padding:8px 12px;border-bottom:1px solid var(--bd);font-family:'Unbounded',sans-serif;font-size:8px;color:var(--cl);letter-spacing:.1em;flex-shrink:0">AI BEAT GENERATOR</div>
+      <div class="ai-body">
+        <div class="ai-sec">
+          <div class="ai-sec-title">モード</div>
+          <div class="model-row">
+            <button class="mbt act-cl" id="aimode-new"  onclick="setAiMode('new')"  style="border-color:var(--cl);color:var(--cl)">✦ 新規生成</button>
+            <button class="mbt" id="aimode-edit" onclick="setAiMode('edit')" style="border-color:#ffe66d;color:var(--mu)">✏ 編集指示</button>
+          </div>
+        </div>
+        <div class="ai-sec">
+          <div class="ai-sec-title">モデル</div>
+          <div class="model-row">
+            <button class="mbt act-cl" id="ai-cl" onclick="setAiMdl('claude')">CLAUDE</button>
+            <button class="mbt" id="ai-gm" onclick="setAiMdl('gemini')">GEMINI</button>
+            <button class="mbt" id="ai-oa" onclick="setAiMdl('openai')">OPENAI</button>
+          </div>
+        </div>
+        <div class="ai-sec" id="ai-newgen-sec">
+          <div class="ai-sec-title">設定</div>
+          <div style="display:grid;grid-template-columns:1fr 1fr;gap:6px;margin-bottom:6px">
+            <select class="inp" id="ai-genre" style="font-size:9px">
+              <option>J-Pop</option><option>シティポップ</option><option>ロック</option>
+              <option>ヒップホップ</option><option>EDM</option><option>ジャズ</option>
+              <option>ボサノバ</option><option>レゲエ</option><option>パンク</option>
+              <option>アニソン</option><option>Lo-Fi</option><option>ファンク</option>
+            </select>
+            <select class="inp" id="ai-feel" style="font-size:9px">
+              <option value="straight">ストレート</option>
+              <option value="swing">スウィング</option>
+              <option value="halftime">ハーフタイム</option>
+              <option value="busy">手数多め</option>
+              <option value="sparse">ミニマル</option>
+            </select>
+          </div>
+          <div style="display:grid;grid-template-columns:1fr 1fr;gap:6px">
+            <label style="font-size:8px;color:var(--mu);display:flex;flex-direction:column;gap:2px">
+              小節数 <input class="inp" type="number" id="ai-bars" value="2" min="1" max="8" style="font-size:9px">
+            </label>
+            <label style="font-size:8px;color:var(--mu);display:flex;flex-direction:column;gap:2px">
+              分割 <select class="inp" id="ai-div" style="font-size:9px">
+                <option value="8">8th</option><option value="16" selected>16th</option>
+              </select>
+            </label>
+          </div>
+        </div>
+        <div class="ai-sec" id="ai-edit-sec" style="display:none">
+          <div class="ai-sec-title">編集対象</div>
+          <div style="font-size:9px;color:var(--mu);padding:8px;background:var(--s2);border:1px solid var(--bd);border-radius:3px;line-height:1.6" id="ai-current-summary">
+            現在のパターンを確認中...
+          </div>
+        </div>
+        <div class="ai-sec">
+          <div class="ai-sec-title" id="ai-prompt-label">プロンプト（任意）</div>
+          <textarea class="inp" id="ai-prompt" rows="3" placeholder="例: フィルイン多めの盛り上がるサビ用ビート" style="width:100%;font-size:9px;resize:vertical;line-height:1.5"></textarea>
+          <div id="ai-edit-suggestions" style="display:none;margin-top:6px;display:flex;flex-wrap:wrap;gap:4px"></div>
+        </div>
+        <button class="ai-gen-btn" id="ai-gen-btn" onclick="aiRun()">✦ AI生成</button>
+        <div id="ai-result-area"></div>
+      </div>
+    </div>
+    <div class="ai-right">
+      <div class="lbl" style="margin-bottom:8px">プレビュー</div>
+      <div id="ai-preview" style="font-size:10px;color:var(--mu)">AI生成を実行するとプレビューが表示されます</div>
+    </div>
+  </div>
+
+  <!-- ══ EXPORT / SHARE ══ -->
+  <div class="view hidden" id="view-export">
+    <div class="export-body">
+
+      <div class="export-card">
+        <div class="export-card-title" style="color:var(--cl)">⬇ MIDI エクスポート</div>
+        <div class="export-card-desc">
+          現在のドラムパターンを Standard MIDI File (Format 1, ch10/GMドラム) として書き出します。
+          GarageBandの「ファイル」アプリから直接開けます。
+        </div>
+        <div class="export-row">
+          <button class="btn pri" onclick="exportMIDI()">⬇ MIDIをダウンロード</button>
+        </div>
+      </div>
+
+      <div class="export-card">
+        <div class="export-card-title" style="color:#ffe66d">📥 iCloud Drive 連携</div>
+        <div class="export-card-desc">
+          パターンをJSON形式でエクスポートします。Files.appで「iCloud Drive」に保存し、
+          score-editor-v2.html の「📥 music-lab」ボタンからインポートできます。
+        </div>
+        <div class="export-row">
+          <button class="btn pri" onclick="exportJSON()">📥 JSONエクスポート</button>
+          <label class="btn" style="display:inline-flex;align-items:center;cursor:pointer">
+            📤 JSONインポート
+            <input type="file" accept=".json" onchange="importJSON(this)" style="display:none">
+          </label>
+        </div>
+      </div>
+
+      <div class="export-card">
+        <div class="export-card-title" style="color:var(--acc)">🔗 score-editor-v2 へ送る</div>
+        <div class="export-card-desc">
+          URL Schemeでscore-editor-v2.htmlを開き、現在のパターンをDrumトラックとして直接渡します。
+          同じドメイン（GitHub Pages）に両ファイルが配置されている必要があります。
+        </div>
+        <div style="margin-bottom:8px">
+          <div class="lbl">score-editor-v2.html のURL</div>
+          <input class="inp" id="se-url" placeholder="https://norinori-jan.github.io/music-lab/score-editor-v2.html" style="width:100%;font-size:9px">
+        </div>
+        <div class="export-row">
+          <button class="btn pri" onclick="sendToScoreEditor()">🔗 ROLLへ送信して開く</button>
+        </div>
+      </div>
+
+      <div class="export-card">
+        <div class="export-card-title" style="color:var(--ohat)">▶ プレビュー再生</div>
+        <div class="export-card-desc">現在のBPMとパターンをそのまま試聴できます。</div>
+        <div class="export-row">
+          <button class="tbtn" id="play-btn-ex" onclick="togglePlay()">▶</button>
+          <button class="tbtn" onclick="stopPlay()">■</button>
+        </div>
+      </div>
+
+    </div>
+  </div>
+
+</div><!-- /views -->
+
+<script>
+'use strict';
+// ════════════════════════════════════════════════════════
+// CONSTANTS
+// ════════════════════════════════════════════════════════
+const ROWS=[
+  {id:'kick',  name:'Kick',     pitch:36, color:'var(--kick)'},
+  {id:'snare', name:'Snare',    pitch:38, color:'var(--snare)'},
+  {id:'clap',  name:'Clap',     pitch:39, color:'var(--snare)'},
+  {id:'hat',   name:'Hi-Hat',   pitch:42, color:'var(--hat)'},
+  {id:'ohat',  name:'Open Hat', pitch:46, color:'var(--ohat)'},
+  {id:'crash', name:'Crash',    pitch:49, color:'var(--crash)'},
+  {id:'ride',  name:'Ride',     pitch:51, color:'var(--ride)'},
+  {id:'tom1',  name:'Tom Hi',   pitch:50, color:'var(--tom1)'},
+  {id:'tom2',  name:'Tom Lo',   pitch:45, color:'var(--tom2)'},
+  {id:'perc',  name:'Perc',     pitch:75, color:'var(--perc)'},
+];
+
+const APP={
+  bars:2, div:16, timeSig:4,
+  pattern:{},   // key "rowId:step" -> velocity 0-1
+  swing:false,
+  playing:false, playStep:0,
+  view:'step', aiModel:'claude', aiMode:'new',
+  undoStack:[], redoStack:[],
+};
+
+const VEL_LEVELS=[1,0.85,0.65,0.4]; // tap cycles: off->full->med->soft->off
+
+// ════════════════════════════════════════════════════════
+// UTILS
+// ════════════════════════════════════════════════════════
+function pk(rowId,step){return rowId+':'+step}
+function setStatus(t,m){document.getElementById('sdot').className='sdot'+(t?' '+t:'');document.getElementById('smsg').textContent=m}
+function totalSteps(){return APP.bars*APP.timeSig*(APP.div/4)}
+function esc(s){return String(s||'').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;')}
+
+// ════════════════════════════════════════════════════════
+// VIEW SWITCHING
+// ════════════════════════════════════════════════════════
+function switchView(v){
+  APP.view=v;
+  document.querySelectorAll('.view').forEach(e=>e.classList.add('hidden'));
+  document.getElementById('view-'+v).classList.remove('hidden');
+  document.querySelectorAll('.tab').forEach(e=>e.classList.remove('active'));
+  document.getElementById('tab-'+v)?.classList.add('active');
+  if(v==='step') renderStepGrid();
+  if(v==='lib')  renderLibrary();
+  if(v==='ai' && APP.aiMode==='edit') updateCurrentPatternSummary();
+}
+
+// ════════════════════════════════════════════════════════
+// STEP SEQUENCER
+// ════════════════════════════════════════════════════════
+function renderStepGrid(){
+  APP.bars=parseInt(document.getElementById('step-bars').value);
+  APP.div=parseInt(document.getElementById('step-div').value);
+  APP.timeSig=parseInt(document.getElementById('step-timesig').value);
+  const steps=totalSteps();
+  const stepsPerBeat=APP.div/4;
+  const el=document.getElementById('step-grid-inner');
+
+  // Header
+  let h=`<div class="beat-header">
+    <div class="beat-header-offset">BEAT</div>
+    <div class="beat-nums">`;
+  for(let s=0;s<steps;s++){
+    const isBar=(s%(APP.timeSig*stepsPerBeat)===0);
+    const bar=Math.floor(s/(APP.timeSig*stepsPerBeat))+1;
+    const beat=Math.floor((s%(APP.timeSig*stepsPerBeat))/stepsPerBeat)+1;
+    const sub=s%stepsPerBeat;
+    h+=`<div class="beat-num ${isBar?'bar-n':''}">${sub===0?(isBar?bar+'.'+beat:beat):'·'}</div>`;
+  }
+  h+=`</div></div>`;
+
+  // Rows
+  ROWS.forEach(row=>{
+    let cells='';
+    for(let s=0;s<steps;s++){
+      const k=pk(row.id,s);
+      const vel=APP.pattern[k];
+      const isBeatStart=(s%stepsPerBeat===0);
+      let cls='sc'+(isBeatStart?' beat-start':'');
+      let style='';
+      if(vel){
+        cls+= vel<0.7 ? ' hit hit-low' : ' hit';
+        style=`background:${row.color}; opacity:${0.35+vel*0.65}`;
+      }
+      cells+=`<div class="${cls}" id="sc-${row.id}-${s}" style="${style}"
+        onclick="cellClick('${row.id}',${s})"
+        oncontextmenu="event.preventDefault();cellClear('${row.id}',${s})"></div>`;
+    }
+    h+=`<div class="step-row">
+      <div class="step-label">
+        <div class="step-label-dot" style="background:${row.color}"></div>
+        ${row.name}
+      </div>
+      <div class="step-cells">${cells}</div>
+    </div>`;
+  });
+  el.innerHTML=h;
+}
+
+function cellClick(rowId,step){
+  const k=pk(rowId,step);
+  const cur=APP.pattern[k];
+  saveUndo();
+  // cycle: off -> 1.0 -> 0.7 -> 0.4 -> off
+  if(!cur) APP.pattern[k]=1.0;
+  else if(cur>=1.0) APP.pattern[k]=0.7;
+  else if(cur>=0.7) APP.pattern[k]=0.4;
+  else delete APP.pattern[k];
+  refreshCell(rowId,step);
+  if(APP.pattern[k]){
+    const row=ROWS.find(r=>r.id===rowId);
+    playHit(row.pitch, APP.pattern[k]);
+  }
+}
+function cellClear(rowId,step){
+  const k=pk(rowId,step);
+  if(!APP.pattern[k])return;
+  saveUndo();
+  delete APP.pattern[k];
+  refreshCell(rowId,step);
+}
+function refreshCell(rowId,step){
+  const k=pk(rowId,step);
+  const vel=APP.pattern[k];
+  const row=ROWS.find(r=>r.id===rowId);
+  const el=document.getElementById(`sc-${rowId}-${step}`);
+  if(!el)return;
+  const stepsPerBeat=APP.div/4;
+  const isBeatStart=(step%stepsPerBeat===0);
+  let cls='sc'+(isBeatStart?' beat-start':'');
+  if(vel){
+    cls+= vel<0.7?' hit hit-low':' hit';
+    el.style.background=row.color;
+    el.style.opacity=0.35+vel*0.65;
+  } else {
+    el.style.background=''; el.style.opacity='';
+  }
+  el.className=cls;
+}
+
+function clearPattern(){
+  saveUndo();
+  APP.pattern={};
+  renderStepGrid();
+  setStatus('ok','パターンをクリアしました');
+}
+
+function shiftPattern(dir){
+  saveUndo();
+  const steps=totalSteps();
+  const newPat={};
+  Object.entries(APP.pattern).forEach(([k,v])=>{
+    const [rowId,stepStr]=k.split(':');
+    let step=(parseInt(stepStr)+dir+steps)%steps;
+    newPat[pk(rowId,step)]=v;
+  });
+  APP.pattern=newPat;
+  renderStepGrid();
+}
+
+function duplicateBars(){
+  const sel=document.getElementById('step-bars');
+  const cur=APP.bars;
+  const opts=[1,2,4,8];
+  const next=opts.find(o=>o>cur)||cur*2;
+  if(next>8){setStatus('err','最大8小節です');return;}
+  saveUndo();
+  const oldSteps=totalSteps();
+  sel.value=next;
+  APP.bars=next;
+  // duplicate pattern into new bars
+  const ratio=Math.floor(next/cur);
+  const newPat={...APP.pattern};
+  for(let r=1;r<ratio;r++){
+    Object.entries(APP.pattern).forEach(([k,v])=>{
+      const [rowId,stepStr]=k.split(':');
+      newPat[pk(rowId,parseInt(stepStr)+oldSteps*r)]=v;
+    });
+  }
+  APP.pattern=newPat;
+  renderStepGrid();
+  setStatus('ok',`${next}小節に複製しました`);
+}
+
+function toggleSwing(){
+  APP.swing=!APP.swing;
+  document.getElementById('swing-btn').textContent='SWING '+(APP.swing?'ON':'OFF');
+  document.getElementById('swing-btn').classList.toggle('on',APP.swing);
+}
+
+// ════════════════════════════════════════════════════════
+// PLAYBACK
+// ════════════════════════════════════════════════════════
+let synthKick=null,synthSnare=null,synthMetal=null,synthPerc=null;
+function getKick(){ if(!synthKick){synthKick=new Tone.MembraneSynth({pitchDecay:.05,octaves:6,envelope:{attack:.001,decay:.25,sustain:0,release:.1}}).toDestination();synthKick.volume.value=-4;} return synthKick; }
+function getSnare(){ if(!synthSnare){synthSnare=new Tone.NoiseSynth({noise:{type:'white'},envelope:{attack:.001,decay:.15,sustain:0,release:.03}}).toDestination();synthSnare.volume.value=-9;} return synthSnare; }
+function getMetal(){ if(!synthMetal){synthMetal=new Tone.MetalSynth({frequency:400,envelope:{attack:.001,decay:.25,release:.01},harmonicity:5.1,modulationIndex:32,resonance:4000,octaves:1.5}).toDestination();synthMetal.volume.value=-16;} return synthMetal; }
+function getPerc(){ if(!synthPerc){synthPerc=new Tone.MembraneSynth({pitchDecay:.02,octaves:3,envelope:{attack:.001,decay:.1,sustain:0,release:.05}}).toDestination();synthPerc.volume.value=-10;} return synthPerc; }
+
+async function playHit(pitch, vel=1){
+  await Tone.start();
+  const v = -20*(1-vel); // velocity → volume offset (dB)
+  if(pitch===36){ getKick().volume.value=-4+v; getKick().triggerAttackRelease('C1','8n'); }
+  else if(pitch===38||pitch===39){ getSnare().volume.value=-9+v; getSnare().triggerAttackRelease('16n'); }
+  else if(pitch===42||pitch===46||pitch===49||pitch===51){
+    const m=getMetal(); m.volume.value=-16+v;
+    m.triggerAttackRelease(pitch===46?'4n':pitch===49?'2n':pitch===51?'8n':'16n');
+  }
+  else { const p=getPerc(); p.volume.value=-10+v; p.triggerAttackRelease(pitch>50?'C2':'G1','16n'); }
+}
+
+let playTimer=null;
+async function togglePlay(){
+  await Tone.start();
+  if(APP.playing){ stopPlay(); return; }
+  APP.playing=true;
+  document.querySelectorAll('#play-btn,#play-btn-ex').forEach(b=>{b.textContent='⏹';b.classList.add('active')});
+  const steps=totalSteps();
+  const stepsPerBeat=APP.div/4;
+  const baseMs=(60/PROJ_BPM())*(4/APP.div)*1000;
+  APP.playStep=0;
+  function tick(){
+    if(!APP.playing)return;
+    // highlight column
+    document.querySelectorAll('.playing-step').forEach(e=>e.classList.remove('playing-step'));
+    ROWS.forEach(row=>{
+      const k=pk(row.id,APP.playStep);
+      const vel=APP.pattern[k];
+      const el=document.getElementById(`sc-${row.id}-${APP.playStep}`);
+      if(el)el.classList.add('playing-step');
+      if(vel) playHit(row.pitch,vel);
+    });
+    let ms=baseMs;
+    if(APP.swing && APP.playStep%2===0) ms*=1.66;
+    else if(APP.swing && APP.playStep%2===1) ms*=0.34;
+    APP.playStep=(APP.playStep+1)%steps;
+    playTimer=setTimeout(tick,ms);
+  }
+  tick();
+}
+function stopPlay(){
+  APP.playing=false;
+  clearTimeout(playTimer); playTimer=null;
+  document.querySelectorAll('#play-btn,#play-btn-ex').forEach(b=>{b.textContent='▶';b.classList.remove('active')});
+  document.querySelectorAll('.playing-step').forEach(e=>e.classList.remove('playing-step'));
+}
+function PROJ_BPM(){ return parseInt(document.getElementById('bpm-sl').value); }
+function setBpm(v){ document.getElementById('bpm-val').textContent=v; }
+
+// ════════════════════════════════════════════════════════
+// PATTERN LIBRARY
+// ════════════════════════════════════════════════════════
+// Each pattern: {name, bars, div, timeSig, pattern:{rowId:step:vel}}
+const LIBRARY = {
+  'J-Pop / Rock': [
+    {name:'8ビート ベーシック', bars:1, div:8, timeSig:4, pat:{
+      kick:[0,4], snare:[2,6], hat:[0,1,2,3,4,5,6,7]
+    }},
+    {name:'ロックビート', bars:1, div:16, timeSig:4, pat:{
+      kick:[0,6,10], snare:[4,12], hat:[0,2,4,6,8,10,12,14]
+    }},
+    {name:'バラード', bars:2, div:16, timeSig:4, pat:{
+      kick:[0,16], snare:[8,24], hat:[0,4,8,12,16,20,24,28], ohat:[14,30]
+    }},
+    {name:'アップテンポ16', bars:1, div:16, timeSig:4, pat:{
+      kick:[0,6,8,14], snare:[4,12], hat:[0,2,4,6,8,10,12,14], ohat:[7,15]
+    }},
+  ],
+  'シティポップ / ファンク': [
+    {name:'シティポップ16', bars:1, div:16, timeSig:4, pat:{
+      kick:[0,10], snare:[4,12], hat:[0,2,3,6,8,10,11,14], ohat:[7,15]
+    }},
+    {name:'ファンクシャッフル', bars:1, div:16, timeSig:4, pat:{
+      kick:[0,7,10], snare:[4,12], hat:[0,3,4,6,7,10,11,12,15]
+    }},
+    {name:'ディスコ', bars:1, div:8, timeSig:4, pat:{
+      kick:[0,2,4,6], snare:[2,6], ohat:[1,3,5,7]
+    }},
+  ],
+  'ヒップホップ / Lo-Fi': [
+    {name:'Boom Bap', bars:1, div:16, timeSig:4, pat:{
+      kick:[0,10], snare:[4,12], hat:[0,2,4,6,8,10,12,14]
+    }},
+    {name:'Lo-Fi スウィング', bars:1, div:16, timeSig:4, pat:{
+      kick:[0,9], snare:[4,12], hat:[0,2,4,6,9,12,14]
+    }},
+    {name:'トラップ', bars:1, div:16, timeSig:4, pat:{
+      kick:[0,5,10], snare:[4,12], hat:[0,1,2,3,4,5,6,7,8,9,10,11,12,13,14,15], ohat:[15]
+    }},
+  ],
+  'EDM / ダンス': [
+    {name:'4つ打ち', bars:1, div:16, timeSig:4, pat:{
+      kick:[0,4,8,12], hat:[2,6,10,14], ohat:[15], clap:[4,12]
+    }},
+    {name:'ハウス', bars:1, div:16, timeSig:4, pat:{
+      kick:[0,4,8,12], hat:[0,2,4,6,8,10,12,14], ohat:[2,6,10,14], clap:[4,12]
+    }},
+    {name:'ドラムンベース', bars:2, div:16, timeSig:4, pat:{
+      kick:[0,22], snare:[4,12,20,28], hat:[0,2,4,6,8,10,12,14,16,18,20,22,24,26,28,30]
+    }},
+  ],
+  'ジャズ / ボサノバ': [
+    {name:'ジャズスウィング', bars:1, div:8, timeSig:4, pat:{
+      kick:[0,4], ride:[0,1,2,3,4,5,6,7], hat:[2,6]
+    }},
+    {name:'ボサノバ', bars:1, div:16, timeSig:4, pat:{
+      kick:[0,6,10], snare:[4,12], hat:[0,2,4,6,8,10,12,14]
+    }},
+  ],
+  'レゲエ / パンク': [
+    {name:'ワンドロップ', bars:1, div:16, timeSig:4, pat:{
+      kick:[8], snare:[8], hat:[0,2,4,6,8,10,12,14]
+    }},
+    {name:'パンク8ビート', bars:1, div:8, timeSig:4, pat:{
+      kick:[0,2,4,6], snare:[2,6], hat:[0,1,2,3,4,5,6,7]
+    }},
+  ],
+  'アニソン': [
+    {name:'アニソン疾走', bars:1, div:16, timeSig:4, pat:{
+      kick:[0,4,8,10,12], snare:[4,12], hat:[0,2,4,6,8,10,12,14], crash:[0]
+    }},
+  ],
+};
+
+function renderLibrary(){
+  const el=document.getElementById('lib-body');
+  let h='';
+  Object.entries(LIBRARY).forEach(([genre,patterns])=>{
+    h+=`<div class="genre-section">
+      <div class="genre-title">🎵 ${esc(genre)}</div>
+      <div class="pattern-grid">`;
+    patterns.forEach((p,pi)=>{
+      h+=renderPatternCard(p, genre+'_'+pi);
+    });
+    h+=`</div></div>`;
+  });
+  el.innerHTML=h;
+}
+
+function renderPatternCard(p, cardId){
+  const steps=p.bars*p.timeSig*(p.div/4);
+  const usedRows=ROWS.filter(r=>p.pat[r.id]?.length);
+  let mini='';
+  usedRows.slice(0,5).forEach(row=>{
+    mini+=`<div class="pmini-row">`;
+    for(let s=0;s<Math.min(steps,32);s++){
+      const on=p.pat[row.id]?.includes(s);
+      mini+=`<div class="pmini-cell ${on?'on':''}" style="${on?`background:${row.color}`:''}"></div>`;
+    }
+    mini+=`</div>`;
+  });
+  return `<div class="pattern-card" id="card-${cardId}" onclick='applyLibraryPattern(${JSON.stringify(p).replace(/'/g,"&#39;")})'>
+    <div class="pattern-name">${esc(p.name)}</div>
+    <div class="pattern-meta">${p.bars}bar · ${p.div}th · ${usedRows.length}パート</div>
+    <div class="pattern-mini">${mini}</div>
+  </div>`;
+}
+
+function applyLibraryPattern(p){
+  saveUndo();
+  APP.bars=p.bars; APP.div=p.div; APP.timeSig=p.timeSig;
+  document.getElementById('step-bars').value=p.bars;
+  document.getElementById('step-div').value=p.div;
+  document.getElementById('step-timesig').value=p.timeSig;
+  APP.pattern={};
+  Object.entries(p.pat).forEach(([rowId,steps])=>{
+    steps.forEach(s=>{ APP.pattern[pk(rowId,s)]=1.0; });
+  });
+  switchView('step');
+  setStatus('ok',`「${p.name}」を適用しました`);
+}
+
+// ════════════════════════════════════════════════════════
+// AI GENERATOR
+// ════════════════════════════════════════════════════════
+function setAiMdl(m){
+  APP.aiModel=m;
+  const map={claude:'cl',gemini:'gm',openai:'oa'};
+  Object.values(map).forEach(k=>document.getElementById('ai-'+k)?.classList.remove('act-cl','act-gm','act-oa'));
+  document.getElementById('ai-'+map[m])?.classList.add('act-'+map[m]);
+}
+
+// ════════════════════════════════════════════════════════
+// AI MODE: 新規生成 vs 編集指示
+// ════════════════════════════════════════════════════════
+const EDIT_SUGGESTIONS=[
+  'もっと手数を増やして',
+  'もっとシンプルに（間引いて）',
+  'ハイハットを16分にして',
+  'フィルインを最後の小節に追加',
+  'ハーフタイムにして',
+  'スネアを後ろにずらしてグルーヴを出す',
+  'キックを4つ打ちにして',
+  'クラッシュをイントロに追加',
+  'ゴーストノートを追加して人間味を出す',
+  'もっとシティポップっぽく',
+];
+
+function setAiMode(mode){
+  APP.aiMode=mode;
+  const isEdit = mode==='edit';
+  document.getElementById('aimode-new').classList.toggle('act-cl', !isEdit);
+  document.getElementById('aimode-new').style.color = isEdit?'var(--mu)':'var(--cl)';
+  document.getElementById('aimode-edit').classList.toggle('act-cl', isEdit);
+  document.getElementById('aimode-edit').style.color = isEdit?'#ffe66d':'var(--mu)';
+  document.getElementById('aimode-edit').style.borderColor = isEdit?'#ffe66d':'var(--bd)';
+  document.getElementById('aimode-new').style.borderColor = isEdit?'var(--bd)':'var(--cl)';
+
+  document.getElementById('ai-newgen-sec').style.display = isEdit?'none':'block';
+  document.getElementById('ai-edit-sec').style.display = isEdit?'block':'none';
+  document.getElementById('ai-prompt-label').textContent = isEdit?'指示（必須）':'プロンプト（任意）';
+  document.getElementById('ai-prompt').placeholder = isEdit
+    ? '例: もっと手数を増やして、最後にフィルインを入れて'
+    : '例: フィルイン多めの盛り上がるサビ用ビート';
+  document.getElementById('ai-gen-btn').textContent = isEdit?'✏ 編集を適用':'✦ AI生成';
+
+  const sugWrap=document.getElementById('ai-edit-suggestions');
+  if(isEdit){
+    sugWrap.style.display='flex';
+    sugWrap.innerHTML=EDIT_SUGGESTIONS.map(s=>
+      `<button class="btn" style="font-size:8px" onclick="appendEditSuggestion('${esc(s)}')">${esc(s)}</button>`
+    ).join('');
+    updateCurrentPatternSummary();
+  } else {
+    sugWrap.style.display='none';
+    sugWrap.innerHTML='';
+  }
+}
+
+function appendEditSuggestion(text){
+  const ta=document.getElementById('ai-prompt');
+  ta.value = ta.value.trim() ? ta.value.trim()+'。'+text : text;
+}
+
+function summarizePattern(){
+  const steps=totalSteps();
+  const stepsPerBeat=APP.div/4;
+  const lines=[];
+  ROWS.forEach(row=>{
+    const hits=[];
+    for(let s=0;s<steps;s++) if(APP.pattern[pk(row.id,s)]) hits.push(s);
+    if(hits.length) lines.push(`${row.id}: [${hits.join(',')}]`);
+  });
+  return {
+    bars:APP.bars, div:APP.div, timeSig:APP.timeSig, steps,
+    bpm:PROJ_BPM(), swing:APP.swing,
+    summaryText: lines.join(' / ') || '(空のパターン)',
+    rawPattern: lines,
+  };
+}
+
+function updateCurrentPatternSummary(){
+  const s=summarizePattern();
+  document.getElementById('ai-current-summary').innerHTML=
+    `<div style="margin-bottom:4px;color:var(--tx)">${s.bars}小節 / ${s.div}分割 / ${s.timeSig}拍子 / BPM${s.bpm}${s.swing?' / Swing':''}</div>`+
+    `<div style="font-size:8px;word-break:break-all">${esc(s.summaryText)}</div>`;
+}
+
+// ════════════════════════════════════════════════════════
+// AI RUN — dispatcher (新規 or 編集)
+// ════════════════════════════════════════════════════════
+async function aiRun(){
+  if(APP.aiMode==='edit') return aiEditBeat();
+  return aiGenerateBeat();
+}
+
+async function aiEditBeat(){
+  const key=localStorage.getItem('ml_'+APP.aiModel)||'';
+  if(!key){ setStatus('err','APIキー未設定 (ml_'+APP.aiModel+') — music-lab.htmlで設定してください'); return; }
+  const instruction=document.getElementById('ai-prompt').value.trim();
+  if(!instruction){ setStatus('err','編集指示を入力してください'); return; }
+
+  const cur=summarizePattern();
+  const rowIds=ROWS.map(r=>r.id).join(', ');
+
+  document.getElementById('ai-gen-btn').disabled=true;
+  setStatus('gen','編集適用中 ('+APP.aiModel+')...');
+
+  const sys='あなたはプロのドラマー・ビートメーカーです。既存のドラムパターンに対する編集指示を解釈し、変更後の完全なパターンをJSONのみで返してください。前置き不要。';
+  const usr=`現在のドラムパターン:
+- ${cur.bars}小節 / ${cur.div}分割(1拍=${cur.div/4}ステップ、全体${cur.steps}ステップ、0始まり) / ${cur.timeSig}拍子 / BPM${cur.bpm}${cur.swing?' / Swing有効':''}
+- 現在のヒット: ${cur.summaryText}
+
+編集指示: 「${instruction}」
+
+使用可能パート: ${rowIds}
+（kick=バスドラ, snare=スネア, clap=クラップ, hat=クローズハイハット, ohat=オープンハイハット, crash=クラッシュ, ride=ライド, tom1/tom2=タム, perc=パーカッション）
+
+指示を反映した「変更後の完全なパターン」を以下のJSON形式のみで返してください:
+{
+  "name": "編集後パターン名",
+  "description": "何をどう変えたか1〜2文で説明",
+  "bars": ${cur.bars},
+  "div": ${cur.div},
+  "pattern": {
+    "kick": [0,8],
+    "snare": [4,12],
+    "hat": [0,2,4,6,8,10,12,14]
+  }
+}
+重要: 指示に明示的に含まれないパートは現在の状態をできるだけ維持してください。
+小節数や分割を変える指示でない限り bars=${cur.bars}, div=${cur.div} のまま、ステップ番号は0〜${cur.steps-1}の範囲。`;
+
+  try{
+    let result;
+    if(APP.aiModel==='claude')      result=await aiCallClaude(key,sys,usr);
+    else if(APP.aiModel==='gemini') result=await aiCallGemini(key,sys+'\n'+usr);
+    else                            result=await aiCallOpenAI(key,sys,usr);
+
+    const bars=result.bars||cur.bars, div=result.div||cur.div;
+    const steps=bars*4*(div/4);
+    const totalHits=Object.values(result.pattern||{}).reduce((s,a)=>s+a.length,0);
+
+    document.getElementById('ai-preview').innerHTML=
+      `<div style="margin-bottom:6px;font-size:9px;color:var(--acc)">✏ 編集結果プレビュー（適用前）</div>`+
+      renderAiPreview(result,bars,div,steps);
+    document.getElementById('ai-result-area').innerHTML=`
+      <div class="ai-result-card">
+        <div style="color:var(--tx);margin-bottom:4px">${esc(result.name||'編集後パターン')}</div>
+        <div>${esc(result.description||'')}</div>
+        <div style="margin-top:4px;color:var(--mu)">${totalHits}ヒット · ${bars}小節 · ${div}th</div>
+      </div>
+      <button class="ai-apply" onclick='applyAiPattern(${JSON.stringify({result,bars,div,steps}).replace(/'/g,"&#39;")})'>✓ この編集を適用</button>`;
+    setStatus('ok','編集案を生成しました — 内容を確認して適用してください');
+  }catch(e){
+    setStatus('err',e.message);
+    document.getElementById('ai-result-area').innerHTML=`<div class="ai-result-card err">❌ ${esc(e.message)}</div>`;
+  }
+  document.getElementById('ai-gen-btn').disabled=false;
+}
+
+async function aiGenerateBeat(){
+
+  const key=localStorage.getItem('ml_'+APP.aiModel)||'';
+  if(!key){ setStatus('err','APIキー未設定 (ml_'+APP.aiModel+') — music-lab.htmlで設定してください'); return; }
+  const genre=document.getElementById('ai-genre').value;
+  const feel=document.getElementById('ai-feel').value;
+  const bars=parseInt(document.getElementById('ai-bars').value)||2;
+  const div=parseInt(document.getElementById('ai-div').value)||16;
+  const prompt=document.getElementById('ai-prompt').value.trim();
+  const steps=bars*4*(div/4);
+
+  document.getElementById('ai-gen-btn').disabled=true;
+  setStatus('gen','AI生成中 ('+APP.aiModel+')...');
+
+  const rowIds=ROWS.map(r=>r.id).join(', ');
+  const sys='あなたはプロのドラマー・ビートメーカーです。必ずJSONのみを返してください。前置き不要。';
+  const usr=`ジャンル:${genre}、フィール:${feel}、${bars}小節、${div}分音符グリッド(1小節=${4*(div/4)}ステップ、全体${steps}ステップ、0始まり)のドラムパターンを作成してください。
+${prompt?'追加指示: '+prompt:''}
+
+使用可能パート: ${rowIds}
+（kick=バスドラ, snare=スネア, clap=クラップ, hat=クローズハイハット, ohat=オープンハイハット, crash=クラッシュ, ride=ライド, tom1/tom2=タム, perc=パーカッション）
+
+以下のJSON形式のみで返してください:
+{
+  "name": "パターン名",
+  "description": "1文で特徴を説明",
+  "pattern": {
+    "kick": [0,8],
+    "snare": [4,12],
+    "hat": [0,2,4,6,8,10,12,14]
+  }
+}
+ステップ番号は0〜${steps-1}の範囲。各値は0-${steps-1}の整数配列。`;
+
+  try{
+    let result;
+    if(APP.aiModel==='claude')      result=await aiCallClaude(key,sys,usr);
+    else if(APP.aiModel==='gemini') result=await aiCallGemini(key,sys+'\n'+usr);
+    else                            result=await aiCallOpenAI(key,sys,usr);
+
+    const totalHits=Object.values(result.pattern||{}).reduce((s,a)=>s+a.length,0);
+    document.getElementById('ai-preview').innerHTML=renderAiPreview(result,bars,div,steps);
+    document.getElementById('ai-result-area').innerHTML=`
+      <div class="ai-result-card">
+        <div style="color:var(--tx);margin-bottom:4px">${esc(result.name||genre)}</div>
+        <div>${esc(result.description||'')}</div>
+        <div style="margin-top:4px;color:var(--mu)">${totalHits}ヒット · ${bars}小節 · ${div}th</div>
+      </div>
+      <button class="ai-apply" onclick='applyAiPattern(${JSON.stringify({result,bars,div,steps}).replace(/'/g,"&#39;")})'>✓ パターンに適用</button>`;
+    setStatus('ok','生成完了 — '+totalHits+'ヒット');
+  }catch(e){
+    setStatus('err',e.message);
+    document.getElementById('ai-result-area').innerHTML=`<div class="ai-result-card err">❌ ${esc(e.message)}</div>`;
+  }
+  document.getElementById('ai-gen-btn').disabled=false;
+}
+
+function renderAiPreview(result,bars,div,steps){
+  let h=`<div style="margin-bottom:8px;font-size:11px;color:var(--tx)">${esc(result.name||'')}</div>`;
+  h+=`<div style="margin-bottom:10px;font-size:10px;color:var(--mu)">${esc(result.description||'')}</div>`;
+  ROWS.forEach(row=>{
+    const hits=result.pattern?.[row.id];
+    if(!hits?.length)return;
+    h+=`<div style="margin-bottom:6px">
+      <div style="font-size:9px;color:${row.color};margin-bottom:3px">${row.name}</div>
+      <div style="display:flex;gap:1px">`;
+    for(let s=0;s<steps;s++){
+      const on=hits.includes(s);
+      const stepsPerBeat=div/4;
+      const isBeat=(s%stepsPerBeat===0);
+      h+=`<div style="flex:1;height:14px;border-radius:1px;background:${on?row.color:'var(--s2)'};border:1px solid ${isBeat?'var(--bd2)':'var(--bd)'}"></div>`;
+    }
+    h+=`</div></div>`;
+  });
+  return h;
+}
+
+function applyAiPattern({result,bars,div,steps}){
+  saveUndo();
+  APP.bars=bars; APP.div=div; APP.timeSig=4;
+  document.getElementById('step-bars').value=bars in {1:1,2:1,4:1,8:1}?bars:bars;
+  document.getElementById('step-bars').value=bars;
+  document.getElementById('step-div').value=div;
+  document.getElementById('step-timesig').value=4;
+  APP.pattern={};
+  Object.entries(result.pattern||{}).forEach(([rowId,arr])=>{
+    arr.forEach(s=>{ if(s>=0&&s<steps) APP.pattern[pk(rowId,s)]=1.0; });
+  });
+  switchView('step');
+  setStatus('ok',`AIパターン「${result.name||''}」を適用しました`);
+}
+
+function _parseJ(t){return JSON.parse(t.replace(/```json\s*/g,'').replace(/```\s*/g,'').trim())}
+async function aiCallClaude(key,sys,usr){
+  const r=await fetch('https://api.anthropic.com/v1/messages',{method:'POST',
+    headers:{'Content-Type':'application/json'},
+    body:JSON.stringify({model:'claude-sonnet-4-20250514',max_tokens:1000,system:sys,messages:[{role:'user',content:usr}]})});
+  if(!r.ok)throw new Error('Claude HTTP '+r.status);
+  const d=await r.json();
+  return _parseJ(d.content?.find(b=>b.type==='text')?.text||'');
+}
+async function aiCallGemini(key,prompt){
+  const r=await fetch(`https://generativelanguage.googleapis.com/v1beta/models/gemini-2.0-flash:generateContent?key=${key}`,
+    {method:'POST',headers:{'Content-Type':'application/json'},
+    body:JSON.stringify({contents:[{parts:[{text:prompt}]}],generationConfig:{maxOutputTokens:1000}})});
+  if(!r.ok)throw new Error('Gemini HTTP '+r.status);
+  const d=await r.json();
+  return _parseJ(d.candidates?.[0]?.content?.parts?.[0]?.text||'');
+}
+async function aiCallOpenAI(key,sys,usr){
+  const r=await fetch('https://api.openai.com/v1/chat/completions',{method:'POST',
+    headers:{'Content-Type':'application/json','Authorization':'Bearer '+key},
+    body:JSON.stringify({model:'gpt-4o-mini',max_tokens:1000,messages:[{role:'system',content:sys},{role:'user',content:usr}]})});
+  if(!r.ok)throw new Error('OpenAI HTTP '+r.status);
+  const d=await r.json();
+  return _parseJ(d.choices?.[0]?.message?.content||'');
+}
+
+// ════════════════════════════════════════════════════════
+// EXPORT — MIDI
+// ════════════════════════════════════════════════════════
+function exportMIDI(){
+  const bpm=PROJ_BPM(), ppq=480;
+  const stepsPerBeat=APP.div/4;
+  const beatPerStep=1/stepsPerBeat;
+  const ch=9; // GM drum channel (ch10, 0-indexed=9)
+
+  function vl(v){if(v<0x80)return[v];const b=[];b.unshift(v&0x7f);v>>=7;while(v){b.unshift((v&0x7f)|0x80);v>>=7;}return b;}
+  function s2b(s){return[...s].map(c=>c.charCodeAt(0))}
+  function meta(t,s){const b=s2b(s);return[0,0xFF,t,...vl(b.length),...b]}
+  function tempoTrk(){
+    const us=Math.round(60000000/bpm);
+    return[...meta(0x03,'Tempo'),0,0xFF,0x51,3,(us>>16)&0xFF,(us>>8)&0xFF,us&0xFF,0,0xFF,0x58,4,APP.timeSig,2,24,8,0,0xFF,0x2F,0];
+  }
+  const evs=[];
+  ROWS.forEach(row=>{
+    for(let s=0;s<totalSteps();s++){
+      const vel=APP.pattern[pk(row.id,s)];
+      if(!vel)continue;
+      const tick=Math.round(s*beatPerStep*ppq);
+      const v=Math.round(40+vel*87); // 40-127
+      evs.push({t:tick,d:[0x90|ch,row.pitch,v]});
+      evs.push({t:tick+10,d:[0x80|ch,row.pitch,0]});
+    }
+  });
+  evs.sort((a,b)=>a.t-b.t);
+  const trkData=[...meta(0x03,'Drums')];
+  let last=0;
+  evs.forEach(e=>{trkData.push(...vl(e.t-last),...e.d);last=e.t;});
+  trkData.push(0,0xFF,0x2F,0);
+
+  function chunk(tag,data){const l=data.length;return[...s2b(tag),(l>>24)&0xFF,(l>>16)&0xFF,(l>>8)&0xFF,l&0xFF,...data]}
+  const hdr=[0x4D,0x54,0x68,0x64,0,0,0,6,0,1,0,2,(ppq>>8)&0xFF,ppq&0xFF];
+  const all=[chunk('MTrk',tempoTrk()),chunk('MTrk',trkData)];
+  const midi=new Uint8Array([...hdr,...all.flat()]);
+  const blob=new Blob([midi],{type:'audio/midi'});
+  const url=URL.createObjectURL(blob);
+  const a=document.createElement('a');
+  const name=(document.getElementById('project-name').value||'beat').replace(/\s+/g,'-');
+  a.href=url; a.download=`${name}-${Date.now()}.mid`;
+  document.body.appendChild(a); a.click();
+  setTimeout(()=>{URL.revokeObjectURL(url);a.remove()},1000);
+  setStatus('ok','MIDIをエクスポートしました（GMドラムチャンネル ch10）');
+}
+
+// ════════════════════════════════════════════════════════
+// EXPORT — JSON (for iCloud / score-editor-v2 import)
+// ════════════════════════════════════════════════════════
+function buildExportData(){
+  const stepsPerBeat=APP.div/4;
+  const beatPerStep=1/stepsPerBeat;
+  const notes=[];
+  ROWS.forEach(row=>{
+    for(let s=0;s<totalSteps();s++){
+      const vel=APP.pattern[pk(row.id,s)];
+      if(!vel)continue;
+      notes.push({
+        pitch:row.pitch,
+        startBeat: +(s*beatPerStep).toFixed(4),
+        durationBeats: +(beatPerStep*0.9).toFixed(4),
+        vel: Math.round(40+vel*87)
+      });
+    }
+  });
+  return {
+    version:'1.0',
+    source:'beat-lab',
+    name: document.getElementById('project-name').value || 'Untitled Beat',
+    bpm: PROJ_BPM(),
+    timeSig: APP.timeSig,
+    bars: APP.bars,
+    div: APP.div,
+    bass: { notes: [] },
+    melody: { notes: [] },
+    drums: { notes },          // for score-editor-v2 drum track
+    chords: null,
+    exported: new Date().toISOString()
+  };
+}
+
+function exportJSON(){
+  const data=buildExportData();
+  const blob=new Blob([JSON.stringify(data,null,2)],{type:'application/json'});
+  const url=URL.createObjectURL(blob);
+  const a=document.createElement('a');
+  const name=(document.getElementById('project-name').value||'beat').replace(/\s+/g,'-');
+  a.href=url; a.download=`${name}-pattern-${Date.now()}.json`;
+  document.body.appendChild(a); a.click();
+  setTimeout(()=>{URL.revokeObjectURL(url);a.remove()},1000);
+  setStatus('ok','JSONをエクスポートしました。Files.app→iCloud Driveに保存してください。');
+}
+
+function importJSON(input){
+  const file=input.files[0];
+  if(!file)return;
+  const r=new FileReader();
+  r.onload=ev=>{
+    try{
+      const data=JSON.parse(ev.target.result);
+      saveUndo();
+      if(data.bpm){document.getElementById('bpm-sl').value=data.bpm;setBpm(data.bpm);}
+      if(data.timeSig)document.getElementById('step-timesig').value=data.timeSig;
+      if(data.div)document.getElementById('step-div').value=data.div;
+      if(data.bars)document.getElementById('step-bars').value=Math.min(8,data.bars);
+      APP.timeSig=data.timeSig||4; APP.div=data.div||16; APP.bars=Math.min(8,data.bars||2);
+      APP.pattern={};
+      const stepsPerBeat=APP.div/4;
+      const drumNotes=data.drums?.notes||[];
+      drumNotes.forEach(n=>{
+        const row=ROWS.find(r=>r.pitch===n.pitch);
+        if(!row)return;
+        const step=Math.round(n.startBeat*stepsPerBeat);
+        const vel=Math.max(0.4,Math.min(1,(n.vel||80)/127));
+        APP.pattern[pk(row.id,step)]=vel;
+      });
+      if(data.name)document.getElementById('project-name').value=data.name;
+      switchView('step');
+      setStatus('ok','JSONをインポートしました — '+drumNotes.length+'ノート');
+    }catch(e){
+      setStatus('err','JSONパース失敗: '+e.message);
+    }
+  };
+  r.readAsText(file);
+}
+
+// ════════════════════════════════════════════════════════
+// EXPORT — score-editor-v2 連携（URL Scheme / postMessage）
+// ════════════════════════════════════════════════════════
+function sendToScoreEditor(){
+  const url=document.getElementById('se-url').value.trim();
+  if(!url){ setStatus('err','score-editor-v2.htmlのURLを入力してください'); return; }
+  const data=buildExportData();
+  // Encode as base64 JSON in URL hash (works across page navigation, no server needed)
+  const json=JSON.stringify(data);
+  const b64=btoa(unescape(encodeURIComponent(json)));
+  const target=url+(url.includes('#')?'':'#') + 'import=' + encodeURIComponent(b64);
+  setStatus('ok','score-editor-v2を開いています...');
+  window.location.href=target;
+}
+
+// score-editor-v2側で受け取る場合のヘルパー（このファイル自身が起動時にチェック）
+function checkIncomingImport(){
+  const hash=window.location.hash;
+  const m=hash.match(/import=([^&]+)/);
+  if(!m)return;
+  try{
+    const json=decodeURIComponent(escape(atob(decodeURIComponent(m[1]))));
+    const data=JSON.parse(json);
+    saveUndo();
+    if(data.bpm){document.getElementById('bpm-sl').value=data.bpm;setBpm(data.bpm);}
+    if(data.drums?.notes){
+      APP.pattern={};
+      const stepsPerBeat=APP.div/4;
+      data.drums.notes.forEach(n=>{
+        const row=ROWS.find(r=>r.pitch===n.pitch);
+        if(!row)return;
+        const step=Math.round(n.startBeat*stepsPerBeat);
+        APP.pattern[pk(row.id,step)]=Math.max(0.4,Math.min(1,(n.vel||80)/127));
+      });
+    }
+    history.replaceState(null,'',window.location.pathname);
+    setStatus('ok','データを受信しました: '+(data.name||''));
+    renderStepGrid();
+  }catch(e){ console.warn('import parse failed',e); }
+}
+
+// ════════════════════════════════════════════════════════
+// UNDO / REDO
+// ════════════════════════════════════════════════════════
+function saveUndo(){
+  APP.undoStack.push(JSON.stringify({pattern:APP.pattern,bars:APP.bars,div:APP.div,timeSig:APP.timeSig}));
+  if(APP.undoStack.length>60)APP.undoStack.shift();
+  APP.redoStack=[];
+}
+function undoA(){
+  if(!APP.undoStack.length)return;
+  APP.redoStack.push(JSON.stringify({pattern:APP.pattern,bars:APP.bars,div:APP.div,timeSig:APP.timeSig}));
+  const d=JSON.parse(APP.undoStack.pop());
+  APP.pattern=d.pattern; APP.bars=d.bars; APP.div=d.div; APP.timeSig=d.timeSig;
+  document.getElementById('step-bars').value=APP.bars;
+  document.getElementById('step-div').value=APP.div;
+  document.getElementById('step-timesig').value=APP.timeSig;
+  if(APP.view==='step')renderStepGrid();
+}
+function redoA(){
+  if(!APP.redoStack.length)return;
+  APP.undoStack.push(JSON.stringify({pattern:APP.pattern,bars:APP.bars,div:APP.div,timeSig:APP.timeSig}));
+  const d=JSON.parse(APP.redoStack.pop());
+  APP.pattern=d.pattern; APP.bars=d.bars; APP.div=d.div; APP.timeSig=d.timeSig;
+  document.getElementById('step-bars').value=APP.bars;
+  document.getElementById('step-div').value=APP.div;
+  document.getElementById('step-timesig').value=APP.timeSig;
+  if(APP.view==='step')renderStepGrid();
+}
+
+// ════════════════════════════════════════════════════════
+// KEYBOARD
+// ════════════════════════════════════════════════════════
+document.addEventListener('keydown',e=>{
+  if(e.target.tagName==='INPUT'||e.target.tagName==='TEXTAREA'||e.target.tagName==='SELECT')return;
+  if(e.code==='Space'){e.preventDefault();togglePlay();}
+  if((e.ctrlKey||e.metaKey)&&e.key==='z'){e.preventDefault();undoA();}
+  if((e.ctrlKey||e.metaKey)&&(e.key==='y'||(e.shiftKey&&e.key==='z'))){e.preventDefault();redoA();}
+});
+
+// ════════════════════════════════════════════════════════
+// BOOT
+// ════════════════════════════════════════════════════════
+(function boot(){
+  // load default pattern (8-beat basic)
+  applyLibraryPatternSilent(LIBRARY['J-Pop / Rock'][0]);
+  renderStepGrid();
+  checkIncomingImport();
+  setStatus('ok','BEAT//LAB 起動完了 — STEPでパターン編集、PATTERNSでプリセット選択');
+})();
+
+function applyLibraryPatternSilent(p){
+  APP.bars=p.bars; APP.div=p.div; APP.timeSig=p.timeSig;
+  document.getElementById('step-bars').value=p.bars;
+  document.getElementById('step-div').value=p.div;
+  document.getElementById('step-timesig').value=p.timeSig;
+  APP.pattern={};
+  Object.entries(p.pat).forEach(([rowId,steps])=>{
+    steps.forEach(s=>{ APP.pattern[pk(rowId,s)]=1.0; });
+  });
+}
+</script>
+</body>
+</html>
+beat-lab.html
+beat-lab.html を表示しています。

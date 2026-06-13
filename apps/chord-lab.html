@@ -1,0 +1,1353 @@
+何も選択されていません 
+
+コンテンツへ
+Gmail でのスクリーン リーダーの使用
+スレッド
+自分
+（件名なし）
+ - music-suite リポジトリ構成案 全体方針 4アプリ(vocal-lab, music-lab/chord, beat-lab, score-editor)を1リポジトリ・複数HTML・共通データ一元化で統合。各アプリは単体でも動作するが、プロジェクトデータ(楽曲データ)を共通フォーマットで保存し、相互に読み込める状態にする。 ディレクトリ構造 music-suite/ ├── index.
+ 
+9:45
+15 GB 中 35% 使用済み
+利用規約 · プライバシー · プログラム ポリシー
+前回のアカウント アクティビティ: 1 分前
+詳細
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover,user-scalable=no">
+<title>CHORD//LAB</title>
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+<meta name="apple-mobile-web-app-title" content="CHORD//LAB">
+<meta name="theme-color" content="#03030a">
+<link rel="manifest" href="chord-lab-manifest.json">
+<link href="https://fonts.googleapis.com/css2?family=Space+Mono:wght@400;700&family=Unbounded:wght@400;700;900&display=swap" rel="stylesheet">
+<script src="https://cdnjs.cloudflare.com/ajax/libs/tone/14.8.49/Tone.js"></script>
+<style>
+:root{
+  --bg:#03030a; --s1:#080910; --s2:#0e0f1a; --s3:#141626;
+  --bd:rgba(255,255,255,.055); --bd2:rgba(255,255,255,.10);
+  --tx:#dde1f5; --mu:#3e4260;
+  --chd:#4ecdc4; --bas:#ff6b9d; --acc:#55efc4;
+  --cl:#a29bfe; --gm:#4ecdc4; --oa:#ff6b6b; --mel:#ffe66d;
+  --r:3px;
+}
+*{box-sizing:border-box;margin:0;padding:0;-webkit-tap-highlight-color:transparent}
+html,body{height:100%;overflow:hidden;background:var(--bg);color:var(--tx);font-family:'Space Mono',monospace}
+body{display:flex;flex-direction:column}
+::-webkit-scrollbar{width:3px;height:3px}
+::-webkit-scrollbar-thumb{background:var(--bd2);border-radius:2px}
+.hidden{display:none!important}
+
+/* ── shared ── */
+.btn{
+  font-family:'Space Mono',monospace;font-size:9px;padding:5px 10px;border-radius:var(--r);
+  border:1px solid var(--bd2);background:var(--s2);color:var(--mu);cursor:pointer;
+  transition:all .12s;white-space:nowrap;user-select:none;
+}
+.btn:hover,.btn:active{color:var(--tx)}
+.btn.on{background:rgba(78,205,196,.12);border-color:rgba(78,205,196,.4);color:var(--chd)}
+.btn.pri{background:linear-gradient(135deg,var(--cl),var(--chd));color:#07080f;border:none;font-weight:700}
+.btn.danger{color:var(--oa);border-color:rgba(255,107,107,.3)}
+.inp{
+  background:var(--s2);border:1px solid var(--bd2);color:var(--tx);
+  font-family:'Space Mono',monospace;font-size:10px;padding:5px 8px;border-radius:var(--r);outline:none;
+}
+.inp:focus{border-color:var(--cl)}
+select.inp{cursor:pointer}
+.lbl{font-size:7px;color:var(--mu);letter-spacing:.1em;text-transform:uppercase;margin-bottom:3px}
+.sep{width:1px;height:18px;background:var(--bd2);flex-shrink:0}
+
+/* ── topbar ── */
+#topbar{
+  display:flex;align-items:center;gap:8px;padding:8px 12px;
+  border-bottom:1px solid var(--bd);background:var(--bg);flex-shrink:0;flex-wrap:wrap;
+}
+.logo{
+  font-family:'Unbounded',sans-serif;font-size:12px;font-weight:900;
+  background:linear-gradient(90deg,var(--chd),var(--cl));-webkit-background-clip:text;-webkit-text-fill-color:transparent;
+}
+#bpm-sl{-webkit-appearance:none;width:64px;height:3px;border-radius:2px;background:var(--bd2);outline:none}
+#bpm-sl::-webkit-slider-thumb{-webkit-appearance:none;width:13px;height:13px;border-radius:50%;background:var(--chd);cursor:pointer}
+#bpm-val{font-size:9px;color:var(--chd);min-width:30px}
+.tbtn{
+  width:30px;height:30px;border-radius:50%;border:1px solid var(--bd2);background:none;color:var(--tx);
+  font-size:12px;cursor:pointer;display:flex;align-items:center;justify-content:center;transition:all .15s;
+}
+.tbtn:hover{border-color:var(--chd);color:var(--chd)}
+.tbtn.active{background:rgba(78,205,196,.15);border-color:var(--chd);color:var(--chd)}
+
+/* ── statusbar ── */
+#statusbar{
+  padding:4px 12px;border-bottom:1px solid var(--bd);background:var(--s1);
+  font-size:8px;color:var(--mu);display:flex;align-items:center;gap:6px;flex-shrink:0;min-height:22px;
+}
+.sdot{width:5px;height:5px;border-radius:50%;background:var(--mu);flex-shrink:0}
+.sdot.ok{background:var(--acc);box-shadow:0 0 5px var(--acc)}
+.sdot.gen{background:var(--cl);animation:blink .6s infinite alternate}
+.sdot.err{background:var(--oa)}
+@keyframes blink{from{opacity:.3}to{opacity:1}}
+
+/* ── tabs ── */
+#tabs{display:flex;border-bottom:1px solid var(--bd);flex-shrink:0;overflow-x:auto}
+.tab{
+  flex:1;min-width:80px;padding:8px 10px;font-size:9px;font-family:'Unbounded',sans-serif;
+  font-weight:700;letter-spacing:.06em;text-align:center;cursor:pointer;border:none;background:none;
+  color:var(--mu);border-bottom:2px solid transparent;transition:all .15s;white-space:nowrap;
+}
+.tab.active{color:var(--chd);border-bottom-color:var(--chd)}
+
+/* ── views ── */
+#views{flex:1;overflow:hidden;position:relative;min-height:0}
+.view{position:absolute;inset:0;overflow:hidden;display:flex;flex-direction:column}
+.view.hidden{display:none!important}
+
+/* ── PROG (Quick Composer) ── */
+#view-prog{display:flex;flex-direction:column;overflow:hidden}
+.prog-topbar{
+  padding:6px 10px;border-bottom:1px solid var(--bd);display:flex;align-items:center;
+  gap:8px;flex-wrap:wrap;flex-shrink:0;background:var(--s1);
+}
+.prog-body{flex:1;overflow-y:auto;padding:10px 12px}
+
+/* Section selector */
+.section-blocks{display:flex;flex-wrap:wrap;gap:6px;margin-bottom:12px}
+.sec-block{
+  padding:5px 12px;border-radius:3px;font-size:9px;cursor:pointer;
+  border:1px solid var(--bd2);background:var(--s2);color:var(--mu);
+  font-family:'Unbounded',sans-serif;letter-spacing:.05em;transition:all .12s;
+}
+.sec-block.active-sec{border-color:var(--chd);color:var(--chd);background:rgba(78,205,196,.08)}
+
+/* Chord palette */
+.chord-palette{display:flex;flex-wrap:wrap;gap:6px;margin-bottom:12px}
+.chord-btn{
+  font-family:'Space Mono',monospace;font-size:11px;font-weight:700;
+  padding:8px 12px;border-radius:4px;cursor:pointer;user-select:none;
+  background:rgba(78,205,196,.08);border:1px solid rgba(78,205,196,.25);color:var(--chd);
+  transition:all .12s;display:flex;flex-direction:column;align-items:center;gap:2px;
+}
+.chord-btn:hover{background:rgba(78,205,196,.18);box-shadow:0 0 10px rgba(78,205,196,.15)}
+.chord-note-preview{font-size:7px;color:rgba(78,205,196,.6);font-weight:400}
+
+/* Add chord area */
+.add-chord-area{padding:10px;border:1px dashed var(--bd2);border-radius:4px;margin-bottom:12px}
+.note-grid{display:grid;grid-template-columns:repeat(12,1fr);gap:3px;margin-bottom:6px}
+.ng-key{padding:4px 2px;text-align:center;font-size:8px;border-radius:2px;cursor:pointer;border:1px solid var(--bd);transition:all .1s}
+.ng-key.white-k{background:rgba(255,255,255,.04);color:var(--mu)}
+.ng-key.black-k{background:rgba(0,0,0,.4);color:rgba(255,255,255,.25)}
+.ng-key.selected-k{background:rgba(78,205,196,.2);border-color:var(--chd);color:var(--chd)}
+.chord-type-sel{display:flex;flex-wrap:wrap;gap:4px;margin-bottom:6px}
+.ct-btn{font-size:8px;padding:3px 7px;border-radius:2px;border:1px solid var(--bd);background:none;color:var(--mu);cursor:pointer;transition:all .1s}
+.ct-btn.active{border-color:var(--chd);color:var(--chd);background:rgba(78,205,196,.08)}
+
+/* Progression timeline */
+.prog-timeline{display:flex;gap:4px;overflow-x:auto;padding:6px 0;border-top:1px solid var(--bd);margin-top:6px;align-items:flex-start;flex-wrap:wrap}
+.prog-chord{
+  display:flex;flex-direction:column;align-items:center;gap:2px;padding:6px 8px;border-radius:3px;cursor:pointer;
+  border:1px solid rgba(78,205,196,.2);background:rgba(78,205,196,.06);min-width:48px;position:relative;transition:all .12s;
+}
+.prog-chord:hover{border-color:rgba(78,205,196,.5)}
+.prog-chord.prog-playing{background:rgba(78,205,196,.2);box-shadow:0 0 8px rgba(78,205,196,.2)}
+.prog-chord-name{font-size:11px;font-weight:700;color:var(--chd)}
+.prog-chord-roman{font-size:8px;color:var(--cl);font-weight:700}
+.prog-chord-beats{font-size:7px;color:var(--mu)}
+.prog-chord-del{
+  position:absolute;top:-4px;right:-4px;width:12px;height:12px;border-radius:50%;
+  background:var(--oa);color:#fff;font-size:7px;display:none;align-items:center;justify-content:center;cursor:pointer;
+}
+.prog-chord:hover .prog-chord-del{display:flex}
+
+/* Bass preview row */
+.bass-row{display:flex;gap:4px;overflow-x:auto;padding:6px 0;border-top:1px solid var(--bd);margin-top:6px;flex-wrap:wrap}
+.bass-note{
+  min-width:48px;padding:4px 8px;border-radius:3px;text-align:center;
+  border:1px solid rgba(255,107,157,.2);background:rgba(255,107,157,.06);color:var(--bas);
+  font-size:10px;font-weight:700;
+}
+
+/* ── PROGRESSIONS LIBRARY ── */
+#view-lib{display:flex;flex-direction:column;overflow:hidden}
+.lib-topbar{padding:6px 10px;border-bottom:1px solid var(--bd);display:flex;align-items:center;gap:8px;flex-wrap:wrap;flex-shrink:0;background:var(--s1)}
+.lib-body{flex:1;overflow-y:auto;padding:10px 12px}
+.genre-section{margin-bottom:18px}
+.genre-title{font-family:'Unbounded',sans-serif;font-size:10px;font-weight:700;letter-spacing:.08em;color:var(--chd);margin-bottom:8px;display:flex;align-items:center;gap:6px}
+.pattern-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(150px,1fr));gap:8px}
+.pattern-card{border:1px solid var(--bd2);border-radius:6px;padding:10px;cursor:pointer;background:var(--s2);transition:all .15s}
+.pattern-card:hover{border-color:var(--chd);background:var(--s3)}
+.pattern-name{font-size:10px;font-weight:700;color:var(--tx);margin-bottom:2px}
+.pattern-roman{font-size:9px;color:var(--cl);font-weight:700;margin-bottom:4px}
+.pattern-meta{font-size:8px;color:var(--mu);margin-bottom:6px}
+.pattern-chips{display:flex;gap:3px;flex-wrap:wrap}
+.pattern-chip{font-size:8px;padding:2px 6px;border-radius:2px;background:rgba(78,205,196,.08);border:1px solid rgba(78,205,196,.2);color:var(--chd)}
+
+/* ── AI GENERATOR ── */
+#view-ai{display:flex;overflow:hidden}
+.ai-left{width:260px;flex-shrink:0;border-right:1px solid var(--bd2);display:flex;flex-direction:column;overflow:hidden;background:var(--s1)}
+.ai-body{flex:1;overflow-y:auto;padding:10px 12px}
+.ai-sec{margin-bottom:14px}
+.ai-sec-title{font-family:'Unbounded',sans-serif;font-size:8px;color:var(--cl);letter-spacing:.1em;margin-bottom:6px}
+.model-row{display:flex;gap:3px;margin-bottom:8px}
+.mbt{
+  flex:1;text-align:center;padding:4px;font-size:8px;border-radius:2px;border:1px solid var(--bd);
+  background:none;color:var(--mu);cursor:pointer;font-family:'Unbounded',sans-serif;font-weight:700;transition:all .12s;
+}
+.mbt.act-cl{border-color:var(--cl);color:var(--cl);background:rgba(162,155,254,.1)}
+.mbt.act-gm{border-color:var(--gm);color:var(--gm);background:rgba(78,205,196,.1)}
+.mbt.act-oa{border-color:var(--oa);color:var(--oa);background:rgba(255,107,107,.1)}
+.ai-gen-btn{
+  width:100%;padding:9px;font-family:'Unbounded',sans-serif;font-size:10px;font-weight:700;letter-spacing:.05em;
+  border:none;border-radius:4px;cursor:pointer;background:linear-gradient(135deg,var(--cl),var(--chd));
+  color:#07080f;transition:opacity .15s;
+}
+.ai-gen-btn:disabled{opacity:.35;cursor:not-allowed}
+.ai-result-card{margin-top:8px;padding:8px;background:var(--s2);border:1px solid var(--bd);border-radius:3px;font-size:9px;color:var(--mu);line-height:1.6}
+.ai-result-card.err{color:var(--oa);border-color:rgba(255,107,107,.2)}
+.ai-apply{
+  margin-top:6px;width:100%;padding:6px;border-radius:3px;border:1px solid rgba(78,205,196,.3);
+  background:rgba(78,205,196,.07);color:var(--chd);cursor:pointer;font-size:9px;font-family:'Space Mono',monospace;
+}
+.ai-right{flex:1;overflow:auto;padding:10px 12px}
+
+/* ── EXPORT / SHARE ── */
+#view-export{display:flex;flex-direction:column;overflow:hidden}
+.export-body{flex:1;overflow-y:auto;padding:14px}
+.export-card{border:1px solid var(--bd2);border-radius:6px;padding:14px;margin-bottom:12px;background:var(--s1)}
+.export-card-title{font-family:'Unbounded',sans-serif;font-size:10px;font-weight:700;letter-spacing:.08em;margin-bottom:8px;display:flex;align-items:center;gap:6px}
+.export-card-desc{font-size:9px;color:var(--mu);line-height:1.7;margin-bottom:10px}
+.export-row{display:flex;gap:8px;flex-wrap:wrap}
+
+.sdot.cl{background:var(--cl)} .sdot.gm{background:var(--gm)} .sdot.oa{background:var(--oa)}
+</style>
+</head>
+<body>
+
+<!-- TOPBAR -->
+<div id="topbar">
+  <div class="logo">CHORD//LAB</div>
+  <div class="sep"></div>
+  <input class="inp" id="project-name" value="Untitled Progression" style="width:120px;font-size:9px">
+  <div class="sep"></div>
+  <div class="lbl" style="margin:0">キー</div>
+  <select class="inp" id="qc-key" style="width:60px;font-size:9px" onchange="updateChordPalette()">
+    <option>C</option><option>D</option><option>E</option><option>F</option>
+    <option>G</option><option>A</option><option>B</option>
+    <option>Am</option><option>Dm</option><option>Em</option>
+  </select>
+  <div class="sep"></div>
+  <span style="font-size:8px;color:var(--mu)">BPM</span>
+  <input type="range" id="bpm-sl" min="40" max="220" value="120" oninput="setBpm(this.value)">
+  <span id="bpm-val">120</span>
+  <div class="sep"></div>
+  <button class="tbtn" id="play-btn" onclick="togglePlay()">▶</button>
+  <button class="tbtn" onclick="stopPlay()">■</button>
+  <div style="flex:1"></div>
+  <button class="btn" onclick="undoA()">↩</button>
+  <button class="btn" onclick="redoA()">↪</button>
+  <button class="btn on" onclick="switchView('export')">⬇ EXPORT</button>
+</div>
+
+<!-- STATUS -->
+<div id="statusbar">
+  <div class="sdot" id="sdot"></div>
+  <span id="smsg">CHORD//LAB 起動完了 — PROG からコード進行を作成してください</span>
+</div>
+
+<!-- TABS -->
+<div id="tabs">
+  <button class="tab active" id="tab-prog"   onclick="switchView('prog')">🎹 PROG</button>
+  <button class="tab"        id="tab-lib"    onclick="switchView('lib')">📚 PROGRESSIONS</button>
+  <button class="tab"        id="tab-ai"     onclick="switchView('ai')">🤖 AI</button>
+  <button class="tab"        id="tab-export" onclick="switchView('export')">⬇ EXPORT</button>
+</div>
+
+<!-- VIEWS -->
+<div id="views">
+
+  <!-- ══ PROG (Quick Composer) ══ -->
+  <div class="view" id="view-prog">
+    <div class="prog-topbar">
+      <button class="btn" onclick="suggestChords()">✦ 提案</button>
+      <button class="btn" onclick="generateBassline()">🎸 ベース自動生成</button>
+      <button class="btn" onclick="playProgression()">▶ 試聴</button>
+      <button class="btn" onclick="stopProg()">■</button>
+      <div class="sep"></div>
+      <div class="lbl" style="margin:0">拍/コード</div>
+      <select class="inp" id="default-beats" style="width:56px;font-size:9px">
+        <option value="2">2拍</option><option value="4" selected>4拍</option><option value="8">8拍</option>
+      </select>
+    </div>
+    <div class="prog-body">
+      <div class="lbl">セクション</div>
+      <div class="section-blocks" id="section-blocks"></div>
+
+      <div class="lbl">コードパレット <span style="color:var(--mu);font-weight:400">(クリックで進行に追加)</span></div>
+      <div class="chord-palette" id="chord-palette"></div>
+
+      <div class="add-chord-area">
+        <div class="lbl" style="margin-bottom:6px">カスタムコード追加</div>
+        <div class="lbl">ルート</div>
+        <div class="note-grid" id="root-grid"></div>
+        <div class="lbl">タイプ</div>
+        <div class="chord-type-sel" id="chord-type-sel"></div>
+        <div style="display:flex;gap:6px;align-items:center;margin-top:6px">
+          <span id="chord-preview" style="font-size:11px;font-weight:700;color:var(--chd);min-width:60px">—</span>
+          <button class="btn on" onclick="addCustomChord()" style="flex:1">＋ 進行に追加</button>
+        </div>
+      </div>
+
+      <div class="lbl">進行 <span id="prog-section-name" style="color:var(--chd)"></span></div>
+      <div class="prog-timeline" id="prog-timeline"></div>
+
+      <div class="lbl" style="margin-top:6px">ベースライン（自動生成プレビュー）</div>
+      <div class="bass-row" id="bass-row"></div>
+    </div>
+  </div>
+
+  <!-- ══ PROGRESSIONS LIBRARY ══ -->
+  <div class="view hidden" id="view-lib">
+    <div class="lib-topbar">
+      <span style="font-family:'Unbounded',sans-serif;font-size:9px;color:var(--chd);letter-spacing:.1em">PROGRESSION LIBRARY</span>
+      <div class="sep"></div>
+      <span style="font-size:8px;color:var(--mu)">クリックで現在のセクションに適用（キーに自動移調）</span>
+    </div>
+    <div class="lib-body" id="lib-body"></div>
+  </div>
+
+  <!-- ══ AI GENERATOR ══ -->
+  <div class="view hidden" id="view-ai">
+    <div class="ai-left">
+      <div style="padding:8px 12px;border-bottom:1px solid var(--bd);font-family:'Unbounded',sans-serif;font-size:8px;color:var(--cl);letter-spacing:.1em;flex-shrink:0">AI CHORD GENERATOR</div>
+      <div class="ai-body">
+        <div class="ai-sec">
+          <div class="ai-sec-title">モード</div>
+          <div class="model-row">
+            <button class="mbt act-cl" id="aimode-new"  onclick="setAiMode('new')"  style="border-color:var(--cl);color:var(--cl)">✦ 新規生成</button>
+            <button class="mbt" id="aimode-edit" onclick="setAiMode('edit')" style="border-color:var(--chd);color:var(--mu)">✏ 編集指示</button>
+          </div>
+        </div>
+        <div class="ai-sec">
+          <div class="ai-sec-title">モデル</div>
+          <div class="model-row">
+            <button class="mbt act-cl" id="ai-cl" onclick="setAiMdl('claude')">CLAUDE</button>
+            <button class="mbt" id="ai-gm" onclick="setAiMdl('gemini')">GEMINI</button>
+            <button class="mbt" id="ai-oa" onclick="setAiMdl('openai')">OPENAI</button>
+          </div>
+        </div>
+        <div class="ai-sec" id="ai-newgen-sec">
+          <div class="ai-sec-title">設定</div>
+          <div style="display:grid;grid-template-columns:1fr 1fr;gap:6px;margin-bottom:6px">
+            <select class="inp" id="ai-genre" style="font-size:9px">
+              <option>J-Pop</option><option>シティポップ</option><option>ロック</option>
+              <option>ヒップホップ</option><option>EDM</option><option>ジャズ</option>
+              <option>ボサノバ</option><option>レゲエ</option><option>パンク</option>
+              <option>アニソン</option><option>Lo-Fi</option><option>ファンク</option>
+            </select>
+            <select class="inp" id="ai-mood" style="font-size:9px">
+              <option value="happy">明るい・楽しい</option>
+              <option value="sad">切ない・哀愁</option>
+              <option value="epic">壮大・感動的</option>
+              <option value="chill">リラックス</option>
+              <option value="tense">緊張感・ダーク</option>
+              <option value="nostalgic">ノスタルジック</option>
+            </select>
+          </div>
+          <label style="font-size:8px;color:var(--mu);display:flex;flex-direction:column;gap:2px">
+            コード数 <input class="inp" type="number" id="ai-chordcount" value="4" min="2" max="16" style="font-size:9px">
+          </label>
+        </div>
+        <div class="ai-sec" id="ai-edit-sec" style="display:none">
+          <div class="ai-sec-title">編集対象</div>
+          <div style="font-size:9px;color:var(--mu);padding:8px;background:var(--s2);border:1px solid var(--bd);border-radius:3px;line-height:1.6" id="ai-current-summary">
+            現在の進行を確認中...
+          </div>
+        </div>
+        <div class="ai-sec">
+          <div class="ai-sec-title" id="ai-prompt-label">プロンプト（任意）</div>
+          <textarea class="inp" id="ai-prompt" rows="3" placeholder="例: 切ないサビ用の進行、key=Am" style="width:100%;font-size:9px;resize:vertical;line-height:1.5"></textarea>
+          <div id="ai-edit-suggestions" style="display:none;flex-wrap:wrap;gap:4px;margin-top:6px"></div>
+        </div>
+        <button class="ai-gen-btn" id="ai-gen-btn" onclick="aiRun()">✦ AI生成</button>
+        <div id="ai-result-area"></div>
+      </div>
+    </div>
+    <div class="ai-right">
+      <div class="lbl" style="margin-bottom:8px">プレビュー</div>
+      <div id="ai-preview" style="font-size:10px;color:var(--mu)">AI生成を実行するとプレビューが表示されます</div>
+    </div>
+  </div>
+
+  <!-- ══ EXPORT / SHARE ══ -->
+  <div class="view hidden" id="view-export">
+    <div class="export-body">
+
+      <div class="export-card">
+        <div class="export-card-title" style="color:var(--cl)">⬇ MIDI エクスポート</div>
+        <div class="export-card-desc">
+          現在のコード進行＋ベースラインを Standard MIDI File (Format 1) として書き出します。
+          コードトラック(ch1)とベーストラック(ch2)に分かれます。GarageBandの「ファイル」アプリから直接開けます。
+        </div>
+        <div class="export-row">
+          <button class="btn pri" onclick="exportMIDI()">⬇ MIDIをダウンロード</button>
+        </div>
+      </div>
+
+      <div class="export-card">
+        <div class="export-card-title" style="color:var(--chd)">📥 iCloud Drive 連携</div>
+        <div class="export-card-desc">
+          進行をJSON形式でエクスポートします。Files.appで「iCloud Drive」に保存し、
+          score-editor-v2.html / beat-lab.html の「📥 JSON」からインポートできます。
+        </div>
+        <div class="export-row">
+          <button class="btn pri" onclick="exportJSON()">📥 JSONエクスポート</button>
+          <label class="btn" style="display:inline-flex;align-items:center;cursor:pointer">
+            📤 JSONインポート
+            <input type="file" accept=".json" onchange="importJSON(this)" style="display:none">
+          </label>
+        </div>
+      </div>
+
+      <div class="export-card">
+        <div class="export-card-title" style="color:var(--acc)">🔗 score-editor-v2 へ送る</div>
+        <div class="export-card-desc">
+          URL Schemeでscore-editor-v2.htmlを開き、現在のコード進行＋ベースラインを
+          ChordトラックとBassトラックとして直接渡します。BPM/キーも引き継がれます。
+        </div>
+        <div style="margin-bottom:8px">
+          <div class="lbl">score-editor-v2.html のURL</div>
+          <input class="inp" id="se-url" placeholder="https://norinori-jan.github.io/music-lab/score-editor-v2.html" style="width:100%;font-size:9px">
+        </div>
+        <div class="export-row">
+          <button class="btn pri" onclick="sendToScoreEditor()">🔗 ROLLへ送信して開く</button>
+        </div>
+      </div>
+
+      <div class="export-card">
+        <div class="export-card-title" style="color:var(--bas)">🥁 beat-lab へ送る</div>
+        <div class="export-card-desc">
+          beat-lab.htmlを開き、現在のBPMとキー情報を渡します（曲のテンポ感を共有してドラムパターンを作成）。
+        </div>
+        <div style="margin-bottom:8px">
+          <div class="lbl">beat-lab.html のURL</div>
+          <input class="inp" id="bl-url" placeholder="https://norinori-jan.github.io/music-lab/beat-lab.html" style="width:100%;font-size:9px">
+        </div>
+        <div class="export-row">
+          <button class="btn pri" onclick="sendToBeatLab()">🔗 beat-labを開く</button>
+        </div>
+      </div>
+
+      <div class="export-card">
+        <div class="export-card-title" style="color:var(--mel)">▶ プレビュー再生</div>
+        <div class="export-card-desc">現在のBPMとコード進行をそのまま試聴できます。</div>
+        <div class="export-row">
+          <button class="tbtn" id="play-btn-ex" onclick="togglePlay()">▶</button>
+          <button class="tbtn" onclick="stopPlay()">■</button>
+        </div>
+      </div>
+
+    </div>
+  </div>
+
+</div><!-- /views -->
+
+<script>
+'use strict';
+// ════════════════════════════════════════════════════════
+// CONSTANTS
+// ════════════════════════════════════════════════════════
+const NOTES=['C','C#','D','D#','E','F','F#','G','G#','A','A#','B'];
+const IS_BLACK=[0,1,0,1,0,0,1,0,1,0,1,0];
+
+const CHORD_FORMULAS={
+  'maj':[0,4,7],'min':[0,3,7],'7':[0,4,7,10],'maj7':[0,4,7,11],
+  'min7':[0,3,7,10],'dim':[0,3,6],'aug':[0,4,8],'sus2':[0,2,7],
+  'sus4':[0,5,7],'9':[0,4,7,10,14],'add9':[0,4,7,14],
+  'maj9':[0,4,7,11,14],'6':[0,4,7,9],'dim7':[0,3,6,9],
+};
+
+// Diatonic chords + roman numerals per key
+const DIATONIC={
+  'C' :{chords:['C','Dm','Em','F','G','Am','Bdim'],   roman:['I','ii','iii','IV','V','vi','vii°']},
+  'D' :{chords:['D','Em','F#m','G','A','Bm','C#dim'], roman:['I','ii','iii','IV','V','vi','vii°']},
+  'E' :{chords:['E','F#m','G#m','A','B','C#m','D#dim'],roman:['I','ii','iii','IV','V','vi','vii°']},
+  'F' :{chords:['F','Gm','Am','Bb','C','Dm','Edim'],  roman:['I','ii','iii','IV','V','vi','vii°']},
+  'G' :{chords:['G','Am','Bm','C','D','Em','F#dim'],  roman:['I','ii','iii','IV','V','vi','vii°']},
+  'A' :{chords:['A','Bm','C#m','D','E','F#m','G#dim'],roman:['I','ii','iii','IV','V','vi','vii°']},
+  'B' :{chords:['B','C#m','D#m','E','F#','G#m','A#dim'],roman:['I','ii','iii','IV','V','vi','vii°']},
+  'Am':{chords:['Am','Bdim','C','Dm','Em','F','G'],   roman:['i','ii°','III','iv','v','VI','VII']},
+  'Dm':{chords:['Dm','Edim','F','Gm','Am','Bb','C'],  roman:['i','ii°','III','iv','v','VI','VII']},
+  'Em':{chords:['Em','F#dim','G','Am','Bm','C','D'],  roman:['i','ii°','III','iv','v','VI','VII']},
+};
+
+const ROOT_MAP={C:0,'C#':1,Db:1,D:2,'D#':3,Eb:3,E:4,F:5,'F#':6,Gb:6,G:7,'G#':8,Ab:8,A:9,'A#':10,Bb:10,B:11};
+
+// ════════════════════════════════════════════════════════
+// STATE
+// ════════════════════════════════════════════════════════
+const PROJ={
+  name:'Untitled Progression', bpm:120, key:'C',
+  sections:[
+    {id:'s1',name:'Verse 1',progression:[]},
+    {id:'s2',name:'Chorus', progression:[]},
+    {id:'s3',name:'Bridge', progression:[]},
+  ],
+};
+const APP={
+  view:'prog', qcSection:'s1', chordRoot:0, chordType:'maj',
+  aiModel:'claude', aiMode:'new',
+  undoStack:[], redoStack:[],
+  playing:false,
+};
+
+let _uid=1;
+const uid=()=>'id'+(_uid++);
+function esc(s){return String(s||'').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;')}
+function setStatus(t,m){document.getElementById('sdot').className='sdot'+(t?' '+t:'');document.getElementById('smsg').textContent=m}
+function PROJ_BPM(){return parseInt(document.getElementById('bpm-sl').value)}
+function setBpm(v){PROJ.bpm=parseInt(v);document.getElementById('bpm-val').textContent=v;}
+
+// ════════════════════════════════════════════════════════
+// CHORD HELPERS
+// ════════════════════════════════════════════════════════
+function chordNotes(rootSemitone,type,octave=4){
+  const formula=CHORD_FORMULAS[type]||[0,4,7];
+  const base=rootSemitone+(octave+1)*12;
+  return formula.map(i=>base+i);
+}
+function chordNameToNotes(name,octave=3){
+  const m=name.match(/^([A-G][#b]?)(.*)/);
+  if(!m)return[];
+  const root=ROOT_MAP[m[1]]??0;
+  let type=m[2]||'maj';
+  if(type==='m')type='min';
+  if(type==='M7')type='maj7';
+  if(type==='-7')type='min7';
+  return chordNotes(root,type,octave);
+}
+function chordRoot(name){
+  const m=name.match(/^([A-G][#b]?)/);
+  return m?ROOT_MAP[m[1]]??0:0;
+}
+function pitchName(p){return NOTES[((p%12)+12)%12]+Math.floor(p/12-1)}
+function midiToTone(m){return NOTES[((m%12)+12)%12]+Math.floor(m/12-1)}
+
+// roman numeral lookup for current key
+function romanFor(chordName){
+  const dia=DIATONIC[PROJ.key];
+  if(!dia)return'';
+  const idx=dia.chords.findIndex(c=>c===chordName);
+  return idx>=0?dia.roman[idx]:'';
+}
+
+// ════════════════════════════════════════════════════════
+// VIEW SWITCHING
+// ════════════════════════════════════════════════════════
+function switchView(v){
+  APP.view=v;
+  document.querySelectorAll('.view').forEach(e=>e.classList.add('hidden'));
+  document.getElementById('view-'+v).classList.remove('hidden');
+  document.querySelectorAll('.tab').forEach(e=>e.classList.remove('active'));
+  document.getElementById('tab-'+v)?.classList.add('active');
+  if(v==='prog') renderProg();
+  if(v==='lib')  renderLibrary();
+  if(v==='ai' && APP.aiMode==='edit') updateCurrentProgSummary();
+}
+
+// ════════════════════════════════════════════════════════
+// PROG VIEW (Quick Composer)
+// ════════════════════════════════════════════════════════
+function renderProg(){
+  renderSectionBlocks();
+  updateChordPalette();
+  renderProgTimeline();
+  renderRootGrid();
+  renderChordTypes();
+  updateChordPreview();
+  renderBassRow();
+}
+
+function renderSectionBlocks(){
+  const el=document.getElementById('section-blocks');
+  el.innerHTML=PROJ.sections.map(s=>`
+    <div class="sec-block ${s.id===APP.qcSection?'active-sec':''}" onclick="selectSection('${s.id}')">${esc(s.name)}</div>`).join('')+
+    `<div class="sec-block" onclick="addSection()" style="color:var(--mu);border-style:dashed">＋</div>`;
+}
+function selectSection(id){
+  APP.qcSection=id;
+  renderSectionBlocks();
+  renderProgTimeline();
+  renderBassRow();
+  document.getElementById('prog-section-name').textContent='— '+(PROJ.sections.find(s=>s.id===id)?.name||'');
+  if(APP.view==='ai'&&APP.aiMode==='edit')updateCurrentProgSummary();
+}
+function addSection(){
+  const name=prompt('セクション名','Bridge 2');
+  if(!name)return;
+  PROJ.sections.push({id:uid(),name,progression:[]});
+  renderSectionBlocks();
+}
+
+function updateChordPalette(){
+  const key=document.getElementById('qc-key').value;
+  PROJ.key=key;
+  const el=document.getElementById('chord-palette');
+  const dia=DIATONIC[key]||DIATONIC['C'];
+  el.innerHTML=dia.chords.map((cn,i)=>{
+    const ns=chordNameToNotes(cn);
+    return`<div class="chord-btn" onclick="addChordToProg('${esc(cn)}')">
+      ${esc(cn)}
+      <span class="prog-chord-roman" style="font-size:8px">${dia.roman[i]}</span>
+      <div class="chord-note-preview">${ns.map(pitchName).join(' ')}</div>
+    </div>`;
+  }).join('');
+}
+
+function renderRootGrid(){
+  const el=document.getElementById('root-grid');
+  el.innerHTML=NOTES.map((n,i)=>`
+    <div class="ng-key ${IS_BLACK[i]?'black-k':'white-k'} ${i===APP.chordRoot?'selected-k':''}"
+      onclick="selectRoot(${i})">${n}</div>`).join('');
+}
+function selectRoot(i){APP.chordRoot=i;renderRootGrid();updateChordPreview();}
+function renderChordTypes(){
+  const el=document.getElementById('chord-type-sel');
+  el.innerHTML=Object.keys(CHORD_FORMULAS).map(t=>`
+    <button class="ct-btn ${t===APP.chordType?'active':''}" onclick="selectChordType('${t}')">${t}</button>`).join('');
+}
+function selectChordType(t){APP.chordType=t;renderChordTypes();updateChordPreview();}
+function updateChordPreview(){
+  const name=NOTES[APP.chordRoot]+(APP.chordType==='maj'?'':APP.chordType==='min'?'m':APP.chordType);
+  document.getElementById('chord-preview').textContent=name;
+}
+function addCustomChord(){
+  const name=NOTES[APP.chordRoot]+(APP.chordType==='maj'?'':APP.chordType==='min'?'m':APP.chordType);
+  addChordToProg(name);
+}
+function addChordToProg(name){
+  const sec=PROJ.sections.find(s=>s.id===APP.qcSection);
+  if(!sec)return;
+  const beats=parseInt(document.getElementById('default-beats').value)||4;
+  saveUndo();
+  sec.progression.push({id:uid(),name,beats,notes:chordNameToNotes(name)});
+  renderProgTimeline();
+  renderBassRow();
+  playChordPreview(chordNameToNotes(name));
+}
+
+function renderProgTimeline(){
+  const el=document.getElementById('prog-timeline');
+  const sec=PROJ.sections.find(s=>s.id===APP.qcSection);
+  if(!sec){el.innerHTML='';return;}
+  if(!sec.progression.length){
+    el.innerHTML='<div style="color:var(--mu);font-size:10px;padding:8px">コードパレットからクリックして追加</div>';
+    return;
+  }
+  el.innerHTML=sec.progression.map((c,i)=>{
+    const roman=romanFor(c.name);
+    return`<div class="prog-chord" draggable="true"
+      ondragstart="progDragStart(event,${i})"
+      ondragover="event.preventDefault();this.classList.add('arr-drag-over')"
+      ondrop="progDrop(event,${i})"
+      ondragleave="this.classList.remove('arr-drag-over')"
+      onclick="playChordPreview(${JSON.stringify(c.notes)})">
+      ${roman?`<div class="prog-chord-roman">${roman}</div>`:''}
+      <div class="prog-chord-name">${esc(c.name)}</div>
+      <div class="prog-chord-beats">${c.beats}♩</div>
+      <div class="prog-chord-del" onclick="event.stopPropagation();removeProgChord(${i})">×</div>
+    </div>`;
+  }).join('');
+}
+
+function removeProgChord(i){
+  const sec=PROJ.sections.find(s=>s.id===APP.qcSection);
+  if(!sec)return;
+  saveUndo();
+  sec.progression.splice(i,1);
+  renderProgTimeline();
+  renderBassRow();
+}
+
+let progDragIdx=null;
+function progDragStart(e,i){progDragIdx=i;}
+function progDrop(e,i){
+  e.preventDefault();
+  document.querySelectorAll('.prog-chord').forEach(c=>c.classList.remove('arr-drag-over'));
+  if(progDragIdx===null||progDragIdx===i)return;
+  const sec=PROJ.sections.find(s=>s.id===APP.qcSection);
+  if(!sec)return;
+  saveUndo();
+  const [item]=sec.progression.splice(progDragIdx,1);
+  sec.progression.splice(i,0,item);
+  progDragIdx=null;
+  renderProgTimeline();
+  renderBassRow();
+}
+
+// ════════════════════════════════════════════════════════
+// BASSLINE GENERATION
+// ════════════════════════════════════════════════════════
+function generateBassline(){
+  const sec=PROJ.sections.find(s=>s.id===APP.qcSection);
+  if(!sec?.progression.length){setStatus('err','進行が空です');return;}
+  renderBassRow();
+  setStatus('ok','ベースラインをルート音から自動生成しました');
+}
+function getBassNoteForChord(chord){
+  // root note, one octave below chord notes (octave 2)
+  const root=chordRoot(chord.name);
+  return root+36; // C2=36
+}
+function renderBassRow(){
+  const el=document.getElementById('bass-row');
+  const sec=PROJ.sections.find(s=>s.id===APP.qcSection);
+  if(!sec?.progression.length){el.innerHTML='<div style="color:var(--mu);font-size:9px;padding:6px">進行を追加すると自動生成されます</div>';return;}
+  el.innerHTML=sec.progression.map(c=>{
+    const bp=getBassNoteForChord(c);
+    return `<div class="bass-note">${pitchName(bp)}<div style="font-size:7px;color:var(--mu);font-weight:400">${c.beats}♩</div></div>`;
+  }).join('');
+}
+
+// ════════════════════════════════════════════════════════
+// SUGGEST CHORDS
+// ════════════════════════════════════════════════════════
+function suggestChords(){
+  const key=document.getElementById('qc-key').value;
+  const progressions={
+    'C':['C','Am','F','G'],'Am':['Am','F','C','G'],'G':['G','Em','C','D'],
+    'D':['D','Bm','G','A'],'Em':['Em','C','G','D'],'F':['F','Dm','Bb','C'],
+    'A':['A','F#m','D','E'],'E':['E','C#m','A','B'],'B':['B','G#m','E','F#'],'Dm':['Dm','Bb','F','C']
+  };
+  const prog=progressions[key]||progressions['C'];
+  const sec=PROJ.sections.find(s=>s.id===APP.qcSection);
+  if(!sec)return;
+  saveUndo();
+  const beats=parseInt(document.getElementById('default-beats').value)||4;
+  sec.progression=prog.map(n=>({id:uid(),name:n,beats,notes:chordNameToNotes(n)}));
+  renderProgTimeline();
+  renderBassRow();
+  setStatus('ok','コード進行を提案しました');
+}
+
+// ════════════════════════════════════════════════════════
+// PLAYBACK
+// ════════════════════════════════════════════════════════
+let chordSynth=null,bassSynth=null;
+function getCS(){
+  if(!chordSynth){
+    chordSynth=new Tone.PolySynth(Tone.Synth,{oscillator:{type:'triangle'},envelope:{attack:.03,decay:.1,sustain:.5,release:.9}}).toDestination();
+    chordSynth.volume.value=-9;
+  }
+  return chordSynth;
+}
+function getBS(){
+  if(!bassSynth){
+    bassSynth=new Tone.Synth({oscillator:{type:'sawtooth'},envelope:{attack:.02,decay:.1,sustain:.7,release:.5}}).toDestination();
+    bassSynth.volume.value=-7;
+  }
+  return bassSynth;
+}
+async function playChordPreview(notes){
+  await Tone.start();
+  getCS().triggerAttackRelease(notes.map(midiToTone),'2n');
+}
+
+let progPlayTimer=null;
+async function playProgression(){
+  await Tone.start();
+  const sec=PROJ.sections.find(s=>s.id===APP.qcSection);
+  if(!sec?.progression.length)return;
+  stopProg();
+  APP.playing=true;
+  document.querySelectorAll('#play-btn,#play-btn-ex').forEach(b=>{b.textContent='⏹';b.classList.add('active')});
+  let i=0;
+  const chords=sec.progression;
+  const chips=document.querySelectorAll('.prog-chord');
+  function next(){
+    if(!APP.playing||i>=chords.length){ stopProg(); return; }
+    const c=chords[i];
+    chips.forEach(ch=>ch.classList.remove('prog-playing'));
+    if(chips[i])chips[i].classList.add('prog-playing');
+    getCS().triggerAttackRelease(c.notes.map(midiToTone), c.beats>=4?'1n':'2n');
+    getBS().triggerAttackRelease(midiToTone(getBassNoteForChord(c)), c.beats>=4?'1n':'2n');
+    i++;
+    progPlayTimer=setTimeout(next,(c.beats/(PROJ_BPM()/60))*1000);
+  }
+  next();
+}
+function stopProg(){
+  APP.playing=false;
+  clearTimeout(progPlayTimer); progPlayTimer=null;
+  document.querySelectorAll('.prog-chord').forEach(c=>c.classList.remove('prog-playing'));
+  document.querySelectorAll('#play-btn,#play-btn-ex').forEach(b=>{b.textContent='▶';b.classList.remove('active')});
+}
+function togglePlay(){ APP.playing?stopProg():playProgression(); }
+function stopPlay(){ stopProg(); }
+
+// ════════════════════════════════════════════════════════
+// PROGRESSION LIBRARY
+// ════════════════════════════════════════════════════════
+// roman numerals, will be transposed to current key
+const LIBRARY={
+  '定番進行 (J-Pop)':[
+    {name:'王道進行', roman:['IV','V','iii','vi'], beats:4},
+    {name:'カノン進行', roman:['I','V','vi','iii','IV','I','IV','V'], beats:4},
+    {name:'丸サ進行', roman:['IV','V','iii','vi','I','V','vi','vi'], beats:4},
+    {name:'I-V-vi-IV', roman:['I','V','vi','IV'], beats:4},
+    {name:'小室進行', roman:['vi','IV','V','I'], beats:4},
+  ],
+  'シティポップ / ジャズ':[
+    {name:'ii-V-I', roman:['ii','V','I'], beats:4},
+    {name:'ii-V-I-vi', roman:['ii','V','I','vi'], beats:4},
+    {name:'おしゃれ4561', roman:['IV','V','vi','I'], beats:4},
+    {name:'循環コード', roman:['I','vi','ii','V'], beats:4},
+  ],
+  'バラード / 切ない':[
+    {name:'マイナー定番', roman:['vi','IV','I','V'], beats:4},
+    {name:'切ないvi-V', roman:['vi','V','IV','III'], beats:4},
+    {name:'下降進行', roman:['I','vii°','vi','V'], beats:4},
+  ],
+  'ロック / パンク':[
+    {name:'パワーコード進行', roman:['I','IV','V','IV'], beats:4},
+    {name:'I-bVII-IV', roman:['I','VII','IV','I'], beats:4},
+  ],
+  'EDM / ダンス':[
+    {name:'EDM定番', roman:['vi','IV','I','V'], beats:8},
+    {name:'プログレッシブ', roman:['I','V','vi','iii','IV','I','IV','V'], beats:2},
+  ],
+  'アニソン':[
+    {name:'壮大進行', roman:['IV','V','vi','I'], beats:4},
+    {name:'疾走感', roman:['I','V','vi','iii','IV','I','II','V'], beats:2},
+  ],
+};
+
+function renderLibrary(){
+  const el=document.getElementById('lib-body');
+  let h='';
+  Object.entries(LIBRARY).forEach(([genre,patterns])=>{
+    h+=`<div class="genre-section"><div class="genre-title">🎵 ${esc(genre)}</div><div class="pattern-grid">`;
+    patterns.forEach(p=>{ h+=renderPatternCard(p); });
+    h+=`</div></div>`;
+  });
+  el.innerHTML=h;
+}
+
+function romanToChordName(roman, key){
+  const dia=DIATONIC[key]||DIATONIC['C'];
+  const idx=dia.roman.indexOf(roman);
+  if(idx>=0)return dia.chords[idx];
+  // fallback: handle 'II','VII' etc not in diatonic table by transposing from C-major map
+  const cDia=DIATONIC['C'];
+  const cIdx=cDia.roman.findIndex(r=>r.toLowerCase().replace('°','')===roman.toLowerCase().replace('°',''));
+  if(cIdx<0)return dia.chords[0];
+  // transpose: get semitone offset between key root and C, apply to C's chord at cIdx
+  const keyRoot=ROOT_MAP[key.replace('m','')]??0;
+  const baseChord=cDia.chords[cIdx];
+  const baseRoot=chordRoot(baseChord);
+  const isMinorChord=baseChord.includes('m')&&!baseChord.includes('maj');
+  const isDim=baseChord.includes('dim');
+  const newRoot=(baseRoot+keyRoot)%12;
+  let suffix='';
+  if(isDim)suffix='dim'; else if(isMinorChord)suffix='m';
+  return NOTES[newRoot]+suffix;
+}
+
+function renderPatternCard(p){
+  const key=document.getElementById('qc-key').value;
+  const chordNames=p.roman.map(r=>romanToChordName(r,key));
+  return `<div class="pattern-card" onclick='applyLibraryPattern(${JSON.stringify(p).replace(/'/g,"&#39;")})'>
+    <div class="pattern-name">${esc(p.name)}</div>
+    <div class="pattern-roman">${p.roman.join(' - ')}</div>
+    <div class="pattern-meta">${p.roman.length}コード · ${p.beats}拍/コード</div>
+    <div class="pattern-chips">${chordNames.map(c=>`<span class="pattern-chip">${esc(c)}</span>`).join('')}</div>
+  </div>`;
+}
+
+function applyLibraryPattern(p){
+  const key=document.getElementById('qc-key').value;
+  const sec=PROJ.sections.find(s=>s.id===APP.qcSection);
+  if(!sec)return;
+  saveUndo();
+  sec.progression=p.roman.map(r=>{
+    const name=romanToChordName(r,key);
+    return {id:uid(),name,beats:p.beats,notes:chordNameToNotes(name)};
+  });
+  switchView('prog');
+  setStatus('ok',`「${p.name}」を ${sec.name} に適用しました（キー: ${key}）`);
+}
+
+// ════════════════════════════════════════════════════════
+// AI MODE: 新規生成 vs 編集指示
+// ════════════════════════════════════════════════════════
+const EDIT_SUGGESTIONS=[
+  'もっと切ない感じにして',
+  'テンションコードを足してジャズっぽく',
+  '最後を盛り上がる終止にして',
+  '転調を入れて',
+  'コード数を増やして展開を作って',
+  'ベースラインを動かして（ルート以外も使う）',
+  'もっとシンプルな3コードにして',
+  'サブドミナントマイナーを使って',
+  'セカンダリードミナントを足して',
+  'もっとシティポップっぽく',
+];
+
+function setAiMdl(m){
+  APP.aiModel=m;
+  const map={claude:'cl',gemini:'gm',openai:'oa'};
+  Object.values(map).forEach(k=>document.getElementById('ai-'+k)?.classList.remove('act-cl','act-gm','act-oa'));
+  document.getElementById('ai-'+map[m])?.classList.add('act-'+map[m]);
+}
+
+function setAiMode(mode){
+  APP.aiMode=mode;
+  const isEdit=mode==='edit';
+  document.getElementById('aimode-new').classList.toggle('act-cl',!isEdit);
+  document.getElementById('aimode-new').style.color=isEdit?'var(--mu)':'var(--cl)';
+  document.getElementById('aimode-new').style.borderColor=isEdit?'var(--bd)':'var(--cl)';
+  document.getElementById('aimode-edit').classList.toggle('act-cl',isEdit);
+  document.getElementById('aimode-edit').style.color=isEdit?'var(--chd)':'var(--mu)';
+  document.getElementById('aimode-edit').style.borderColor=isEdit?'var(--chd)':'var(--bd)';
+
+  document.getElementById('ai-newgen-sec').style.display=isEdit?'none':'block';
+  document.getElementById('ai-edit-sec').style.display=isEdit?'block':'none';
+  document.getElementById('ai-prompt-label').textContent=isEdit?'指示（必須）':'プロンプト（任意）';
+  document.getElementById('ai-prompt').placeholder=isEdit
+    ? '例: もっと切ない感じにして、最後に転調を入れて'
+    : '例: 切ないサビ用の進行、key=Am';
+  document.getElementById('ai-gen-btn').textContent=isEdit?'✏ 編集を適用':'✦ AI生成';
+
+  const sugWrap=document.getElementById('ai-edit-suggestions');
+  if(isEdit){
+    sugWrap.style.display='flex';
+    sugWrap.innerHTML=EDIT_SUGGESTIONS.map(s=>
+      `<button class="btn" style="font-size:8px" onclick="appendEditSuggestion('${esc(s)}')">${esc(s)}</button>`).join('');
+    updateCurrentProgSummary();
+  }else{
+    sugWrap.style.display='none';
+    sugWrap.innerHTML='';
+  }
+}
+function appendEditSuggestion(text){
+  const ta=document.getElementById('ai-prompt');
+  ta.value=ta.value.trim()?ta.value.trim()+'。'+text:text;
+}
+
+function summarizeProgression(){
+  const sec=PROJ.sections.find(s=>s.id===APP.qcSection);
+  const chords=sec?.progression||[];
+  return {
+    sectionName:sec?.name||'',
+    key:PROJ.key, bpm:PROJ_BPM(),
+    chords: chords.map(c=>({name:c.name,beats:c.beats,roman:romanFor(c.name)})),
+    summaryText: chords.length? chords.map(c=>`${c.name}(${romanFor(c.name)||'?'},${c.beats}♩)`).join(' - ') : '(空の進行)',
+  };
+}
+function updateCurrentProgSummary(){
+  const s=summarizeProgression();
+  document.getElementById('ai-current-summary').innerHTML=
+    `<div style="margin-bottom:4px;color:var(--tx)">${esc(s.sectionName)} / Key:${esc(s.key)} / BPM${s.bpm}</div>`+
+    `<div style="font-size:8px;word-break:break-all">${esc(s.summaryText)}</div>`;
+}
+
+// ════════════════════════════════════════════════════════
+// AI RUN — dispatcher
+// ════════════════════════════════════════════════════════
+async function aiRun(){
+  if(APP.aiMode==='edit') return aiEditProgression();
+  return aiGenerateProgression();
+}
+
+async function aiGenerateProgression(){
+  const key=localStorage.getItem('ml_'+APP.aiModel)||'';
+  if(!key){ setStatus('err','APIキー未設定 (ml_'+APP.aiModel+') — music-lab.htmlで設定してください'); return; }
+  const genre=document.getElementById('ai-genre').value;
+  const mood=document.getElementById('ai-mood').value;
+  const chordCount=parseInt(document.getElementById('ai-chordcount').value)||4;
+  const prompt=document.getElementById('ai-prompt').value.trim();
+  const projKey=document.getElementById('qc-key').value;
+
+  document.getElementById('ai-gen-btn').disabled=true;
+  setStatus('gen','AI生成中 ('+APP.aiModel+')...');
+
+  const sys='あなたはプロの作曲家・音楽理論家です。必ずJSONのみを返してください。前置き不要。';
+  const usr=`ジャンル:${genre}、ムード:${mood}、キー:${projKey}、コード数:${chordCount}個のコード進行を作成してください。
+${prompt?'追加指示: '+prompt:''}
+
+以下のJSON形式のみで返してください:
+{
+  "name": "進行名",
+  "description": "1文で特徴を説明",
+  "key": "${projKey}",
+  "chords": [
+    {"name":"Am","roman":"vi","beats":4},
+    {"name":"F","roman":"IV","beats":4}
+  ]
+}
+chordsは${chordCount}個。nameはコードネーム(例: C, Am, F#dim7, Gmaj7)。romanはローマ数字表記。beatsは拍数(2/4/8等)。`;
+
+  try{
+    let result;
+    if(APP.aiModel==='claude')      result=await aiCallClaude(key,sys,usr);
+    else if(APP.aiModel==='gemini') result=await aiCallGemini(key,sys+'\n'+usr);
+    else                            result=await aiCallOpenAI(key,sys,usr);
+
+    document.getElementById('ai-preview').innerHTML=renderAiPreview(result);
+    document.getElementById('ai-result-area').innerHTML=`
+      <div class="ai-result-card">
+        <div style="color:var(--tx);margin-bottom:4px">${esc(result.name||genre)}</div>
+        <div>${esc(result.description||'')}</div>
+        <div style="margin-top:4px;color:var(--mu)">${(result.chords||[]).length}コード</div>
+      </div>
+      <button class="ai-apply" onclick='applyAiProgression(${JSON.stringify(result).replace(/'/g,"&#39;")})'>✓ 進行に適用</button>`;
+    setStatus('ok','生成完了 — '+(result.chords||[]).length+'コード');
+  }catch(e){
+    setStatus('err',e.message);
+    document.getElementById('ai-result-area').innerHTML=`<div class="ai-result-card err">❌ ${esc(e.message)}</div>`;
+  }
+  document.getElementById('ai-gen-btn').disabled=false;
+}
+
+async function aiEditProgression(){
+  const key=localStorage.getItem('ml_'+APP.aiModel)||'';
+  if(!key){ setStatus('err','APIキー未設定 (ml_'+APP.aiModel+') — music-lab.htmlで設定してください'); return; }
+  const instruction=document.getElementById('ai-prompt').value.trim();
+  if(!instruction){ setStatus('err','編集指示を入力してください'); return; }
+
+  const cur=summarizeProgression();
+  document.getElementById('ai-gen-btn').disabled=true;
+  setStatus('gen','編集適用中 ('+APP.aiModel+')...');
+
+  const sys='あなたはプロの作曲家・音楽理論家です。既存のコード進行に対する編集指示を解釈し、変更後の完全な進行をJSONのみで返してください。前置き不要。';
+  const usr=`現在のコード進行 (セクション: ${cur.sectionName}, Key: ${cur.key}, BPM: ${cur.bpm}):
+${cur.summaryText}
+
+編集指示: 「${instruction}」
+
+指示を反映した「変更後の完全な進行」を以下のJSON形式のみで返してください:
+{
+  "name": "編集後の進行名",
+  "description": "何をどう変えたか1〜2文で説明",
+  "key": "${cur.key}",
+  "chords": [
+    {"name":"Am","roman":"vi","beats":4}
+  ]
+}
+キーを変える指示でない限り key="${cur.key}" のまま。指示に関係ない部分はできるだけ元の進行を維持してください。`;
+
+  try{
+    let result;
+    if(APP.aiModel==='claude')      result=await aiCallClaude(key,sys,usr);
+    else if(APP.aiModel==='gemini') result=await aiCallGemini(key,sys+'\n'+usr);
+    else                            result=await aiCallOpenAI(key,sys,usr);
+
+    document.getElementById('ai-preview').innerHTML=
+      `<div style="margin-bottom:6px;font-size:9px;color:var(--acc)">✏ 編集結果プレビュー（適用前）</div>`+
+      renderAiPreview(result);
+    document.getElementById('ai-result-area').innerHTML=`
+      <div class="ai-result-card">
+        <div style="color:var(--tx);margin-bottom:4px">${esc(result.name||'編集後進行')}</div>
+        <div>${esc(result.description||'')}</div>
+        <div style="margin-top:4px;color:var(--mu)">${(result.chords||[]).length}コード</div>
+      </div>
+      <button class="ai-apply" onclick='applyAiProgression(${JSON.stringify(result).replace(/'/g,"&#39;")})'>✓ この編集を適用</button>`;
+    setStatus('ok','編集案を生成しました — 内容を確認して適用してください');
+  }catch(e){
+    setStatus('err',e.message);
+    document.getElementById('ai-result-area').innerHTML=`<div class="ai-result-card err">❌ ${esc(e.message)}</div>`;
+  }
+  document.getElementById('ai-gen-btn').disabled=false;
+}
+
+function renderAiPreview(result){
+  let h=`<div style="margin-bottom:8px;font-size:11px;color:var(--tx)">${esc(result.name||'')}</div>`;
+  h+=`<div style="margin-bottom:10px;font-size:10px;color:var(--mu)">${esc(result.description||'')}</div>`;
+  h+=`<div style="display:flex;gap:6px;flex-wrap:wrap">`;
+  (result.chords||[]).forEach(c=>{
+    const notes=chordNameToNotes(c.name);
+    h+=`<div class="prog-chord" style="cursor:default" onclick="playChordPreview(${JSON.stringify(notes)})">
+      ${c.roman?`<div class="prog-chord-roman">${esc(c.roman)}</div>`:''}
+      <div class="prog-chord-name">${esc(c.name)}</div>
+      <div class="prog-chord-beats">${c.beats||4}♩</div>
+    </div>`;
+  });
+  h+=`</div>`;
+  return h;
+}
+
+function applyAiProgression(result){
+  const sec=PROJ.sections.find(s=>s.id===APP.qcSection);
+  if(!sec)return;
+  saveUndo();
+  if(result.key && result.key!==PROJ.key){
+    PROJ.key=result.key;
+    document.getElementById('qc-key').value=result.key;
+    updateChordPalette();
+  }
+  sec.progression=(result.chords||[]).map(c=>({
+    id:uid(), name:c.name, beats:c.beats||4, notes:chordNameToNotes(c.name)
+  }));
+  switchView('prog');
+  setStatus('ok',`「${result.name||''}」を ${sec.name} に適用しました`);
+}
+
+function _parseJ(t){return JSON.parse(t.replace(/```json\s*/g,'').replace(/```\s*/g,'').trim())}
+async function aiCallClaude(key,sys,usr){
+  const r=await fetch('https://api.anthropic.com/v1/messages',{method:'POST',
+    headers:{'Content-Type':'application/json'},
+    body:JSON.stringify({model:'claude-sonnet-4-20250514',max_tokens:1000,system:sys,messages:[{role:'user',content:usr}]})});
+  if(!r.ok)throw new Error('Claude HTTP '+r.status);
+  const d=await r.json();
+  return _parseJ(d.content?.find(b=>b.type==='text')?.text||'');
+}
+async function aiCallGemini(key,prompt){
+  const r=await fetch(`https://generativelanguage.googleapis.com/v1beta/models/gemini-2.0-flash:generateContent?key=${key}`,
+    {method:'POST',headers:{'Content-Type':'application/json'},
+    body:JSON.stringify({contents:[{parts:[{text:prompt}]}],generationConfig:{maxOutputTokens:1000}})});
+  if(!r.ok)throw new Error('Gemini HTTP '+r.status);
+  const d=await r.json();
+  return _parseJ(d.candidates?.[0]?.content?.parts?.[0]?.text||'');
+}
+async function aiCallOpenAI(key,sys,usr){
+  const r=await fetch('https://api.openai.com/v1/chat/completions',{method:'POST',
+    headers:{'Content-Type':'application/json','Authorization':'Bearer '+key},
+    body:JSON.stringify({model:'gpt-4o-mini',max_tokens:1000,messages:[{role:'system',content:sys},{role:'user',content:usr}]})});
+  if(!r.ok)throw new Error('OpenAI HTTP '+r.status);
+  const d=await r.json();
+  return _parseJ(d.choices?.[0]?.message?.content||'');
+}
+
+// ════════════════════════════════════════════════════════
+// EXPORT — MIDI (Chord ch1 + Bass ch2)
+// ════════════════════════════════════════════════════════
+function exportMIDI(){
+  const sec=PROJ.sections.find(s=>s.id===APP.qcSection);
+  if(!sec?.progression.length){setStatus('err','進行が空です');return;}
+  const bpm=PROJ_BPM(), ppq=480;
+
+  function vl(v){if(v<0x80)return[v];const b=[];b.unshift(v&0x7f);v>>=7;while(v){b.unshift((v&0x7f)|0x80);v>>=7;}return b;}
+  function s2b(s){return[...s].map(c=>c.charCodeAt(0))}
+  function meta(t,s){const b=s2b(s);return[0,0xFF,t,...vl(b.length),...b]}
+  function tempoTrk(){
+    const us=Math.round(60000000/bpm);
+    return[...meta(0x03,PROJ.name||'Progression'),0,0xFF,0x51,3,(us>>16)&0xFF,(us>>8)&0xFF,us&0xFF,0,0xFF,0x58,4,4,2,24,8,0,0xFF,0x2F,0];
+  }
+
+  const chordEvs=[],bassEvs=[];
+  let beat=0;
+  sec.progression.forEach(c=>{
+    const st=Math.round(beat*ppq), dt=Math.round(c.beats*ppq);
+    c.notes.forEach(p=>{
+      chordEvs.push({t:st,d:[0x90,p,60]});
+      chordEvs.push({t:st+dt,d:[0x80,p,0]});
+    });
+    const bp=getBassNoteForChord(c);
+    bassEvs.push({t:st,d:[0x90,bp,80]});
+    bassEvs.push({t:st+dt,d:[0x80,bp,0]});
+    beat+=c.beats;
+  });
+
+  function buildTrk(name,evs,ch,prog){
+    evs.sort((a,b)=>a.t-b.t);
+    const d=[...meta(0x03,name),0,0xC0|ch,prog];
+    let last=0;
+    evs.forEach(e=>{ d.push(...vl(e.t-last),e.d[0]|ch,e.d[1],e.d[2]); last=e.t; });
+    d.push(0,0xFF,0x2F,0);
+    return d;
+  }
+  function chunk(tag,data){const l=data.length;return[...s2b(tag),(l>>24)&0xFF,(l>>16)&0xFF,(l>>8)&0xFF,l&0xFF,...data]}
+  const hdr=[0x4D,0x54,0x68,0x64,0,0,0,6,0,1,0,3,(ppq>>8)&0xFF,ppq&0xFF];
+  const all=[
+    chunk('MTrk',tempoTrk()),
+    chunk('MTrk',buildTrk('Chords',chordEvs,0,0)),
+    chunk('MTrk',buildTrk('Bass',bassEvs,1,32)),
+  ];
+  const midi=new Uint8Array([...hdr,...all.flat()]);
+  const blob=new Blob([midi],{type:'audio/midi'});
+  const url=URL.createObjectURL(blob);
+  const a=document.createElement('a');
+  const name=(document.getElementById('project-name').value||'progression').replace(/\s+/g,'-');
+  a.href=url; a.download=`${name}-${Date.now()}.mid`;
+  document.body.appendChild(a); a.click();
+  setTimeout(()=>{URL.revokeObjectURL(url);a.remove()},1000);
+  setStatus('ok','MIDIをエクスポートしました（ch1:コード, ch2:ベース）');
+}
+
+// ════════════════════════════════════════════════════════
+// EXPORT — JSON (for iCloud / score-editor-v2 / beat-lab)
+// ════════════════════════════════════════════════════════
+function buildExportData(){
+  const sec=PROJ.sections.find(s=>s.id===APP.qcSection);
+  const progression=sec?.progression||[];
+  let beat=0;
+  const chordSections=[{tag:sec?.name||'Section',progression:progression.map(c=>{
+    const item={chord:c.name,beats:c.beats,notes:c.notes};
+    return item;
+  })}];
+  const bassNotes=[];
+  beat=0;
+  progression.forEach(c=>{
+    bassNotes.push({pitch:getBassNoteForChord(c),startBeat:beat,durationBeats:c.beats,vel:80});
+    beat+=c.beats;
+  });
+  return {
+    version:'1.0', source:'chord-lab',
+    name: document.getElementById('project-name').value || 'Untitled Progression',
+    bpm: PROJ_BPM(), key: PROJ.key, timeSig:4,
+    sectionName: sec?.name||'',
+    melody:{notes:[]},
+    chords:{key:PROJ.key, sections:chordSections},
+    bass:{notes:bassNotes},
+    drums:{notes:[]},
+    exported:new Date().toISOString()
+  };
+}
+function exportJSON(){
+  const data=buildExportData();
+  const blob=new Blob([JSON.stringify(data,null,2)],{type:'application/json'});
+  const url=URL.createObjectURL(blob);
+  const a=document.createElement('a');
+  const name=(document.getElementById('project-name').value||'progression').replace(/\s+/g,'-');
+  a.href=url; a.download=`${name}-${Date.now()}.json`;
+  document.body.appendChild(a); a.click();
+  setTimeout(()=>{URL.revokeObjectURL(url);a.remove()},1000);
+  setStatus('ok','JSONをエクスポートしました。Files.app→iCloud Driveに保存してください。');
+}
+
+function importJSON(input){
+  const file=input.files[0];
+  if(!file)return;
+  const r=new FileReader();
+  r.onload=ev=>{
+    try{
+      const data=JSON.parse(ev.target.result);
+      saveUndo();
+      if(data.bpm){document.getElementById('bpm-sl').value=data.bpm;setBpm(data.bpm);}
+      if(data.key){PROJ.key=data.key;document.getElementById('qc-key').value=data.key;updateChordPalette();}
+      const sec=PROJ.sections.find(s=>s.id===APP.qcSection);
+      if(sec && data.chords?.sections?.length){
+        const newProg=[];
+        data.chords.sections.forEach(s=>s.progression.forEach(item=>{
+          const name=item.chord||item.name;
+          newProg.push({id:uid(),name,beats:item.beats||4,notes:item.notes||chordNameToNotes(name)});
+        }));
+        sec.progression=newProg;
+      }
+      if(data.name)document.getElementById('project-name').value=data.name;
+      switchView('prog');
+      setStatus('ok','JSONをインポートしました');
+    }catch(e){ setStatus('err','JSONパース失敗: '+e.message); }
+  };
+  r.readAsText(file);
+}
+
+// ════════════════════════════════════════════════════════
+// EXPORT — score-editor-v2 / beat-lab 連携 (URL hash)
+// ════════════════════════════════════════════════════════
+function sendToScoreEditor(){
+  const url=document.getElementById('se-url').value.trim();
+  if(!url){ setStatus('err','score-editor-v2.htmlのURLを入力してください'); return; }
+  const data=buildExportData();
+  const json=JSON.stringify(data);
+  const b64=btoa(unescape(encodeURIComponent(json)));
+  const target=url+(url.includes('#')?'':'#')+'import='+encodeURIComponent(b64);
+  setStatus('ok','score-editor-v2を開いています...');
+  window.location.href=target;
+}
+
+function sendToBeatLab(){
+  const url=document.getElementById('bl-url').value.trim();
+  if(!url){ setStatus('err','beat-lab.htmlのURLを入力してください'); return; }
+  // share BPM + key context only
+  const data={version:'1.0',source:'chord-lab',bpm:PROJ_BPM(),key:PROJ.key,name:document.getElementById('project-name').value,
+    melody:{notes:[]},chords:null,bass:{notes:[]},drums:{notes:[]}};
+  const json=JSON.stringify(data);
+  const b64=btoa(unescape(encodeURIComponent(json)));
+  const target=url+(url.includes('#')?'':'#')+'import='+encodeURIComponent(b64);
+  setStatus('ok','beat-labを開いています...');
+  window.location.href=target;
+}
+
+// 受信側 (chord-labが他アプリから起動された場合)
+function checkIncomingImport(){
+  const hash=window.location.hash;
+  const m=hash.match(/import=([^&]+)/);
+  if(!m)return;
+  try{
+    const json=decodeURIComponent(escape(atob(decodeURIComponent(m[1]))));
+    const data=JSON.parse(json);
+    saveUndo();
+    if(data.bpm){document.getElementById('bpm-sl').value=data.bpm;setBpm(data.bpm);}
+    if(data.key){PROJ.key=data.key;document.getElementById('qc-key').value=data.key;updateChordPalette();}
+    const sec=PROJ.sections.find(s=>s.id===APP.qcSection);
+    if(sec && data.chords?.sections?.length){
+      const newProg=[];
+      data.chords.sections.forEach(s=>s.progression.forEach(item=>{
+        const name=item.chord||item.name;
+        newProg.push({id:uid(),name,beats:item.beats||4,notes:item.notes||chordNameToNotes(name)});
+      }));
+      sec.progression=newProg;
+    }
+    history.replaceState(null,'',window.location.pathname+window.location.search);
+    setStatus('ok','データを受信しました: '+(data.name||data.source||''));
+    renderProg();
+  }catch(e){ console.warn('import parse failed',e); }
+}
+
+// ════════════════════════════════════════════════════════
+// UNDO / REDO
+// ════════════════════════════════════════════════════════
+function saveUndo(){
+  APP.undoStack.push(JSON.stringify({sections:PROJ.sections,key:PROJ.key}));
+  if(APP.undoStack.length>60)APP.undoStack.shift();
+  APP.redoStack=[];
+}
+function undoA(){
+  if(!APP.undoStack.length)return;
+  APP.redoStack.push(JSON.stringify({sections:PROJ.sections,key:PROJ.key}));
+  const d=JSON.parse(APP.undoStack.pop());
+  PROJ.sections=d.sections; PROJ.key=d.key;
+  document.getElementById('qc-key').value=PROJ.key;
+  refreshAll();
+}
+function redoA(){
+  if(!APP.redoStack.length)return;
+  APP.undoStack.push(JSON.stringify({sections:PROJ.sections,key:PROJ.key}));
+  const d=JSON.parse(APP.redoStack.pop());
+  PROJ.sections=d.sections; PROJ.key=d.key;
+  document.getElementById('qc-key').value=PROJ.key;
+  refreshAll();
+}
+function refreshAll(){
+  if(APP.view==='prog') renderProg();
+  if(APP.view==='lib')  renderLibrary();
+  if(APP.view==='ai' && APP.aiMode==='edit') updateCurrentProgSummary();
+}
+
+// ════════════════════════════════════════════════════════
+// KEYBOARD
+// ════════════════════════════════════════════════════════
+document.addEventListener('keydown',e=>{
+  if(e.target.tagName==='INPUT'||e.target.tagName==='TEXTAREA'||e.target.tagName==='SELECT')return;
+  if(e.code==='Space'){e.preventDefault();togglePlay();}
+  if((e.ctrlKey||e.metaKey)&&e.key==='z'){e.preventDefault();undoA();}
+  if((e.ctrlKey||e.metaKey)&&(e.key==='y'||(e.shiftKey&&e.key==='z'))){e.preventDefault();redoA();}
+});
+
+// ════════════════════════════════════════════════════════
+// BOOT
+// ════════════════════════════════════════════════════════
+(function boot(){
+  PROJ.key=document.getElementById('qc-key').value;
+  // default progression
+  PROJ.sections[0].progression=['C','Am','F','G'].map(n=>({id:uid(),name:n,beats:4,notes:chordNameToNotes(n)}));
+  renderProg();
+  setStatus('ok','CHORD//LAB 起動完了 — PROGでコード進行を作成、PROGRESSIONSでプリセット選択');
+  checkIncomingImport();
+})();
+</script>
+</body>
+</html>
+chord-lab.html
+chord-lab.html を表示しています。
