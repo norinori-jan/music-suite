@@ -194,7 +194,8 @@ body{background:var(--bg);color:var(--text);font-family:'Inter','Hiragino Sans',
     <div class="empty-cards" id="empty-msg">フレーズをまだ保存していません。<br>録音してカードを作りましょう。</div>
   </div>
   <div class="sidebar-footer">
-    <button class="btn-export" id="btn-export">JSON エクスポート</button>
+    <button class="btn-export" id="btn-export" style="margin-bottom:6px">JSON エクスポート</button>
+    <button class="btn-export" id="btn-send-score" style="border-color:rgba(168,85,247,0.3);color:#c084fc">🎼 score-editor へ送る</button>
   </div>
 </aside>
 
@@ -1007,6 +1008,7 @@ function commitCard(fromAi) {
   renderCardList();
   selectCard(card.id);
   maybeShowAiPanel();
+  saveCardsToStorage();
   showToast(`「${name}」を保存しました`);
 }
 
@@ -1054,6 +1056,7 @@ function deleteCard(id) {
   state.cards = state.cards.filter(c=>c.id!==id);
   if (state.activeCardId===id) { state.activeCardId=null; previewPanel.classList.remove('visible'); }
   renderCardList();
+  saveCardsToStorage();
 }
 
 /* ═══════════════════════════════
@@ -1095,6 +1098,49 @@ btnExport.addEventListener('click', () => {
 });
 
 /* ═══════════════════════════════
+   SCORE-EDITOR 連携
+   cards[] → 共通フォーマット変換 → URLハッシュで送信
+═══════════════════════════════ */
+$('btn-send-score').addEventListener('click', () => {
+  if (!state.cards.length) { showToast('カードがありません'); return; }
+  // 全カードのnotes を1本のメロディトラックに結合（カード順に配置）
+  const BPM = 120;
+  const melodyNotes = [];
+  let beatOffset = 0;
+  state.cards.forEach(card => {
+    const maxDur = card.notes.reduce((m,n) => Math.max(m, n.start + n.dur), 0);
+    card.notes.forEach(n => {
+      melodyNotes.push({
+        pitch:         n.midiR || 60,
+        startBeat:     parseFloat((beatOffset + n.start).toFixed(3)),
+        durationBeats: parseFloat(n.dur.toFixed(3)),
+        vel:           Math.round((n.conf || 0.8) * 80 + 20),
+      });
+    });
+    beatOffset += Math.max(maxDur, 4); // カード間に最低4拍
+  });
+  const payload = {
+    version:  '1.0',
+    source:   'vocal-lab',
+    name:     `vocal-lab (${state.cards.length}フレーズ)`,
+    bpm:      BPM,
+    timeSig:  4,
+    melody:   { notes: melodyNotes },
+    chords:   null,
+    bass:     { notes: [] },
+    drums:    { notes: [] },
+    exported: new Date().toISOString(),
+  };
+  const b64 = btoa(unescape(encodeURIComponent(JSON.stringify(payload))));
+  // score-editor-v2.html のパスを ../apps/ からの相対で組み立て
+  // index.html経由なら ../score-editor-v2.html、直接開いた場合は同フォルダ
+  const seUrl = location.href.includes('apps/')
+    ? 'score-editor-v2.html'
+    : 'apps/score-editor-v2.html';
+  window.location.href = seUrl + '#import=' + encodeURIComponent(b64);
+});
+
+/* ═══════════════════════════════
    TOAST / UTILS
 ═══════════════════════════════ */
 function showToast(msg) {
@@ -1104,11 +1150,46 @@ function showToast(msg) {
 function escHtml(s) { return s.replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;'); }
 
 /* ═══════════════════════════════
+   LOCALSTORAGE 自動保存・復元
+   キー: vl3_cards  値: カード配列JSON
+   ※ blobは保存不可なので除外して保存
+═══════════════════════════════ */
+const CARDS_KEY = 'vl3_cards';
+
+function saveCardsToStorage() {
+  try {
+    const saveable = state.cards.map(c => {
+      const { blob, ...rest } = c;  // blobは除外
+      return rest;
+    });
+    localStorage.setItem(CARDS_KEY, JSON.stringify(saveable));
+  } catch(e) {
+    console.warn('localStorage save failed:', e);
+  }
+}
+
+function loadCardsFromStorage() {
+  try {
+    const raw = localStorage.getItem(CARDS_KEY);
+    if (!raw) return;
+    const cards = JSON.parse(raw);
+    if (!Array.isArray(cards) || !cards.length) return;
+    state.cards = cards;
+    renderCardList();
+    showToast(`${cards.length}件のカードを復元しました`);
+  } catch(e) {
+    console.warn('localStorage load failed:', e);
+  }
+}
+
+/* ═══════════════════════════════
    INIT
 ═══════════════════════════════ */
 // APIキー復元
 const _saved = localStorage.getItem('vl3_claude_key');
 if (_saved) $('apikey-input').value = _saved;
+// カード復元
+loadCardsFromStorage();
 renderCardList();
 setAiMode('auto');
 </script>
