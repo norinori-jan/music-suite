@@ -415,6 +415,9 @@ setTimeout(resizeCanvases, 80);
    NOTE UTILS
 ═══════════════════════════════ */
 const NOTE_NAMES = ['C','C#','D','D#','E','F','F#','G','G#','A','A#','B'];
+function noteName(midiR) {
+  return NOTE_NAMES[((midiR % 12) + 12) % 12] + (Math.floor(midiR / 12) - 1);
+}
 function freqToNote(hz) {
   if (hz <= 0) return null;
   const midi = 12 * Math.log2(hz / 440) + 69;
@@ -1183,6 +1186,57 @@ function loadCardsFromStorage() {
   }
 }
 
+function normalizeImportedCards(data) {
+  const cards = Array.isArray(data) ? data : (Array.isArray(data?.cards) ? data.cards : []);
+  return cards.map((card, idx) => ({
+    id: card.id || Date.now() + idx,
+    name: card.name || `フレーズ ${idx + 1}`,
+    emotion: card.emotion || 'neutral',
+    aiMode: card.aiMode || 'off',
+    hasAi: !!card.hasAi,
+    notes: (card.notes || []).map(n => ({
+      name: n.name || noteName(n.midiR || n.pitch || 60),
+      midiR: n.midiR || n.pitch || 60,
+      hz: n.hz || noteToFreq(n.midiR || n.pitch || 60),
+      start: n.start ?? n.startBeat ?? 0,
+      dur: n.dur ?? n.durationBeats ?? 1,
+      conf: n.conf ?? n.confidence ?? 0.8,
+    })),
+    rawNotes: (card.rawNotes || card.notes || []).map(n => ({
+      name: n.name || noteName(n.midiR || n.pitch || 60),
+      midiR: n.midiR || n.pitch || 60,
+      hz: n.hz || noteToFreq(n.midiR || n.pitch || 60),
+      start: n.start ?? n.startBeat ?? 0,
+      dur: n.dur ?? n.durationBeats ?? 1,
+      conf: n.conf ?? n.confidence ?? 0.8,
+    })),
+    aiComment: card.aiComment || '',
+    createdAt: card.createdAt || new Date().toISOString(),
+  })).filter(card => card.notes.length);
+}
+
+function checkIncomingImport() {
+  const m = window.location.hash.match(/import=([^&]+)/);
+  if (!m) return false;
+  try {
+    const json = decodeURIComponent(escape(atob(decodeURIComponent(m[1]))));
+    const cards = normalizeImportedCards(JSON.parse(json));
+    if (!cards.length) throw new Error('カードが含まれていません');
+    state.cards = cards;
+    state.activeCardId = cards[0].id;
+    saveCardsToStorage();
+    renderCardList();
+    selectCard(cards[0].id);
+    history.replaceState(null, '', window.location.pathname + window.location.search);
+    showToast(`${cards.length}件のカードを読み込みました`);
+    return true;
+  } catch(e) {
+    console.warn('checkIncomingImport failed:', e);
+    showToast('受信データの読み込みに失敗しました');
+    return false;
+  }
+}
+
 /* ═══════════════════════════════
    INIT
 ═══════════════════════════════ */
@@ -1190,7 +1244,7 @@ function loadCardsFromStorage() {
 const _saved = localStorage.getItem('vl3_claude_key');
 if (_saved) $('apikey-input').value = _saved;
 // カード復元
-loadCardsFromStorage();
+if (!checkIncomingImport()) loadCardsFromStorage();
 renderCardList();
 setAiMode('auto');
 </script>

@@ -184,7 +184,7 @@ html,body{min-height:100vh;background:var(--bg);color:var(--tx);font-family:'Int
   <a class="app-card score" href="apps/score-editor-v2.html">
     <div class="card-icon">🎼</div>
     <div><span class="card-name">score-editor</span><span class="card-version">v2</span></div>
-    <div class="card-desc">ピアノロール・ドラムグリッド・アレンジメントビューを統合。chord-lab / beat-lab の JSON を直接インポート可能。</div>
+    <div class="card-desc">ピアノロール・ドラムグリッド・アレンジメントビューを統合。vocal-lab / canvas / chord-lab / beat-lab の JSON を直接インポート可能。</div>
     <div class="card-tags">
       <span class="card-tag">ピアノロール</span>
       <span class="card-tag">DRUM</span>
@@ -232,6 +232,14 @@ html,body{min-height:100vh;background:var(--bg);color:var(--tx);font-family:'Int
       </div>
     </div>
     <div class="flow-card">
+      <div class="flow-app"><div class="flow-dot" style="background:#ec4899"></div>作曲キャンバス</div>
+      <div class="flow-items">
+        <div class="flow-item">vl3_cards を自動読み込み</div>
+        <div class="flow-item">構成順にメロディ結合</div>
+        <div class="flow-item">score-editor へ送信</div>
+      </div>
+    </div>
+    <div class="flow-card">
       <div class="flow-app"><div class="flow-dot" style="background:var(--green)"></div>chord-lab</div>
       <div class="flow-items">
         <div class="flow-item">コード進行 (JSON)</div>
@@ -251,8 +259,8 @@ html,body{min-height:100vh;background:var(--bg);color:var(--tx);font-family:'Int
       <div class="flow-app"><div class="flow-dot" style="background:var(--ai-hi)"></div>score-editor v2</div>
       <div class="flow-items">
         <div class="flow-item">全トラック統合</div>
+        <div class="flow-item">vocal/canvas/chord/beat受信</div>
         <div class="flow-item">MIDI (Format 1) 書き出し</div>
-        <div class="flow-item">GarageBand 連携</div>
       </div>
     </div>
   </div>

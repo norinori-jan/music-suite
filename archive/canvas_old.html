@@ -1,0 +1,690 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover,user-scalable=no">
+<title>作曲キャンバス — music-suite</title>
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="theme-color" content="#0a0a0d">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+<script src="https://cdnjs.cloudflare.com/ajax/libs/tone/14.8.49/Tone.js"></script>
+<style>
+:root{
+  --bg:#0a0a0d;--bg2:#121217;--bg3:#1a1a22;--bg4:#22222e;
+  --bd:rgba(255,255,255,0.07);--bd2:rgba(255,255,255,0.13);
+  --tx:#eeedf8;--tx2:#8886a0;--tx3:#4a4860;
+  --acc:#7f77dd;--acc-hi:#afa9ec;--acc-bg:rgba(127,119,221,0.1);
+  --green:#1d9e75;--green-hi:#5dcaa5;--green-bg:rgba(29,158,117,0.1);
+  --amber:#ef9f27;--amber-bg:rgba(239,159,39,0.08);
+  --red:#e24b4a;--red-bg:rgba(226,75,74,0.08);
+  --cv:#ec4899;--cv-hi:#f472b6;--cv-bg:rgba(236,72,153,0.1);--cv-bd:rgba(236,72,153,0.3);
+  --r:10px;--r-lg:16px;
+}
+*{box-sizing:border-box;margin:0;padding:0;-webkit-tap-highlight-color:transparent;user-select:none}
+html,body{height:100%;overflow:hidden;background:var(--bg);color:var(--tx);font-family:'Inter',sans-serif;font-size:14px}
+body{display:flex;flex-direction:column}
+
+/* HEADER */
+header{padding:10px 16px;border-bottom:0.5px solid var(--bd);display:flex;align-items:center;gap:10px;flex-shrink:0;background:var(--bg);z-index:50}
+.back-link{font-size:12px;color:var(--tx3);text-decoration:none;display:flex;align-items:center;gap:4px;flex-shrink:0}
+.back-link:hover{color:var(--tx2)}
+.title-wrap{flex:1;min-width:0}
+.title{font-size:14px;font-weight:600;display:flex;align-items:center;gap:6px}
+.title .badge{font-size:9px;font-weight:600;padding:1px 7px;border-radius:20px;background:var(--cv-bg);color:var(--cv-hi);border:0.5px solid var(--cv-bd)}
+.proj-input{background:none;border:none;color:var(--tx3);font-size:11px;font-family:'Inter',sans-serif;outline:none;width:160px}
+.proj-input:focus{color:var(--tx2)}
+.hbtn{padding:6px 12px;border:0.5px solid var(--bd2);background:none;color:var(--tx2);border-radius:var(--r);font-size:11px;cursor:pointer;transition:all .15s;white-space:nowrap;font-family:'Inter',sans-serif}
+.hbtn:hover{background:var(--bg3);color:var(--tx)}
+.hbtn.primary{border-color:var(--cv-bd);background:var(--cv-bg);color:var(--cv-hi)}
+
+/* TOOLBAR */
+.toolbar{padding:7px 16px;border-bottom:0.5px solid var(--bd);display:flex;align-items:center;gap:8px;flex-shrink:0;background:var(--bg2);overflow-x:auto}
+.tbtn{padding:5px 11px;border:0.5px solid var(--bd2);background:none;color:var(--tx2);border-radius:var(--r);font-size:11px;cursor:pointer;white-space:nowrap;transition:all .15s;font-family:'Inter',sans-serif;flex-shrink:0}
+.tbtn:hover{background:var(--bg3);color:var(--tx)}
+.tsep{width:1px;height:18px;background:var(--bd2);flex-shrink:0}
+.zone-swatch-row{display:flex;gap:5px;flex-shrink:0}
+.zone-swatch{width:18px;height:18px;border-radius:5px;cursor:pointer;border:2px solid transparent;flex-shrink:0;transition:transform .12s}
+.zone-swatch:hover{transform:scale(1.15)}
+.count-disp{font-size:11px;color:var(--tx3);flex-shrink:0;margin-left:auto;white-space:nowrap}
+
+/* VIEWPORT */
+.viewport{flex:1;overflow:hidden;position:relative;background:
+  radial-gradient(circle,rgba(255,255,255,0.04) 1px,transparent 1px) 0 0/22px 22px,
+  var(--bg);cursor:grab}
+.viewport.panning{cursor:grabbing}
+.canvas-content{position:absolute;top:0;left:0;width:3000px;height:3000px;transform-origin:0 0}
+
+/* ZONES */
+.zone{position:absolute;border-radius:14px;border:1.5px dashed;display:flex;flex-direction:column;pointer-events:none}
+.zone-head{pointer-events:auto;cursor:grab;padding:6px 10px;display:flex;align-items:center;gap:6px;border-radius:12px 12px 0 0}
+.zone-head:active{cursor:grabbing}
+.zone-name{font-size:11px;font-weight:600;flex:1;background:none;border:none;outline:none;color:inherit;font-family:'Inter',sans-serif;min-width:0}
+.zone-del{pointer-events:auto;background:none;border:none;color:inherit;opacity:.5;cursor:pointer;font-size:13px;padding:2px 4px;flex-shrink:0}
+.zone-del:hover{opacity:1}
+.zone-count{font-size:9px;opacity:.7;flex-shrink:0;white-space:nowrap}
+.zone-resize{position:absolute;right:0;bottom:0;width:22px;height:22px;cursor:nwse-resize;pointer-events:auto}
+.zone-resize::after{content:'';position:absolute;right:5px;bottom:5px;width:8px;height:8px;border-right:2px solid;border-bottom:2px solid;opacity:.4}
+
+/* CARDS */
+.pcard{position:absolute;width:148px;background:var(--bg2);border:1px solid var(--bd2);border-radius:var(--r);padding:9px 10px 8px;cursor:grab;pointer-events:auto;box-shadow:0 2px 10px rgba(0,0,0,0.3);transition:box-shadow .15s,border-color .15s}
+.pcard:active{cursor:grabbing}
+.pcard.dragging{box-shadow:0 8px 28px rgba(0,0,0,0.5);z-index:100;border-color:var(--cv-hi)}
+.pcard-top{display:flex;align-items:center;justify-content:space-between;margin-bottom:5px}
+.pcard-name{font-size:12px;font-weight:600;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;flex:1;min-width:0}
+.pcard-emo{font-size:8px;font-weight:600;padding:1px 6px;border-radius:20px;flex-shrink:0;margin-left:4px}
+.pcard-spark{width:100%;height:28px;margin-bottom:5px;display:block}
+.pcard-meta{font-size:9px;color:var(--tx3);display:flex;justify-content:space-between;align-items:center}
+.pcard-play{background:none;border:none;color:var(--tx2);cursor:pointer;font-size:12px;padding:2px 5px;border-radius:4px;flex-shrink:0}
+.pcard-play:hover{background:var(--bg3);color:var(--cv-hi)}
+.pcard-play.playing{color:var(--cv-hi)}
+
+/* EMPTY STATE */
+.empty-hint{position:absolute;top:50%;left:50%;transform:translate(-50%,-50%);text-align:center;color:var(--tx3);font-size:13px;line-height:2;pointer-events:none;white-space:nowrap}
+.empty-hint .ei{font-size:38px;opacity:.4;margin-bottom:6px}
+
+/* ZOOM CONTROLS */
+.zoom-ctrl{position:absolute;right:14px;bottom:14px;display:flex;flex-direction:column;gap:5px;z-index:40}
+.zbtn{width:32px;height:32px;border-radius:8px;border:0.5px solid var(--bd2);background:var(--bg2);color:var(--tx2);font-size:15px;cursor:pointer;display:flex;align-items:center;justify-content:center}
+.zbtn:hover{background:var(--bg3);color:var(--tx)}
+
+/* DETAIL MODAL */
+.modal-ov{position:fixed;inset:0;background:rgba(5,5,8,0.82);z-index:200;display:none;align-items:flex-end;justify-content:center}
+.modal-ov.open{display:flex}
+.modal{background:var(--bg2);border-radius:18px 18px 0 0;width:100%;max-width:520px;max-height:78dvh;overflow-y:auto;border-top:0.5px solid var(--bd2)}
+.modal-head{padding:16px 18px 10px;display:flex;align-items:center;gap:10px;border-bottom:0.5px solid var(--bd)}
+.modal-head h3{font-size:15px;font-weight:600;flex:1}
+.modal-close{background:var(--bg3);border:none;color:var(--tx2);width:28px;height:28px;border-radius:50%;cursor:pointer;font-size:13px}
+.modal-body{padding:16px 18px}
+.detail-row{display:flex;justify-content:space-between;padding:7px 0;border-bottom:0.5px solid var(--bd);font-size:12px}
+.detail-row span:first-child{color:var(--tx3)}
+.modal-spark{width:100%;height:60px;margin:12px 0;border:0.5px solid var(--bd);border-radius:var(--r);background:var(--bg)}
+.modal-comment{font-size:12px;color:var(--tx2);line-height:1.7;background:var(--bg);border-radius:var(--r);padding:11px 13px;margin-top:10px;border:0.5px solid var(--bd)}
+.modal-actions{display:flex;gap:8px;margin-top:14px}
+.mabtn{flex:1;padding:11px;border-radius:var(--r);border:0.5px solid var(--bd2);background:none;color:var(--tx2);font-size:12px;cursor:pointer;font-family:'Inter',sans-serif}
+.mabtn:hover{background:var(--bg3);color:var(--tx)}
+.mabtn.danger{border-color:rgba(226,75,74,0.3);color:var(--red)}
+.mabtn.primary{border-color:var(--cv-bd);background:var(--cv-bg);color:var(--cv-hi)}
+
+/* TOAST */
+.toast{position:fixed;bottom:18px;left:50%;transform:translateX(-50%) translateY(60px);background:var(--bg3);border:0.5px solid var(--bd2);border-radius:var(--r);padding:8px 18px;font-size:12px;color:var(--tx);transition:transform .25s;pointer-events:none;z-index:300}
+.toast.show{transform:translateX(-50%) translateY(0)}
+
+::-webkit-scrollbar{width:3px;height:3px}
+::-webkit-scrollbar-thumb{background:var(--bg4);border-radius:3px}
+</style>
+</head>
+<body>
+
+<header>
+  <a class="back-link" href="../index.html">← suite</a>
+  <div class="title-wrap">
+    <div class="title">🗺️ 作曲キャンバス<span class="badge">canvas</span></div>
+    <input class="proj-input" id="proj-name" value="Untitled Canvas" oninput="onProjNameChange()">
+  </div>
+  <button class="hbtn" onclick="exportJSON()">📦 JSON</button>
+  <label class="hbtn" style="cursor:pointer">📥 取込<input type="file" accept=".json" onchange="importFile(this)" style="display:none"></label>
+  <button class="hbtn primary" onclick="saveAsProject()">💾 suiteへ保存</button>
+</header>
+
+<div class="toolbar">
+  <button class="tbtn" onclick="addZone()">＋ ゾーン追加</button>
+  <div class="zone-swatch-row" id="zone-swatch-row"></div>
+  <div class="tsep"></div>
+  <button class="tbtn" onclick="resetLayout()">整列リセット</button>
+  <button class="tbtn" onclick="clearAll()" style="color:var(--red)">🗑 全削除</button>
+  <span class="count-disp" id="count-disp">0枚</span>
+</div>
+
+<div class="viewport" id="viewport">
+  <div class="canvas-content" id="canvas-content">
+    <div class="empty-hint" id="empty-hint">
+      <div class="ei">🗺️</div>
+      <div>カードがありません<br>vocal-lab v3 から送るか、JSONを取込してください</div>
+    </div>
+  </div>
+  <div class="zoom-ctrl">
+    <button class="zbtn" onclick="zoomBy(1.2)">＋</button>
+    <button class="zbtn" onclick="zoomReset()">⊡</button>
+    <button class="zbtn" onclick="zoomBy(0.83)">－</button>
+  </div>
+</div>
+
+<!-- DETAIL MODAL -->
+<div class="modal-ov" id="modal" onclick="closeModalOv(event)">
+  <div class="modal">
+    <div class="modal-head">
+      <h3 id="m-name">—</h3>
+      <button class="modal-close" onclick="closeModal()">✕</button>
+    </div>
+    <div class="modal-body">
+      <div class="detail-row"><span>感情タグ</span><span id="m-emotion">—</span></div>
+      <div class="detail-row"><span>ノート数</span><span id="m-notecount">—</span></div>
+      <div class="detail-row"><span>ゾーン</span><span id="m-zone">—</span></div>
+      <svg class="modal-spark" id="m-spark"></svg>
+      <div style="display:flex;gap:8px">
+        <button class="mabtn" onclick="playCard(currentDetailId,false)">▶ 生データ再生</button>
+        <button class="mabtn primary" onclick="playCard(currentDetailId,true)">▶ AI補正後再生</button>
+      </div>
+      <div class="modal-comment" id="m-comment" style="display:none"></div>
+      <div class="modal-actions">
+        <button class="mabtn danger" onclick="deleteCardFromModal()">🗑 削除</button>
+        <button class="mabtn" onclick="closeModal()">閉じる</button>
+      </div>
+    </div>
+  </div>
+</div>
+
+<div class="toast" id="toast"></div>
+
+<script>
+'use strict';
+
+/* ══════════ STATE ══════════ */
+const ZONE_PALETTE = [
+  {name:'Aメロ',  color:'#7f77dd'},
+  {name:'サビ',   color:'#ec4899'},
+  {name:'Bメロ',  color:'#1d9e75'},
+  {name:'没案',   color:'#4a4860'},
+  {name:'ブリッジ',color:'#ef9f27'},
+];
+const EMOTION_COLORS = {
+  sad:'#5b9bd5', happy:'#ffd93d', tense:'#e24b4a', calm:'#5dcaa5',
+  bright:'#f472b6', dark:'#7f77dd', nostalgic:'#ef9f27', default:'#8886a0'
+};
+
+const STORAGE_KEY = 'msuite_canvas_autosave';
+const PROJECTS_KEY = 'msuite_projects';
+
+let STATE = {
+  projectName: 'Untitled Canvas',
+  cards: [],   // {id,name,emotion,rawNotes,notes,aiComment,x,y,zoneId}
+  zones: [],   // {id,name,color,x,y,w,h}
+  pan: {x:60, y:40}, zoom: 1,
+};
+
+let dragTarget = null, dragMode = null, dragStart = null, panStart = null, isPanning = false;
+let currentDetailId = null;
+let playSynth = null;
+
+/* ══════════ INIT ══════════ */
+window.onload = () => {
+  loadAutosave();
+  checkIncomingImport();
+  renderZoneSwatches();
+  renderAll();
+  bindViewportEvents();
+};
+
+function loadAutosave() {
+  try {
+    const raw = localStorage.getItem(STORAGE_KEY);
+    if (raw) {
+      const d = JSON.parse(raw);
+      STATE = Object.assign(STATE, d);
+      document.getElementById('proj-name').value = STATE.projectName || 'Untitled Canvas';
+    } else {
+      // 初回起動: デフォルトゾーン3つを用意
+      STATE.zones = [
+        {id:uid(),name:'Aメロ',color:ZONE_PALETTE[0].color,x:60,y:40,w:320,h:380},
+        {id:uid(),name:'サビ', color:ZONE_PALETTE[1].color,x:420,y:40,w:320,h:380},
+        {id:uid(),name:'没案', color:ZONE_PALETTE[3].color,x:780,y:40,w:320,h:380},
+      ];
+    }
+  } catch(e) { console.warn('autosave load failed', e); }
+}
+
+function saveAutosave() {
+  try { localStorage.setItem(STORAGE_KEY, JSON.stringify(STATE)); } catch(e) {}
+}
+let saveTimer = null;
+function scheduleSave() { clearTimeout(saveTimer); saveTimer = setTimeout(saveAutosave, 400); }
+
+function uid() { return 'c' + Math.random().toString(36).slice(2, 9); }
+
+/* ══════════ IMPORT ══════════ */
+function checkIncomingImport() {
+  const hash = window.location.hash;
+  const m = hash.match(/import=([^&]+)/);
+  if (!m) return;
+  try {
+    const json = decodeURIComponent(escape(atob(decodeURIComponent(m[1]))));
+    const data = JSON.parse(json);
+    ingestData(data, 'URLから受信');
+    history.replaceState(null, '', window.location.pathname + window.location.search);
+  } catch(e) { console.warn('import hash failed', e); showToast('受信データの解析に失敗しました'); }
+}
+
+function importFile(input) {
+  const file = input.files[0];
+  if (!file) return;
+  const r = new FileReader();
+  r.onload = ev => {
+    try {
+      const data = JSON.parse(ev.target.result);
+      ingestData(data, file.name);
+    } catch(e) { showToast('JSONの読み込みに失敗: ' + e.message); }
+  };
+  r.readAsText(file);
+  input.value = '';
+}
+
+function ingestData(data, sourceLabel) {
+  let incomingCards = [];
+
+  if (Array.isArray(data)) {
+    // vocal-lab v3 の生エクスポート（カード配列）
+    incomingCards = data;
+  } else if (data.cards && Array.isArray(data.cards)) {
+    // canvas自身のプロジェクト形式 or {cards:[...]}でラップされたもの
+    incomingCards = data.cards;
+    if (data.zones && Array.isArray(data.zones) && data.zones.length) {
+      STATE.zones = data.zones;
+    }
+    if (data.name) STATE.projectName = data.name;
+  } else {
+    showToast('カードデータが見つかりませんでした');
+    return;
+  }
+
+  // 既存座標を持たないカードはグリッド配置
+  let placed = 0;
+  const startX = 60, startY = 460, cols = 5, gapX = 168, gapY = 150;
+  incomingCards.forEach((c, i) => {
+    const exists = STATE.cards.find(x => x.id === c.id);
+    if (exists) return; // 重複IDはスキップ
+    const card = {
+      id: c.id || uid(),
+      name: c.name || `フレーズ ${STATE.cards.length + 1}`,
+      emotion: c.emotion || 'default',
+      rawNotes: c.rawNotes || c.notes || [],
+      notes: c.notes || c.rawNotes || [],
+      aiComment: c.aiComment || '',
+      x: typeof c.x === 'number' ? c.x : startX + (placed % cols) * gapX,
+      y: typeof c.y === 'number' ? c.y : startY + Math.floor(placed / cols) * gapY,
+      zoneId: c.zoneId || null,
+    };
+    STATE.cards.push(card);
+    placed++;
+  });
+
+  document.getElementById('proj-name').value = STATE.projectName;
+  renderAll();
+  scheduleSave();
+  showToast(`${sourceLabel} — ${placed}枚のカードを取込みました`);
+}
+
+/* ══════════ ZONES ══════════ */
+function renderZoneSwatches() {
+  const row = document.getElementById('zone-swatch-row');
+  row.innerHTML = ZONE_PALETTE.map(z =>
+    `<div class="zone-swatch" style="background:${z.color}" title="${z.name}" onclick="addZone('${z.name}','${z.color}')"></div>`
+  ).join('');
+}
+
+function addZone(name, color) {
+  const idx = STATE.zones.length % ZONE_PALETTE.length;
+  const z = {
+    id: uid(),
+    name: name || ZONE_PALETTE[idx].name,
+    color: color || ZONE_PALETTE[idx].color,
+    x: 60 + (STATE.zones.length * 30) % 400,
+    y: 40 + (STATE.zones.length * 30) % 200,
+    w: 300, h: 340,
+  };
+  STATE.zones.push(z);
+  renderAll();
+  scheduleSave();
+}
+
+function deleteZone(id) {
+  if (!confirm('このゾーンを削除しますか？（中のカードは削除されません）')) return;
+  STATE.zones = STATE.zones.filter(z => z.id !== id);
+  STATE.cards.forEach(c => { if (c.zoneId === id) c.zoneId = null; });
+  renderAll();
+  scheduleSave();
+}
+
+function renameZone(id, name) {
+  const z = STATE.zones.find(z => z.id === id);
+  if (z) { z.name = name; scheduleSave(); }
+}
+
+function zoneCardCount(zoneId) {
+  return STATE.cards.filter(c => c.zoneId === zoneId).length;
+}
+
+/* ══════════ RENDER ══════════ */
+function renderAll() {
+  renderZones();
+  renderCards();
+  applyTransform();
+  updateCount();
+  document.getElementById('empty-hint').style.display = STATE.cards.length ? 'none' : 'block';
+}
+
+function renderZones() {
+  const layer = getOrCreateLayer('zone-layer', 5);
+  layer.innerHTML = '';
+  STATE.zones.forEach(z => {
+    const el = document.createElement('div');
+    el.className = 'zone';
+    el.style.cssText = `left:${z.x}px;top:${z.y}px;width:${z.w}px;height:${z.h}px;border-color:${z.color}55;background:${z.color}0d`;
+    el.innerHTML = `
+      <div class="zone-head" style="background:${z.color}1f;color:${z.color}" data-zone-id="${z.id}">
+        <input class="zone-name" value="${escAttr(z.name)}" style="color:${z.color}"
+          onchange="renameZone('${z.id}',this.value)" onclick="event.stopPropagation()">
+        <span class="zone-count" style="color:${z.color}">${zoneCardCount(z.id)}枚</span>
+        <button class="zone-del" onclick="event.stopPropagation();deleteZone('${z.id}')">✕</button>
+      </div>
+      <div class="zone-resize" style="color:${z.color}" data-zone-resize="${z.id}"></div>
+    `;
+    layer.appendChild(el);
+  });
+}
+
+function renderCards() {
+  const layer = getOrCreateLayer('card-layer', 10);
+  layer.innerHTML = '';
+  STATE.cards.forEach(c => {
+    const emoColor = EMOTION_COLORS[c.emotion] || EMOTION_COLORS.default;
+    const notes = c.notes && c.notes.length ? c.notes : c.rawNotes;
+    const el = document.createElement('div');
+    el.className = 'pcard';
+    el.dataset.cardId = c.id;
+    el.style.cssText = `left:${c.x}px;top:${c.y}px`;
+    el.innerHTML = `
+      <div class="pcard-top">
+        <div class="pcard-name">${escAttr(c.name)}</div>
+        <div class="pcard-emo" style="background:${emoColor}26;color:${emoColor}">${escAttr(c.emotion||'—')}</div>
+      </div>
+      <svg class="pcard-spark" viewBox="0 0 128 28" preserveAspectRatio="none">${sparkPath(notes, emoColor)}</svg>
+      <div class="pcard-meta">
+        <span>${(notes||[]).length}音</span>
+        <button class="pcard-play" data-play-id="${c.id}" onclick="event.stopPropagation();playCard('${c.id}',true)">▶</button>
+      </div>
+    `;
+    el.addEventListener('click', e => { if (!dragMoved) openDetail(c.id); });
+    layer.appendChild(el);
+  });
+}
+
+function getOrCreateLayer(id, z) {
+  let l = document.getElementById(id);
+  if (!l) {
+    l = document.createElement('div');
+    l.id = id;
+    l.style.cssText = `position:absolute;top:0;left:0;z-index:${z}`;
+    document.getElementById('canvas-content').appendChild(l);
+  }
+  return l;
+}
+
+function sparkPath(notes, color) {
+  if (!notes || !notes.length) return `<line x1="4" y1="14" x2="124" y2="14" stroke="${color}55" stroke-width="1.5"/>`;
+  const pitches = notes.map(n => n.midiR ?? n.pitch ?? 60);
+  const min = Math.min(...pitches), max = Math.max(...pitches);
+  const range = (max - min) || 1;
+  const w = 128, h = 28, pad = 4;
+  const pts = pitches.map((p, i) => {
+    const x = pad + (i / Math.max(1, pitches.length - 1)) * (w - pad*2);
+    const y = h - pad - ((p - min) / range) * (h - pad*2);
+    return `${x.toFixed(1)},${y.toFixed(1)}`;
+  }).join(' ');
+  return `<polyline points="${pts}" fill="none" stroke="${color}" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" opacity="0.85"/>`;
+}
+
+function escAttr(s) { return String(s||'').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;'); }
+
+function updateCount() {
+  document.getElementById('count-disp').textContent = `${STATE.cards.length}枚 / ${STATE.zones.length}ゾーン`;
+}
+
+function onProjNameChange() {
+  STATE.projectName = document.getElementById('proj-name').value;
+  scheduleSave();
+}
+
+/* ══════════ PAN / ZOOM ══════════ */
+function applyTransform() {
+  const el = document.getElementById('canvas-content');
+  el.style.transform = `translate(${STATE.pan.x}px,${STATE.pan.y}px) scale(${STATE.zoom})`;
+}
+function zoomBy(f) {
+  STATE.zoom = Math.min(Math.max(STATE.zoom * f, 0.35), 2.2);
+  applyTransform(); scheduleSave();
+}
+function zoomReset() {
+  STATE.zoom = 1; STATE.pan = {x:60,y:40};
+  applyTransform(); scheduleSave();
+}
+
+/* ══════════ POINTER / DRAG ══════════ */
+let dragMoved = false;
+
+function bindViewportEvents() {
+  const vp = document.getElementById('viewport');
+  vp.addEventListener('pointerdown', onPointerDown);
+  vp.addEventListener('pointermove', onPointerMove);
+  vp.addEventListener('pointerup', onPointerUp);
+  vp.addEventListener('pointercancel', onPointerUp);
+  vp.addEventListener('wheel', onWheel, {passive:false});
+}
+
+function onWheel(e) {
+  if (!(e.ctrlKey || e.metaKey)) return;
+  e.preventDefault();
+  zoomBy(e.deltaY < 0 ? 1.08 : 0.93);
+}
+
+function onPointerDown(e) {
+  dragMoved = false;
+  const cardEl = e.target.closest('.pcard');
+  const zoneHeadEl = e.target.closest('.zone-head');
+  const zoneResizeEl = e.target.closest('.zone-resize');
+
+  if (cardEl) {
+    const card = STATE.cards.find(c => c.id === cardEl.dataset.cardId);
+    if (!card) return;
+    dragTarget = card; dragMode = 'card';
+    cardEl.classList.add('dragging');
+    dragStart = { px: e.clientX, py: e.clientY, ox: card.x, oy: card.y };
+    e.stopPropagation();
+  } else if (zoneResizeEl) {
+    const zone = STATE.zones.find(z => z.id === zoneResizeEl.dataset.zoneResize);
+    if (!zone) return;
+    dragTarget = zone; dragMode = 'zone-resize';
+    dragStart = { px: e.clientX, py: e.clientY, ow: zone.w, oh: zone.h };
+    e.stopPropagation();
+  } else if (zoneHeadEl) {
+    const zone = STATE.zones.find(z => z.id === zoneHeadEl.dataset.zoneId);
+    if (!zone) return;
+    dragTarget = zone; dragMode = 'zone';
+    dragStart = { px: e.clientX, py: e.clientY, ox: zone.x, oy: zone.y };
+    e.stopPropagation();
+  } else {
+    // パン
+    isPanning = true;
+    panStart = { px: e.clientX, py: e.clientY, ox: STATE.pan.x, oy: STATE.pan.y };
+    document.getElementById('viewport').classList.add('panning');
+  }
+}
+
+function onPointerMove(e) {
+  if (dragTarget) {
+    const dx = (e.clientX - dragStart.px) / STATE.zoom;
+    const dy = (e.clientY - dragStart.py) / STATE.zoom;
+    if (Math.abs(dx) > 2 || Math.abs(dy) > 2) dragMoved = true;
+
+    if (dragMode === 'card') {
+      dragTarget.x = dragStart.ox + dx;
+      dragTarget.y = dragStart.oy + dy;
+      const el = document.querySelector(`.pcard[data-card-id="${dragTarget.id}"]`);
+      if (el) { el.style.left = dragTarget.x + 'px'; el.style.top = dragTarget.y + 'px'; }
+    } else if (dragMode === 'zone') {
+      dragTarget.x = dragStart.ox + dx;
+      dragTarget.y = dragStart.oy + dy;
+      renderZones();
+    } else if (dragMode === 'zone-resize') {
+      dragTarget.w = Math.max(160, dragStart.ow + dx);
+      dragTarget.h = Math.max(120, dragStart.oh + dy);
+      renderZones();
+    }
+    return;
+  }
+  if (isPanning) {
+    STATE.pan.x = panStart.ox + (e.clientX - panStart.px);
+    STATE.pan.y = panStart.oy + (e.clientY - panStart.py);
+    applyTransform();
+  }
+}
+
+function onPointerUp() {
+  if (dragMode === 'card' && dragTarget) {
+    assignZoneByPosition(dragTarget);
+    const el = document.querySelector(`.pcard[data-card-id="${dragTarget.id}"]`);
+    if (el) el.classList.remove('dragging');
+    renderZones();
+    scheduleSave();
+  } else if (dragMode === 'zone' || dragMode === 'zone-resize') {
+    scheduleSave();
+  }
+  dragTarget = null; dragMode = null;
+  if (isPanning) { isPanning = false; document.getElementById('viewport').classList.remove('panning'); }
+  setTimeout(() => { dragMoved = false; }, 0);
+}
+
+function assignZoneByPosition(card) {
+  const cx = card.x + 74, cy = card.y + 40; // カード中心(おおよそ)
+  let found = null;
+  STATE.zones.forEach(z => {
+    if (cx >= z.x && cx <= z.x + z.w && cy >= z.y && cy <= z.y + z.h) found = z.id;
+  });
+  card.zoneId = found;
+}
+
+/* ══════════ LAYOUT ══════════ */
+function resetLayout() {
+  if (!confirm('未割当のカードをグリッド状に整列しますか？')) return;
+  const cols = 5, gapX = 168, gapY = 150;
+  let i = 0;
+  STATE.cards.forEach(c => {
+    if (c.zoneId) return; // ゾーン内のカードは動かさない
+    c.x = 60 + (i % cols) * gapX;
+    c.y = 460 + Math.floor(i / cols) * gapY;
+    i++;
+  });
+  renderAll(); scheduleSave();
+  showToast('未割当カードを整列しました');
+}
+
+function clearAll() {
+  if (!confirm('すべてのカードとゾーンを削除しますか？\nこの操作は元に戻せません。')) return;
+  STATE.cards = []; STATE.zones = [];
+  renderAll(); scheduleSave();
+  showToast('クリアしました');
+}
+
+/* ══════════ DETAIL MODAL ══════════ */
+function openDetail(id) {
+  const c = STATE.cards.find(c => c.id === id);
+  if (!c) return;
+  currentDetailId = id;
+  document.getElementById('m-name').textContent = c.name;
+  document.getElementById('m-emotion').textContent = c.emotion || '—';
+  const notes = c.notes && c.notes.length ? c.notes : c.rawNotes;
+  document.getElementById('m-notecount').textContent = (notes||[]).length + '音';
+  const zone = STATE.zones.find(z => z.id === c.zoneId);
+  document.getElementById('m-zone').textContent = zone ? zone.name : '未割当';
+  const emoColor = EMOTION_COLORS[c.emotion] || EMOTION_COLORS.default;
+  document.getElementById('m-spark').innerHTML = sparkPath(notes, emoColor);
+  const commentEl = document.getElementById('m-comment');
+  if (c.aiComment) { commentEl.style.display = 'block'; commentEl.textContent = '💬 ' + c.aiComment; }
+  else { commentEl.style.display = 'none'; }
+  document.getElementById('modal').classList.add('open');
+}
+function closeModal() { document.getElementById('modal').classList.remove('open'); }
+function closeModalOv(e) { if (e.target.id === 'modal') closeModal(); }
+
+function deleteCardFromModal() {
+  if (!currentDetailId) return;
+  if (!confirm('このカードを削除しますか？')) return;
+  STATE.cards = STATE.cards.filter(c => c.id !== currentDetailId);
+  renderAll(); scheduleSave();
+  closeModal();
+  showToast('削除しました');
+}
+
+/* ══════════ PLAYBACK ══════════ */
+function getSynth() {
+  if (!playSynth) {
+    playSynth = new Tone.Synth({ oscillator:{type:'triangle'}, envelope:{attack:.01,decay:.06,sustain:.5,release:.6} }).toDestination();
+    playSynth.volume.value = -6;
+  }
+  return playSynth;
+}
+const NOTE_NAMES = ['C','C#','D','D#','E','F','F#','G','G#','A','A#','B'];
+function midiToToneName(m) { return NOTE_NAMES[m % 12] + Math.floor(m / 12 - 1); }
+
+async function playCard(id, useCorrected) {
+  const c = STATE.cards.find(c => c.id === id);
+  if (!c) return;
+  const notes = useCorrected ? (c.notes && c.notes.length ? c.notes : c.rawNotes) : (c.rawNotes && c.rawNotes.length ? c.rawNotes : c.notes);
+  if (!notes || !notes.length) { showToast('再生できるノートがありません'); return; }
+  await Tone.start();
+  const synth = getSynth();
+  let t = 0;
+  notes.forEach(n => {
+    const pitch = n.midiR ?? n.pitch ?? 60;
+    const dur = Math.max(0.12, n.dur || 0.3);
+    synth.triggerAttackRelease(midiToToneName(Math.round(pitch)), dur * 0.85, '+' + t);
+    t += dur;
+  });
+}
+
+/* ══════════ EXPORT ══════════ */
+function exportJSON() {
+  const data = {
+    source: 'canvas',
+    name: STATE.projectName,
+    cards: STATE.cards,
+    zones: STATE.zones,
+    exported: new Date().toISOString(),
+  };
+  const blob = new Blob([JSON.stringify(data, null, 2)], { type: 'application/json' });
+  const a = document.createElement('a');
+  a.href = URL.createObjectURL(blob);
+  a.download = `${(STATE.projectName||'canvas').replace(/\s+/g,'-')}-${Date.now()}.json`;
+  a.click();
+  showToast('JSONを書き出しました');
+}
+
+function saveAsProject() {
+  const data = {
+    source: 'canvas',
+    name: STATE.projectName,
+    cards: STATE.cards,
+    zones: STATE.zones,
+    updatedAt: new Date().toISOString(),
+  };
+  try {
+    const raw = localStorage.getItem(PROJECTS_KEY);
+    const projects = raw ? JSON.parse(raw) : [];
+    projects.push(data);
+    localStorage.setItem(PROJECTS_KEY, JSON.stringify(projects));
+    showToast('music-suiteのプロジェクト一覧に保存しました');
+  } catch(e) {
+    showToast('保存に失敗しました（容量不足の可能性）');
+  }
+}
+
+/* ══════════ TOAST ══════════ */
+function showToast(msg) {
+  const t = document.getElementById('toast');
+  t.textContent = msg; t.classList.add('show');
+  clearTimeout(t._timer); t._timer = setTimeout(() => t.classList.remove('show'), 2400);
+}
+</script>
+</body>
+</html>
+

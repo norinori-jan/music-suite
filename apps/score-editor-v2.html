@@ -452,6 +452,7 @@ document.addEventListener('wheel',e=>{if(e.ctrlKey||e.metaKey){e.preventDefault(
 function noteName2midi(name){const map={C:0,'C#':1,Db:1,D:2,'D#':3,Eb:3,E:4,F:5,'F#':6,Gb:6,G:7,'G#':8,Ab:8,A:9,'A#':10,Bb:10,B:11};const m=name?.match(/^([A-G][#b]?)(\d)$/);return m?(map[m[1]]??0)+(parseInt(m[2])+1)*12:null;}
 function importExternalData(data,sourceLabel){
   // vocal-lab v3はカード配列として出力される → 共通フォーマットに変換
+  if(data?.cards?.length) data=data.cards;
   if(Array.isArray(data)){
     const melNotes=[];let off=0;
     data.forEach(card=>{
@@ -463,7 +464,7 @@ function importExternalData(data,sourceLabel){
   }
   saveUndo();let added=0;if(data.bpm)setBpm(data.bpm);if(data.timeSig){PROJ.timeSig=data.timeSig;APP.timeSig=data.timeSig;}if(data.melody?.notes?.length){const notes=data.melody.notes.map(n=>({...n,id:uid()}));addTrack('melody',(data.name?data.name+' ':'')+'Melody',notes);added+=notes.length;}if(data.chords?.sections?.length){const notes=[];let beat=0;data.chords.sections.forEach(s=>s.progression.forEach(item=>{(item.notes||[]).forEach(nn=>{const p=typeof nn==='number'?nn:noteName2midi(nn);if(p!=null)notes.push({id:uid(),pitch:p,startBeat:beat,durationBeats:item.beats,vel:60});});beat+=item.beats;}));if(notes.length){addTrack('chord',(data.name?data.name+' ':'')+'Chords',notes);added+=notes.length;}}if(data.bass?.notes?.length){const notes=data.bass.notes.map(n=>({...n,id:uid()}));addTrack('bass',(data.name?data.name+' ':'')+'Bass',notes);added+=notes.length;}if(data.drums?.notes?.length){const notes=data.drums.notes.map(n=>({...n,id:uid(),vel:n.vel||80}));addTrack('drum',(data.name?data.name+' ':'')+'Drums',notes);added+=notes.length;}refreshAll();setStatus('ok',`${sourceLabel||'外部データ'}を受信 — ${added}ノート追加`);}
 function importFromJSON(input){const file=input.files[0];if(!file)return;const r=new FileReader();r.onload=ev=>{try{const data=JSON.parse(ev.target.result);importExternalData(data,data.source||'JSON');}catch(e){setStatus('err','JSONパース失敗: '+e.message);}};r.readAsText(file);}
-function checkIncomingImport(){const hash=window.location.hash;const m=hash.match(/import=([^&]+)/);if(!m)return;try{const json=decodeURIComponent(escape(atob(decodeURIComponent(m[1]))));const data=JSON.parse(json);importExternalData(data,data.source==='beat-lab'?'beat-lab':'外部アプリ');history.replaceState(null,'',window.location.pathname+window.location.search);}catch(e){console.warn('checkIncomingImport failed',e);setStatus('err','受信データの解析に失敗しました');}}
+function checkIncomingImport(){const hash=window.location.hash;const m=hash.match(/import=([^&]+)/);if(!m)return;try{const json=decodeURIComponent(escape(atob(decodeURIComponent(m[1]))));const data=JSON.parse(json);importExternalData(data,data.source||'外部アプリ');history.replaceState(null,'',window.location.pathname+window.location.search);}catch(e){console.warn('checkIncomingImport failed',e);setStatus('err','受信データの解析に失敗しました');}}
 // BOOT
 (function boot(){addTrack('melody','Melody 1');addTrack('chord','Chord 1');addTrack('bass','Bass 1');renderQC();renderStepKeys();updateStepTrackSel();renderArr();renderDrumGrid();updateAiTrackSel();updateChordPreview();setStatus('ok','SCORE//ED v2 起動完了 — ✦COMPOSEからスタート、SpaceキーでPlay');checkIncomingImport();})();
 </script>
