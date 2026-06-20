@@ -127,6 +127,19 @@ html,body{height:100%;overflow:hidden;background:var(--bg);color:var(--tx);
   overflow:hidden;text-overflow:ellipsis;white-space:nowrap;}
 .sb-card-meta{font-size:10px;color:var(--tx3);}
 .sb-empty{padding:16px;text-align:center;color:var(--tx3);font-size:11px;line-height:1.8;}
+.order-panel{border-top:0.5px solid var(--bd);max-height:38%;min-height:120px;display:flex;flex-direction:column;}
+.order-head{padding:10px 14px 8px;border-bottom:0.5px solid var(--bd);display:flex;align-items:center;justify-content:space-between;gap:8px;}
+.order-title{font-size:10px;font-weight:600;letter-spacing:0.1em;text-transform:uppercase;color:var(--tx3);}
+.order-hint{font-size:9px;color:var(--tx3);}
+.order-list{overflow-y:auto;padding:8px;display:flex;flex-direction:column;gap:5px;}
+.order-item{display:grid;grid-template-columns:18px 1fr auto;gap:6px;align-items:center;padding:7px 8px;border:0.5px solid var(--bd);border-radius:var(--r);background:var(--bg3);}
+.order-item.selected{border-color:var(--acc);box-shadow:0 0 0 1px var(--acc);}
+.order-num{font-size:10px;color:var(--tx3);text-align:right;}
+.order-name{font-size:11px;font-weight:500;color:var(--tx);overflow:hidden;text-overflow:ellipsis;white-space:nowrap;cursor:pointer;}
+.order-actions{display:flex;gap:2px;}
+.mini-btn{width:20px;height:20px;border:0.5px solid var(--bd2);background:none;color:var(--tx3);border-radius:5px;font-size:10px;cursor:pointer;display:flex;align-items:center;justify-content:center;}
+.mini-btn:hover{background:var(--bg4);color:var(--tx);}
+.mini-btn:disabled{opacity:0.25;cursor:not-allowed;}
 .sb-footer{padding:10px 8px;border-top:0.5px solid var(--bd);display:flex;flex-direction:column;gap:6px;}
 
 /* ── LAYOUT ── */
@@ -179,6 +192,13 @@ html,body{height:100%;overflow:hidden;background:var(--bg);color:var(--tx);
   <div id="sidebar">
     <div class="sb-head"><div class="sb-title">フレーズカード</div></div>
     <div class="sb-list" id="sb-list"></div>
+    <div class="order-panel">
+      <div class="order-head">
+        <div class="order-title">曲順</div>
+        <div class="order-hint">上下で送信順</div>
+      </div>
+      <div class="order-list" id="order-list"></div>
+    </div>
     <div class="sb-footer">
       <button class="btn" onclick="clearCanvas()">キャンバスをクリア</button>
       <button class="btn primary" onclick="exportLayout()">レイアウト保存</button>
@@ -212,6 +232,7 @@ const DEFAULT_GROUPS = [
 const state = {
   cards:       [],   // vocal-lab-v3 から読み込んだカード
   layout:      {},   // {cardId: {x,y,groupId}}
+  sequence:    [],   // score-editorへ送る明示的な曲順
   groups:      [...DEFAULT_GROUPS],
   activeGroup: null, // 選択中グループID（カードに割り当て用）
   zoom:        1.0,
@@ -231,8 +252,10 @@ const CARDS_KEY  = 'vl3_cards';
 function init() {
   loadCards();
   loadLayout();
+  normalizeSequence();
   renderGroupPalette();
   renderSidebar();
+  renderOrderPanel();
   renderCanvas();
   updateCardCount();
 }
@@ -251,6 +274,7 @@ function loadCards() {
 function reloadCards() {
   loadCards();
   renderSidebar();
+  renderOrderPanel();
   renderCanvas();
   updateCardCount();
   showToast(`${state.cards.length}枚のカードを読み込みました`);
@@ -262,11 +286,13 @@ function reloadCards() {
 function loadLayout() {
   try {
     const raw = localStorage.getItem(LAYOUT_KEY);
-    state.layout = raw ? JSON.parse(raw) : {};
+    const data = raw ? JSON.parse(raw) : {};
+    state.layout = data.layout || data;
+    state.sequence = Array.isArray(data.sequence) ? data.sequence.map(String) : [];
   } catch(_) { state.layout = {}; }
 }
 function saveLayout() {
-  localStorage.setItem(LAYOUT_KEY, JSON.stringify(state.layout));
+  localStorage.setItem(LAYOUT_KEY, JSON.stringify({ layout: state.layout, sequence: orderedPlacedIds() }));
 }
 function exportLayout() {
   saveLayout();
@@ -331,6 +357,79 @@ function renderSidebar() {
     `;
     if (!onCanvas) div.onclick = () => placeCard(card.id);
     el.appendChild(div);
+  });
+}
+
+/* ══════════════════════════════════
+   SONG ORDER
+══════════════════════════════════ */
+function normalizeSequence() {
+  const cardIds = new Set(state.cards.map(c => String(c.id)));
+  const placedIds = Object.keys(state.layout).map(String).filter(id => cardIds.has(id));
+  state.sequence = state.sequence.filter(id => placedIds.includes(String(id)));
+  placedIds
+    .sort((a, b) => (state.layout[a]?.x ?? 0) - (state.layout[b]?.x ?? 0))
+    .forEach(id => { if (!state.sequence.includes(id)) state.sequence.push(id); });
+}
+
+function orderedPlacedIds() {
+  normalizeSequence();
+  return [...state.sequence];
+}
+
+function renderOrderPanel() {
+  const el = document.getElementById('order-list');
+  if (!el) return;
+  const ids = orderedPlacedIds();
+  if (!ids.length) {
+    el.innerHTML = '<div class="sb-empty">キャンバスに置いたカードがここに並びます。</div>';
+    return;
+  }
+  el.innerHTML = '';
+  ids.forEach((id, idx) => {
+    const card = state.cards.find(c => String(c.id) === String(id));
+    if (!card) return;
+    const div = document.createElement('div');
+    div.className = 'order-item' + (state.selectedCard === id ? ' selected' : '');
+    div.innerHTML = `
+      <div class="order-num">${idx + 1}</div>
+      <div class="order-name" title="${escHtml(card.name)}">${escHtml(card.name)}</div>
+      <div class="order-actions">
+        <button class="mini-btn" onclick="moveInSequence('${id}',-1)" ${idx===0?'disabled':''}>↑</button>
+        <button class="mini-btn" onclick="moveInSequence('${id}',1)" ${idx===ids.length-1?'disabled':''}>↓</button>
+        <button class="mini-btn" onclick="removeFromCanvas('${id}',event)">×</button>
+      </div>
+    `;
+    div.querySelector('.order-name').onclick = () => focusCard(id);
+    el.appendChild(div);
+  });
+}
+
+function moveInSequence(cardId, delta) {
+  const ids = orderedPlacedIds();
+  const from = ids.indexOf(String(cardId));
+  const to = from + delta;
+  if (from < 0 || to < 0 || to >= ids.length) return;
+  const [id] = ids.splice(from, 1);
+  ids.splice(to, 0, id);
+  state.sequence = ids;
+  saveLayout();
+  renderOrderPanel();
+  showToast('曲順を更新しました');
+}
+
+function focusCard(cardId) {
+  const id = String(cardId);
+  const pos = state.layout[id];
+  if (!pos) return;
+  state.selectedCard = id;
+  renderCanvas();
+  renderOrderPanel();
+  const wrap = document.getElementById('canvas-wrap');
+  wrap.scrollTo({
+    left: Math.max(0, pos.x * state.zoom - wrap.clientWidth / 2 + 90),
+    top: Math.max(0, pos.y * state.zoom - wrap.clientHeight / 2 + 55),
+    behavior: 'smooth',
   });
 }
 
@@ -408,6 +507,7 @@ function makePCard(card, pos) {
     } else {
       state.selectedCard = state.selectedCard===String(card.id) ? null : String(card.id);
       renderCanvas();
+      renderOrderPanel();
     }
   });
   return div;
@@ -427,15 +527,19 @@ function placeCard(cardId) {
   saveLayout();
   renderCanvas();
   renderSidebar();
+  renderOrderPanel();
   updateCardCount();
 }
 
 function removeFromCanvas(cardId, e) {
-  e.stopPropagation();
-  delete state.layout[String(cardId)];
+  if (e) e.stopPropagation();
+  const id = String(cardId);
+  delete state.layout[id];
+  state.sequence = state.sequence.filter(cid => cid !== id);
   saveLayout();
   renderCanvas();
   renderSidebar();
+  renderOrderPanel();
   updateCardCount();
 }
 
@@ -451,9 +555,11 @@ function assignGroup(cardId, groupId) {
 function clearCanvas() {
   if (!confirm('キャンバスをクリアしますか？')) return;
   state.layout = {};
+  state.sequence = [];
   saveLayout();
   renderCanvas();
   renderSidebar();
+  renderOrderPanel();
   updateCardCount();
   showToast('キャンバスをクリアしました');
 }
@@ -488,6 +594,7 @@ function autoLayout() {
   });
   saveLayout();
   renderCanvas();
+  renderOrderPanel();
   showToast('自動整列しました');
 }
 
@@ -523,6 +630,7 @@ function startDrag(e, cardId) {
     state.dragging = null;
     saveLayout();
     renderCanvas(); // グループゾーン再描画
+    renderOrderPanel();
     document.removeEventListener('mousemove', onMove);
     document.removeEventListener('mouseup', onUp);
   }
@@ -630,17 +738,15 @@ function showToast(msg) {
 
 /* ══════════════════════════════════
    SCORE-EDITOR 送信
-   キャンバス上のカードをx座標順に並べて
+   曲順パネルの順にカードを並べて
    melody.notes として送信
 ══════════════════════════════════ */
 function sendToScoreEditor() {
-  const placed = Object.entries(state.layout);
-  if (!placed.length) { showToast('キャンバスにカードがありません'); return; }
-  // x座標順（左から右）にソート
-  placed.sort((a, b) => a[1].x - b[1].x);
+  const ids = orderedPlacedIds();
+  if (!ids.length) { showToast('キャンバスにカードがありません'); return; }
   const melodyNotes = [];
   let beatOffset = 0;
-  placed.forEach(([cardId, pos]) => {
+  ids.forEach(cardId => {
     const card = state.cards.find(c => String(c.id) === String(cardId));
     const notes = cardNotes(card);
     if (!notes.length) return;
@@ -658,7 +764,7 @@ function sendToScoreEditor() {
   if (!melodyNotes.length) { showToast('送信できる音符がありません'); return; }
   const payload = {
     version: '1.0', source: 'vocal-lab',
-    name: `キャンバス (${placed.length}フレーズ)`,
+    name: `キャンバス (${ids.length}フレーズ)`,
     bpm: 120, timeSig: 4,
     melody: { notes: melodyNotes },
     chords: null, bass: { notes: [] }, drums: { notes: [] },

@@ -124,6 +124,13 @@ vocal-lab v3 の配列形式 `[{id,name,emotion,notes:[{name,midiR,hz,start,dur,
 - いま交換はしない。交換すると、今回揃えた `vl3_cards` 自動読み込み、配置順のメロディ結合、`score-editor-v2` 送信の流れが崩れるリスクがある。
 - 今後は `archive/canvas_old.html` から「良いUI部品」だけを現行 `apps/canvas.html` に段階移植する。
 
+### archive版canvas UI部品棚卸し
+- すぐ取り込む候補: 曲順/構成を明示するサイドUI、カード詳細モーダル、空状態メッセージの分かりやすさ。
+- 次に取り込む候補: プロジェクト名、JSON取込/書出し、suiteプロジェクト一覧への保存。
+- 慎重に取り込む候補: ドラッグ可能なゾーン、ゾーンのリサイズ、独自オートセーブ形式。
+- 見送り候補: 現行の `vl3_cards` 自動同期を壊す全面差し替え、統合導線と重複する独立プロジェクト管理。
+- 2026-06-20 Phase 2 で、まず現行 `apps/canvas.html` に「曲順パネル」を追加する。
+
 ### 2026-06-20 完了
 - `vocal-lab-v3.html`: `#import=` 経由で受け取ったカード束を復元し、`vl3_cards` に同期。
 - `canvas.html`: `vl3_cards` / `{ cards: [...] }` の読み込みに対応し、音符形式の揺れを吸収。
@@ -131,6 +138,7 @@ vocal-lab v3 の配列形式 `[{id,name,emotion,notes:[{name,midiR,hz,start,dur,
 - `score-editor-v2.html`: vocal-lab の配列形式だけでなく `{ cards: [...] }` 形式も受信可能に。
 - `index.html`: データフロー表示を `vocal-lab / canvas / chord-lab / beat-lab -> score-editor` に更新。
 - 構文チェック: `index.html`, `apps/canvas.html`, `apps/vocal-lab-v3.html`, `apps/score-editor-v2.html` のHTML内JavaScriptはOK。
+- Phase 2開始: `canvas.html` に曲順パネルを追加。配置済みカードを上下ボタンで並べ替え、`score-editor-v2` 送信時は曲順パネルの順序を優先。
 
 ---
 
