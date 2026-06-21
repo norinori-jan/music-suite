@@ -13,87 +13,65 @@
 </head>
 
 <body>
-  <div id="topbar">🎵 Composition Canvas</div>
+<!-- ① 即時解析 input（1つだけ） -->
+<input type="file" accept="audio/*" onchange="analyzeAudioFile(this.files[0])">
 
-  <button class="btn" onclick="autoLayout()">⊞ 自動整列</button>
-  <button class="btn primary" onclick="reloadCards()">↺ カード再読み込み</button>
-  <div class="spacer"></div>
-  <button class="btn" onclick="openAudioFile()">🎧 音源解析</button>
-  <input type="file" id="audio-file-input" accept="audio/*" style="display:none">
+<!-- ② ボタン → hidden input（1つだけ） -->
+<button class="btn" onclick="openAudioFile()">🎧 音源解析</button>
+<input type="file" id="audio-file-input" accept="audio/*" style="display:none">
 
-  <div id="canvas"></div>
+<div id="topbar">🎵 Composition Canvas</div>
 
-  <script>
-    const state = { audioCtx: null };
+<button class="btn" onclick="autoLayout()">⊞ 自動整列</button>
+<button class="btn primary" onclick="reloadCards()">↺ カード再読み込み</button>
+<div class="spacer"></div>
 
-    function showToast(msg) {
-      console.log(msg);
+<div id="canvas"></div>
+
+<script>
+
+const state = { audioCtx: null };
+
+/* ───────────────────────────────
+   YIN ピッチ検出
+────────────────────────────── */
+function yinPitchDetect(buffer, sampleRate) {
+  const threshold = 0.1;
+  const yin = new Float32Array(buffer.length / 2);
+
+  for (let tau = 1; tau < yin.length; tau++) {
+    let sum = 0;
+    for (let i = 0; i < yin.length; i++) {
+      const delta = buffer[i] - buffer[i + tau];
+      sum += delta * delta;
     }
+    yin[tau] = sum;
+  }
 
-    /* ───────────────────────────────
-       カード自動整列
-    ─────────────────────────────── */
-    function autoLayout() {
-      const cards = document.querySelectorAll('.card');
-      const gap = 20;
-      const cols = 4;
+  let runningSum = 0;
+  for (let tau = 1; tau < yin.length; tau++) {
+    runningSum += yin[tau];
+    yin[tau] *= tau / runningSum;
+  }
 
-      cards.forEach((card, i) => {
-        const x = (i % cols) * (card.offsetWidth + gap);
-        const y = Math.floor(i / cols) * (card.offsetHeight + gap);
-        card.style.left = x + 'px';
-        card.style.top = y + 'px';
-      });
-
-      showToast('カードを自動整列しました');
+  for (let tau = 2; tau < yin.length; tau++) {
+    if (yin[tau] < threshold) {
+      return sampleRate / tau;
     }
+  }
 
-    /* ───────────────────────────────
-       カード再読み込み
-    ─────────────────────────────── */
-    function reloadCards() {
-      const saved = localStorage.getItem('composition-cards');
-      if (!saved) {
-        showToast('保存されたカードはありません');
-        return;
-      }
+  return null;
+}
 
-      const cards = JSON.parse(saved);
-      const container = document.getElementById('canvas');
-      container.innerHTML = '';
-
-      cards.forEach(c => {
-        const el = document.createElement('div');
-        el.className = 'card';
-        el.style.left = c.x + 'px';
-        el.style.top = c.y + 'px';
-        el.innerText = c.label || 'Card';
-        container.appendChild(el);
-      });
-
-      showToast('カードを再読み込みしました');
-    }
-
-    /* ───────────────────────────────
-       音源ファイル選択
-    ─────────────────────────────── */
-    function openAudioFile() {
-      const input = document.getElementById('audio-file-input');
-      input.value = '';
-      input.onchange = () => {
-        const file = input.files?.[0];
-        if (!file) return;
-        showToast(`音源を読み込み中: ${file.name}`);
-        analyzeAudioFile(file);
-      };
-      input.click();
-    }
-    async function extractMelody(audioBuf) {
+/* ───────────────────────────────
+   メロディ抽出（YIN）
+────────────────────────────── */
+async function extractMelody(audioBuf) {
   const sampleRate = audioBuf.sampleRate;
   const data = audioBuf.getChannelData(0);
 
-  const frameSize = Math.floor(sampleRate * 0.03); // 30ms
-  const hopSize = Math.floor(frameSize / 2);       // 50% overlap
+  const frameSize = Math.floor(sampleRate * 0.03);
+  const hopSize = Math.floor(frameSize / 2);
 
   const pitches = [];
 
@@ -101,7 +79,6 @@
     const frame = data.slice(start, start + frameSize);
     const pitch = yinPitchDetect(frame, sampleRate);
 
-    // ノイズ対策：20Hz〜2000Hz 以外は無効
     if (pitch && pitch > 20 && pitch < 2000) {
       pitches.push(pitch);
     } else {
@@ -111,59 +88,6 @@
 
   return pitches;
 }
-async function analyzeAudioFile(file) {
-  try {
-    const arrayBuf = await file.arrayBuffer();
-    if (!state.audioCtx) {
-      state.audioCtx = new (window.AudioContext || window.webkitAudioContext)();
-    }
-    const audioBuf = await state.audioCtx.decodeAudioData(arrayBuf);
-
-    showToast("メロディ抽出中…");
-
-    const pitches = await extractMelody(audioBuf);
-
-    console.log("pitches:", pitches);
-    showToast(`抽出フレーム数: ${pitches.length}`);
-
-    // 次ステップ：音名変換へ
-    state.lastPitches = pitches;
-
-  } catch (e) {
-    console.error(e);
-    showToast("音源の解析に失敗しました");
-  }
-}
-
-    /* ───────────────────────────────
-       YIN ピッチ検出
-    ─────────────────────────────── */
-    function yinPitchDetect(buffer, sampleRate) {
-      const threshold = 0.1;
-      const yin = new Float32Array(buffer.length / 2);
-
-      for (let tau = 1; tau < yin.length; tau++) {
-        let sum = 0;
-        for (let i = 0; i < yin.length; i++) {
-          const delta = buffer[i] - buffer[i + tau];
-          sum += delta * delta;
-        }
-        yin[tau] = sum;
-      }
-
-      let runningSum = 0;
-      for (let tau = 1; tau < yin.length; tau++) {
-        runningSum += yin[tau];
-        yin[tau] *= tau / runningSum;
-      }
-
-      for (let tau = 2; tau < yin.length; tau++) {
-        if (yin[tau] < threshold) {
-          return sampleRate / tau;
-        }
-      }
-      return null;
-    }
 
 /* ───────────────────────────────
    ピッチ → 音名変換（B）
@@ -174,8 +98,10 @@ function pitchToNoteName(pitch) {
   const noteNumber = 12 * (Math.log2(pitch / 440)) + 69;
   const midi = Math.round(noteNumber);
 
-  const names = ["C", "C#", "D", "D#", "E", "F",
-                 "F#", "G", "G#", "A", "A#", "B"];
+  const names = [
+    "C", "C#", "D", "D#", "E", "F",
+    "F#", "G", "G#", "A", "A#", "B"
+  ];
 
   const name = names[midi % 12];
   const octave = Math.floor(midi / 12) - 1;
@@ -187,35 +113,110 @@ function convertPitchesToNotes(pitches) {
   return pitches.map(p => pitchToNoteName(p));
 }
 
+/* ───────────────────────────────
+   音源解析 → A+B+C
+────────────────────────────── */
+async function analyzeAudioFile(file) {
+  try {
+    const arrayBuf = await file.arrayBuffer();
 
+    if (!state.audioCtx) {
+      state.audioCtx = new (window.AudioContext || window.webkitAudioContext)();
+    }
+
+    const audioBuf = await state.audioCtx.decodeAudioData(arrayBuf);
+
+    showToast("メロディ抽出中…");
+
+    const pitches = await extractMelody(audioBuf);
+    console.log("pitches:", pitches);
+
+    const notes = convertPitchesToNotes(pitches);
+    state.lastNotes = notes;
+
+    renderNoteCards(notes);
+
+  } catch (e) {
+    console.error(e);
+    showToast("音源の解析に失敗しました");
+  }
+}
+/* ───────────────────────────────
+   メロディログ出力（テキスト保存）
+────────────────────────────── */
+function exportMelodyLog(notes) {
+  const text = notes.join(", ");
+  const blob = new Blob([text], { type: "text/plain" });
+  const url = URL.createObjectURL(blob);
+
+  const a = document.createElement("a");
+  a.href = url;
+  a.download = "melody-log.txt";
+  a.click();
+
+  URL.revokeObjectURL(url);
+}
+/* ───────────────────────────────
+   メロディログを Google スプレッドシートへ送信（任意）
+────────────────────────────── */
+async function exportMelodyToSheet(notes) {
+  const payload = {
+    timestamp: new Date().toISOString(),
+    notes: notes.join(", ")
+  };
+
+  try {
+    await fetch("https://script.google.com/macros/s/AKfycbxOfaTVt52VMPKHh1RloESF3rqWuLMUNIyATVBw8k6oYrXKILZ6BDh4EaCJzJyEdZHe/exec", {
+      method: "POST",
+      mode: "no-cors",
+      headers: {
+        "Content-Type": "application/json"
+      },
+      body: JSON.stringify(payload)
+    });
+
+    showToast("Googleスプレッドシートに送信しました");
+
+  } catch (e) {
+    console.error(e);
+    showToast("スプレッドシート送信に失敗しました");
+  }
+}
+/* ───────────────────────────────
+   音源ファイル選択
+────────────────────────────── */
+function openAudioFile() {
+  const input = document.getElementById("audio-file-input");
+  input.value = "";
+  input.onchange = () => {
+    const file = input.files?.[0];
+    if (!file) return;
+    showToast(`音源を読み込み中: ${file.name}`);
+    analyzeAudioFile(file);
+  };
+  input.click();
+}
 
 /* ───────────────────────────────
    H：音価 → 幅変換
 ────────────────────────────── */
 function lengthToWidth(len) {
-  const base = 80; // 4分音符の幅
+  const base = 80;
   return base * (4 / len);
 }
 
 /* ───────────────────────────────
-   G+H：編集ダイアログ（音名・色・長さ）
+   G+H：編集ダイアログ
 ────────────────────────────── */
 function openEditDialog(card) {
   const newNote = prompt("音名を変更:", card.innerText);
-  if (newNote === null || newNote.trim() === "") return;
+  if (!newNote) return;
 
-  const newColor = prompt(
-    "カード色（例: #ffcc00 または red）:",
-    card.style.backgroundColor || "#ffffff"
-  );
+  const newColor = prompt("カード色:", card.style.backgroundColor || "#ffffff");
+  const newLength = prompt("音価 (1/2/4/8):", card.dataset.length || "4");
 
-  const newLength = prompt(
-    "音価（例: 1=全音符, 2=2分, 4=4分, 8=8分）:",
-    card.dataset.length || "4"
-  );
-
-  // 反映
   card.innerText = newNote;
+
   if (newColor) card.style.backgroundColor = newColor;
 
   if (newLength) {
@@ -243,44 +244,19 @@ function renderNoteCards(notes) {
     card.className = "card";
     card.innerText = note;
 
-    // 初期位置
     card.style.left = x + "px";
     card.style.top = y + "px";
 
-    // H：デフォルト長さ（4分音符）
     card.dataset.length = 4;
     card.style.width = lengthToWidth(4) + "px";
 
-    // E：ドラッグ移動
     card.draggable = true;
-
     card.addEventListener("dragstart", (e) => {
       e.dataTransfer.setData("text/plain", i);
     });
 
-    canvas.addEventListener("dragover", (e) => {
-      e.preventDefault();
-    });
+    card.addEventListener("click", () => openEditDialog(card));
 
-    canvas.addEventListener("drop", (e) => {
-      e.preventDefault();
-      const index = e.dataTransfer.getData("text/plain");
-      const card = canvas.children[index];
-
-      const rect = canvas.getBoundingClientRect();
-      const x = e.clientX - rect.left;
-      const y = e.clientY - rect.top;
-
-      card.style.left = x + "px";
-      card.style.top = y + "px";
-    });
-
-    // G：クリックで編集
-    card.addEventListener("click", () => {
-      openEditDialog(card);
-    });
-
-    // E：ダブルクリックで削除
     card.addEventListener("dblclick", () => {
       card.remove();
       showToast(note + " を削除しました");
@@ -294,53 +270,13 @@ function renderNoteCards(notes) {
       y += 60;
     }
   });
-
+  exportMelodyLog(notes);
+  exportMelodyToSheet(notes);   // スプレッドシート送信（任意）
   showToast("音名カードをキャンバスに配置しました");
 }
 
 /* ───────────────────────────────
-   A+B+C：音源解析
-────────────────────────────── */
-async function analyzeAudioFile(file) {
-  try {
-    const arrayBuf = await file.arrayBuffer();
-    if (!state.audioCtx) {
-      state.audioCtx = new (window.AudioContext || window.webkitAudioContext)();
-    }
-    const audioBuf = await state.audioCtx.decodeAudioData(arrayBuf);
-
-    showToast("メロディ抽出中…");
-
-    const pitches = await extractMelody(audioBuf);
-    console.log("pitches:", pitches);
-
-    const notes = convertPitchesToNotes(pitches);
-    state.lastNotes = notes;
-
-    renderNoteCards(notes);
-
-  } catch (e) {
-    console.error(e);
-    showToast("音源の解析に失敗しました");
-  }
-}
-
-/* ───────────────────────────────
-   D：音名配列の復元
-────────────────────────────── */
-function loadCards() {
-  const saved = localStorage.getItem("savedNotes");
-  if (!saved) return;
-
-  const notes = JSON.parse(saved);
-  state.lastNotes = notes;
-  renderNoteCards(notes);
-
-  showToast("保存されたカードを復元しました");
-}
-
-/* ───────────────────────────────
-   F：カード位置＋内容の保存
+   F：カード保存
 ────────────────────────────── */
 function saveCardPositions() {
   const canvas = document.getElementById("canvas");
@@ -363,7 +299,7 @@ function saveCardPositions() {
 }
 
 /* ───────────────────────────────
-   F：カード位置＋内容の復元
+   F：カード復元
 ────────────────────────────── */
 function loadCardPositions() {
   const saved = localStorage.getItem("savedCardLayout");
@@ -383,21 +319,12 @@ function loadCardPositions() {
     card.style.top = item.y + "px";
     card.style.backgroundColor = item.color;
 
-    // 長さ
     card.dataset.length = item.length || "4";
     card.style.width = lengthToWidth(card.dataset.length) + "px";
 
-    // E：ドラッグ移動
     card.draggable = true;
 
-    card.addEventListener("dragstart", (e) => {
-      e.dataTransfer.setData("text/plain", item.note);
-    });
-
-    // G：編集
-    card.addEventListener("click", () => {
-      openEditDialog(card);
-    });
+    card.addEventListener("click", () => openEditDialog(card));
 
     canvas.appendChild(card);
   });
@@ -406,13 +333,16 @@ function loadCardPositions() {
 }
 
 /* ───────────────────────────────
-   ページ読み込み時に D+F を復元
+   ページ読み込み時
 ────────────────────────────── */
 window.addEventListener("load", () => {
-  loadCards();
   loadCardPositions();
 });
 
+function showToast(msg) {
+  console.log(msg);
+}
 </script>
+
 </body>
 </html>
