@@ -1327,5 +1327,21 @@ document.getElementById('sendToQuickRef')?.addEventListener('click', () => {
 });
 </script>
 
+<script>
+document.getElementById('sendToQuickRef')?.addEventListener('click', () => {
+  const exportData = buildExportData();
+
+  localStorage.setItem('ms_transfer', JSON.stringify({
+    ...exportData,
+    source: 'music-suite',
+    timestamp: Date.now()
+  }));
+
+  const label = `BPM:${exportData.bpm} Key:${exportData.key}`;
+  const go = confirm(`楽曲データ(${label})をquick-refに送ります。\nquick-refを開きますか?`);
+  if (go) location.href = 'https://norinori-jan.github.io/quick-ref/';
+});
+</script>
+
 </body>
 </html>
