@@ -1300,7 +1300,32 @@ function applyLibraryPatternSilent(p){
   });
 }
 </script>
+
+<!-- ★ quick-ref 連携コードはここに置く ★ -->
+<script>
+document.getElementById('sendToQuickRef')?.addEventListener('click', () => {
+  const score = window.currentScore || window.editorScore || null;
+  const bpm   = window.currentBPM   || 120;
+
+  if (!score) {
+    alert('楽曲データが見つかりません');
+    return;
+  }
+
+  const title = score.title || `music-${new Date().toISOString().slice(0,10)}`;
+
+  localStorage.setItem('ms_transfer', JSON.stringify({
+    score: score,
+    bpm: bpm,
+    title: title,
+    source: 'music-suite',
+    timestamp: Date.now()
+  }));
+
+  const go = confirm(`「${title}」をquick-refに送ります。\nquick-refを開きますか?`);
+  if (go) location.href = 'https://norinori-jan.github.io/quick-ref/';
+});
+</script>
+
 </body>
 </html>
-beat-lab.html
-beat-lab.html を表示しています。
