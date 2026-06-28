@@ -13,18 +13,34 @@
 </head>
 
 <body>
-<!-- ① 即時解析 input（1つだけ） -->
-<input type="file" accept="audio/*" onchange="analyzeAudioFile(this.files[0])">
-
-<!-- ② ボタン → hidden input（1つだけ） -->
-<button class="btn" onclick="openAudioFile()">🎧 音源解析</button>
-<input type="file" id="audio-file-input" accept="audio/*" style="display:none">
 
 <div id="topbar">🎵 Composition Canvas</div>
 
-<button class="btn" onclick="autoLayout()">⊞ 自動整列</button>
-<button class="btn primary" onclick="reloadCards()">↺ カード再読み込み</button>
+<button class="btn" onclick="autoLayout()">
+⊞ 自動整列
+</button>
+
+<button class="btn primary" onclick="reloadCards()">
+↺ カード再読み込み
+</button>
+
 <div class="spacer"></div>
+
+<button class="btn" onclick="openAudioFile()">
+🎧 音源解析
+</button>
+
+<button class="btn primary"
+        onclick="sendToScoreEditor()">
+🎼 score-editorへ送る
+</button>
+
+<!-- hidden input はこれ1個だけ -->
+<input
+  type="file"
+  id="audio-file-input"
+  accept="audio/*"
+  style="display:none">
 
 <div id="canvas"></div>
 
@@ -79,7 +95,7 @@ async function extractMelody(audioBuf) {
     const frame = data.slice(start, start + frameSize);
     const pitch = yinPitchDetect(frame, sampleRate);
 
-    if (pitch && pitch > 20 && pitch < 2000) {
+    if (pitch && pitch > 150 && pitch < 1200) {
       pitches.push(pitch);
     } else {
       pitches.push(null);
@@ -112,35 +128,146 @@ function pitchToNoteName(pitch) {
 function convertPitchesToNotes(pitches) {
   return pitches.map(p => pitchToNoteName(p));
 }
+function noteToMidi(note) {
+  const table = {
+    C:0,"C#":1,
+    D:2,"D#":3,
+    E:4,
+    F:5,"F#":6,
+    G:7,"G#":8,
+    A:9,"A#":10,
+    B:11
+  };
 
+  const m = note.match(
+    /^([A-G]#?)(-?\d+)$/
+  );
+
+  return table[m[1]]
+       + (parseInt(m[2]) + 1) * 12;
+}
+function noteDistance(a, b) {
+  if (!a || !b) return 999;
+
+  const table = {
+    C:0,
+    "C#":1,
+    D:2,
+    "D#":3,
+    E:4,
+    F:5,
+    "F#":6,
+    G:7,
+    "G#":8,
+    A:9,
+    "A#":10,
+    B:11
+  };
+
+  const parse = (n) => {
+    const m = n.match(/^([A-G]#?)(-?\d+)$/);
+    return table[m[1]] + parseInt(m[2]) * 12;
+  };
+
+  return Math.abs(parse(a) - parse(b));
+}
 /* ───────────────────────────────
-   音源解析 → A+B+C
+   音源解析 → A+B+C + セグメント化
 ────────────────────────────── */
 async function analyzeAudioFile(file) {
   try {
     const arrayBuf = await file.arrayBuffer();
 
     if (!state.audioCtx) {
-      state.audioCtx = new (window.AudioContext || window.webkitAudioContext)();
+      state.audioCtx =
+        new (window.AudioContext || window.webkitAudioContext)();
     }
 
-    const audioBuf = await state.audioCtx.decodeAudioData(arrayBuf);
+    const audioBuf =
+      await state.audioCtx.decodeAudioData(arrayBuf);
 
     showToast("メロディ抽出中…");
 
+    // A：ピッチ抽出
     const pitches = await extractMelody(audioBuf);
     console.log("pitches:", pitches);
 
+    // B：音名変換
     const notes = convertPitchesToNotes(pitches);
-    state.lastNotes = notes;
+    console.log("notes:", notes);
 
-    renderNoteCards(notes);
+    // ★追加：連続音を統合
+    const segments = segmentNotes(notes);
+    console.log("segments:", segments);
+
+    // 保存
+    state.lastNotes = notes;
+    state.lastSegments = segments;
+
+    // C：カード表示
+    renderNoteCards(segments);
+
+    showToast(
+      `${notes.length}フレーム → ${segments.length}音に統合`
+    );
 
   } catch (e) {
     console.error(e);
     showToast("音源の解析に失敗しました");
   }
 }
+
+/* ───────────────────────────────
+   連続音の統合（セグメント化）
+────────────────────────────── */
+function segmentNotes(notes) {
+  const result = [];
+
+  let current = null;
+  let count = 0;
+
+  for (const note of notes) {
+
+    if (!note) continue;
+
+    // 同音または半音以内なら同じ音として扱う
+    if (
+      current !== null &&
+      noteDistance(note, current) <= 1
+    ) {
+      count++;
+
+    } else {
+
+      if (current !== null) {
+        result.push({
+          note: current,
+          length: count
+        });
+      }
+
+      current = note;
+      count = 1;
+    }
+  }
+
+  if (current !== null) {
+    result.push({
+      note: current,
+      length: count
+    });
+  }
+
+  console.log(
+    "segment:",
+    notes.length,
+    "→",
+    result.length
+  );
+
+  return result;
+}
+
 /* ───────────────────────────────
    メロディログ出力（テキスト保存）
 ────────────────────────────── */
@@ -230,15 +357,17 @@ function openEditDialog(card) {
 /* ───────────────────────────────
    C+E+G+H：音名カード生成
 ────────────────────────────── */
-function renderNoteCards(notes) {
+function renderNoteCards(segments) {
   const canvas = document.getElementById("canvas");
   canvas.innerHTML = "";
 
   let x = 0;
   let y = 0;
 
-  notes.forEach((note, i) => {
-    if (!note) return;
+  segments.forEach((seg, i) => {
+
+    const note = seg.note;
+    const len = seg.length;
 
     const card = document.createElement("div");
     card.className = "card";
@@ -247,15 +376,20 @@ function renderNoteCards(notes) {
     card.style.left = x + "px";
     card.style.top = y + "px";
 
-    card.dataset.length = 4;
-    card.style.width = lengthToWidth(4) + "px";
+    card.dataset.length = len;
+
+    const width = Math.max(60, len * 12);
+    card.style.width = width + "px";
 
     card.draggable = true;
+
     card.addEventListener("dragstart", (e) => {
       e.dataTransfer.setData("text/plain", i);
     });
 
-    card.addEventListener("click", () => openEditDialog(card));
+    card.addEventListener("click", () => {
+      openEditDialog(card);
+    });
 
     card.addEventListener("dblclick", () => {
       card.remove();
@@ -264,14 +398,19 @@ function renderNoteCards(notes) {
 
     canvas.appendChild(card);
 
-    x += 80;
-    if (x > window.innerWidth - 100) {
+    x += width + 10;
+
+    if (x > window.innerWidth - 200) {
       x = 0;
       y += 60;
     }
   });
-  exportMelodyLog(notes);
-  exportMelodyToSheet(notes);   // スプレッドシート送信（任意）
+
+  exportMelodyLog(segments);
+  exportMelodyToSheet(segments);
+
+  console.log("描画カード数:", segments.length);
+
   showToast("音名カードをキャンバスに配置しました");
 }
 
@@ -310,6 +449,9 @@ function loadCardPositions() {
   const canvas = document.getElementById("canvas");
   canvas.innerHTML = "";
 
+  // ★ score-editor送信用に復元
+  state.lastNotes = [];
+
   data.forEach(item => {
     const card = document.createElement("div");
     card.className = "card";
@@ -317,21 +459,86 @@ function loadCardPositions() {
 
     card.style.left = item.x + "px";
     card.style.top = item.y + "px";
-    card.style.backgroundColor = item.color;
+    card.style.backgroundColor = item.color || "#ffffff";
 
     card.dataset.length = item.length || "4";
-    card.style.width = lengthToWidth(card.dataset.length) + "px";
+    card.style.width =
+      Math.max(60, Number(card.dataset.length) * 12) + "px";
 
     card.draggable = true;
 
-    card.addEventListener("click", () => openEditDialog(card));
+    card.addEventListener(
+      "click",
+      () => openEditDialog(card)
+    );
 
     canvas.appendChild(card);
+
+    // ★ 復元したカードを送信用データへ
+    state.lastNotes.push({
+      note: item.note,
+      length: Number(item.length) || 4
+    });
   });
+
+  console.log(
+    "復元:",
+    state.lastNotes.length,
+    "カード"
+  );
 
   showToast("カード位置と内容を復元しました");
 }
+/* ───────────────────────────────
+   score-editor-v2へ送信
+────────────────────────────── */
+function sendToScoreEditor() {
 
+  if (!state.lastNotes || state.lastNotes.length === 0) {
+    showToast("送信するメロディがありません");
+    return;
+  }
+
+  const melody = [];
+
+  let beat = 0;
+
+  state.lastNotes.forEach(seg => {
+
+    melody.push({
+      pitch: noteToMidi(seg.note),
+      startBeat: beat,
+      durationBeats: seg.length / 4,
+      vel: 90
+    });
+
+    beat += seg.length / 4;
+  });
+
+  const project = {
+    version: "1.0",
+    source: "composition-canvas",
+    name: "Imported Melody",
+    bpm: 120,
+    timeSig: 4,
+
+    melody: {
+      notes: melody
+    },
+
+    exported: new Date().toISOString()
+  };
+
+  const encoded =
+    btoa(
+      encodeURIComponent(
+        JSON.stringify(project)
+      )
+    );
+
+  window.location.href =
+    "score-editor-v2.html#import=" + encoded;
+}
 /* ───────────────────────────────
    ページ読み込み時
 ────────────────────────────── */
