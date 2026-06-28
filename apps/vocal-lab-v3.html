@@ -1,3 +1,12 @@
+
+
+コンテンツへ
+Gmail でのスクリーン リーダーの使用
+スレッド
+15 GB 中 35% 使用済み
+利用規約 · プライバシー · プログラム ポリシー
+前回のアカウント アクティビティ: 1 時間前
+詳細
 <!DOCTYPE html>
 <html lang="ja">
 <head>
@@ -9,7 +18,8 @@
   --bg:#0e0e11; --bg2:#18181d; --bg3:#22222a; --bg4:#2a2a34;
   --border:rgba(255,255,255,0.08); --border-hi:rgba(255,255,255,0.18);
   --text:#f0eef8; --text2:#9896a8; --text3:#5a5870;
-  --accent:#7f77dd; --accent-hi:#afa9ec; --accent-dim:#3c3489; --accent-bg:rgba(127,119,221,0.12);
+  --accent:#7f77dd; --accent-hi:#afa9ec; --accent-dim:#3c3489;
+  --accent-bg:rgba(127,119,221,0.12);
   --green:#1d9e75; --green-bg:rgba(29,158,117,0.12); --green-hi:#5dcaa5;
   --red:#e24b4a; --red-bg:rgba(226,75,74,0.1);
   --amber:#ef9f27; --amber-bg:rgba(239,159,39,0.1); --amber-hi:#f5c05a;
@@ -41,11 +51,13 @@ body{background:var(--bg);color:var(--text);font-family:'Inter','Hiragino Sans',
 .card-meta{font-size:10px;color:var(--text3);display:flex;gap:6px;align-items:center;flex-wrap:wrap;}
 .card-emotion-badge{font-size:9px;padding:1px 5px;border-radius:20px;background:var(--green-bg);color:var(--green-hi);}
 .card-ai-badge{font-size:9px;padding:1px 5px;border-radius:20px;background:var(--ai-bg);color:var(--ai-hi);}
-.card-delete{position:absolute;top:7px;right:7px;width:18px;height:18px;border:none;background:none;color:var(--text3);cursor:pointer;border-radius:3px;display:flex;align-items:center;justify-content:center;font-size:12px;opacity:0;transition:opacity 0.15s;}
-.phrase-card:hover .card-delete{opacity:1;}
-.card-delete:hover{color:var(--red);background:var(--red-bg);}
+.card-actions{position:absolute;top:7px;right:7px;display:flex;gap:3px;opacity:0;transition:opacity 0.15s;}
+.phrase-card:hover .card-actions{opacity:1;}
+.card-btn{width:18px;height:18px;border:none;background:none;color:var(--text3);cursor:pointer;border-radius:3px;display:flex;align-items:center;justify-content:center;font-size:11px;}
+.card-btn:hover{background:var(--bg4);color:var(--text);}
+.card-btn.delete:hover{color:var(--red);background:var(--red-bg);}
 .empty-cards{padding:20px 14px;text-align:center;color:var(--text3);font-size:12px;line-height:1.8;}
-.sidebar-footer{padding:10px;border-top:0.5px solid var(--border);}
+.sidebar-footer{padding:10px;border-top:0.5px solid var(--border);display:flex;flex-direction:column;gap:6px;}
 .btn-export{width:100%;padding:7px;border:0.5px solid var(--border-hi);background:none;color:var(--text2);border-radius:var(--radius);font-size:12px;cursor:pointer;transition:background 0.15s;}
 .btn-export:hover{background:var(--bg3);color:var(--text);}
 
@@ -58,11 +70,17 @@ body{background:var(--bg);color:var(--text);font-family:'Inter','Hiragino Sans',
 .emotion-tag.selected{background:var(--accent-bg);border-color:var(--accent);color:var(--accent-hi);}
 
 /* AI MODE SWITCHER */
-.ai-mode-row{display:flex;gap:6px;align-items:center;}
-.mode-label{font-size:10px;color:var(--text3);margin-right:2px;}
+.ai-mode-row{display:flex;gap:6px;align-items:center;flex-wrap:wrap;}
 .mode-btn{padding:5px 12px;border-radius:20px;border:0.5px solid var(--border-hi);background:none;color:var(--text2);font-size:12px;cursor:pointer;transition:all 0.15s;display:flex;align-items:center;gap:5px;}
 .mode-btn:hover{background:var(--bg3);}
 .mode-btn.active{background:var(--ai-bg);border-color:var(--ai-dim);color:var(--ai-hi);}
+
+/* BPM */
+.bpm-row{display:flex;align-items:center;gap:8px;}
+.bpm-label{font-size:10px;color:var(--text3);}
+.bpm-input{width:60px;padding:4px 8px;background:var(--bg3);border:0.5px solid var(--border);border-radius:var(--radius);color:var(--text);font-size:12px;outline:none;text-align:center;}
+.bpm-input:focus{border-color:var(--accent);}
+.bpm-unit{font-size:10px;color:var(--text3);}
 
 /* API KEY */
 .apikey-row{display:flex;gap:6px;align-items:center;}
@@ -72,7 +90,7 @@ body{background:var(--bg);color:var(--text);font-family:'Inter','Hiragino Sans',
 .apikey-save{padding:5px 10px;border:0.5px solid var(--ai-dim);background:var(--ai-bg);color:var(--ai-hi);border-radius:var(--radius);font-size:11px;cursor:pointer;}
 
 /* RECORDER */
-.recorder-area{flex:1;display:flex;flex-direction:column;align-items:center;justify-content:center;padding:24px 24px;gap:20px;}
+.recorder-area{flex:1;display:flex;flex-direction:column;align-items:center;justify-content:center;padding:24px;gap:20px;}
 .waveform-wrap{width:100%;max-width:540px;background:var(--bg2);border:0.5px solid var(--border);border-radius:var(--radius-lg);padding:14px;}
 #waveform-canvas{width:100%;height:70px;display:block;border-radius:5px;}
 .pitch-row{display:flex;align-items:center;gap:16px;width:100%;max-width:540px;}
@@ -109,9 +127,7 @@ body{background:var(--bg);color:var(--text);font-family:'Inter','Hiragino Sans',
 .btn-commit:hover{opacity:0.85;}
 .btn-commit:disabled{opacity:0.35;cursor:not-allowed;}
 
-/* ══════════════════════════════
-   AI CORRECTION PANEL
-══════════════════════════════ */
+/* AI CORRECTION PANEL */
 .ai-panel{width:100%;max-width:540px;background:var(--bg2);border:0.5px solid var(--ai-dim);border-radius:var(--radius-lg);overflow:hidden;}
 .ai-panel-header{padding:10px 14px;background:var(--ai-bg);display:flex;align-items:center;gap:8px;border-bottom:0.5px solid var(--ai-dim);}
 .ai-panel-title{font-size:12px;font-weight:600;color:var(--ai-hi);}
@@ -137,6 +153,13 @@ body{background:var(--bg);color:var(--text);font-family:'Inter','Hiragino Sans',
 .candidate-mode-area{display:flex;flex-direction:column;gap:10px;}
 .phrase-step-info{font-size:11px;color:var(--text3);display:flex;align-items:center;gap:6px;}
 .phrase-step-badge{font-size:10px;padding:2px 8px;border-radius:20px;background:var(--ai-bg);color:var(--ai-hi);}
+
+/* FIX: 候補モードでもフレーズ名入力できるようにする専用エリア */
+.candidate-name-row{display:flex;gap:7px;align-items:center;}
+.candidate-name-input{flex:1;padding:7px 11px;background:var(--bg2);border:0.5px solid var(--border);border-radius:var(--radius);color:var(--text);font-size:12px;outline:none;transition:border-color 0.15s;}
+.candidate-name-input:focus{border-color:var(--ai);}
+.candidate-name-input::placeholder{color:var(--text3);}
+
 .btn-ai-candidates{width:100%;padding:10px;border:none;background:linear-gradient(135deg,var(--ai),var(--accent));color:#fff;border-radius:var(--radius);font-size:13px;font-weight:600;cursor:pointer;transition:opacity 0.15s;display:flex;align-items:center;justify-content:center;gap:7px;}
 .btn-ai-candidates:hover{opacity:0.88;}
 .btn-ai-candidates:disabled{opacity:0.38;cursor:not-allowed;}
@@ -146,7 +169,7 @@ body{background:var(--bg);color:var(--text);font-family:'Inter','Hiragino Sans',
 .candidate-card.selected{border-color:var(--ai);background:var(--ai-bg);}
 .candidate-header{display:flex;align-items:center;gap:8px;margin-bottom:6px;}
 .candidate-label{font-size:11px;font-weight:600;color:var(--ai-hi);}
-.candidate-desc{font-size:10px;color:var(--text3);}
+.candidate-desc{font-size:10px;color:var(--text3);flex:1;}
 .candidate-notes{display:flex;gap:3px;flex-wrap:wrap;margin-bottom:6px;}
 .candidate-note{font-size:11px;font-weight:600;padding:1px 7px;border-radius:20px;background:var(--bg4);color:var(--text2);}
 .candidate-card.selected .candidate-note{background:var(--ai-dim);color:var(--ai-hi);}
@@ -184,7 +207,6 @@ body{background:var(--bg);color:var(--text);font-family:'Inter','Hiragino Sans',
 </head>
 <body>
 <div class="app">
-
 <!-- SIDEBAR -->
 <aside class="sidebar">
   <div class="sidebar-header">
@@ -194,9 +216,12 @@ body{background:var(--bg);color:var(--text);font-family:'Inter','Hiragino Sans',
     <div class="empty-cards" id="empty-msg">フレーズをまだ保存していません。<br>録音してカードを作りましょう。</div>
   </div>
   <div class="sidebar-footer">
-    <button class="btn-export" id="btn-export" style="margin-bottom:6px">JSON エクスポート</button>
-    <a href="canvas.html" style="display:block;margin-bottom:6px;padding:7px;border:0.5px solid rgba(236,72,153,0.3);background:rgba(236,72,153,0.07);color:#f472b6;border-radius:var(--radius);font-size:12px;text-align:center;text-decoration:none;transition:background 0.15s;">🗺️ 作曲キャンバスで開く</a>
+    <button class="btn-export" id="btn-export">JSON エクスポート</button>
+    <!-- FIX: 逆インポートボタン追加 -->
+    <button class="btn-export" id="btn-import-json" style="border-color:rgba(29,158,117,0.3);color:var(--green-hi)">📥 JSON インポート</button>
+    <input type="file" id="import-file-input" accept=".json" style="display:none">
     <button class="btn-export" id="btn-send-score" style="border-color:rgba(168,85,247,0.3);color:#c084fc">🎼 score-editor へ送る</button>
+    <!-- score-editor からの受信は checkIncomingImport() で自動処理 -->
   </div>
 </aside>
 
@@ -222,6 +247,15 @@ body{background:var(--bg);color:var(--text);font-family:'Inter','Hiragino Sans',
         <button class="mode-btn active" id="mode-btn-auto" onclick="setAiMode('auto')">✦ おまかせ補正</button>
         <button class="mode-btn" id="mode-btn-candidate" onclick="setAiMode('candidate')">◎ 候補選択</button>
         <button class="mode-btn" id="mode-btn-off" onclick="setAiMode('off')">— なし</button>
+      </div>
+    </div>
+    <!-- BPM (新機能) -->
+    <div>
+      <div class="section-title" style="margin-bottom:7px">テンポ</div>
+      <div class="bpm-row">
+        <input class="bpm-input" id="bpm-input" type="number" min="40" max="240" value="120">
+        <span class="bpm-unit">BPM</span>
+        <button class="btn-secondary" style="font-size:11px;padding:4px 10px" onclick="resetBpm()">リセット</button>
       </div>
     </div>
     <!-- APIキー -->
@@ -266,7 +300,7 @@ body{background:var(--bg);color:var(--text);font-family:'Inter','Hiragino Sans',
       </div>
     </div>
 
-    <!-- ══ AI PANEL ══ -->
+    <!-- AI PANEL -->
     <div class="ai-panel" id="ai-panel" style="display:none">
       <!-- おまかせ補正 -->
       <div id="auto-correct-panel">
@@ -305,6 +339,10 @@ body{background:var(--bg);color:var(--text);font-family:'Inter','Hiragino Sans',
               <span class="phrase-step-badge" id="phrase-step-badge">フレーズ 1</span>
               <span>AIが候補を3つ生成します</span>
             </div>
+            <!-- FIX: 候補モード専用フレーズ名入力 -->
+            <div class="candidate-name-row">
+              <input class="candidate-name-input" id="candidate-phrase-name" placeholder="フレーズ名（例: サビ冒頭）" />
+            </div>
             <button class="btn-ai-candidates" id="btn-ai-candidates" onclick="runCandidateGen()">◎ 候補を生成</button>
             <div class="ai-loading" id="ai-loading-cand">AIが候補を生成中…</div>
             <div class="candidates-list" id="candidates-list"></div>
@@ -338,11 +376,11 @@ body{background:var(--bg);color:var(--text);font-family:'Inter','Hiragino Sans',
   </div>
 </main>
 </div>
-
 <div class="toast" id="toast"></div>
 
 <script>
 'use strict';
+
 /* ═══════════════════════════════
    STATE
 ═══════════════════════════════ */
@@ -355,46 +393,57 @@ const state = {
   analyser: null,
   sourceNode: null,
   animFrame: null,
-  detectedNotes: [],      // 生ピッチ検出結果
-  correctedNotes: [],     // AI補正後
+  detectedNotes: [],
+  correctedNotes: [],
   aiComment: '',
-  candidates: [],         // [{label, desc, notes:[{name,midiR,hz,start,dur,conf}]}]
+  candidates: [],
   selectedCandidate: -1,
   cards: [],
   selectedEmotion: 'neutral',
-  aiMode: 'auto',         // 'auto' | 'candidate' | 'off'
+  aiMode: 'auto',
   activeCardId: null,
   previewPlaying: false,
   previewSynth: null,
   pitchHistory: [],
   showingCorrected: false,
-  phraseCount: 0,         // 候補モードのフレーズ番号
+  phraseCount: 0,
 };
+
 const AC = window.AudioContext || window.webkitAudioContext;
 let ac = null;
+
+/* ═══════════════════════════════
+   BPM (新機能)
+═══════════════════════════════ */
+function getBpm() {
+  const v = parseInt($('bpm-input').value, 10);
+  return (v >= 40 && v <= 240) ? v : 120;
+}
+function getSPB() { return 60 / getBpm(); }
+function resetBpm() { $('bpm-input').value = 120; }
 
 /* ═══════════════════════════════
    ELEMENTS
 ═══════════════════════════════ */
 const $ = id => document.getElementById(id);
-const btnRec        = $('btn-rec');
-const btnPlayBack   = $('btn-play-back');
-const btnClearDet   = $('btn-clear-det');
-const btnCommit     = $('btn-commit');
-const btnExport     = $('btn-export');
-const btnPrevPlay   = $('btn-preview-play');
-const recStatus     = $('rec-status');
-const pitchNote     = $('pitch-note');
-const pitchHz       = $('pitch-hz');
-const detectedEl    = $('detected-notes');
-const cardList      = $('card-list');
-const emptyMsg      = $('empty-msg');
-const phraseInput   = $('phrase-name');
-const previewPanel  = $('preview-panel');
-const wvCanvas      = $('waveform-canvas');
-const ptCanvas      = $('pitch-canvas');
-const wvCtx         = wvCanvas.getContext('2d');
-const ptCtx         = ptCanvas.getContext('2d');
+const btnRec = $('btn-rec');
+const btnPlayBack = $('btn-play-back');
+const btnClearDet = $('btn-clear-det');
+const btnCommit = $('btn-commit');
+const btnExport = $('btn-export');
+const btnPrevPlay = $('btn-preview-play');
+const recStatus = $('rec-status');
+const pitchNote = $('pitch-note');
+const pitchHz = $('pitch-hz');
+const detectedEl = $('detected-notes');
+const cardList = $('card-list');
+const emptyMsg = $('empty-msg');
+const phraseInput = $('phrase-name');
+const previewPanel = $('preview-panel');
+const wvCanvas = $('waveform-canvas');
+const ptCanvas = $('pitch-canvas');
+const wvCtx = wvCanvas.getContext('2d');
+const ptCtx = ptCanvas.getContext('2d');
 
 /* ═══════════════════════════════
    CANVAS
@@ -402,7 +451,7 @@ const ptCtx         = ptCanvas.getContext('2d');
 function resizeCanvases() {
   const dpr = devicePixelRatio || 1;
   [wvCanvas, ptCanvas].forEach(c => {
-    c.width  = c.offsetWidth  * dpr;
+    c.width = c.offsetWidth * dpr;
     c.height = c.offsetHeight * dpr;
   });
   wvCtx.scale(dpr, dpr);
@@ -422,7 +471,7 @@ function freqToNote(hz) {
   if (hz <= 0) return null;
   const midi = 12 * Math.log2(hz / 440) + 69;
   const midiR = Math.round(midi);
-  const name  = NOTE_NAMES[((midiR % 12) + 12) % 12] + (Math.floor(midiR / 12) - 1);
+  const name = NOTE_NAMES[((midiR % 12) + 12) % 12] + (Math.floor(midiR / 12) - 1);
   return { name, midiR, hz };
 }
 function noteToFreq(midiR) { return 440 * Math.pow(2, (midiR - 69) / 12); }
@@ -431,10 +480,10 @@ function noteToFreq(midiR) { return 440 * Math.pow(2, (midiR - 69) / 12); }
    PITCH DETECTION (YIN)
 ═══════════════════════════════ */
 function detectPitch(buf, sampleRate) {
-  const SIZE  = buf.length;
+  const SIZE = buf.length;
   const START = Math.floor(sampleRate / 800);
-  const END   = Math.floor(sampleRate / 50);
-  const yin   = new Float32Array(END);
+  const END = Math.floor(sampleRate / 50);
+  const yin = new Float32Array(END);
   for (let tau = START; tau < END; tau++) {
     let s = 0;
     for (let i = 0; i < SIZE - tau; i++) { const d = buf[i] - buf[i+tau]; s += d*d; }
@@ -513,18 +562,20 @@ function quantize(notes, grid=0.25) {
   return notes.map(n => ({
     ...n,
     start: Math.round(n.start/grid)*grid,
-    dur:   Math.max(grid, Math.round(n.dur/grid)*grid),
+    dur: Math.max(grid, Math.round(n.dur/grid)*grid),
   }));
 }
 async function analyzeRecording(blob) {
   if (!ac) ac = new AC();
+  // FIX: AudioContext suspended 対応
+  if (ac.state === 'suspended') await ac.resume();
   const arrayBuf = await blob.arrayBuffer();
   const audioBuf = await ac.decodeAudioData(arrayBuf);
   state.audioBuffer = audioBuf;
   const data = audioBuf.getChannelData(0);
-  const sr   = audioBuf.sampleRate;
+  const sr = audioBuf.sampleRate;
   const FRAME = 2048, HOP = 512;
-  const BPM = 120, SPB = 60/BPM;
+  const SPB = getSPB(); // FIX: BPMを動的に取得
   const segs = [];
   let cur = null, curStart = 0;
   for (let off = 0; off + FRAME < data.length; off += HOP) {
@@ -550,9 +601,9 @@ async function analyzeRecording(blob) {
   if (cur && cur.dur > 0.05) segs.push(cur);
   const inBeats = segs.map(n => ({
     name: n.name, midiR: n.midiR,
-    hz:   Math.round(n.hz),
+    hz: Math.round(n.hz),
     start: parseFloat((n.start/SPB).toFixed(3)),
-    dur:   parseFloat((n.dur  /SPB).toFixed(3)),
+    dur: parseFloat((n.dur/SPB).toFixed(3)),
     confidence: parseFloat(n.confidence.toFixed(2)),
   }));
   state.detectedNotes = quantize(inBeats);
@@ -576,7 +627,7 @@ function renderDetectedNotes() {
   notes.forEach(n => {
     const el = document.createElement('div');
     el.className = 'det-note' + (n.confidence < 0.7 ? ' low-conf' : '');
-    el.title = `${n.name}  conf:${n.confidence}  dur:${n.dur}拍`;
+    el.title = `${n.name} conf:${n.confidence} dur:${n.dur}拍`;
     el.textContent = n.name;
     const bar = document.createElement('div');
     bar.className = 'conf-bar';
@@ -596,17 +647,16 @@ function setAiMode(mode) {
   state.aiMode = mode;
   ['auto','candidate','off'].forEach(m => $('mode-btn-'+m).classList.toggle('active', m===mode));
   maybeShowAiPanel();
-  // commit rowは off と auto のとき表示
+  // FIX: 候補モードでもcommit-rowを非表示にするが、candidate-name-rowで代替
   $('commit-row').style.display = mode === 'candidate' ? 'none' : 'flex';
 }
-
 function maybeShowAiPanel() {
   const hasNotes = state.detectedNotes.length > 0;
   const panel = $('ai-panel');
   if (state.aiMode === 'off' || !hasNotes) { panel.style.display='none'; return; }
   panel.style.display = 'block';
-  $('auto-correct-panel').style.display  = state.aiMode==='auto'      ? 'block' : 'none';
-  $('candidate-panel').style.display     = state.aiMode==='candidate' ? 'block' : 'none';
+  $('auto-correct-panel').style.display = state.aiMode==='auto' ? 'block' : 'none';
+  $('candidate-panel').style.display = state.aiMode==='candidate' ? 'block' : 'none';
 }
 
 /* ═══════════════════════════════
@@ -619,15 +669,10 @@ function saveApiKey() {
   const key = $('apikey-input').value.trim();
   if (key) { localStorage.setItem('vl3_claude_key', key); showToast('APIキーを保存しました'); }
 }
-// 起動時にキーを復元
-document.addEventListener('DOMContentLoaded', () => {
-  const saved = localStorage.getItem('vl3_claude_key');
-  if (saved) $('apikey-input').value = saved;
-});
 
 async function callClaude(systemPrompt, userPrompt) {
   const key = getApiKey();
-  if (!key) throw new Error('APIキーが設定されていません（ヘッダーの入力欄に入力してください）');
+  if (!key) throw new Error('APIキーが設定されていません');
   const res = await fetch('https://api.anthropic.com/v1/messages', {
     method: 'POST',
     headers: {
@@ -665,19 +710,14 @@ async function runAutoCorrect() {
 3. 感情タグに合ったスケールへの補正
 4. 自然な音楽的フレーズになるよう整形
 必ずJSONのみを返してください。前置き・Markdownコードブロック記号は不要。`;
-
-    const noteList = state.detectedNotes.map(n=>
+    const noteList = state.detectedNotes.map(n =>
       `${n.name}(start:${n.start},dur:${n.dur},conf:${n.confidence})`
     ).join(', ');
-
     const usr = `感情タグ: ${state.selectedEmotion}（スケールヒント: ${emotionScaleHints[state.selectedEmotion]}）
 検出音符: ${noteList}
-
 以下のJSON形式のみで返してください:
 {"notes":[{"name":"C4","midiR":60,"hz":262,"start":0,"dur":1,"confidence":0.95}],"comment":"補正内容を1〜2文で説明"}
-
 noteの数は元の検出音符数と同じにしてください。nameはC3〜B5の範囲。`;
-
     const result = await callClaude(sys, usr);
     state.correctedNotes = (result.notes||[]).map(n => ({
       name: n.name, midiR: n.midiR||60, hz: n.hz||noteToFreq(n.midiR||60),
@@ -694,15 +734,11 @@ noteの数は元の検出音符数と同じにしてください。nameはC3〜B
     $('ai-loading').classList.remove('show');
   }
 }
-
 function renderCorrectedNotes() {
   const el = $('corrected-notes');
-  el.innerHTML = state.correctedNotes.map(n =>
-    `<span class="corrected-note">${n.name}</span>`
-  ).join('');
+  el.innerHTML = state.correctedNotes.map(n => `<span class="corrected-note">${n.name}</span>`).join('');
   $('ai-comment').textContent = state.aiComment;
 }
-
 function showRaw() {
   state.showingCorrected = false;
   $('btn-show-raw').className = 'compare-btn active';
@@ -715,7 +751,7 @@ function showCorrected() {
   $('btn-show-raw').className = 'compare-btn';
   $('btn-show-corrected').className = 'compare-btn ai-active';
   renderDetectedNotes();
-  previewNotes(state.correctedNotes); // 自動試聴
+  previewNotes(state.correctedNotes);
 }
 
 /* ═══════════════════════════════
@@ -732,14 +768,11 @@ async function runCandidateGen() {
     const sys = `あなたはプロの作曲家です。鼻歌の検出傾向から、ユーザーが意図したであろう自然なメロディ候補を3パターン生成します。
 各候補は同じ拍数・似たような音程の動き・感情タグに合ったスケールを使ってください。
 必ずJSONのみを返してください。Markdownコードブロック記号は不要。`;
-
-    const noteList = state.detectedNotes.map(n=>
+    const noteList = state.detectedNotes.map(n =>
       `${n.name}(start:${n.start},dur:${n.dur},conf:${n.confidence})`
     ).join(', ');
-
     const usr = `感情タグ: ${state.selectedEmotion}（スケールヒント: ${emotionScaleHints[state.selectedEmotion]}）
 検出音符: ${noteList}
-
 3パターンの候補を以下のJSON形式で返してください:
 {"candidates":[
   {"label":"A","description":"検出に近い・素直な解釈","notes":[{"name":"C4","midiR":60,"hz":262,"start":0,"dur":1,"confidence":0.95}]},
@@ -747,11 +780,10 @@ async function runCandidateGen() {
   {"label":"C","description":"跳躍や変化を加えたバリエーション","notes":[...]}
 ]}
 各候補のnote数は元の検出音符数と同じにしてください。nameはC3〜B5の範囲。`;
-
     const result = await callClaude(sys, usr);
     state.candidates = (result.candidates||[]).map(c => ({
       label: c.label,
-      desc:  c.description,
+      desc: c.description,
       notes: (c.notes||[]).map(n => ({
         name:n.name, midiR:n.midiR||60, hz:n.hz||noteToFreq(n.midiR||60),
         start:n.start, dur:n.dur, confidence:n.confidence||0.95,
@@ -767,7 +799,6 @@ async function runCandidateGen() {
     $('ai-loading-cand').classList.remove('show');
   }
 }
-
 function renderCandidates() {
   const el = $('candidates-list');
   el.innerHTML = '';
@@ -787,21 +818,14 @@ function renderCandidates() {
     el.appendChild(card);
   });
 }
-
 function selectCandidate(idx) {
   state.selectedCandidate = idx;
   renderCandidates();
   $('btn-candidate-commit').disabled = false;
 }
-
 let candPlayIdx = -1;
 function toggleCandidatePlay(idx) {
-  if (candPlayIdx === idx) {
-    stopPreviewSynth();
-    candPlayIdx = -1;
-    updateCandPlayBtns();
-    return;
-  }
+  if (candPlayIdx === idx) { stopPreviewSynth(); candPlayIdx = -1; updateCandPlayBtns(); return; }
   stopPreviewSynth();
   candPlayIdx = idx;
   updateCandPlayBtns();
@@ -817,32 +841,32 @@ function updateCandPlayBtns() {
   });
 }
 
+// FIX: commitSelectedCandidate で候補モード専用フレーズ名を参照
 function commitSelectedCandidate() {
   if (state.selectedCandidate < 0) return;
   const cand = state.candidates[state.selectedCandidate];
-  // 選択した候補をcorrectedNotesとして持ち込み、カード化
   state.correctedNotes = cand.notes;
   state.aiComment = `候補${cand.label}: ${cand.desc}`;
-  commitCard(true);
+  // FIX: 候補モード専用入力欄からフレーズ名を取得
+  const candidateName = $('candidate-phrase-name').value.trim();
+  commitCard(true, candidateName);
   state.phraseCount++;
   $('phrase-step-badge').textContent = `フレーズ ${state.phraseCount+1}`;
-  // 次のフレーズへリセット
   state.detectedNotes = [];
   state.candidates = [];
   state.selectedCandidate = -1;
+  $('candidate-phrase-name').value = '';
   renderDetectedNotes();
   $('candidates-list').innerHTML = '';
   $('candidate-actions').style.display = 'none';
   $('btn-ai-candidates').disabled = false;
   maybeShowAiPanel();
 }
-
 function resetCandidates() {
   state.candidates = [];
   state.selectedCandidate = -1;
   $('candidates-list').innerHTML = '';
   $('candidate-actions').style.display = 'none';
-  // 再録音を促す
   state.detectedNotes = [];
   renderDetectedNotes();
   maybeShowAiPanel();
@@ -855,10 +879,11 @@ function resetCandidates() {
 btnRec.addEventListener('click', async () => {
   state.recording ? stopRecording() : await startRecording();
 });
-
 async function startRecording() {
   try {
     if (!ac) ac = new AC();
+    // FIX: suspended 対応
+    if (ac.state === 'suspended') await ac.resume();
     const stream = await navigator.mediaDevices.getUserMedia({ audio: true });
     state.audioChunks = [];
     state.detectedNotes = [];
@@ -869,13 +894,11 @@ async function startRecording() {
     $('ai-panel').style.display='none';
     detectedEl.innerHTML='<span class="det-empty">録音中…</span>';
     btnPlayBack.disabled=true; btnCommit.disabled=true; btnClearDet.disabled=true;
-
-    const srcNode  = ac.createMediaStreamSource(stream);
+    const srcNode = ac.createMediaStreamSource(stream);
     const analyser = ac.createAnalyser();
     analyser.fftSize = 2048;
     srcNode.connect(analyser);
     state.analyser = analyser; state.sourceNode = srcNode;
-
     const mr = new MediaRecorder(stream);
     state.mediaRecorder = mr;
     mr.ondataavailable = e => state.audioChunks.push(e.data);
@@ -891,9 +914,8 @@ async function startRecording() {
     state.recording = true;
     btnRec.classList.add('recording'); btnRec.textContent='■';
     recStatus.textContent='録音中…';
-
-    const dataArr  = new Uint8Array(analyser.fftSize);
-    const float32  = new Float32Array(analyser.fftSize);
+    const dataArr = new Uint8Array(analyser.fftSize);
+    const float32 = new Float32Array(analyser.fftSize);
     const HIST_MAX = 120;
     function loop() {
       if (!state.recording) return;
@@ -912,7 +934,6 @@ async function startRecording() {
     loop();
   } catch(e) { showToast('マイクアクセスが拒否されました'); }
 }
-
 function stopRecording() {
   if (!state.mediaRecorder) return;
   state.recording = false;
@@ -934,29 +955,28 @@ btnPlayBack.addEventListener('click', () => {
   audio.play();
   audio.onended = () => { btnPlayBack.textContent='▶ 再生'; btnPlayBack.disabled=false; URL.revokeObjectURL(url); };
 });
-
 btnClearDet.addEventListener('click', () => {
   state.detectedNotes=[]; state.correctedNotes=[];
   renderDetectedNotes(); maybeShowAiPanel();
 });
 
 /* ═══════════════════════════════
-   SYNTH PREVIEW
+   SYNTH PREVIEW (BPM連動)
 ═══════════════════════════════ */
 function previewNotes(notes, onEnd) {
   if (!ac) ac = new AC();
   if (ac.state==='suspended') ac.resume();
   stopPreviewSynth();
-  const BPM=120, SPB=60/BPM;
+  const SPB = getSPB(); // FIX: 動的BPM
   const now = ac.currentTime;
   const gain = ac.createGain(); gain.gain.value=0.4; gain.connect(ac.destination);
   const oscs = [];
   notes.forEach(n => {
-    const hz  = n.hz || noteToFreq(n.midiR || 60);
+    const hz = n.hz || noteToFreq(n.midiR || 60);
     const osc = ac.createOscillator(); osc.type='sine'; osc.frequency.value=hz;
-    const g   = ac.createGain();
-    const t0  = now + n.start * SPB;
-    const t1  = t0  + n.dur   * SPB;
+    const g = ac.createGain();
+    const t0 = now + n.start * SPB;
+    const t1 = t0 + n.dur * SPB;
     g.gain.setValueAtTime(0,t0);
     g.gain.linearRampToValueAtTime(0.6,t0+0.02);
     g.gain.setValueAtTime(0.6,Math.max(t0+0.02,t1-0.03));
@@ -968,41 +988,50 @@ function previewNotes(notes, onEnd) {
   state.previewSynth = oscs;
   state.previewPlaying = true;
   const totalBeats = Math.max(...notes.map(n=>n.start+n.dur), 0);
-  const totalSec   = totalBeats * SPB + 0.3;
+  const totalSec = totalBeats * SPB + 0.3;
   state._previewTimer = setTimeout(() => {
     stopPreviewSynth();
     if (onEnd) onEnd();
   }, totalSec * 1000);
 }
 function stopPreviewSynth() {
-  if (state.previewSynth) { state.previewSynth.forEach(o=>{try{o.stop();}catch(_){}}) ; state.previewSynth=null; }
+  if (state.previewSynth) { state.previewSynth.forEach(o=>{try{o.stop();}catch(_){}}); state.previewSynth=null; }
   clearTimeout(state._previewTimer);
   state.previewPlaying=false;
-  btnPrevPlay.textContent='▶ 試聴'; btnPrevPlay.classList.remove('playing');
+  btnPrevPlay.textContent='▶ 試聴';
+  btnPrevPlay.classList.remove('playing');
 }
 
 /* ═══════════════════════════════
    COMMIT → CARD
+   FIX: optionalName引数を追加（候補モード用）
 ═══════════════════════════════ */
 btnCommit.addEventListener('click', () => commitCard(false));
-
-function commitCard(fromAi) {
-  const rawNotes   = state.detectedNotes;
-  const aiNotes    = state.correctedNotes;
-  const useAi      = fromAi || (state.aiMode==='auto' && aiNotes.length > 0);
+function commitCard(fromAi, optionalName) {
+  const rawNotes = state.detectedNotes;
+  const aiNotes = state.correctedNotes;
+  const useAi = fromAi || (state.aiMode==='auto' && aiNotes.length > 0);
   const finalNotes = useAi ? aiNotes : rawNotes;
+  // FIX: conf が undefined の場合のフォールバック
+  const safeNotes = (notes) => notes.map(n => ({
+    name: n.name, midiR: n.midiR || 60,
+    hz: n.hz || noteToFreq(n.midiR || 60),
+    start: n.start || 0, dur: n.dur || 0.25,
+    conf: n.conf ?? n.confidence ?? 0.8,
+  }));
   if (!finalNotes.length && !rawNotes.length) return;
-  const name = phraseInput.value.trim() || `フレーズ ${state.cards.length+1}`;
+  const name = optionalName || phraseInput.value.trim() || `フレーズ ${state.cards.length+1}`;
   const card = {
-    id:        Date.now(),
+    id: Date.now(),
     name,
-    emotion:   state.selectedEmotion,
-    aiMode:    state.aiMode,
-    hasAi:     useAi,
-    notes:     finalNotes.map(n => ({ name:n.name, midiR:n.midiR, hz:n.hz, start:n.start, dur:n.dur, conf:n.confidence })),
-    rawNotes:  rawNotes.map(n => ({ name:n.name, midiR:n.midiR, hz:n.hz, start:n.start, dur:n.dur, conf:n.confidence })),
+    emotion: state.selectedEmotion,
+    aiMode: state.aiMode,
+    hasAi: useAi,
+    bpm: getBpm(), // FIX: BPMを保存
+    notes: safeNotes(finalNotes),
+    rawNotes: safeNotes(rawNotes),
     aiComment: state.aiComment,
-    blob:      state.audioBlob,
+    blob: state.audioBlob,
     createdAt: new Date().toISOString(),
   };
   state.cards.push(card);
@@ -1017,12 +1046,12 @@ function commitCard(fromAi) {
 }
 
 /* ═══════════════════════════════
-   CARD LIST
+   CARD LIST (並び替えボタン追加)
 ═══════════════════════════════ */
 function renderCardList() {
   cardList.innerHTML = '';
   if (!state.cards.length) { cardList.appendChild(emptyMsg); return; }
-  state.cards.forEach(card => {
+  state.cards.forEach((card, idx) => {
     const el = document.createElement('div');
     el.className = 'phrase-card' + (card.id===state.activeCardId?' active':'');
     const uniqNotes = [...new Set(card.notes.map(n=>n.name))];
@@ -1034,13 +1063,26 @@ function renderCardList() {
         <span class="card-emotion-badge">${emotionLabels[card.emotion]||card.emotion}</span>
         ${card.hasAi?`<span class="card-ai-badge">AI補正済み</span>`:''}
         <span>${card.notes.length}音符</span>
+        ${card.bpm ? `<span>${card.bpm}BPM</span>` : ''}
       </div>
-      <button class="card-delete" data-id="${card.id}">✕</button>
+      <div class="card-actions">
+        <button class="card-btn" title="上へ" onclick="event.stopPropagation();moveCard(${idx},-1)">↑</button>
+        <button class="card-btn" title="下へ" onclick="event.stopPropagation();moveCard(${idx},1)">↓</button>
+        <button class="card-btn delete" title="削除" onclick="event.stopPropagation();deleteCard(${card.id})">✕</button>
+      </div>
     `;
-    el.addEventListener('click', e => { if(e.target.closest('.card-delete')) return; selectCard(card.id); });
-    el.querySelector('.card-delete').addEventListener('click', e => { e.stopPropagation(); deleteCard(card.id); });
+    el.addEventListener('click', e => { if(e.target.closest('.card-actions')) return; selectCard(card.id); });
     cardList.appendChild(el);
   });
+}
+
+// FIX: フレーズ並び替え
+function moveCard(idx, dir) {
+  const newIdx = idx + dir;
+  if (newIdx < 0 || newIdx >= state.cards.length) return;
+  [state.cards[idx], state.cards[newIdx]] = [state.cards[newIdx], state.cards[idx]];
+  renderCardList();
+  saveCardsToStorage();
 }
 
 function selectCard(id) {
@@ -1048,14 +1090,13 @@ function selectCard(id) {
   renderCardList();
   const card = state.cards.find(c=>c.id===id);
   if (!card) { previewPanel.classList.remove('visible'); return; }
-  $('preview-title').textContent  = card.name;
+  $('preview-title').textContent = card.name;
   $('preview-emotion').textContent = emotionLabels[card.emotion]||card.emotion;
-  $('preview-ai-tag').textContent  = card.hasAi ? '✦ AI補正済み' : '';
+  $('preview-ai-tag').textContent = card.hasAi ? '✦ AI補正済み' : '';
   $('preview-notes').innerHTML = card.notes.map(n=>`<span class="preview-note${card.hasAi?' ai':''}">${n.name}</span>`).join('');
   previewPanel.classList.add('visible');
   stopPreviewSynth();
 }
-
 function deleteCard(id) {
   state.cards = state.cards.filter(c=>c.id!==id);
   if (state.activeCardId===id) { state.activeCardId=null; previewPanel.classList.remove('visible'); }
@@ -1071,7 +1112,8 @@ btnPrevPlay.addEventListener('click', () => {
   const card = state.cards.find(c=>c.id===state.activeCardId);
   if (!card) return;
   previewNotes(card.notes, () => {});
-  btnPrevPlay.textContent='■ 停止'; btnPrevPlay.classList.add('playing');
+  btnPrevPlay.textContent='■ 停止';
+  btnPrevPlay.classList.add('playing');
   state.previewPlaying=true;
 });
 
@@ -1092,55 +1134,84 @@ $('emotion-row').addEventListener('click', e => {
 btnExport.addEventListener('click', () => {
   const data = state.cards.map(c => ({
     id:c.id, name:c.name, emotion:c.emotion, aiMode:c.aiMode, hasAi:c.hasAi,
-    bpm:120, notes:c.notes, rawNotes:c.rawNotes, aiComment:c.aiComment, createdAt:c.createdAt,
+    bpm: c.bpm || 120, notes:c.notes, rawNotes:c.rawNotes, aiComment:c.aiComment, createdAt:c.createdAt,
   }));
   const blob = new Blob([JSON.stringify(data,null,2)], { type:'application/json' });
-  const url  = URL.createObjectURL(blob);
-  const a    = document.createElement('a'); a.href=url; a.download=`vocal-lab-v3-${Date.now()}.json`;
+  const url = URL.createObjectURL(blob);
+  const a = document.createElement('a'); a.href=url; a.download=`vocal-lab-v3-${Date.now()}.json`;
   a.click(); URL.revokeObjectURL(url);
   showToast('エクスポートしました');
 });
 
 /* ═══════════════════════════════
+   JSON インポート (新機能: ファイル選択)
+═══════════════════════════════ */
+$('btn-import-json').addEventListener('click', () => $('import-file-input').click());
+$('import-file-input').addEventListener('change', e => {
+  const file = e.target.files[0];
+  if (!file) return;
+  const reader = new FileReader();
+  reader.onload = ev => {
+    try {
+      const data = JSON.parse(ev.target.result);
+      const cards = normalizeImportedCards(data);
+      if (!cards.length) throw new Error('有効なカードがありません');
+      const merge = confirm(`${cards.length}件のカードを読み込みます。\n現在のカードに追加しますか？\n（キャンセルで上書き）`);
+      if (merge) {
+        state.cards = [...state.cards, ...cards];
+      } else {
+        state.cards = cards;
+        state.activeCardId = cards[0]?.id || null;
+      }
+      saveCardsToStorage();
+      renderCardList();
+      if (state.activeCardId) selectCard(state.activeCardId);
+      showToast(`${cards.length}件のカードを読み込みました`);
+    } catch(err) {
+      showToast('読み込みエラー: ' + err.message);
+    }
+  };
+  reader.readAsText(file);
+  e.target.value = '';
+});
+
+/* ═══════════════════════════════
    SCORE-EDITOR 連携
-   cards[] → 共通フォーマット変換 → URLハッシュで送信
+   FIX: URLパス判定を安全な方法に変更
 ═══════════════════════════════ */
 $('btn-send-score').addEventListener('click', () => {
   if (!state.cards.length) { showToast('カードがありません'); return; }
-  // 全カードのnotes を1本のメロディトラックに結合（カード順に配置）
-  const BPM = 120;
   const melodyNotes = [];
   let beatOffset = 0;
   state.cards.forEach(card => {
     const maxDur = card.notes.reduce((m,n) => Math.max(m, n.start + n.dur), 0);
     card.notes.forEach(n => {
       melodyNotes.push({
-        pitch:         n.midiR || 60,
-        startBeat:     parseFloat((beatOffset + n.start).toFixed(3)),
+        pitch: n.midiR || 60,
+        startBeat: parseFloat((beatOffset + n.start).toFixed(3)),
         durationBeats: parseFloat(n.dur.toFixed(3)),
-        vel:           Math.round((n.conf || 0.8) * 80 + 20),
+        vel: Math.round((n.conf ?? 0.8) * 80 + 20), // FIX: conf undefined対応
       });
     });
-    beatOffset += Math.max(maxDur, 4); // カード間に最低4拍
+    beatOffset += Math.max(maxDur, 4);
   });
   const payload = {
-    version:  '1.0',
-    source:   'vocal-lab',
-    name:     `vocal-lab (${state.cards.length}フレーズ)`,
-    bpm:      BPM,
-    timeSig:  4,
-    melody:   { notes: melodyNotes },
-    chords:   null,
-    bass:     { notes: [] },
-    drums:    { notes: [] },
+    version: '1.0',
+    source: 'vocal-lab',
+    name: `vocal-lab (${state.cards.length}フレーズ)`,
+    bpm: getBpm(), // FIX: 動的BPM
+    timeSig: 4,
+    melody: { notes: melodyNotes },
+    chords: null,
+    bass: { notes: [] },
+    drums: { notes: [] },
     exported: new Date().toISOString(),
   };
   const b64 = btoa(unescape(encodeURIComponent(JSON.stringify(payload))));
-  // score-editor-v2.html のパスを ../apps/ からの相対で組み立て
-  // index.html経由なら ../score-editor-v2.html、直接開いた場合は同フォルダ
-  const seUrl = location.href.includes('apps/')
-    ? 'score-editor-v2.html'
-    : 'apps/score-editor-v2.html';
+  // FIX: パス判定をパスセグメントで安全に行う
+  const segments = window.location.pathname.split('/').filter(Boolean);
+  const inAppsDir = segments.includes('apps');
+  const seUrl = inAppsDir ? 'score-editor-v2.html' : 'apps/score-editor-v2.html';
   window.location.href = seUrl + '#import=' + encodeURIComponent(b64);
 });
 
@@ -1154,39 +1225,143 @@ function showToast(msg) {
 function escHtml(s) { return s.replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;'); }
 
 /* ═══════════════════════════════
-   LOCALSTORAGE 自動保存・復元
-   キー: vl3_cards  値: カード配列JSON
-   ※ blobは保存不可なので除外して保存
+   INDEXEDDB ストレージ
+   - blobも保存可能（LocalStorage上限5MB を突破）
+   - LocalStorageからの自動マイグレーション付き
 ═══════════════════════════════ */
-const CARDS_KEY = 'vl3_cards';
+const DB_NAME = 'vocal-lab-v3';
+const DB_VERSION = 1;
+const STORE_CARDS = 'cards';
+const STORE_META = 'meta';
 
-function saveCardsToStorage() {
+let db = null;
+
+function openDB() {
+  return new Promise((resolve, reject) => {
+    if (db) { resolve(db); return; }
+    const req = indexedDB.open(DB_NAME, DB_VERSION);
+    req.onupgradeneeded = e => {
+      const d = e.target.result;
+      if (!d.objectStoreNames.contains(STORE_CARDS)) {
+        d.createObjectStore(STORE_CARDS, { keyPath: 'id' });
+      }
+      if (!d.objectStoreNames.contains(STORE_META)) {
+        d.createObjectStore(STORE_META);
+      }
+    };
+    req.onsuccess = e => { db = e.target.result; resolve(db); };
+    req.onerror = e => reject(e.target.error);
+  });
+}
+
+async function saveCardsToStorage() {
   try {
-    const saveable = state.cards.map(c => {
-      const { blob, ...rest } = c;  // blobは除外
-      return rest;
+    const d = await openDB();
+    const tx = d.transaction(STORE_CARDS, 'readwrite');
+    const store = tx.objectStore(STORE_CARDS);
+    // 全削除してから全書き込み（順序保持のため）
+    await new Promise((res, rej) => {
+      const r = store.clear();
+      r.onsuccess = res; r.onerror = rej;
     });
-    localStorage.setItem(CARDS_KEY, JSON.stringify(saveable));
+    for (const card of state.cards) {
+      await new Promise((res, rej) => {
+        const r = store.put(card); // blobも含めてそのまま保存
+        r.onsuccess = res; r.onerror = rej;
+      });
+    }
+    // 順序をmetaストアに保存
+    const metaTx = d.transaction(STORE_META, 'readwrite');
+    const metaStore = metaTx.objectStore(STORE_META);
+    await new Promise((res, rej) => {
+      const r = metaStore.put(state.cards.map(c => c.id), 'card_order');
+      r.onsuccess = res; r.onerror = rej;
+    });
   } catch(e) {
-    console.warn('localStorage save failed:', e);
+    console.warn('IndexedDB save failed, falling back to localStorage:', e);
+    // フォールバック: blobを除いてLocalStorageへ
+    try {
+      const saveable = state.cards.map(c => { const { blob, ...rest } = c; return rest; });
+      localStorage.setItem('vl3_cards', JSON.stringify(saveable));
+    } catch(e2) { console.warn('localStorage fallback also failed:', e2); }
   }
 }
 
-function loadCardsFromStorage() {
+async function loadCardsFromStorage() {
   try {
-    const raw = localStorage.getItem(CARDS_KEY);
+    const d = await openDB();
+    // 順序を取得
+    const order = await new Promise((res, rej) => {
+      const tx = d.transaction(STORE_META, 'readonly');
+      const r = tx.objectStore(STORE_META).get('card_order');
+      r.onsuccess = () => res(r.result || []);
+      r.onerror = rej;
+    });
+    // 全カードを取得
+    const all = await new Promise((res, rej) => {
+      const tx = d.transaction(STORE_CARDS, 'readonly');
+      const r = tx.objectStore(STORE_CARDS).getAll();
+      r.onsuccess = () => res(r.result || []);
+      r.onerror = rej;
+    });
+    if (!all.length) {
+      // IndexedDBが空 → LocalStorageからマイグレーション
+      await migrateFromLocalStorage();
+      return;
+    }
+    // 順序通りに並べ替え
+    const map = Object.fromEntries(all.map(c => [c.id, c]));
+    const ordered = order.length
+      ? order.map(id => map[id]).filter(Boolean)
+      : all;
+    if (!ordered.length) return;
+    state.cards = ordered;
+    renderCardList();
+    showToast(`${ordered.length}件のカードを復元しました`);
+  } catch(e) {
+    console.warn('IndexedDB load failed:', e);
+    await migrateFromLocalStorage();
+  }
+}
+
+async function migrateFromLocalStorage() {
+  try {
+    const raw = localStorage.getItem('vl3_cards');
     if (!raw) return;
     const cards = JSON.parse(raw);
     if (!Array.isArray(cards) || !cards.length) return;
     state.cards = cards;
     renderCardList();
-    showToast(`${cards.length}件のカードを復元しました`);
-  } catch(e) {
-    console.warn('localStorage load failed:', e);
-  }
+    showToast(`${cards.length}件のカードを復元しました（移行完了）`);
+    // IndexedDBに書き込んでLocalStorageは保持（念のため）
+    await saveCardsToStorage();
+  } catch(e) { console.warn('localStorage migration failed:', e); }
 }
 
 function normalizeImportedCards(data) {
+  // score-editor からの melody ペイロードにも対応
+  if (data.source && data.melody && data.melody.notes) {
+    // score-editor → vocal-lab 逆インポート
+    return [{
+      id: Date.now(),
+      name: data.name || 'score-editorから',
+      emotion: 'neutral',
+      aiMode: 'off',
+      hasAi: false,
+      bpm: data.bpm || 120,
+      notes: data.melody.notes.map(n => ({
+        name: noteName(n.pitch || 60),
+        midiR: n.pitch || 60,
+        hz: noteToFreq(n.pitch || 60),
+        start: n.startBeat ?? 0,
+        dur: n.durationBeats ?? 1,
+        conf: (n.vel || 80) / 100,
+      })),
+      rawNotes: [],
+      aiComment: 'score-editorからインポート',
+      createdAt: new Date().toISOString(),
+    }];
+  }
   const cards = Array.isArray(data) ? data : (Array.isArray(data?.cards) ? data.cards : []);
   return cards.map((card, idx) => ({
     id: card.id || Date.now() + idx,
@@ -1194,6 +1369,7 @@ function normalizeImportedCards(data) {
     emotion: card.emotion || 'neutral',
     aiMode: card.aiMode || 'off',
     hasAi: !!card.hasAi,
+    bpm: card.bpm || 120,
     notes: (card.notes || []).map(n => ({
       name: n.name || noteName(n.midiR || n.pitch || 60),
       midiR: n.midiR || n.pitch || 60,
@@ -1220,11 +1396,12 @@ function checkIncomingImport() {
   if (!m) return false;
   try {
     const json = decodeURIComponent(escape(atob(decodeURIComponent(m[1]))));
-    const cards = normalizeImportedCards(JSON.parse(json));
+    const parsed = JSON.parse(json);
+    const cards = normalizeImportedCards(parsed);
     if (!cards.length) throw new Error('カードが含まれていません');
     state.cards = cards;
     state.activeCardId = cards[0].id;
-    saveCardsToStorage();
+    saveCardsToStorage(); // async だが await しない（初期化を止めない）
     renderCardList();
     selectCard(cards[0].id);
     history.replaceState(null, '', window.location.pathname + window.location.search);
@@ -1240,13 +1417,15 @@ function checkIncomingImport() {
 /* ═══════════════════════════════
    INIT
 ═══════════════════════════════ */
-// APIキー復元
-const _saved = localStorage.getItem('vl3_claude_key');
-if (_saved) $('apikey-input').value = _saved;
-// カード復元
-if (!checkIncomingImport()) loadCardsFromStorage();
-renderCardList();
-setAiMode('auto');
+(async () => {
+  const _saved = localStorage.getItem('vl3_claude_key');
+  if (_saved) $('apikey-input').value = _saved;
+  if (!checkIncomingImport()) await loadCardsFromStorage();
+  renderCardList();
+  setAiMode('auto');
+})();
 </script>
 </body>
 </html>
+vocal-lab-v3.html
+vocal-lab-v3.html を表示しています。
