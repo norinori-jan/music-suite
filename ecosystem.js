@@ -23,3 +23,37 @@ export function loadApiKeys() {
 export function saveApiKeys(keys) {
   localStorage.setItem('ml_keys', JSON.stringify(keys));
 }
+
+// ── iCloud Drive 保存 ──────────────────────────────
+const MS_ICLOUD_KEY = 'ms_icloud_last_save';
+
+function saveToiCloud(blob, filename) {
+  filename = filename || `music-suite-${new Date().toISOString().slice(0,10)}.json`;
+  const url = URL.createObjectURL(blob);
+  const a = document.createElement('a'); a.href = url; a.download = filename;
+  document.body.appendChild(a); a.click(); document.body.removeChild(a);
+  setTimeout(() => URL.revokeObjectURL(url), 5000);
+  localStorage.setItem(MS_ICLOUD_KEY, JSON.stringify({ savedAt: Date.now(), filename }));
+  const isIOS = /iPhone|iPad|iPod/.test(navigator.userAgent);
+  if (isIOS) alert(`?? "${filename}" をダウンロードしました。\nファイルアプリ → iCloud Drive に移動してください。`);
+  return filename;
+}
+
+function exportProjectToiCloud(projectData) {
+  const json = JSON.stringify(projectData, null, 2);
+  const blob = new Blob([json], { type: 'application/json' });
+  return saveToiCloud(blob, `ms-project-${new Date().toISOString().slice(0,19).replace(/[T:]/g,'-')}.json`);
+}
+
+function getLastiCloudSave() {
+  try { const d = JSON.parse(localStorage.getItem(MS_ICLOUD_KEY)||'null'); return d; } catch(_) { return null; }
+}
+
+// quick-ref への転送
+function sendToQuickRef(meta) {
+  try {
+    const payload = { source: 'music-suite', destination: 'quick-ref', ...meta, date: new Date().toISOString() };
+    localStorage.setItem('ms_transfer', JSON.stringify(payload));
+    return { ok: true };
+  } catch(e) { return { ok: false, msg: e.message }; }
+}
