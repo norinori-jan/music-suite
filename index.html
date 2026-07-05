@@ -1,4 +1,4 @@
-<!DOCTYPE html>
+﻿<!DOCTYPE html>
 <html lang="ja">
 <head>
 <meta charset="UTF-8">
@@ -19,14 +19,14 @@
 *{box-sizing:border-box;margin:0;padding:0;}
 html,body{min-height:100vh;background:var(--bg);color:var(--tx);font-family:'Inter','Hiragino Sans','Yu Gothic UI',sans-serif;font-size:14px;line-height:1.6;}
 
-/* ── HERO ── */
+/* 笏笏 HERO 笏笏 */
 .hero{padding:48px 24px 0;text-align:center;}
 .hero-logo{font-size:11px;font-weight:600;letter-spacing:0.18em;text-transform:uppercase;color:var(--tx3);margin-bottom:12px;}
 .hero-title{font-size:32px;font-weight:700;letter-spacing:-0.02em;color:var(--tx);margin-bottom:8px;}
 .hero-title span{color:var(--acc-hi);}
 .hero-sub{font-size:14px;color:var(--tx2);max-width:480px;margin:0 auto 40px;}
 
-/* ── APP GRID ── */
+/* 笏笏 APP GRID 笏笏 */
 .app-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(260px,1fr));gap:14px;max-width:900px;margin:0 auto;padding:0 24px 48px;}
 
 .app-card{
@@ -57,7 +57,7 @@ html,body{min-height:100vh;background:var(--bg);color:var(--tx);font-family:'Int
 .card-arrow{position:absolute;top:20px;right:20px;font-size:16px;color:var(--tx3);transition:color 0.15s,transform 0.15s;}
 .app-card:hover .card-arrow{color:var(--tx2);transform:translateX(2px);}
 
-/* ── PROJECT SECTION ── */
+/* 笏笏 PROJECT SECTION 笏笏 */
 .section{max-width:900px;margin:0 auto;padding:0 24px 48px;}
 .section-head{display:flex;align-items:center;justify-content:space-between;margin-bottom:14px;}
 .section-title{font-size:10px;font-weight:600;letter-spacing:0.12em;text-transform:uppercase;color:var(--tx3);}
@@ -65,7 +65,7 @@ html,body{min-height:100vh;background:var(--bg);color:var(--tx);font-family:'Int
 .btn-sm:hover{background:var(--bg3);color:var(--tx);}
 .btn-sm.primary{border-color:var(--acc);background:var(--acc-bg);color:var(--acc-hi);}
 
-/* ── PROJECT LIST ── */
+/* 笏笏 PROJECT LIST 笏笏 */
 .project-list{display:flex;flex-direction:column;gap:6px;}
 .project-item{
   background:var(--bg2);border:0.5px solid var(--bd);border-radius:var(--r);
@@ -88,7 +88,7 @@ html,body{min-height:100vh;background:var(--bg);color:var(--tx);font-family:'Int
 .proj-del:hover{color:var(--red);background:var(--red-bg);}
 .empty-proj{padding:24px;text-align:center;color:var(--tx3);font-size:12px;background:var(--bg2);border:0.5px solid var(--bd);border-radius:var(--r);}
 
-/* ── IMPORT DROP ── */
+/* 笏笏 IMPORT DROP 笏笏 */
 .import-area{
   border:1px dashed var(--bd2);border-radius:var(--r-lg);padding:28px;text-align:center;
   color:var(--tx3);font-size:12px;transition:all 0.15s;cursor:pointer;
@@ -96,23 +96,23 @@ html,body{min-height:100vh;background:var(--bg);color:var(--tx);font-family:'Int
 .import-area:hover,.import-area.drag-over{border-color:var(--acc);color:var(--acc-hi);background:var(--acc-bg);}
 .import-area input{display:none;}
 
-/* ── DATA FLOW ── */
+/* 笏笏 DATA FLOW 笏笏 */
 .flow-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(180px,1fr));gap:10px;}
 .flow-card{background:var(--bg2);border:0.5px solid var(--bd);border-radius:var(--r);padding:14px 16px;}
 .flow-app{font-size:11px;font-weight:600;color:var(--tx2);margin-bottom:6px;display:flex;align-items:center;gap:6px;}
 .flow-dot{width:7px;height:7px;border-radius:50%;}
 .flow-items{display:flex;flex-direction:column;gap:3px;}
 .flow-item{font-size:11px;color:var(--tx3);display:flex;align-items:center;gap:5px;}
-.flow-item::before{content:'→';color:var(--tx3);font-size:10px;}
+.flow-item::before{content:'竊・;color:var(--tx3);font-size:10px;}
 
-/* ── FOOTER ── */
+/* 笏笏 FOOTER 笏笏 */
 .footer{max-width:900px;margin:0 auto;padding:0 24px 40px;display:flex;align-items:center;justify-content:space-between;border-top:0.5px solid var(--bd);padding-top:20px;}
 .footer-logo{font-size:11px;color:var(--tx3);letter-spacing:0.1em;}
 .footer-links{display:flex;gap:12px;}
 .footer-link{font-size:11px;color:var(--tx3);text-decoration:none;transition:color 0.15s;}
 .footer-link:hover{color:var(--tx2);}
 
-/* ── TOAST ── */
+/* 笏笏 TOAST 笏笏 */
 .toast{position:fixed;bottom:20px;left:50%;transform:translateX(-50%) translateY(60px);background:var(--bg3);border:0.5px solid var(--bd2);border-radius:var(--r);padding:8px 18px;font-size:12px;color:var(--tx);transition:transform 0.25s;pointer-events:none;z-index:999;}
 .toast.show{transform:translateX(-50%) translateY(0);}
 
@@ -125,73 +125,73 @@ html,body{min-height:100vh;background:var(--bg);color:var(--tx);font-family:'Int
 <!-- HERO -->
 <div class="hero">
   <div class="hero-logo">music-suite</div>
-  <h1 class="hero-title">思いついた音楽を<br><span>最速で形にする</span></h1>
-  <p class="hero-sub">鼻歌からコード進行、ドラムパターン、スコアまで。<br>4つのツールが共通データで連携します。</p>
+  <h1 class="hero-title">諤昴＞縺､縺・◆髻ｳ讌ｽ繧・br><span>譛騾溘〒蠖｢縺ｫ縺吶ｋ</span></h1>
+  <p class="hero-sub">鮠ｻ豁後°繧峨さ繝ｼ繝蛾ｲ陦後√ラ繝ｩ繝繝代ち繝ｼ繝ｳ縲√せ繧ｳ繧｢縺ｾ縺ｧ縲・br>4縺､縺ｮ繝・・繝ｫ縺悟・騾壹ョ繝ｼ繧ｿ縺ｧ騾｣謳ｺ縺励∪縺吶・/p>
 </div>
 
 <!-- APP GRID -->
 <div class="app-grid">
 
-  <a class="app-card vocal" href="apps/vocal-lab-v3.html">
-    <div class="card-icon">🎤</div>
+  <a class="app-card vocal" href="apps/vocal-lab.html">
+    <div class="card-icon">痔</div>
     <div><span class="card-name">vocal-lab</span><span class="card-version">v3 AI</span></div>
-    <div class="card-desc">鼻歌を録音してピッチ検出。AIが自動補正または3候補を提案してメロディをカード化。感情タグでスケールを制御。</div>
+    <div class="card-desc">鮠ｻ豁後ｒ骭ｲ髻ｳ縺励※繝斐ャ繝∵､懷・縲・I縺瑚・蜍戊｣懈ｭ｣縺ｾ縺溘・3蛟呵｣懊ｒ謠先｡医＠縺ｦ繝｡繝ｭ繝・ぅ繧偵き繝ｼ繝牙喧縲よ─諠・ち繧ｰ縺ｧ繧ｹ繧ｱ繝ｼ繝ｫ繧貞宛蠕｡縲・/div>
     <div class="card-tags">
-      <span class="card-tag">録音</span>
-      <span class="card-tag">ピッチ検出</span>
-      <span class="card-tag">AI補正</span>
-      <span class="card-tag">候補選択</span>
+      <span class="card-tag">骭ｲ髻ｳ</span>
+      <span class="card-tag">繝斐ャ繝∵､懷・</span>
+      <span class="card-tag">AI陬懈ｭ｣</span>
+      <span class="card-tag">蛟呵｣憺∈謚・/span>
     </div>
-    <div class="card-arrow">→</div>
+    <div class="card-arrow">竊・/div>
   </a>
 
   <a class="app-card chord" href="apps/chord-lab.html">
-    <div class="card-icon">🎹</div>
+    <div class="card-icon">嫉</div>
     <div><span class="card-name">chord-lab</span><span class="card-version">v1</span></div>
-    <div class="card-desc">ダイアトニックパレットからコード進行を組み立て。AIが新規生成・編集。MIDI / JSON エクスポート対応。</div>
+    <div class="card-desc">繝繧､繧｢繝医ル繝・け繝代Ξ繝・ヨ縺九ｉ繧ｳ繝ｼ繝蛾ｲ陦後ｒ邨・∩遶九※縲・I縺梧眠隕冗函謌舌・邱ｨ髮・・IDI / JSON 繧ｨ繧ｯ繧ｹ繝昴・繝亥ｯｾ蠢懊・/div>
     <div class="card-tags">
-      <span class="card-tag">コード進行</span>
-      <span class="card-tag">AI生成</span>
-      <span class="card-tag">MIDI出力</span>
+      <span class="card-tag">繧ｳ繝ｼ繝蛾ｲ陦・/span>
+      <span class="card-tag">AI逕滓・</span>
+      <span class="card-tag">MIDI蜃ｺ蜉・/span>
     </div>
-    <div class="card-arrow">→</div>
+    <div class="card-arrow">竊・/div>
   </a>
 
   <a class="app-card beat" href="apps/beat-lab.html">
-    <div class="card-icon">🥁</div>
+    <div class="card-icon">･・/div>
     <div><span class="card-name">beat-lab</span><span class="card-version">v1</span></div>
-    <div class="card-desc">16ステップシーケンサーでドラムパターンを作成。AIがジャンル・フィール別に自動生成。MIDI書き出し対応。</div>
+    <div class="card-desc">16繧ｹ繝・ャ繝励す繝ｼ繧ｱ繝ｳ繧ｵ繝ｼ縺ｧ繝峨Λ繝繝代ち繝ｼ繝ｳ繧剃ｽ懈・縲・I縺後ず繝｣繝ｳ繝ｫ繝ｻ繝輔ぅ繝ｼ繝ｫ蛻･縺ｫ閾ｪ蜍慕函謌舌・IDI譖ｸ縺榊・縺怜ｯｾ蠢懊・/div>
     <div class="card-tags">
-      <span class="card-tag">ステップ入力</span>
-      <span class="card-tag">AI生成</span>
-      <span class="card-tag">MIDI出力</span>
+      <span class="card-tag">繧ｹ繝・ャ繝怜・蜉・/span>
+      <span class="card-tag">AI逕滓・</span>
+      <span class="card-tag">MIDI蜃ｺ蜉・/span>
     </div>
-    <div class="card-arrow">→</div>
+    <div class="card-arrow">竊・/div>
   </a>
 
   <a class="app-card" href="apps/canvas.html" style="border-color:rgba(236,72,153,0.2);">
-    <div class="card-icon">🗺️</div>
-    <div><span class="card-name">作曲キャンバス</span><span class="card-version" style="background:rgba(236,72,153,0.1);color:#f472b6;">new</span></div>
-    <div class="card-desc">フレーズカードを自由に配置・グルーピング。サビ/Aメロ/没案などのゾーンで構成を可視化。vocal-lab v3と自動連携。</div>
+    <div class="card-icon">亮・・/div>
+    <div><span class="card-name">菴懈峇繧ｭ繝｣繝ｳ繝舌せ</span><span class="card-version" style="background:rgba(236,72,153,0.1);color:#f472b6;">new</span></div>
+    <div class="card-desc">繝輔Ξ繝ｼ繧ｺ繧ｫ繝ｼ繝峨ｒ閾ｪ逕ｱ縺ｫ驟咲ｽｮ繝ｻ繧ｰ繝ｫ繝ｼ繝斐Φ繧ｰ縲ゅし繝・A繝｡繝ｭ/豐｡譯医↑縺ｩ縺ｮ繧ｾ繝ｼ繝ｳ縺ｧ讒区・繧貞庄隕門喧縲Ｗocal-lab v3縺ｨ閾ｪ蜍暮｣謳ｺ縲・/div>
     <div class="card-tags">
-      <span class="card-tag">ドラッグ配置</span>
-      <span class="card-tag">グルーピング</span>
-      <span class="card-tag">構成管理</span>
+      <span class="card-tag">繝峨Λ繝・げ驟咲ｽｮ</span>
+      <span class="card-tag">繧ｰ繝ｫ繝ｼ繝斐Φ繧ｰ</span>
+      <span class="card-tag">讒区・邂｡逅・/span>
     </div>
-    <div class="card-arrow">→</div>
+    <div class="card-arrow">竊・/div>
   </a>
 
   <a class="app-card score" href="apps/score-editor-v2.html">
-    <div class="card-icon">🎼</div>
+    <div class="card-icon">湿</div>
     <div><span class="card-name">score-editor</span><span class="card-version">v2</span></div>
-    <div class="card-desc">ピアノロール・ドラムグリッド・アレンジメントビューを統合。vocal-lab / canvas / chord-lab / beat-lab の JSON を直接インポート可能。</div>
+    <div class="card-desc">繝斐い繝弱Ο繝ｼ繝ｫ繝ｻ繝峨Λ繝繧ｰ繝ｪ繝・ラ繝ｻ繧｢繝ｬ繝ｳ繧ｸ繝｡繝ｳ繝医ン繝･繝ｼ繧堤ｵｱ蜷医Ｗocal-lab / canvas / chord-lab / beat-lab 縺ｮ JSON 繧堤峩謗･繧､繝ｳ繝昴・繝亥庄閭ｽ縲・/div>
     <div class="card-tags">
-      <span class="card-tag">ピアノロール</span>
+      <span class="card-tag">繝斐い繝弱Ο繝ｼ繝ｫ</span>
       <span class="card-tag">DRUM</span>
-      <span class="card-tag">AI生成</span>
-      <span class="card-tag">MIDI出力</span>
+      <span class="card-tag">AI逕滓・</span>
+      <span class="card-tag">MIDI蜃ｺ蜉・/span>
     </div>
-    <div class="card-arrow">→</div>
+    <div class="card-arrow">竊・/div>
   </a>
 
 </div>
@@ -199,10 +199,10 @@ html,body{min-height:100vh;background:var(--bg);color:var(--tx);font-family:'Int
 <!-- PROJECT MANAGER -->
 <div class="section">
   <div class="section-head">
-    <span class="section-title">プロジェクト</span>
+    <span class="section-title">繝励Ο繧ｸ繧ｧ繧ｯ繝・/span>
     <div style="display:flex;gap:6px;">
       <label class="btn-sm" style="cursor:pointer;">
-        📥 JSONインポート
+        踏 JSON繧､繝ｳ繝昴・繝・
         <input type="file" accept=".json" onchange="importProject(this)">
       </label>
     </div>
@@ -211,8 +211,8 @@ html,body{min-height:100vh;background:var(--bg);color:var(--tx);font-family:'Int
   <div style="margin-top:10px;">
     <label class="import-area" id="drop-area">
       <input type="file" accept=".json" onchange="importProject(this)">
-      <div>📂 JSONファイルをここにドロップ</div>
-      <div style="margin-top:4px;font-size:11px;">vocal-lab / chord-lab / beat-lab のエクスポートJSONを読み込みます</div>
+      <div>唐 JSON繝輔ぃ繧､繝ｫ繧偵％縺薙↓繝峨Ο繝・・</div>
+      <div style="margin-top:4px;font-size:11px;">vocal-lab / chord-lab / beat-lab 縺ｮ繧ｨ繧ｯ繧ｹ繝昴・繝・SON繧定ｪｭ縺ｿ霎ｼ縺ｿ縺ｾ縺・/div>
     </label>
   </div>
 </div>
@@ -220,47 +220,47 @@ html,body{min-height:100vh;background:var(--bg);color:var(--tx);font-family:'Int
 <!-- DATA FLOW -->
 <div class="section">
   <div class="section-head">
-    <span class="section-title">データフロー</span>
+    <span class="section-title">繝・・繧ｿ繝輔Ο繝ｼ</span>
   </div>
   <div class="flow-grid">
     <div class="flow-card">
       <div class="flow-app"><div class="flow-dot" style="background:var(--acc)"></div>vocal-lab v3</div>
       <div class="flow-items">
-        <div class="flow-item">フレーズカード (JSON)</div>
-        <div class="flow-item">rawNotes + AI補正後</div>
-        <div class="flow-item">感情タグ付き</div>
+        <div class="flow-item">繝輔Ξ繝ｼ繧ｺ繧ｫ繝ｼ繝・(JSON)</div>
+        <div class="flow-item">rawNotes + AI陬懈ｭ｣蠕・/div>
+        <div class="flow-item">諢滓ュ繧ｿ繧ｰ莉倥″</div>
       </div>
     </div>
     <div class="flow-card">
-      <div class="flow-app"><div class="flow-dot" style="background:#ec4899"></div>作曲キャンバス</div>
+      <div class="flow-app"><div class="flow-dot" style="background:#ec4899"></div>菴懈峇繧ｭ繝｣繝ｳ繝舌せ</div>
       <div class="flow-items">
-        <div class="flow-item">vl3_cards を自動読み込み</div>
-        <div class="flow-item">構成順にメロディ結合</div>
-        <div class="flow-item">score-editor へ送信</div>
+        <div class="flow-item">vl3_cards 繧定・蜍戊ｪｭ縺ｿ霎ｼ縺ｿ</div>
+        <div class="flow-item">讒区・鬆・↓繝｡繝ｭ繝・ぅ邨仙粋</div>
+        <div class="flow-item">score-editor 縺ｸ騾∽ｿ｡</div>
       </div>
     </div>
     <div class="flow-card">
       <div class="flow-app"><div class="flow-dot" style="background:var(--green)"></div>chord-lab</div>
       <div class="flow-items">
-        <div class="flow-item">コード進行 (JSON)</div>
-        <div class="flow-item">MIDI (ch1:コード / ch2:ベース)</div>
-        <div class="flow-item">score-editor へ送信</div>
+        <div class="flow-item">繧ｳ繝ｼ繝蛾ｲ陦・(JSON)</div>
+        <div class="flow-item">MIDI (ch1:繧ｳ繝ｼ繝・/ ch2:繝吶・繧ｹ)</div>
+        <div class="flow-item">score-editor 縺ｸ騾∽ｿ｡</div>
       </div>
     </div>
     <div class="flow-card">
       <div class="flow-app"><div class="flow-dot" style="background:var(--amber)"></div>beat-lab</div>
       <div class="flow-items">
-        <div class="flow-item">ドラムパターン (JSON)</div>
-        <div class="flow-item">MIDI (ch10 GMドラム)</div>
-        <div class="flow-item">score-editor へ送信</div>
+        <div class="flow-item">繝峨Λ繝繝代ち繝ｼ繝ｳ (JSON)</div>
+        <div class="flow-item">MIDI (ch10 GM繝峨Λ繝)</div>
+        <div class="flow-item">score-editor 縺ｸ騾∽ｿ｡</div>
       </div>
     </div>
     <div class="flow-card">
       <div class="flow-app"><div class="flow-dot" style="background:var(--ai-hi)"></div>score-editor v2</div>
       <div class="flow-items">
-        <div class="flow-item">全トラック統合</div>
-        <div class="flow-item">vocal/canvas/chord/beat受信</div>
-        <div class="flow-item">MIDI (Format 1) 書き出し</div>
+        <div class="flow-item">蜈ｨ繝医Λ繝・け邨ｱ蜷・/div>
+        <div class="flow-item">vocal/canvas/chord/beat蜿嶺ｿ｡</div>
+        <div class="flow-item">MIDI (Format 1) 譖ｸ縺榊・縺・/div>
       </div>
     </div>
   </div>
@@ -270,7 +270,7 @@ html,body{min-height:100vh;background:var(--bg);color:var(--tx);font-family:'Int
 <div class="footer">
   <div class="footer-logo">music-suite</div>
   <div class="footer-links">
-    <a class="footer-link" href="apps/vocal-lab-v2.html">vocal-lab v2（旧版）</a>
+    <a class="footer-link" href="apps/vocal-lab-v2.html">vocal-lab v2・域立迚茨ｼ・/a>
   </div>
 </div>
 
@@ -279,7 +279,7 @@ html,body{min-height:100vh;background:var(--bg);color:var(--tx);font-family:'Int
 <script>
 'use strict';
 
-/* ── PROJECT STORAGE ── */
+/* 笏笏 PROJECT STORAGE 笏笏 */
 const STORAGE_KEY = 'msuite_projects';
 
 function loadProjects() {
@@ -294,7 +294,7 @@ function renderProjects() {
   const list = document.getElementById('project-list');
   const projects = loadProjects();
   if (!projects.length) {
-    list.innerHTML = '<div class="empty-proj">プロジェクトがありません。各アプリのJSONエクスポートをインポートしてください。</div>';
+    list.innerHTML = '<div class="empty-proj">繝励Ο繧ｸ繧ｧ繧ｯ繝医′縺ゅｊ縺ｾ縺帙ｓ縲ょ推繧｢繝励Μ縺ｮJSON繧ｨ繧ｯ繧ｹ繝昴・繝医ｒ繧､繝ｳ繝昴・繝医＠縺ｦ縺上□縺輔＞縲・/div>';
     return;
   }
   list.innerHTML = '';
@@ -303,23 +303,23 @@ function renderProjects() {
     const el = document.createElement('div');
     el.className = 'project-item';
     const src  = p.source || detectSource(p);
-    const icon = { 'vocal-lab':'🎤', 'chord-lab':'🎹', 'beat-lab':'🥁', 'score-editor':'🎼' }[src] || '📄';
+    const icon = { 'vocal-lab':'痔', 'chord-lab':'嫉', 'beat-lab':'･・, 'score-editor':'湿' }[src] || '塘';
     const date = p.updatedAt || p.exported || p.createdAt || '';
     const dateStr = date ? new Date(date).toLocaleDateString('ja-JP',{month:'short',day:'numeric',hour:'2-digit',minute:'2-digit'}) : '';
     const badgeClass = {'vocal-lab':'vocal','chord-lab':'chord','beat-lab':'beat','score-editor':'score'}[src] || '';
     el.innerHTML = `
       <div class="proj-icon">${icon}</div>
       <div class="proj-info">
-        <div class="proj-name">${escHtml(p.name || p.projectName || '無題')}</div>
-        <div class="proj-meta">${escHtml(src)} ${dateStr ? '· '+dateStr : ''}</div>
+        <div class="proj-name">${escHtml(p.name || p.projectName || '辟｡鬘・)}</div>
+        <div class="proj-meta">${escHtml(src)} ${dateStr ? 'ﾂｷ '+dateStr : ''}</div>
       </div>
       <div class="proj-badges">
-        ${p.cards?.length ? `<span class="proj-badge vocal">${p.cards.length}フレーズ</span>` : ''}
-        ${p.chords ? `<span class="proj-badge chord">コード</span>` : ''}
-        ${p.drums?.notes?.length ? `<span class="proj-badge beat">ドラム</span>` : ''}
+        ${p.cards?.length ? `<span class="proj-badge vocal">${p.cards.length}繝輔Ξ繝ｼ繧ｺ</span>` : ''}
+        ${p.chords ? `<span class="proj-badge chord">繧ｳ繝ｼ繝・/span>` : ''}
+        ${p.drums?.notes?.length ? `<span class="proj-badge beat">繝峨Λ繝</span>` : ''}
         <span class="proj-badge ${badgeClass}">${escHtml(src)}</span>
       </div>
-      <button class="proj-del" onclick="deleteProject(${idx},event)" title="削除">✕</button>
+      <button class="proj-del" onclick="deleteProject(${idx},event)" title="蜑企勁">笨・/button>
     `;
     el.addEventListener('click', () => openProject(p));
     list.appendChild(el);
@@ -338,14 +338,14 @@ function detectSource(p) {
 function openProject(p) {
   const src = detectSource(p);
   const map = {
-    'vocal-lab':    'apps/vocal-lab-v3.html',
+    'vocal-lab':    'apps/vocal-lab.html',
     'chord-lab':    'apps/chord-lab.html',
     'beat-lab':     'apps/beat-lab.html',
     'score-editor': 'apps/score-editor-v2.html',
   };
   const url = map[src];
-  if (!url) { showToast('対応アプリが見つかりません'); return; }
-  // URLハッシュでデータを渡す（chord-lab/beat-lab/score-editor共通方式）
+  if (!url) { showToast('蟇ｾ蠢懊い繝励Μ縺瑚ｦ九▽縺九ｊ縺ｾ縺帙ｓ'); return; }
+  // URL繝上ャ繧ｷ繝･縺ｧ繝・・繧ｿ繧呈ｸ｡縺呻ｼ・hord-lab/beat-lab/score-editor蜈ｱ騾壽婿蠑擾ｼ・
   const json = JSON.stringify(p);
   const b64  = btoa(unescape(encodeURIComponent(json)));
   window.location.href = url + '#import=' + encodeURIComponent(b64);
@@ -357,7 +357,7 @@ function deleteProject(idx, e) {
   projects.splice(idx, 1);
   saveProjects(projects);
   renderProjects();
-  showToast('削除しました');
+  showToast('蜑企勁縺励∪縺励◆');
 }
 
 function importProject(input) {
@@ -367,7 +367,7 @@ function importProject(input) {
   r.onload = ev => {
     try {
       const raw = JSON.parse(ev.target.result);
-      // vocal-lab は配列（カードのリスト）として出力されるので包む
+      // vocal-lab 縺ｯ驟榊・・医き繝ｼ繝峨・繝ｪ繧ｹ繝茨ｼ峨→縺励※蜃ｺ蜉帙＆繧後ｋ縺ｮ縺ｧ蛹・・
       const data = Array.isArray(raw)
         ? { source:'vocal-lab', name:'vocal-lab project', cards: raw, updatedAt: new Date().toISOString() }
         : raw;
@@ -376,16 +376,16 @@ function importProject(input) {
       projects.push(data);
       saveProjects(projects);
       renderProjects();
-      showToast(`「${data.name || data.projectName || file.name}」をインポートしました`);
+      showToast(`縲・{data.name || data.projectName || file.name}縲阪ｒ繧､繝ｳ繝昴・繝医＠縺ｾ縺励◆`);
     } catch(e) {
-      showToast('JSONの読み込みに失敗しました: ' + e.message);
+      showToast('JSON縺ｮ隱ｭ縺ｿ霎ｼ縺ｿ縺ｫ螟ｱ謨励＠縺ｾ縺励◆: ' + e.message);
     }
   };
   r.readAsText(file);
   input.value = '';
 }
 
-/* ── DRAG & DROP ── */
+/* 笏笏 DRAG & DROP 笏笏 */
 const dropArea = document.getElementById('drop-area');
 dropArea.addEventListener('dragover', e => { e.preventDefault(); dropArea.classList.add('drag-over'); });
 dropArea.addEventListener('dragleave', () => dropArea.classList.remove('drag-over'));
@@ -393,7 +393,7 @@ dropArea.addEventListener('drop', e => {
   e.preventDefault();
   dropArea.classList.remove('drag-over');
   const file = e.dataTransfer.files[0];
-  if (!file || !file.name.endsWith('.json')) { showToast('.jsonファイルをドロップしてください'); return; }
+  if (!file || !file.name.endsWith('.json')) { showToast('.json繝輔ぃ繧､繝ｫ繧偵ラ繝ｭ繝・・縺励※縺上□縺輔＞'); return; }
   const r = new FileReader();
   r.onload = ev => {
     try {
@@ -406,15 +406,15 @@ dropArea.addEventListener('drop', e => {
       projects.push(data);
       saveProjects(projects);
       renderProjects();
-      showToast(`「${data.name || file.name}」をインポートしました`);
+      showToast(`縲・{data.name || file.name}縲阪ｒ繧､繝ｳ繝昴・繝医＠縺ｾ縺励◆`);
     } catch(e) {
-      showToast('JSONの読み込みに失敗: ' + e.message);
+      showToast('JSON縺ｮ隱ｭ縺ｿ霎ｼ縺ｿ縺ｫ螟ｱ謨・ ' + e.message);
     }
   };
   r.readAsText(file);
 });
 
-/* ── UTILS ── */
+/* 笏笏 UTILS 笏笏 */
 function escHtml(s) { return String(s||'').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;'); }
 function showToast(msg) {
   const t = document.getElementById('toast');
@@ -422,7 +422,7 @@ function showToast(msg) {
   clearTimeout(t._t); t._t = setTimeout(() => t.classList.remove('show'), 2500);
 }
 
-/* ── INIT ── */
+/* 笏笏 INIT 笏笏 */
 renderProjects();
 </script>
 </body>
