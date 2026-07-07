@@ -1,17 +1,3 @@
-何も選択されていません 
-
-コンテンツへ
-Gmail でのスクリーン リーダーの使用
-スレッド
-自分
-（件名なし）
- - music-suite リポジトリ構成案 全体方針 4アプリ(vocal-lab, music-lab/chord, beat-lab, score-editor)を1リポジトリ・複数HTML・共通データ一元化で統合。各アプリは単体でも動作するが、プロジェクトデータ(楽曲データ)を共通フォーマットで保存し、相互に読み込める状態にする。 ディレクトリ構造 music-suite/ ├── index.
- 
-9:45
-15 GB 中 35% 使用済み
-利用規約 · プライバシー · プログラム ポリシー
-前回のアカウント アクティビティ: 1 分前
-詳細
 <!DOCTYPE html>
 <html lang="ja">
 <head>
@@ -392,12 +378,13 @@ select.inp{cursor:pointer}
       <div class="export-card">
         <div class="export-card-title" style="color:var(--acc)">🔗 score-editor-v2 へ送る</div>
         <div class="export-card-desc">
-          URL Schemeでscore-editor-v2.htmlを開き、現在のパターンをDrumトラックとして直接渡します。
-          同じドメイン（GitHub Pages）に両ファイルが配置されている必要があります。
+          現在のパターンをDrumトラックとしてscore-editor-v2.htmlへ渡します。
+          同じフォルダ内にあれば自動で開くので、下の欄は空欄のままでOKです。
+          別ドメイン（GitHub Pagesなど）に配置している場合のみURLを入力してください。
         </div>
         <div style="margin-bottom:8px">
-          <div class="lbl">score-editor-v2.html のURL</div>
-          <input class="inp" id="se-url" placeholder="https://norinori-jan.github.io/music-lab/score-editor-v2.html" style="width:100%;font-size:9px">
+          <div class="lbl">score-editor-v2.html のURL（省略可）</div>
+          <input class="inp" id="se-url" placeholder="空欄なら同じフォルダのscore-editor-v2.htmlを自動で開きます" style="width:100%;font-size:9px">
         </div>
         <div class="export-row">
           <button class="btn pri" onclick="sendToScoreEditor()">🔗 ROLLへ送信して開く</button>
@@ -1200,10 +1187,17 @@ function importJSON(input){
 
 // ════════════════════════════════════════════════════════
 // EXPORT — score-editor-v2 連携（URL Scheme / postMessage）
+// FIX: 手動URL指定がなければ同じフォルダ内を自動判定（vocal-lab-v3 / canvas と同方式）
 // ════════════════════════════════════════════════════════
+function resolveScoreEditorUrl(){
+  const manual=document.getElementById('se-url').value.trim();
+  if(manual) return manual;
+  const segments=window.location.pathname.split('/').filter(Boolean);
+  const inAppsDir=segments.includes('apps');
+  return inAppsDir ? 'score-editor-v2.html' : 'apps/score-editor-v2.html';
+}
 function sendToScoreEditor(){
-  const url=document.getElementById('se-url').value.trim();
-  if(!url){ setStatus('err','score-editor-v2.htmlのURLを入力してください'); return; }
+  const url=resolveScoreEditorUrl();
   const data=buildExportData();
   // Encode as base64 JSON in URL hash (works across page navigation, no server needed)
   const json=JSON.stringify(data);
@@ -1299,48 +1293,6 @@ function applyLibraryPatternSilent(p){
     steps.forEach(s=>{ APP.pattern[pk(rowId,s)]=1.0; });
   });
 }
-</script>
-
-<!-- ★ quick-ref 連携コードはここに置く ★ -->
-<script>
-document.getElementById('sendToQuickRef')?.addEventListener('click', () => {
-  const score = window.currentScore || window.editorScore || null;
-  const bpm   = window.currentBPM   || 120;
-
-  if (!score) {
-    alert('楽曲データが見つかりません');
-    return;
-  }
-
-  const title = score.title || `music-${new Date().toISOString().slice(0,10)}`;
-
-  localStorage.setItem('ms_transfer', JSON.stringify({
-    score: score,
-    bpm: bpm,
-    title: title,
-    source: 'music-suite',
-    timestamp: Date.now()
-  }));
-
-  const go = confirm(`「${title}」をquick-refに送ります。\nquick-refを開きますか?`);
-  if (go) location.href = 'https://norinori-jan.github.io/quick-ref/';
-});
-</script>
-
-<script>
-document.getElementById('sendToQuickRef')?.addEventListener('click', () => {
-  const exportData = buildExportData();
-
-  localStorage.setItem('ms_transfer', JSON.stringify({
-    ...exportData,
-    source: 'music-suite',
-    timestamp: Date.now()
-  }));
-
-  const label = `BPM:${exportData.bpm} Key:${exportData.key}`;
-  const go = confirm(`楽曲データ(${label})をquick-refに送ります。\nquick-refを開きますか?`);
-  if (go) location.href = 'https://norinori-jan.github.io/quick-ref/';
-});
 </script>
 
 </body>

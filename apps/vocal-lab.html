@@ -3,1213 +3,1568 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>vocal-lab v2</title>
+<title>vocal-lab v3</title>
 <style>
-  :root {
-    --bg: #0e0e11;
-    --bg2: #18181d;
-    --bg3: #22222a;
-    --border: rgba(255,255,255,0.08);
-    --border-hi: rgba(255,255,255,0.18);
-    --text: #f0eef8;
-    --text2: #9896a8;
-    --text3: #5a5870;
-    --accent: #7f77dd;
-    --accent-hi: #afa9ec;
-    --accent-dim: #3c3489;
-    --accent-bg: rgba(127,119,221,0.12);
-    --green: #1d9e75;
-    --green-bg: rgba(29,158,117,0.12);
-    --green-hi: #5dcaa5;
-    --red: #e24b4a;
-    --red-bg: rgba(226,75,74,0.1);
-    --amber: #ef9f27;
-    --amber-bg: rgba(239,159,39,0.1);
-    --radius: 10px;
-    --radius-lg: 16px;
-  }
-  * { box-sizing: border-box; margin: 0; padding: 0; }
-  body {
-    background: var(--bg);
-    color: var(--text);
-    font-family: 'Inter', 'Hiragino Sans', 'Yu Gothic UI', sans-serif;
-    font-size: 14px;
-    line-height: 1.6;
-    min-height: 100vh;
-  }
+:root {
+  --bg:#0e0e11; --bg2:#18181d; --bg3:#22222a; --bg4:#2a2a34;
+  --border:rgba(255,255,255,0.08); --border-hi:rgba(255,255,255,0.18);
+  --text:#f0eef8; --text2:#9896a8; --text3:#5a5870;
+  --accent:#7f77dd; --accent-hi:#afa9ec; --accent-dim:#3c3489;
+  --accent-bg:rgba(127,119,221,0.12);
+  --green:#1d9e75; --green-bg:rgba(29,158,117,0.12); --green-hi:#5dcaa5;
+  --red:#e24b4a; --red-bg:rgba(226,75,74,0.1);
+  --amber:#ef9f27; --amber-bg:rgba(239,159,39,0.1); --amber-hi:#f5c05a;
+  --ai:#a855f7; --ai-bg:rgba(168,85,247,0.1); --ai-hi:#c084fc; --ai-dim:rgba(168,85,247,0.25);
+  --radius:10px; --radius-lg:16px;
+}
+*{box-sizing:border-box;margin:0;padding:0;}
+body{background:var(--bg);color:var(--text);font-family:'Inter','Hiragino Sans','Yu Gothic UI',sans-serif;font-size:14px;line-height:1.6;min-height:100vh;}
+.app{display:grid;grid-template-columns:290px 1fr;min-height:100vh;}
+.sidebar{background:var(--bg2);border-right:0.5px solid var(--border);display:flex;flex-direction:column;overflow:hidden;}
+.main{display:flex;flex-direction:column;overflow:hidden;}
 
-  /* ── LAYOUT ── */
-  .app { display: grid; grid-template-columns: 280px 1fr; min-height: 100vh; }
-  .sidebar {
-    background: var(--bg2);
-    border-right: 0.5px solid var(--border);
-    display: flex; flex-direction: column;
-    padding: 0;
-    overflow: hidden;
-  }
-  .main { display: flex; flex-direction: column; overflow: hidden; }
+/* SIDEBAR */
+.sidebar-header{padding:18px 16px 14px;border-bottom:0.5px solid var(--border);}
+.logo{font-size:13px;font-weight:600;letter-spacing:0.12em;color:var(--accent-hi);text-transform:uppercase;}
+.logo span{color:var(--text3);font-weight:400;}
+.logo-badge{font-size:9px;padding:1px 6px;background:var(--ai-bg);border:0.5px solid var(--ai-dim);color:var(--ai-hi);border-radius:20px;margin-left:6px;letter-spacing:0.06em;}
+.card-list{flex:1;overflow-y:auto;padding:10px 8px;display:flex;flex-direction:column;gap:5px;}
+.card-list::-webkit-scrollbar{width:3px;}
+.card-list::-webkit-scrollbar-thumb{background:var(--bg3);border-radius:3px;}
+.phrase-card{background:var(--bg3);border:0.5px solid var(--border);border-radius:var(--radius);padding:10px 12px;cursor:pointer;transition:border-color 0.15s,background 0.15s;position:relative;}
+.phrase-card:hover{border-color:var(--border-hi);}
+.phrase-card.active{border-color:var(--accent);background:var(--accent-bg);}
+.card-label{font-size:10px;color:var(--text3);letter-spacing:0.05em;margin-bottom:3px;}
+.card-title{font-size:13px;font-weight:500;color:var(--text);margin-bottom:5px;}
+.card-notes{display:flex;gap:3px;flex-wrap:wrap;margin-bottom:5px;}
+.note-pill{font-size:10px;font-weight:600;padding:1px 6px;border-radius:20px;background:var(--accent-dim);color:var(--accent-hi);}
+.note-pill.ai{background:var(--ai-bg);color:var(--ai-hi);}
+.card-meta{font-size:10px;color:var(--text3);display:flex;gap:6px;align-items:center;flex-wrap:wrap;}
+.card-emotion-badge{font-size:9px;padding:1px 5px;border-radius:20px;background:var(--green-bg);color:var(--green-hi);}
+.card-ai-badge{font-size:9px;padding:1px 5px;border-radius:20px;background:var(--ai-bg);color:var(--ai-hi);}
+.card-actions{position:absolute;top:7px;right:7px;display:flex;gap:3px;opacity:0;transition:opacity 0.15s;}
+.phrase-card:hover .card-actions{opacity:1;}
+.card-btn{width:18px;height:18px;border:none;background:none;color:var(--text3);cursor:pointer;border-radius:3px;display:flex;align-items:center;justify-content:center;font-size:11px;}
+.card-btn:hover{background:var(--bg4);color:var(--text);}
+.card-btn.delete:hover{color:var(--red);background:var(--red-bg);}
+.empty-cards{padding:20px 14px;text-align:center;color:var(--text3);font-size:12px;line-height:1.8;}
+.sidebar-footer{padding:10px;border-top:0.5px solid var(--border);display:flex;flex-direction:column;gap:6px;}
+.btn-export{width:100%;padding:7px;border:0.5px solid var(--border-hi);background:none;color:var(--text2);border-radius:var(--radius);font-size:12px;cursor:pointer;transition:background 0.15s;}
+.btn-export:hover{background:var(--bg3);color:var(--text);}
 
-  /* ── SIDEBAR HEADER ── */
-  .sidebar-header {
-    padding: 20px 16px 16px;
-    border-bottom: 0.5px solid var(--border);
-  }
-  .logo {
-    font-size: 13px;
-    font-weight: 600;
-    letter-spacing: 0.12em;
-    color: var(--accent-hi);
-    text-transform: uppercase;
-  }
-  .logo span { color: var(--text3); font-weight: 400; }
+/* MAIN HEADER */
+.main-header{padding:18px 24px 0;display:flex;flex-direction:column;gap:12px;}
+.section-title{font-size:10px;font-weight:600;letter-spacing:0.1em;color:var(--text3);text-transform:uppercase;}
+.emotion-row{display:flex;gap:5px;flex-wrap:wrap;}
+.emotion-tag{padding:4px 11px;border-radius:20px;border:0.5px solid var(--border-hi);background:none;color:var(--text2);font-size:12px;cursor:pointer;transition:all 0.15s;}
+.emotion-tag:hover{background:var(--bg3);color:var(--text);}
+.emotion-tag.selected{background:var(--accent-bg);border-color:var(--accent);color:var(--accent-hi);}
 
-  /* ── CARD LIST ── */
-  .card-list {
-    flex: 1;
-    overflow-y: auto;
-    padding: 12px 10px;
-    display: flex;
-    flex-direction: column;
-    gap: 6px;
-  }
-  .card-list::-webkit-scrollbar { width: 4px; }
-  .card-list::-webkit-scrollbar-thumb { background: var(--bg3); border-radius: 4px; }
+/* AI MODE SWITCHER */
+.ai-mode-row{display:flex;gap:6px;align-items:center;flex-wrap:wrap;}
+.mode-btn{padding:5px 12px;border-radius:20px;border:0.5px solid var(--border-hi);background:none;color:var(--text2);font-size:12px;cursor:pointer;transition:all 0.15s;display:flex;align-items:center;gap:5px;}
+.mode-btn:hover{background:var(--bg3);}
+.mode-btn.active{background:var(--ai-bg);border-color:var(--ai-dim);color:var(--ai-hi);}
 
-  .phrase-card {
-    background: var(--bg3);
-    border: 0.5px solid var(--border);
-    border-radius: var(--radius);
-    padding: 10px 12px;
-    cursor: pointer;
-    transition: border-color 0.15s, background 0.15s;
-    position: relative;
-  }
-  .phrase-card:hover { border-color: var(--border-hi); }
-  .phrase-card.active {
-    border-color: var(--accent);
-    background: var(--accent-bg);
-  }
-  .card-label {
-    font-size: 11px;
-    color: var(--text3);
-    letter-spacing: 0.06em;
-    margin-bottom: 4px;
-  }
-  .card-title {
-    font-size: 13px;
-    font-weight: 500;
-    color: var(--text);
-    margin-bottom: 6px;
-  }
-  .card-notes {
-    display: flex;
-    gap: 3px;
-    flex-wrap: wrap;
-    margin-bottom: 6px;
-  }
-  .note-pill {
-    font-size: 10px;
-    font-weight: 600;
-    padding: 1px 6px;
-    border-radius: 20px;
-    background: var(--accent-dim);
-    color: var(--accent-hi);
-    letter-spacing: 0.04em;
-  }
-  .card-meta {
-    font-size: 11px;
-    color: var(--text3);
-    display: flex;
-    gap: 8px;
-    align-items: center;
-  }
-  .card-emotion-badge {
-    font-size: 10px;
-    padding: 1px 6px;
-    border-radius: 20px;
-    background: var(--green-bg);
-    color: var(--green-hi);
-  }
-  .card-delete {
-    position: absolute;
-    top: 8px; right: 8px;
-    width: 20px; height: 20px;
-    border: none;
-    background: none;
-    color: var(--text3);
-    cursor: pointer;
-    border-radius: 4px;
-    display: flex; align-items: center; justify-content: center;
-    font-size: 14px;
-    opacity: 0;
-    transition: opacity 0.15s;
-  }
-  .phrase-card:hover .card-delete { opacity: 1; }
-  .card-delete:hover { color: var(--red); background: var(--red-bg); }
+/* BPM */
+.bpm-row{display:flex;align-items:center;gap:8px;}
+.bpm-label{font-size:10px;color:var(--text3);}
+.bpm-input{width:60px;padding:4px 8px;background:var(--bg3);border:0.5px solid var(--border);border-radius:var(--radius);color:var(--text);font-size:12px;outline:none;text-align:center;}
+.bpm-input:focus{border-color:var(--accent);}
+.bpm-unit{font-size:10px;color:var(--text3);}
 
-  /* ── EMPTY STATE ── */
-  .empty-cards {
-    padding: 24px 16px;
-    text-align: center;
-    color: var(--text3);
-    font-size: 12px;
-    line-height: 1.8;
-  }
+/* API KEY */
+.apikey-row{display:flex;gap:6px;align-items:center;}
+.apikey-input{flex:1;padding:5px 10px;background:var(--bg3);border:0.5px solid var(--border);border-radius:var(--radius);color:var(--text);font-size:11px;outline:none;}
+.apikey-input:focus{border-color:var(--ai);}
+.apikey-input::placeholder{color:var(--text3);}
+.apikey-save{padding:5px 10px;border:0.5px solid var(--ai-dim);background:var(--ai-bg);color:var(--ai-hi);border-radius:var(--radius);font-size:11px;cursor:pointer;}
 
-  /* ── SIDEBAR FOOTER ── */
-  .sidebar-footer {
-    padding: 12px;
-    border-top: 0.5px solid var(--border);
-  }
-  .btn-export {
-    width: 100%;
-    padding: 8px;
-    border: 0.5px solid var(--border-hi);
-    background: none;
-    color: var(--text2);
-    border-radius: var(--radius);
-    font-size: 12px;
-    cursor: pointer;
-    transition: background 0.15s, color 0.15s;
-  }
-  .btn-export:hover { background: var(--bg3); color: var(--text); }
+/* RECORDER */
+.recorder-area{flex:1;display:flex;flex-direction:column;align-items:center;justify-content:center;padding:24px;gap:20px;}
+.waveform-wrap{width:100%;max-width:540px;background:var(--bg2);border:0.5px solid var(--border);border-radius:var(--radius-lg);padding:14px;}
+#waveform-canvas{width:100%;height:70px;display:block;border-radius:5px;}
+.pitch-row{display:flex;align-items:center;gap:16px;width:100%;max-width:540px;}
+.pitch-current{background:var(--bg2);border:0.5px solid var(--border);border-radius:var(--radius);padding:10px 16px;text-align:center;min-width:90px;}
+.pitch-note{font-size:26px;font-weight:600;color:var(--accent-hi);}
+.pitch-hz{font-size:10px;color:var(--text3);}
+.pitch-roll{flex:1;}
+#pitch-canvas{width:100%;height:42px;display:block;}
+.controls-row{display:flex;align-items:center;gap:14px;}
+.btn-rec{width:68px;height:68px;border-radius:50%;border:none;background:var(--accent);color:#fff;font-size:22px;cursor:pointer;display:flex;align-items:center;justify-content:center;transition:transform 0.1s,background 0.15s;box-shadow:0 0 0 0 rgba(127,119,221,0.4);}
+.btn-rec:hover{transform:scale(1.04);}
+.btn-rec.recording{background:var(--red);animation:pulse 1.4s infinite;}
+@keyframes pulse{0%{box-shadow:0 0 0 0 rgba(226,75,74,0.4);}70%{box-shadow:0 0 0 14px rgba(226,75,74,0);}100%{box-shadow:0 0 0 0 rgba(226,75,74,0);}}
+.btn-secondary{padding:7px 16px;border:0.5px solid var(--border-hi);background:none;color:var(--text2);border-radius:var(--radius);font-size:12px;cursor:pointer;transition:all 0.15s;}
+.btn-secondary:hover{background:var(--bg3);color:var(--text);}
+.btn-secondary:disabled{opacity:0.35;cursor:not-allowed;}
+.rec-status{font-size:12px;color:var(--text3);}
 
-  /* ── MAIN HEADER ── */
-  .main-header {
-    padding: 20px 28px 0;
-    display: flex;
-    align-items: flex-start;
-    gap: 16px;
-    flex-direction: column;
-  }
-  .section-title {
-    font-size: 11px;
-    font-weight: 600;
-    letter-spacing: 0.1em;
-    color: var(--text3);
-    text-transform: uppercase;
-  }
+/* DETECTED NOTES */
+.detected-wrap{width:100%;max-width:540px;}
+.detected-header{display:flex;align-items:center;justify-content:space-between;margin-bottom:6px;}
+.detected-notes{display:flex;gap:5px;flex-wrap:wrap;min-height:34px;background:var(--bg2);border:0.5px solid var(--border);border-radius:var(--radius);padding:7px 10px;align-items:center;}
+.det-note{font-size:12px;font-weight:600;padding:2px 9px;border-radius:20px;background:var(--bg3);border:0.5px solid var(--border-hi);color:var(--text);position:relative;cursor:default;}
+.det-note .conf-bar{position:absolute;bottom:0;left:0;height:2px;border-radius:0 0 20px 20px;background:var(--accent);transition:width 0.2s;}
+.det-note.low-conf{opacity:0.5;}
+.det-empty{font-size:12px;color:var(--text3);}
 
-  /* ── EMOTION TAGS ── */
-  .emotion-row {
-    display: flex;
-    gap: 6px;
-    flex-wrap: wrap;
-  }
-  .emotion-tag {
-    padding: 4px 12px;
-    border-radius: 20px;
-    border: 0.5px solid var(--border-hi);
-    background: none;
-    color: var(--text2);
-    font-size: 12px;
-    cursor: pointer;
-    transition: all 0.15s;
-  }
-  .emotion-tag:hover { background: var(--bg3); color: var(--text); }
-  .emotion-tag.selected {
-    background: var(--accent-bg);
-    border-color: var(--accent);
-    color: var(--accent-hi);
-  }
+/* COMMIT ROW */
+.commit-row{width:100%;max-width:540px;display:flex;gap:7px;align-items:center;}
+.phrase-name-input{flex:1;padding:7px 11px;background:var(--bg2);border:0.5px solid var(--border);border-radius:var(--radius);color:var(--text);font-size:12px;outline:none;transition:border-color 0.15s;}
+.phrase-name-input:focus{border-color:var(--accent);}
+.phrase-name-input::placeholder{color:var(--text3);}
+.btn-commit{padding:7px 16px;border:none;background:var(--accent);color:#fff;border-radius:var(--radius);font-size:12px;font-weight:600;cursor:pointer;transition:opacity 0.15s;}
+.btn-commit:hover{opacity:0.85;}
+.btn-commit:disabled{opacity:0.35;cursor:not-allowed;}
 
-  /* ── RECORDER AREA ── */
-  .recorder-area {
-    flex: 1;
-    display: flex;
-    flex-direction: column;
-    align-items: center;
-    justify-content: center;
-    padding: 32px 28px;
-    gap: 28px;
-  }
+/* AI CORRECTION PANEL */
+.ai-panel{width:100%;max-width:540px;background:var(--bg2);border:0.5px solid var(--ai-dim);border-radius:var(--radius-lg);overflow:hidden;}
+.ai-panel-header{padding:10px 14px;background:var(--ai-bg);display:flex;align-items:center;gap:8px;border-bottom:0.5px solid var(--ai-dim);}
+.ai-panel-title{font-size:12px;font-weight:600;color:var(--ai-hi);}
+.ai-panel-subtitle{font-size:10px;color:var(--text3);}
+.ai-panel-body{padding:12px 14px;}
 
-  /* ── WAVEFORM ── */
-  .waveform-wrap {
-    width: 100%;
-    max-width: 560px;
-    background: var(--bg2);
-    border: 0.5px solid var(--border);
-    border-radius: var(--radius-lg);
-    padding: 16px;
-  }
-  #waveform-canvas {
-    width: 100%;
-    height: 80px;
-    display: block;
-    border-radius: 6px;
-  }
+/* AUTO CORRECT MODE */
+.auto-correct-area{display:flex;flex-direction:column;gap:10px;}
+.btn-ai-run{width:100%;padding:10px;border:none;background:linear-gradient(135deg,var(--ai),var(--accent));color:#fff;border-radius:var(--radius);font-size:13px;font-weight:600;cursor:pointer;transition:opacity 0.15s;display:flex;align-items:center;justify-content:center;gap:7px;}
+.btn-ai-run:hover{opacity:0.88;}
+.btn-ai-run:disabled{opacity:0.38;cursor:not-allowed;}
+.ai-loading{font-size:12px;color:var(--ai-hi);text-align:center;padding:8px;display:none;}
+.ai-loading.show{display:block;}
+.compare-row{display:flex;gap:6px;}
+.compare-btn{flex:1;padding:6px;border-radius:var(--radius);font-size:12px;cursor:pointer;transition:all 0.15s;border:0.5px solid var(--border-hi);background:none;color:var(--text2);}
+.compare-btn.active{background:var(--accent-bg);border-color:var(--accent);color:var(--accent-hi);}
+.compare-btn.ai-active{background:var(--ai-bg);border-color:var(--ai-dim);color:var(--ai-hi);}
+.corrected-notes{display:flex;gap:4px;flex-wrap:wrap;min-height:30px;background:var(--bg3);border-radius:var(--radius);padding:6px 10px;align-items:center;}
+.corrected-note{font-size:12px;font-weight:600;padding:2px 9px;border-radius:20px;background:var(--ai-bg);border:0.5px solid var(--ai-dim);color:var(--ai-hi);}
+.ai-comment{font-size:11px;color:var(--text3);line-height:1.6;padding:6px 2px;}
 
-  /* ── PITCH DISPLAY ── */
-  .pitch-row {
-    display: flex;
-    align-items: center;
-    gap: 20px;
-    width: 100%;
-    max-width: 560px;
-  }
-  .pitch-current {
-    background: var(--bg2);
-    border: 0.5px solid var(--border);
-    border-radius: var(--radius);
-    padding: 12px 20px;
-    text-align: center;
-    min-width: 100px;
-  }
-  .pitch-note { font-size: 28px; font-weight: 600; color: var(--accent-hi); }
-  .pitch-hz { font-size: 11px; color: var(--text3); }
-  .pitch-roll {
-    flex: 1;
-    overflow: hidden;
-  }
-  #pitch-canvas {
-    width: 100%;
-    height: 48px;
-    display: block;
-  }
+/* CANDIDATE SELECT MODE */
+.candidate-mode-area{display:flex;flex-direction:column;gap:10px;}
+.phrase-step-info{font-size:11px;color:var(--text3);display:flex;align-items:center;gap:6px;}
+.phrase-step-badge{font-size:10px;padding:2px 8px;border-radius:20px;background:var(--ai-bg);color:var(--ai-hi);}
 
-  /* ── RECORD BUTTON ── */
-  .controls-row {
-    display: flex;
-    align-items: center;
-    gap: 16px;
-  }
-  .btn-rec {
-    width: 72px; height: 72px;
-    border-radius: 50%;
-    border: none;
-    background: var(--accent);
-    color: #fff;
-    font-size: 24px;
-    cursor: pointer;
-    display: flex; align-items: center; justify-content: center;
-    transition: transform 0.1s, background 0.15s;
-    box-shadow: 0 0 0 0 rgba(127,119,221,0.4);
-  }
-  .btn-rec:hover { transform: scale(1.04); }
-  .btn-rec:active { transform: scale(0.97); }
-  .btn-rec.recording {
-    background: var(--red);
-    animation: pulse 1.4s infinite;
-  }
-  @keyframes pulse {
-    0% { box-shadow: 0 0 0 0 rgba(226,75,74,0.4); }
-    70% { box-shadow: 0 0 0 14px rgba(226,75,74,0); }
-    100% { box-shadow: 0 0 0 0 rgba(226,75,74,0); }
-  }
-  .btn-secondary {
-    padding: 8px 18px;
-    border: 0.5px solid var(--border-hi);
-    background: none;
-    color: var(--text2);
-    border-radius: var(--radius);
-    font-size: 13px;
-    cursor: pointer;
-    transition: all 0.15s;
-  }
-  .btn-secondary:hover { background: var(--bg3); color: var(--text); }
-  .btn-secondary:disabled { opacity: 0.35; cursor: not-allowed; }
+/* PHRASE STACKING SESSION (候補モードのフレーズ積み上げ) */
+.session-strip{display:flex;gap:5px;flex-wrap:wrap;min-height:0;}
+.session-strip:empty{display:none;}
+.session-pill{
+  display:flex;align-items:center;gap:5px;font-size:11px;padding:4px 9px;border-radius:20px;
+  background:var(--bg3);border:0.5px solid var(--ai-dim);color:var(--ai-hi);cursor:pointer;transition:all 0.15s;
+}
+.session-pill:hover{background:var(--ai-bg);}
+.session-pill .sp-idx{font-weight:700;color:var(--text2);}
+.session-total{font-size:10px;color:var(--text3);}
+.session-actions{display:flex;gap:6px;}
+.session-actions .btn-secondary{flex:1;font-size:11px;padding:6px 10px;}
 
-  .rec-status { font-size: 12px; color: var(--text3); }
+/* FIX: 候補モードでもフレーズ名入力できるようにする専用エリア */
+.candidate-name-row{display:flex;gap:7px;align-items:center;}
+.candidate-name-input{flex:1;padding:7px 11px;background:var(--bg2);border:0.5px solid var(--border);border-radius:var(--radius);color:var(--text);font-size:12px;outline:none;transition:border-color 0.15s;}
+.candidate-name-input:focus{border-color:var(--ai);}
+.candidate-name-input::placeholder{color:var(--text3);}
 
-  /* ── DETECTED NOTES PREVIEW ── */
-  .detected-wrap {
-    width: 100%;
-    max-width: 560px;
-  }
-  .detected-header {
-    display: flex;
-    align-items: center;
-    justify-content: space-between;
-    margin-bottom: 8px;
-  }
-  .detected-notes {
-    display: flex;
-    gap: 6px;
-    flex-wrap: wrap;
-    min-height: 36px;
-    background: var(--bg2);
-    border: 0.5px solid var(--border);
-    border-radius: var(--radius);
-    padding: 8px 12px;
-    align-items: center;
-  }
-  .det-note {
-    font-size: 13px;
-    font-weight: 600;
-    padding: 3px 10px;
-    border-radius: 20px;
-    background: var(--bg3);
-    border: 0.5px solid var(--border-hi);
-    color: var(--text);
-    position: relative;
-    cursor: default;
-  }
-  .det-note .conf-bar {
-    position: absolute;
-    bottom: 0; left: 0;
-    height: 2px;
-    border-radius: 0 0 20px 20px;
-    background: var(--accent);
-    transition: width 0.2s;
-  }
-  .det-note.low-conf { opacity: 0.5; }
-  .det-empty { font-size: 12px; color: var(--text3); }
+.btn-ai-candidates{width:100%;padding:10px;border:none;background:linear-gradient(135deg,var(--ai),var(--accent));color:#fff;border-radius:var(--radius);font-size:13px;font-weight:600;cursor:pointer;transition:opacity 0.15s;display:flex;align-items:center;justify-content:center;gap:7px;}
+.btn-ai-candidates:hover{opacity:0.88;}
+.btn-ai-candidates:disabled{opacity:0.38;cursor:not-allowed;}
+.candidates-list{display:flex;flex-direction:column;gap:6px;}
+.candidate-card{border:0.5px solid var(--border);border-radius:var(--radius);padding:10px 12px;cursor:pointer;transition:all 0.15s;background:var(--bg3);}
+.candidate-card:hover{border-color:var(--ai-dim);}
+.candidate-card.selected{border-color:var(--ai);background:var(--ai-bg);}
+.candidate-header{display:flex;align-items:center;gap:8px;margin-bottom:6px;}
+.candidate-label{font-size:11px;font-weight:600;color:var(--ai-hi);}
+.candidate-desc{font-size:10px;color:var(--text3);flex:1;}
+.candidate-notes{display:flex;gap:3px;flex-wrap:wrap;margin-bottom:6px;}
+.candidate-note{font-size:11px;font-weight:600;padding:1px 7px;border-radius:20px;background:var(--bg4);color:var(--text2);}
+.candidate-card.selected .candidate-note{background:var(--ai-dim);color:var(--ai-hi);}
+.candidate-play-btn{font-size:11px;padding:3px 10px;border:0.5px solid var(--border-hi);background:none;color:var(--text3);border-radius:20px;cursor:pointer;transition:all 0.15s;}
+.candidate-play-btn:hover{background:var(--green-bg);color:var(--green-hi);border-color:var(--green);}
+.candidate-play-btn.playing{background:var(--amber-bg);color:var(--amber-hi);border-color:var(--amber);}
+.candidate-actions{display:flex;gap:6px;margin-top:4px;}
+.btn-candidate-commit{flex:1;padding:8px;border:none;background:var(--ai);color:#fff;border-radius:var(--radius);font-size:12px;font-weight:600;cursor:pointer;transition:opacity 0.15s;}
+.btn-candidate-commit:hover{opacity:0.85;}
+.btn-candidate-commit:disabled{opacity:0.35;cursor:not-allowed;}
+.btn-rerecord{padding:8px 14px;border:0.5px solid var(--border-hi);background:none;color:var(--text2);border-radius:var(--radius);font-size:12px;cursor:pointer;transition:background 0.15s;}
+.btn-rerecord:hover{background:var(--bg3);}
 
-  /* ── COMMIT ROW ── */
-  .commit-row {
-    width: 100%;
-    max-width: 560px;
-    display: flex;
-    gap: 8px;
-    align-items: center;
-  }
-  .phrase-name-input {
-    flex: 1;
-    padding: 8px 12px;
-    background: var(--bg2);
-    border: 0.5px solid var(--border);
-    border-radius: var(--radius);
-    color: var(--text);
-    font-size: 13px;
-    outline: none;
-    transition: border-color 0.15s;
-  }
-  .phrase-name-input:focus { border-color: var(--accent); }
-  .phrase-name-input::placeholder { color: var(--text3); }
-  .btn-commit {
-    padding: 8px 18px;
-    border: none;
-    background: var(--accent);
-    color: #fff;
-    border-radius: var(--radius);
-    font-size: 13px;
-    font-weight: 600;
-    cursor: pointer;
-    transition: opacity 0.15s;
-  }
-  .btn-commit:hover { opacity: 0.85; }
-  .btn-commit:disabled { opacity: 0.35; cursor: not-allowed; }
+/* PREVIEW PANEL */
+.preview-panel{background:var(--bg2);border-top:0.5px solid var(--border);padding:14px 24px;display:none;}
+.preview-panel.visible{display:block;}
+.preview-header{display:flex;align-items:center;gap:10px;margin-bottom:10px;}
+.preview-title{font-size:13px;font-weight:500;}
+.preview-emotion{font-size:10px;color:var(--green-hi);}
+.preview-ai-tag{font-size:10px;color:var(--ai-hi);}
+.preview-notes{display:flex;gap:3px;flex-wrap:wrap;margin-bottom:10px;}
+.preview-note{font-size:12px;font-weight:600;padding:2px 9px;border-radius:20px;background:var(--accent-bg);color:var(--accent-hi);border:0.5px solid var(--accent-dim);}
+.preview-note.ai{background:var(--ai-bg);color:var(--ai-hi);border-color:var(--ai-dim);}
+.preview-controls{display:flex;gap:7px;}
+.btn-play{padding:5px 14px;border:0.5px solid var(--green);background:var(--green-bg);color:var(--green-hi);border-radius:var(--radius);font-size:12px;cursor:pointer;transition:all 0.15s;}
+.btn-play:hover{background:rgba(29,158,117,0.22);}
+.btn-play.playing{border-color:var(--amber);background:var(--amber-bg);color:var(--amber-hi);}
 
-  /* ── PREVIEW PANEL ── */
-  .preview-panel {
-    background: var(--bg2);
-    border-top: 0.5px solid var(--border);
-    padding: 16px 28px;
-    display: none;
-  }
-  .preview-panel.visible { display: block; }
-  .preview-header {
-    display: flex;
-    align-items: center;
-    gap: 12px;
-    margin-bottom: 12px;
-  }
-  .preview-title { font-size: 13px; font-weight: 500; color: var(--text); }
-  .preview-emotion { font-size: 11px; color: var(--green-hi); }
-  .preview-notes {
-    display: flex;
-    gap: 4px;
-    flex-wrap: wrap;
-    margin-bottom: 12px;
-  }
-  .preview-note {
-    font-size: 12px;
-    font-weight: 600;
-    padding: 3px 10px;
-    border-radius: 20px;
-    background: var(--accent-bg);
-    color: var(--accent-hi);
-    border: 0.5px solid var(--accent-dim);
-  }
-  .preview-controls {
-    display: flex;
-    gap: 8px;
-  }
-  .btn-play {
-    padding: 6px 16px;
-    border: 0.5px solid var(--green);
-    background: var(--green-bg);
-    color: var(--green-hi);
-    border-radius: var(--radius);
-    font-size: 12px;
-    cursor: pointer;
-    transition: all 0.15s;
-  }
-  .btn-play:hover { background: rgba(29,158,117,0.22); }
-  .btn-play.playing { border-color: var(--amber); background: var(--amber-bg); color: var(--amber); }
+/* MOOD BANNER (index.htmlからの気持ちメモ受信表示) */
+.mood-banner{display:none;width:100%;max-width:540px;background:var(--accent-bg);border:0.5px solid var(--accent-dim);border-radius:var(--radius);padding:9px 14px;font-size:12px;color:var(--accent-hi);align-items:center;gap:8px;}
+.mood-banner.show{display:flex;}
+.mood-banner .close-x{margin-left:auto;cursor:pointer;color:var(--text3);background:none;border:none;font-size:13px;}
+.mood-banner .close-x:hover{color:var(--text);}
 
-  /* ── TOAST ── */
-  .toast {
-    position: fixed;
-    bottom: 24px; left: 50%;
-    transform: translateX(-50%) translateY(60px);
-    background: var(--bg3);
-    border: 0.5px solid var(--border-hi);
-    border-radius: var(--radius);
-    padding: 10px 20px;
-    font-size: 13px;
-    color: var(--text);
-    transition: transform 0.25s ease;
-    pointer-events: none;
-    z-index: 999;
-  }
-  .toast.show { transform: translateX(-50%) translateY(0); }
-
-  /* ── SCROLLBAR ── */
-  ::-webkit-scrollbar { width: 4px; height: 4px; }
-  ::-webkit-scrollbar-track { background: transparent; }
-  ::-webkit-scrollbar-thumb { background: var(--bg3); border-radius: 4px; }
+/* TOAST */
+.toast{position:fixed;bottom:22px;left:50%;transform:translateX(-50%) translateY(60px);background:var(--bg3);border:0.5px solid var(--border-hi);border-radius:var(--radius);padding:9px 18px;font-size:12px;color:var(--text);transition:transform 0.25s ease;pointer-events:none;z-index:999;}
+.toast.show{transform:translateX(-50%) translateY(0);}
+::-webkit-scrollbar{width:3px;height:3px;}
+::-webkit-scrollbar-thumb{background:var(--bg3);border-radius:3px;}
 </style>
 </head>
 <body>
 <div class="app">
+<!-- SIDEBAR -->
+<aside class="sidebar">
+  <div class="sidebar-header">
+    <div class="logo">vocal-lab <span>v3</span><span class="logo-badge">AI</span></div>
+  </div>
+  <div class="card-list" id="card-list">
+    <div class="empty-cards" id="empty-msg">フレーズをまだ保存していません。<br>録音してカードを作りましょう。</div>
+  </div>
+  <div class="sidebar-footer">
+    <button class="btn-export" id="btn-export">JSON エクスポート</button>
+    <!-- FIX: 逆インポートボタン追加 -->
+    <button class="btn-export" id="btn-import-json" style="border-color:rgba(29,158,117,0.3);color:var(--green-hi)">📥 JSON インポート</button>
+    <input type="file" id="import-file-input" accept=".json" style="display:none">
+    <button class="btn-export" id="btn-send-score" style="border-color:rgba(168,85,247,0.3);color:#c084fc">🎼 score-editor へ送る</button>
+    <!-- score-editor からの受信は checkIncomingImport() で自動処理 -->
+  </div>
+</aside>
 
-  <!-- ── SIDEBAR ── -->
-  <aside class="sidebar">
-    <div class="sidebar-header">
-      <div class="logo">vocal-lab <span>v2</span></div>
-    </div>
-    <div class="card-list" id="card-list">
-      <div class="empty-cards" id="empty-msg">
-        フレーズをまだ保存していません。<br>録音してカードを作りましょう。
+<!-- MAIN -->
+<main class="main">
+  <div class="main-header">
+    <!-- 感情タグ -->
+    <div>
+      <div class="section-title" style="margin-bottom:7px">感情タグ</div>
+      <div class="emotion-row" id="emotion-row">
+        <button class="emotion-tag selected" data-emotion="neutral">ニュートラル</button>
+        <button class="emotion-tag" data-emotion="sad">切ない</button>
+        <button class="emotion-tag" data-emotion="happy">明るい</button>
+        <button class="emotion-tag" data-emotion="tense">緊張感</button>
+        <button class="emotion-tag" data-emotion="nostalgic">懐かしい</button>
+        <button class="emotion-tag" data-emotion="dark">ダーク</button>
       </div>
     </div>
-    <div class="sidebar-footer">
-      <button class="btn-export" id="btn-export">JSON でエクスポート</button>
+    <!-- AIモード切替 -->
+    <div>
+      <div class="section-title" style="margin-bottom:7px">AI補正モード</div>
+      <div class="ai-mode-row">
+        <button class="mode-btn active" id="mode-btn-auto" onclick="setAiMode('auto')">✦ おまかせ補正</button>
+        <button class="mode-btn" id="mode-btn-candidate" onclick="setAiMode('candidate')">◎ 候補選択</button>
+        <button class="mode-btn" id="mode-btn-off" onclick="setAiMode('off')">— なし</button>
+      </div>
     </div>
-  </aside>
+    <!-- BPM (新機能) -->
+    <div>
+      <div class="section-title" style="margin-bottom:7px">テンポ</div>
+      <div class="bpm-row">
+        <input class="bpm-input" id="bpm-input" type="number" min="40" max="240" value="120">
+        <span class="bpm-unit">BPM</span>
+        <button class="btn-secondary" style="font-size:11px;padding:4px 10px" onclick="resetBpm()">リセット</button>
+      </div>
+    </div>
+    <!-- APIキー -->
+    <div>
+      <div class="section-title" style="margin-bottom:7px">Claude API Key</div>
+      <div class="apikey-row">
+        <input class="apikey-input" id="apikey-input" type="password" placeholder="sk-ant-..." />
+        <button class="apikey-save" onclick="saveApiKey()">保存</button>
+      </div>
+    </div>
+  </div>
 
-  <!-- ── MAIN ── -->
-  <main class="main">
+  <div class="recorder-area">
+    <!-- MOOD BANNER -->
+    <div class="mood-banner" id="mood-banner">
+      <span id="mood-banner-text"></span>
+      <button class="close-x" onclick="dismissMoodBanner()">✕</button>
+    </div>
+    <!-- WAVEFORM -->
+    <div class="waveform-wrap">
+      <canvas id="waveform-canvas"></canvas>
+    </div>
+    <!-- PITCH -->
+    <div class="pitch-row">
+      <div class="pitch-current">
+        <div class="pitch-note" id="pitch-note">—</div>
+        <div class="pitch-hz" id="pitch-hz">—</div>
+      </div>
+      <div class="pitch-roll">
+        <canvas id="pitch-canvas"></canvas>
+      </div>
+    </div>
+    <!-- CONTROLS -->
+    <div class="controls-row">
+      <button class="btn-secondary" id="btn-play-back" disabled>▶ 再生</button>
+      <button class="btn-rec" id="btn-rec">●</button>
+      <div class="rec-status" id="rec-status">タップして録音</div>
+    </div>
+    <!-- DETECTED NOTES -->
+    <div class="detected-wrap">
+      <div class="detected-header">
+        <span class="section-title">検出音符（生）</span>
+        <button class="btn-secondary" id="btn-clear-det" style="font-size:11px;padding:4px 10px" disabled>クリア</button>
+      </div>
+      <div class="detected-notes" id="detected-notes">
+        <span class="det-empty">録音すると音符が表示されます</span>
+      </div>
+    </div>
 
-    <div class="main-header">
-      <div>
-        <div class="section-title" style="margin-bottom:8px">感情タグ</div>
-        <div class="emotion-row" id="emotion-row">
-          <button class="emotion-tag selected" data-emotion="neutral">ニュートラル</button>
-          <button class="emotion-tag" data-emotion="sad">切ない</button>
-          <button class="emotion-tag" data-emotion="happy">明るい</button>
-          <button class="emotion-tag" data-emotion="tense">緊張感</button>
-          <button class="emotion-tag" data-emotion="nostalgic">懐かしい</button>
-          <button class="emotion-tag" data-emotion="dark">ダーク</button>
+    <!-- AI PANEL -->
+    <div class="ai-panel" id="ai-panel" style="display:none">
+      <!-- おまかせ補正 -->
+      <div id="auto-correct-panel">
+        <div class="ai-panel-header">
+          <div>
+            <div class="ai-panel-title">✦ おまかせ AI 補正</div>
+            <div class="ai-panel-subtitle">検出結果をAIが自動整形します</div>
+          </div>
+        </div>
+        <div class="ai-panel-body">
+          <div class="auto-correct-area">
+            <button class="btn-ai-run" id="btn-ai-run" onclick="runAutoCorrect()">✦ AI補正を実行</button>
+            <div class="ai-loading" id="ai-loading">AIが補正中…</div>
+            <div id="corrected-area" style="display:none">
+              <div class="compare-row" style="margin-bottom:8px">
+                <button class="compare-btn active" id="btn-show-raw" onclick="showRaw()">録音結果</button>
+                <button class="compare-btn" id="btn-show-corrected" onclick="showCorrected()">AI補正後</button>
+              </div>
+              <div class="corrected-notes" id="corrected-notes"></div>
+              <div class="ai-comment" id="ai-comment"></div>
+            </div>
+          </div>
+        </div>
+      </div>
+      <!-- 候補選択 -->
+      <div id="candidate-panel" style="display:none">
+        <div class="ai-panel-header">
+          <div>
+            <div class="ai-panel-title">◎ 候補選択モード</div>
+            <div class="ai-panel-subtitle">AIが3パターン提案 → 選んで確定</div>
+          </div>
+        </div>
+        <div class="ai-panel-body">
+          <div class="candidate-mode-area">
+            <div class="phrase-step-info">
+              <span class="phrase-step-badge" id="phrase-step-badge">フレーズ 1</span>
+              <span>AIが候補を3つ生成します</span>
+            </div>
+            <!-- 積み上げセッション: これまでに確定したフレーズを一覧表示 -->
+            <div class="session-strip" id="session-strip"></div>
+            <div class="session-actions" id="session-actions" style="display:none">
+              <button class="btn-secondary" onclick="previewSession()">🎵 ここまで通して試聴</button>
+              <button class="btn-secondary" onclick="resetSession()">🔄 新しい曲を始める</button>
+            </div>
+            <!-- FIX: 候補モード専用フレーズ名入力 -->
+            <div class="candidate-name-row">
+              <input class="candidate-name-input" id="candidate-phrase-name" placeholder="フレーズ名（例: サビ冒頭）" />
+            </div>
+            <button class="btn-ai-candidates" id="btn-ai-candidates" onclick="runCandidateGen()">◎ 候補を生成</button>
+            <div class="ai-loading" id="ai-loading-cand">AIが候補を生成中…</div>
+            <div class="candidates-list" id="candidates-list"></div>
+            <div class="candidate-actions" id="candidate-actions" style="display:none">
+              <button class="btn-rerecord" onclick="resetCandidates()">🔄 録り直す</button>
+              <button class="btn-candidate-commit" id="btn-candidate-commit" onclick="commitSelectedCandidate()" disabled>選択した候補でカード化</button>
+            </div>
+          </div>
         </div>
       </div>
     </div>
 
-    <div class="recorder-area">
-
-      <!-- WAVEFORM -->
-      <div class="waveform-wrap">
-        <canvas id="waveform-canvas"></canvas>
-      </div>
-
-      <!-- PITCH -->
-      <div class="pitch-row">
-        <div class="pitch-current">
-          <div class="pitch-note" id="pitch-note">—</div>
-          <div class="pitch-hz" id="pitch-hz">—</div>
-        </div>
-        <div class="pitch-roll">
-          <canvas id="pitch-canvas"></canvas>
-        </div>
-      </div>
-
-      <!-- CONTROLS -->
-      <div class="controls-row">
-        <button class="btn-secondary" id="btn-play-back" disabled>▶ 再生</button>
-        <button class="btn-rec" id="btn-rec" title="録音開始">●</button>
-        <div class="rec-status" id="rec-status">タップして録音</div>
-      </div>
-
-      <!-- DETECTED NOTES -->
-      <div class="detected-wrap">
-        <div class="detected-header">
-          <span class="section-title">検出音符</span>
-          <button class="btn-secondary" id="btn-clear-det" style="font-size:11px;padding:4px 10px" disabled>クリア</button>
-        </div>
-        <div class="detected-notes" id="detected-notes">
-          <span class="det-empty">録音すると音符が表示されます</span>
-        </div>
-      </div>
-
-      <!-- COMMIT -->
-      <div class="commit-row">
-        <input class="phrase-name-input" id="phrase-name" placeholder="フレーズ名（例: サビ冒頭）" />
-        <button class="btn-commit" id="btn-commit" disabled>カードに保存</button>
-      </div>
-
-    </div><!-- /.recorder-area -->
-
-    <!-- PREVIEW PANEL -->
-    <div class="preview-panel" id="preview-panel">
-      <div class="preview-header">
-        <div class="preview-title" id="preview-title"></div>
-        <div class="preview-emotion" id="preview-emotion"></div>
-      </div>
-      <div class="preview-notes" id="preview-notes"></div>
-      <div class="preview-controls">
-        <button class="btn-play" id="btn-preview-play">▶ 試聴</button>
-      </div>
+    <!-- COMMIT ROW (おまかせ補正 / なし モード) -->
+    <div class="commit-row" id="commit-row">
+      <input class="phrase-name-input" id="phrase-name" placeholder="フレーズ名（例: サビ冒頭）" />
+      <button class="btn-commit" id="btn-commit" disabled>カードに保存</button>
     </div>
+  </div>
 
-  </main>
+  <!-- PREVIEW -->
+  <div class="preview-panel" id="preview-panel">
+    <div class="preview-header">
+      <div class="preview-title" id="preview-title"></div>
+      <div class="preview-emotion" id="preview-emotion"></div>
+      <div class="preview-ai-tag" id="preview-ai-tag"></div>
+    </div>
+    <div class="preview-notes" id="preview-notes"></div>
+    <div class="preview-controls">
+      <button class="btn-play" id="btn-preview-play">▶ 試聴</button>
+    </div>
+  </div>
+</main>
 </div>
-
-<!-- TOAST -->
 <div class="toast" id="toast"></div>
 
 <script>
-/* ═══════════════════════════════════════════════════
+'use strict';
+
+/* ═══════════════════════════════
    STATE
-════════════════════════════════════════════════════ */
+═══════════════════════════════ */
 const state = {
   recording: false,
   mediaRecorder: null,
   audioChunks: [],
   audioBlob: null,
-  audioBuffer: null,       // decoded AudioBuffer
+  audioBuffer: null,
   analyser: null,
   sourceNode: null,
   animFrame: null,
-  detectedNotes: [],       // [{note, hz, start, dur, confidence}]
-  cards: [],               // saved phrase cards
+  detectedNotes: [],
+  correctedNotes: [],
+  aiComment: '',
+  candidates: [],
+  selectedCandidate: -1,
+  cards: [],
   selectedEmotion: 'neutral',
+  aiMode: 'auto',
   activeCardId: null,
-  previewSynth: null,
   previewPlaying: false,
-  pitchHistory: [],        // rolling array for pitch roll canvas
+  previewSynth: null,
+  pitchHistory: [],
+  showingCorrected: false,
+  phraseCount: 0,
+  candidateSession: [], // 候補モードで積み上げ中のフレーズ（{id,name,noteCount}の配列、曲順）
+};
+
+const AC = window.AudioContext || window.webkitAudioContext;
+let ac = null;
+
+/* ═══════════════════════════════
+   BPM (新機能)
+═══════════════════════════════ */
+function getBpm() {
+  const v = parseInt($('bpm-input').value, 10);
+  return (v >= 40 && v <= 240) ? v : 120;
 }
+function getSPB() { return 60 / getBpm(); }
+function resetBpm() { $('bpm-input').value = 120; }
 
-const AC = window.AudioContext || window.webkitAudioContext
-let ac = null
-
-/* ═══════════════════════════════════════════════════
+/* ═══════════════════════════════
    ELEMENTS
-════════════════════════════════════════════════════ */
-const btnRec       = document.getElementById('btn-rec')
-const btnPlayBack  = document.getElementById('btn-play-back')
-const btnClearDet  = document.getElementById('btn-clear-det')
-const btnCommit    = document.getElementById('btn-commit')
-const btnExport    = document.getElementById('btn-export')
-const btnPrevPlay  = document.getElementById('btn-preview-play')
-const recStatus    = document.getElementById('rec-status')
-const pitchNote    = document.getElementById('pitch-note')
-const pitchHz      = document.getElementById('pitch-hz')
-const detectedEl   = document.getElementById('detected-notes')
-const cardList     = document.getElementById('card-list')
-const emptyMsg     = document.getElementById('empty-msg')
-const phraseInput  = document.getElementById('phrase-name')
-const previewPanel = document.getElementById('preview-panel')
-const previewTitle = document.getElementById('preview-title')
-const previewEmot  = document.getElementById('preview-emotion')
-const previewNotes = document.getElementById('preview-notes')
-const toastEl      = document.getElementById('toast')
-const wvCanvas     = document.getElementById('waveform-canvas')
-const pitchCanvas  = document.getElementById('pitch-canvas')
-const wvCtx        = wvCanvas.getContext('2d')
-const ptCtx        = pitchCanvas.getContext('2d')
+═══════════════════════════════ */
+const $ = id => document.getElementById(id);
+const btnRec = $('btn-rec');
+const btnPlayBack = $('btn-play-back');
+const btnClearDet = $('btn-clear-det');
+const btnCommit = $('btn-commit');
+const btnExport = $('btn-export');
+const btnPrevPlay = $('btn-preview-play');
+const recStatus = $('rec-status');
+const pitchNote = $('pitch-note');
+const pitchHz = $('pitch-hz');
+const detectedEl = $('detected-notes');
+const cardList = $('card-list');
+const emptyMsg = $('empty-msg');
+const phraseInput = $('phrase-name');
+const previewPanel = $('preview-panel');
+const wvCanvas = $('waveform-canvas');
+const ptCanvas = $('pitch-canvas');
+const wvCtx = wvCanvas.getContext('2d');
+const ptCtx = ptCanvas.getContext('2d');
 
-/* ═══════════════════════════════════════════════════
-   CANVAS SETUP
-════════════════════════════════════════════════════ */
+/* ═══════════════════════════════
+   CANVAS
+═══════════════════════════════ */
 function resizeCanvases() {
-  wvCanvas.width  = wvCanvas.offsetWidth  * devicePixelRatio
-  wvCanvas.height = wvCanvas.offsetHeight * devicePixelRatio
-  pitchCanvas.width  = pitchCanvas.offsetWidth  * devicePixelRatio
-  pitchCanvas.height = pitchCanvas.offsetHeight * devicePixelRatio
-  wvCtx.scale(devicePixelRatio, devicePixelRatio)
-  ptCtx.scale(devicePixelRatio, devicePixelRatio)
+  const dpr = devicePixelRatio || 1;
+  [wvCanvas, ptCanvas].forEach(c => {
+    c.width = c.offsetWidth * dpr;
+    c.height = c.offsetHeight * dpr;
+  });
+  wvCtx.scale(dpr, dpr);
+  ptCtx.scale(dpr, dpr);
 }
-window.addEventListener('resize', resizeCanvases)
-setTimeout(resizeCanvases, 100)
+window.addEventListener('resize', resizeCanvases);
+setTimeout(resizeCanvases, 80);
 
-/* ═══════════════════════════════════════════════════
-   NOTE NAMES
-════════════════════════════════════════════════════ */
-const NOTE_NAMES = ['C','C#','D','D#','E','F','F#','G','G#','A','A#','B']
+/* ═══════════════════════════════
+   NOTE UTILS
+═══════════════════════════════ */
+const NOTE_NAMES = ['C','C#','D','D#','E','F','F#','G','G#','A','A#','B'];
+function noteName(midiR) {
+  return NOTE_NAMES[((midiR % 12) + 12) % 12] + (Math.floor(midiR / 12) - 1);
+}
 function freqToNote(hz) {
-  if (hz <= 0) return null
-  const midi  = 12 * Math.log2(hz / 440) + 69
-  const midiR = Math.round(midi)
-  const cents = (midi - midiR) * 100
-  const name  = NOTE_NAMES[((midiR % 12) + 12) % 12]
-  const oct   = Math.floor(midiR / 12) - 1
-  return { name: `${name}${oct}`, midiR, cents, hz }
+  if (hz <= 0) return null;
+  const midi = 12 * Math.log2(hz / 440) + 69;
+  const midiR = Math.round(midi);
+  const name = NOTE_NAMES[((midiR % 12) + 12) % 12] + (Math.floor(midiR / 12) - 1);
+  return { name, midiR, hz };
 }
+function noteToFreq(midiR) { return 440 * Math.pow(2, (midiR - 69) / 12); }
 
-function noteToFreq(midiR) {
-  return 440 * Math.pow(2, (midiR - 69) / 12)
-}
-
-/* ═══════════════════════════════════════════════════
-   PITCH DETECTION — Autocorrelation (YIN-lite)
-════════════════════════════════════════════════════ */
-function detectPitch(buffer, sampleRate) {
-  const SIZE  = buffer.length
-  const START = Math.floor(sampleRate / 800)   // ~1250Hz upper
-  const END   = Math.floor(sampleRate / 50)    // ~50Hz lower
-  let minVal = Infinity, minIdx = -1
-
-  // YIN difference function
-  const yin = new Float32Array(END)
+/* ═══════════════════════════════
+   PITCH DETECTION (YIN)
+═══════════════════════════════ */
+function detectPitch(buf, sampleRate) {
+  const SIZE = buf.length;
+  const START = Math.floor(sampleRate / 800);
+  const END = Math.floor(sampleRate / 50);
+  const yin = new Float32Array(END);
   for (let tau = START; tau < END; tau++) {
-    let s = 0
-    for (let i = 0; i < SIZE - tau; i++) {
-      const d = buffer[i] - buffer[i + tau]
-      s += d * d
-    }
-    yin[tau] = s
+    let s = 0;
+    for (let i = 0; i < SIZE - tau; i++) { const d = buf[i] - buf[i+tau]; s += d*d; }
+    yin[tau] = s;
   }
-
-  // Cumulative mean normalized
-  yin[0] = 1
-  let cumSum = 0
-  for (let tau = 1; tau < END; tau++) {
-    cumSum += yin[tau]
-    yin[tau] = yin[tau] * tau / cumSum
-  }
-
-  // Absolute threshold
-  const THRESH = 0.12
-  let tau = START
+  yin[0] = 1;
+  let cumSum = 0;
+  for (let tau = 1; tau < END; tau++) { cumSum += yin[tau]; yin[tau] = yin[tau] * tau / cumSum; }
+  const THRESH = 0.12;
+  let tau = START;
+  let minIdx = -1;
   while (tau < END - 1) {
-    if (yin[tau] < THRESH) {
-      while (tau + 1 < END - 1 && yin[tau + 1] < yin[tau]) tau++
-      minIdx = tau
-      break
-    }
-    tau++
+    if (yin[tau] < THRESH) { while (tau+1 < END-1 && yin[tau+1] < yin[tau]) tau++; minIdx = tau; break; }
+    tau++;
   }
-  if (minIdx === -1) return null
-
-  // Parabolic interpolation for sub-sample accuracy
-  const x0 = minIdx > 0 ? minIdx - 1 : minIdx
-  const x2 = minIdx < END - 1 ? minIdx + 1 : minIdx
-  let refinedTau
-  if (x0 === minIdx) {
-    refinedTau = yin[minIdx] <= yin[x2] ? minIdx : x2
-  } else if (x2 === minIdx) {
-    refinedTau = yin[minIdx] <= yin[x0] ? minIdx : x0
-  } else {
-    const s0 = yin[x0], s1 = yin[minIdx], s2 = yin[x2]
-    refinedTau = minIdx + (s2 - s0) / (2 * (2 * s1 - s2 - s0))
+  if (minIdx === -1) return null;
+  const x0 = minIdx > 0 ? minIdx-1 : minIdx;
+  const x2 = minIdx < END-1 ? minIdx+1 : minIdx;
+  let refined = minIdx;
+  if (x0 !== minIdx && x2 !== minIdx) {
+    const s0=yin[x0],s1=yin[minIdx],s2=yin[x2];
+    refined = minIdx + (s2-s0)/(2*(2*s1-s2-s0));
   }
-
-  const confidence = 1 - yin[minIdx]
-  const hz = sampleRate / refinedTau
-  return { hz, confidence }
+  return { hz: sampleRate / refined, confidence: 1 - yin[minIdx] };
 }
 
-/* ═══════════════════════════════════════════════════
-   DRAW WAVEFORM (live or static)
-════════════════════════════════════════════════════ */
-function drawWaveformLive(dataArray) {
-  const W = wvCanvas.offsetWidth
-  const H = wvCanvas.offsetHeight
-  wvCtx.clearRect(0, 0, W, H)
-  wvCtx.strokeStyle = '#7f77dd'
-  wvCtx.lineWidth = 1.5
-  wvCtx.beginPath()
-  const sliceW = W / dataArray.length
-  for (let i = 0; i < dataArray.length; i++) {
-    const v = dataArray[i] / 128
-    const y = (v * H) / 2
-    i === 0 ? wvCtx.moveTo(0, y) : wvCtx.lineTo(i * sliceW, y)
+/* ═══════════════════════════════
+   WAVEFORM / PITCH DRAW
+═══════════════════════════════ */
+function drawWaveLive(data) {
+  const W = wvCanvas.offsetWidth, H = wvCanvas.offsetHeight;
+  wvCtx.clearRect(0,0,W,H);
+  wvCtx.strokeStyle = '#7f77dd'; wvCtx.lineWidth = 1.5;
+  wvCtx.beginPath();
+  const sw = W / data.length;
+  for (let i = 0; i < data.length; i++) {
+    const y = (data[i]/128) * H/2;
+    i === 0 ? wvCtx.moveTo(0,y) : wvCtx.lineTo(i*sw,y);
   }
-  wvCtx.stroke()
+  wvCtx.stroke();
 }
-
-function drawWaveformStatic(audioBuffer) {
-  const W = wvCanvas.offsetWidth
-  const H = wvCanvas.offsetHeight
-  wvCtx.clearRect(0, 0, W, H)
-  const data = audioBuffer.getChannelData(0)
-  const step = Math.ceil(data.length / W)
-  wvCtx.fillStyle = '#534ab7'
+function drawWaveStatic(audioBuf) {
+  const W = wvCanvas.offsetWidth, H = wvCanvas.offsetHeight;
+  wvCtx.clearRect(0,0,W,H);
+  const data = audioBuf.getChannelData(0);
+  const step = Math.ceil(data.length / W);
+  wvCtx.fillStyle = '#534ab7';
   for (let i = 0; i < W; i++) {
-    let max = 0
-    for (let j = 0; j < step; j++) {
-      const v = Math.abs(data[i * step + j] || 0)
-      if (v > max) max = v
-    }
-    const h = max * H
-    wvCtx.fillRect(i, (H - h) / 2, 1, h || 1)
+    let max = 0;
+    for (let j = 0; j < step; j++) { const v = Math.abs(data[i*step+j]||0); if(v>max) max=v; }
+    const h = max * H;
+    wvCtx.fillRect(i, (H-h)/2, 1, h||1);
   }
 }
-
-/* ═══════════════════════════════════════════════════
-   PITCH ROLL CANVAS
-════════════════════════════════════════════════════ */
 function drawPitchRoll() {
-  const W = pitchCanvas.offsetWidth
-  const H = pitchCanvas.offsetHeight
-  ptCtx.clearRect(0, 0, W, H)
-  const hist = state.pitchHistory
-  if (hist.length < 2) return
-
-  const MIDI_MIN = 48, MIDI_MAX = 84  // C3..C6
-  ptCtx.strokeStyle = '#7f77dd'
-  ptCtx.lineWidth = 2
-  ptCtx.beginPath()
-  for (let i = 0; i < hist.length; i++) {
-    const m = hist[i]
-    if (m === null) continue
-    const x = (i / (hist.length - 1)) * W
-    const y = H - ((m - MIDI_MIN) / (MIDI_MAX - MIDI_MIN)) * H
-    i === 0 || hist[i-1] === null ? ptCtx.moveTo(x, y) : ptCtx.lineTo(x, y)
+  const W = ptCanvas.offsetWidth, H = ptCanvas.offsetHeight;
+  ptCtx.clearRect(0,0,W,H);
+  const hist = state.pitchHistory;
+  if (hist.length < 2) return;
+  const MIDI_MIN=48, MIDI_MAX=84;
+  ptCtx.strokeStyle='#7f77dd'; ptCtx.lineWidth=2;
+  ptCtx.beginPath();
+  for (let i=0;i<hist.length;i++) {
+    const m = hist[i]; if(m===null) continue;
+    const x=(i/(hist.length-1))*W;
+    const y=H-((m-MIDI_MIN)/(MIDI_MAX-MIDI_MIN))*H;
+    (i===0||hist[i-1]===null)?ptCtx.moveTo(x,y):ptCtx.lineTo(x,y);
   }
-  ptCtx.stroke()
+  ptCtx.stroke();
 }
 
-/* ═══════════════════════════════════════════════════
-   QUANTIZE & SEGMENT detected notes
-════════════════════════════════════════════════════ */
-function quantizeToGrid(notes, gridBeat = 0.25) {
+/* ═══════════════════════════════
+   OFFLINE ANALYSIS
+═══════════════════════════════ */
+function quantize(notes, grid=0.25) {
   return notes.map(n => ({
     ...n,
-    startQ: Math.round(n.start / gridBeat) * gridBeat,
-    durQ:   Math.max(gridBeat, Math.round(n.dur / gridBeat) * gridBeat),
-  }))
+    start: Math.round(n.start/grid)*grid,
+    dur: Math.max(grid, Math.round(n.dur/grid)*grid),
+  }));
 }
-
-/* ═══════════════════════════════════════════════════
-   OFFLINE PITCH ANALYSIS (after recording stops)
-════════════════════════════════════════════════════ */
 async function analyzeRecording(blob) {
-  if (!ac) ac = new AC()
-  const arrayBuf = await blob.arrayBuffer()
-  const audioBuf = await ac.decodeAudioData(arrayBuf)
-  state.audioBuffer = audioBuf
-
-  const data       = audioBuf.getChannelData(0)
-  const sr         = audioBuf.sampleRate
-  const frameSize  = 2048
-  const hopSize    = 512
-  const bpm        = 120
-  const secPerBeat = 60 / bpm
-
-  const segments = []
-  let curNote  = null
-  let curStart = 0
-
-  for (let offset = 0; offset + frameSize < data.length; offset += hopSize) {
-    const frame = data.slice(offset, offset + frameSize)
-    const t     = offset / sr
-    const res   = detectPitch(frame, sr)
-
+  if (!ac) ac = new AC();
+  // FIX: AudioContext suspended 対応
+  if (ac.state === 'suspended') await ac.resume();
+  const arrayBuf = await blob.arrayBuffer();
+  const audioBuf = await ac.decodeAudioData(arrayBuf);
+  state.audioBuffer = audioBuf;
+  const data = audioBuf.getChannelData(0);
+  const sr = audioBuf.sampleRate;
+  const FRAME = 2048, HOP = 512;
+  const SPB = getSPB(); // FIX: BPMを動的に取得
+  const segs = [];
+  let cur = null, curStart = 0;
+  for (let off = 0; off + FRAME < data.length; off += HOP) {
+    const frame = data.slice(off, off+FRAME);
+    const t = off / sr;
+    const res = detectPitch(frame, sr);
     if (res && res.confidence > 0.6) {
-      const noteInfo = freqToNote(res.hz)
-      if (!noteInfo) continue
-
-      if (curNote && curNote.midiR === noteInfo.midiR) {
-        // extend current
-        curNote.dur = t - curStart
-        curNote.confidence = Math.max(curNote.confidence, res.confidence)
+      const ni = freqToNote(res.hz);
+      if (!ni) continue;
+      if (cur && cur.midiR === ni.midiR) {
+        cur.dur = t - curStart;
+        cur.confidence = Math.max(cur.confidence, res.confidence);
       } else {
-        if (curNote && curNote.dur > 0.05) segments.push(curNote)
-        curNote  = { ...noteInfo, start: t, dur: 0, confidence: res.confidence }
-        curStart = t
+        if (cur && cur.dur > 0.05) segs.push(cur);
+        cur = { ...ni, start: t, dur: 0, confidence: res.confidence };
+        curStart = t;
       }
     } else {
-      if (curNote && curNote.dur > 0.05) segments.push(curNote)
-      curNote = null
+      if (cur && cur.dur > 0.05) segs.push(cur);
+      cur = null;
     }
   }
-  if (curNote && curNote.dur > 0.05) segments.push(curNote)
-
-  // Convert start/dur to beat units
-  const notesInBeats = segments.map(n => ({
-    name:       n.name,
-    midiR:      n.midiR,
-    hz:         Math.round(n.hz),
-    start:      parseFloat((n.start / secPerBeat).toFixed(3)),
-    dur:        parseFloat((n.dur   / secPerBeat).toFixed(3)),
+  if (cur && cur.dur > 0.05) segs.push(cur);
+  const inBeats = segs.map(n => ({
+    name: n.name, midiR: n.midiR,
+    hz: Math.round(n.hz),
+    start: parseFloat((n.start/SPB).toFixed(3)),
+    dur: parseFloat((n.dur/SPB).toFixed(3)),
     confidence: parseFloat(n.confidence.toFixed(2)),
-  }))
-
-  state.detectedNotes = quantizeToGrid(notesInBeats, 0.25)
-  drawWaveformStatic(audioBuf)
-  renderDetectedNotes()
+  }));
+  state.detectedNotes = quantize(inBeats);
+  drawWaveStatic(audioBuf);
+  renderDetectedNotes();
+  maybeShowAiPanel();
 }
 
-/* ═══════════════════════════════════════════════════
+/* ═══════════════════════════════
    RENDER DETECTED NOTES
-════════════════════════════════════════════════════ */
+═══════════════════════════════ */
 function renderDetectedNotes() {
-  const notes = state.detectedNotes
-  detectedEl.innerHTML = ''
-  if (notes.length === 0) {
-    detectedEl.innerHTML = '<span class="det-empty">音符が検出されませんでした</span>'
-    btnCommit.disabled = true
-    btnClearDet.disabled = true
-    return
+  const notes = state.showingCorrected ? state.correctedNotes : state.detectedNotes;
+  detectedEl.innerHTML = '';
+  if (!notes.length) {
+    detectedEl.innerHTML = '<span class="det-empty">音符が検出されませんでした</span>';
+    btnCommit.disabled = true; btnClearDet.disabled = true;
+    return;
   }
-  btnCommit.disabled = false
-  btnClearDet.disabled = false
+  btnCommit.disabled = false; btnClearDet.disabled = false;
   notes.forEach(n => {
-    const el = document.createElement('div')
-    el.className = 'det-note' + (n.confidence < 0.7 ? ' low-conf' : '')
-    el.title = `${n.name}  conf:${n.confidence}  dur:${n.durQ}拍`
-    el.textContent = n.name
-    const bar = document.createElement('div')
-    bar.className = 'conf-bar'
-    bar.style.width = `${Math.round(n.confidence * 100)}%`
-    el.appendChild(bar)
-    detectedEl.appendChild(el)
-  })
+    const el = document.createElement('div');
+    el.className = 'det-note' + (n.confidence < 0.7 ? ' low-conf' : '');
+    el.title = `${n.name} conf:${n.confidence} dur:${n.dur}拍`;
+    el.textContent = n.name;
+    const bar = document.createElement('div');
+    bar.className = 'conf-bar';
+    bar.style.width = Math.round(n.confidence*100)+'%';
+    el.appendChild(bar);
+    detectedEl.appendChild(el);
+  });
 }
 
-/* ═══════════════════════════════════════════════════
-   EMOTION TAG UI
-════════════════════════════════════════════════════ */
-const emotionLabels = {
-  neutral:   'ニュートラル',
-  sad:       '切ない',
-  happy:     '明るい',
-  tense:     '緊張感',
-  nostalgic: '懐かしい',
-  dark:      'ダーク',
-}
-document.getElementById('emotion-row').addEventListener('click', e => {
-  const btn = e.target.closest('.emotion-tag')
-  if (!btn) return
-  document.querySelectorAll('.emotion-tag').forEach(b => b.classList.remove('selected'))
-  btn.classList.add('selected')
-  state.selectedEmotion = btn.dataset.emotion
-})
+/* ═══════════════════════════════
+   AI MODE
+═══════════════════════════════ */
+const emotionLabels = { neutral:'ニュートラル', sad:'切ない', happy:'明るい', tense:'緊張感', nostalgic:'懐かしい', dark:'ダーク' };
+const emotionScaleHints = { neutral:'メジャー/マイナー混合', sad:'マイナースケール優先', happy:'メジャースケール優先', tense:'短2度・増4度含む緊張感のある進行', nostalgic:'メジャー+マイナー混合・懐かしい響き', dark:'フリジアン・マイナーペンタトニック優先' };
 
-/* ═══════════════════════════════════════════════════
-   RECORDING
-════════════════════════════════════════════════════ */
-btnRec.addEventListener('click', async () => {
-  if (state.recording) {
-    stopRecording()
-  } else {
-    await startRecording()
+function setAiMode(mode) {
+  state.aiMode = mode;
+  ['auto','candidate','off'].forEach(m => $('mode-btn-'+m).classList.toggle('active', m===mode));
+  maybeShowAiPanel();
+  // FIX: 候補モードでもcommit-rowを非表示にするが、candidate-name-rowで代替
+  $('commit-row').style.display = mode === 'candidate' ? 'none' : 'flex';
+  if (mode === 'candidate') renderSessionStrip();
+}
+function maybeShowAiPanel() {
+  const hasNotes = state.detectedNotes.length > 0;
+  const panel = $('ai-panel');
+  if (state.aiMode === 'off' || !hasNotes) { panel.style.display='none'; return; }
+  panel.style.display = 'block';
+  $('auto-correct-panel').style.display = state.aiMode==='auto' ? 'block' : 'none';
+  $('candidate-panel').style.display = state.aiMode==='candidate' ? 'block' : 'none';
+}
+
+/* ═══════════════════════════════
+   CLAUDE API
+═══════════════════════════════ */
+function getApiKey() {
+  return $('apikey-input').value.trim() || localStorage.getItem('vl3_claude_key') || '';
+}
+function saveApiKey() {
+  const key = $('apikey-input').value.trim();
+  if (key) { localStorage.setItem('vl3_claude_key', key); showToast('APIキーを保存しました'); }
+}
+
+async function callClaude(systemPrompt, userPrompt) {
+  const key = getApiKey();
+  if (!key) throw new Error('APIキーが設定されていません');
+  const res = await fetch('https://api.anthropic.com/v1/messages', {
+    method: 'POST',
+    headers: {
+      'Content-Type': 'application/json',
+      'x-api-key': key,
+      'anthropic-version': '2023-06-01',
+      'anthropic-dangerous-direct-browser-access': 'true',
+    },
+    body: JSON.stringify({
+      model: 'claude-sonnet-4-6',
+      max_tokens: 1000,
+      system: systemPrompt,
+      messages: [{ role:'user', content: userPrompt }],
+    }),
+  });
+  if (!res.ok) { const t = await res.text(); throw new Error('Claude API error '+res.status+': '+t.slice(0,200)); }
+  const data = await res.json();
+  const text = (data.content||[]).filter(b=>b.type==='text').map(b=>b.text).join('');
+  const clean = text.replace(/```json\s*/gi,'').replace(/```\s*/gi,'').trim();
+  return JSON.parse(clean);
+}
+
+/* ═══════════════════════════════
+   AUTO CORRECT
+═══════════════════════════════ */
+async function runAutoCorrect() {
+  if (!state.detectedNotes.length) { showToast('先に録音してください'); return; }
+  $('btn-ai-run').disabled = true;
+  $('ai-loading').classList.add('show');
+  $('corrected-area').style.display = 'none';
+  try {
+    const sys = `あなたはプロの作曲家です。鼻歌のピッチ検出結果（音名・拍単位の開始時刻・長さ・confidence）を受け取り、以下を行います：
+1. 量子化（0.25拍単位）済みのため時間は変えない
+2. confidence < 0.7 の音符を前後の文脈とスケールから補正
+3. 感情タグに合ったスケールへの補正
+4. 自然な音楽的フレーズになるよう整形
+必ずJSONのみを返してください。前置き・Markdownコードブロック記号は不要。`;
+    const noteList = state.detectedNotes.map(n =>
+      `${n.name}(start:${n.start},dur:${n.dur},conf:${n.confidence})`
+    ).join(', ');
+    const usr = `感情タグ: ${state.selectedEmotion}（スケールヒント: ${emotionScaleHints[state.selectedEmotion]}）
+検出音符: ${noteList}
+以下のJSON形式のみで返してください:
+{"notes":[{"name":"C4","midiR":60,"hz":262,"start":0,"dur":1,"confidence":0.95}],"comment":"補正内容を1〜2文で説明"}
+noteの数は元の検出音符数と同じにしてください。nameはC3〜B5の範囲。`;
+    const result = await callClaude(sys, usr);
+    state.correctedNotes = (result.notes||[]).map(n => ({
+      name: n.name, midiR: n.midiR||60, hz: n.hz||noteToFreq(n.midiR||60),
+      start: n.start, dur: n.dur, confidence: n.confidence||0.95,
+    }));
+    state.aiComment = result.comment || '';
+    renderCorrectedNotes();
+    $('corrected-area').style.display = 'block';
+    showToast('AI補正が完了しました');
+  } catch(e) {
+    showToast('エラー: '+e.message);
+  } finally {
+    $('btn-ai-run').disabled = false;
+    $('ai-loading').classList.remove('show');
   }
-})
+}
+function renderCorrectedNotes() {
+  const el = $('corrected-notes');
+  el.innerHTML = state.correctedNotes.map(n => `<span class="corrected-note">${n.name}</span>`).join('');
+  $('ai-comment').textContent = state.aiComment;
+}
+function showRaw() {
+  state.showingCorrected = false;
+  $('btn-show-raw').className = 'compare-btn active';
+  $('btn-show-corrected').className = 'compare-btn';
+  renderDetectedNotes();
+}
+function showCorrected() {
+  if (!state.correctedNotes.length) return;
+  state.showingCorrected = true;
+  $('btn-show-raw').className = 'compare-btn';
+  $('btn-show-corrected').className = 'compare-btn ai-active';
+  renderDetectedNotes();
+  previewNotes(state.correctedNotes);
+}
 
+/* ═══════════════════════════════
+   CANDIDATE SELECT
+═══════════════════════════════ */
+async function runCandidateGen() {
+  if (!state.detectedNotes.length) { showToast('先に録音してください'); return; }
+  $('btn-ai-candidates').disabled = true;
+  $('ai-loading-cand').classList.add('show');
+  $('candidates-list').innerHTML = '';
+  $('candidate-actions').style.display = 'none';
+  state.selectedCandidate = -1;
+  try {
+    const sys = `あなたはプロの作曲家です。鼻歌の検出傾向から、ユーザーが意図したであろう自然なメロディ候補を3パターン生成します。
+各候補は同じ拍数・似たような音程の動き・感情タグに合ったスケールを使ってください。
+必ずJSONのみを返してください。Markdownコードブロック記号は不要。`;
+    const noteList = state.detectedNotes.map(n =>
+      `${n.name}(start:${n.start},dur:${n.dur},conf:${n.confidence})`
+    ).join(', ');
+    const usr = `感情タグ: ${state.selectedEmotion}（スケールヒント: ${emotionScaleHints[state.selectedEmotion]}）
+検出音符: ${noteList}
+3パターンの候補を以下のJSON形式で返してください:
+{"candidates":[
+  {"label":"A","description":"検出に近い・素直な解釈","notes":[{"name":"C4","midiR":60,"hz":262,"start":0,"dur":1,"confidence":0.95}]},
+  {"label":"B","description":"スケール補正版","notes":[...]},
+  {"label":"C","description":"跳躍や変化を加えたバリエーション","notes":[...]}
+]}
+各候補のnote数は元の検出音符数と同じにしてください。nameはC3〜B5の範囲。`;
+    const result = await callClaude(sys, usr);
+    state.candidates = (result.candidates||[]).map(c => ({
+      label: c.label,
+      desc: c.description,
+      notes: (c.notes||[]).map(n => ({
+        name:n.name, midiR:n.midiR||60, hz:n.hz||noteToFreq(n.midiR||60),
+        start:n.start, dur:n.dur, confidence:n.confidence||0.95,
+      })),
+    }));
+    renderCandidates();
+    $('candidate-actions').style.display = 'flex';
+    showToast('候補を3つ生成しました');
+  } catch(e) {
+    showToast('エラー: '+e.message);
+  } finally {
+    $('btn-ai-candidates').disabled = false;
+    $('ai-loading-cand').classList.remove('show');
+  }
+}
+function renderCandidates() {
+  const el = $('candidates-list');
+  el.innerHTML = '';
+  state.candidates.forEach((cand, idx) => {
+    const card = document.createElement('div');
+    card.className = 'candidate-card' + (idx===state.selectedCandidate?' selected':'');
+    card.onclick = () => selectCandidate(idx);
+    const noteHtml = cand.notes.map(n=>`<span class="candidate-note">${n.name}</span>`).join('');
+    card.innerHTML = `
+      <div class="candidate-header">
+        <span class="candidate-label">候補 ${cand.label}</span>
+        <span class="candidate-desc">${escHtml(cand.desc)}</span>
+        <button class="candidate-play-btn" id="cand-play-${idx}" onclick="event.stopPropagation();toggleCandidatePlay(${idx})">▶ 試聴</button>
+      </div>
+      <div class="candidate-notes">${noteHtml}</div>
+    `;
+    el.appendChild(card);
+  });
+}
+function selectCandidate(idx) {
+  state.selectedCandidate = idx;
+  renderCandidates();
+  $('btn-candidate-commit').disabled = false;
+}
+let candPlayIdx = -1;
+function toggleCandidatePlay(idx) {
+  if (candPlayIdx === idx) { stopPreviewSynth(); candPlayIdx = -1; updateCandPlayBtns(); return; }
+  stopPreviewSynth();
+  candPlayIdx = idx;
+  updateCandPlayBtns();
+  const cand = state.candidates[idx];
+  if (cand) previewNotes(cand.notes, () => { candPlayIdx=-1; updateCandPlayBtns(); });
+}
+function updateCandPlayBtns() {
+  state.candidates.forEach((_,i) => {
+    const btn = $('cand-play-'+i);
+    if (!btn) return;
+    btn.textContent = (candPlayIdx===i) ? '■ 停止' : '▶ 試聴';
+    btn.className = 'candidate-play-btn' + (candPlayIdx===i ? ' playing' : '');
+  });
+}
+
+// FIX: commitSelectedCandidate で候補モード専用フレーズ名を参照
+function commitSelectedCandidate() {
+  if (state.selectedCandidate < 0) return;
+  const cand = state.candidates[state.selectedCandidate];
+  state.correctedNotes = cand.notes;
+  state.aiComment = `候補${cand.label}: ${cand.desc}`;
+  // FIX: 候補モード専用入力欄からフレーズ名を取得
+  const candidateName = $('candidate-phrase-name').value.trim();
+  commitCard(true, candidateName);
+  // 積み上げセッションに追加（今コミットされたカードは常に配列の末尾）
+  const newCard = state.cards[state.cards.length - 1];
+  if (newCard) {
+    state.candidateSession.push({ id: newCard.id, name: newCard.name, noteCount: newCard.notes.length });
+    renderSessionStrip();
+  }
+  state.phraseCount++;
+  $('phrase-step-badge').textContent = `フレーズ ${state.phraseCount+1}`;
+  state.detectedNotes = [];
+  state.candidates = [];
+  state.selectedCandidate = -1;
+  $('candidate-phrase-name').value = '';
+  renderDetectedNotes();
+  $('candidates-list').innerHTML = '';
+  $('candidate-actions').style.display = 'none';
+  $('btn-ai-candidates').disabled = false;
+  maybeShowAiPanel();
+}
+function resetCandidates() {
+  state.candidates = [];
+  state.selectedCandidate = -1;
+  $('candidates-list').innerHTML = '';
+  $('candidate-actions').style.display = 'none';
+  state.detectedNotes = [];
+  renderDetectedNotes();
+  maybeShowAiPanel();
+  showToast('録り直してください');
+}
+
+/* ═══════════════════════════════
+   フレーズ積み上げセッション
+   候補モードで確定したフレーズを曲順に並べ、
+   通し試聴・リセットができるようにする
+═══════════════════════════════ */
+function renderSessionStrip() {
+  const strip = $('session-strip');
+  const actions = $('session-actions');
+  if (!state.candidateSession.length) {
+    strip.innerHTML = '';
+    actions.style.display = 'none';
+    return;
+  }
+  strip.innerHTML = state.candidateSession.map((s, i) => `
+    <span class="session-pill" onclick="selectCard(${s.id})" title="クリックでカードを表示">
+      <span class="sp-idx">${i + 1}</span>${escHtml(s.name)}
+    </span>
+  `).join('') + `<span class="session-total">計${state.candidateSession.length}フレーズ</span>`;
+  actions.style.display = 'flex';
+}
+function previewSession() {
+  if (!state.candidateSession.length) { showToast('まだ確定したフレーズがありません'); return; }
+  const combined = [];
+  let beatOffset = 0;
+  state.candidateSession.forEach(s => {
+    const card = state.cards.find(c => c.id === s.id);
+    if (!card) return;
+    const maxDur = card.notes.reduce((m, n) => Math.max(m, n.start + n.dur), 0);
+    card.notes.forEach(n => combined.push({ ...n, start: beatOffset + n.start }));
+    beatOffset += Math.max(maxDur, 1);
+  });
+  if (!combined.length) { showToast('再生できるノートがありません'); return; }
+  showToast('通し試聴を再生します');
+  previewNotes(combined, () => showToast('再生が終わりました'));
+}
+function resetSession() {
+  state.candidateSession = [];
+  state.phraseCount = 0;
+  $('phrase-step-badge').textContent = 'フレーズ 1';
+  renderSessionStrip();
+  showToast('新しい曲として最初から積み上げます（保存済みカードはそのまま残ります）');
+}
+
+/* ═══════════════════════════════
+   RECORDING
+═══════════════════════════════ */
+btnRec.addEventListener('click', async () => {
+  state.recording ? stopRecording() : await startRecording();
+});
 async function startRecording() {
   try {
-    if (!ac) ac = new AC()
-    const stream = await navigator.mediaDevices.getUserMedia({ audio: true })
-
-    state.audioChunks = []
-    state.detectedNotes = []
-    state.pitchHistory  = []
-    detectedEl.innerHTML = '<span class="det-empty">録音中…</span>'
-    btnPlayBack.disabled = true
-    btnCommit.disabled   = true
-    btnClearDet.disabled = true
-
-    // Live analysis setup
-    const srcNode   = ac.createMediaStreamSource(stream)
-    const analyser  = ac.createAnalyser()
-    analyser.fftSize = 2048
-    srcNode.connect(analyser)
-    state.analyser  = analyser
-    state.sourceNode = srcNode
-
-    // MediaRecorder
-    const mr = new MediaRecorder(stream)
-    state.mediaRecorder = mr
-    mr.ondataavailable = e => state.audioChunks.push(e.data)
+    if (!ac) ac = new AC();
+    // FIX: suspended 対応
+    if (ac.state === 'suspended') await ac.resume();
+    const stream = await navigator.mediaDevices.getUserMedia({ audio: true });
+    state.audioChunks = [];
+    state.detectedNotes = [];
+    state.correctedNotes = [];
+    state.pitchHistory = [];
+    state.showingCorrected = false;
+    $('corrected-area').style.display='none';
+    $('ai-panel').style.display='none';
+    detectedEl.innerHTML='<span class="det-empty">録音中…</span>';
+    btnPlayBack.disabled=true; btnCommit.disabled=true; btnClearDet.disabled=true;
+    const srcNode = ac.createMediaStreamSource(stream);
+    const analyser = ac.createAnalyser();
+    analyser.fftSize = 2048;
+    srcNode.connect(analyser);
+    state.analyser = analyser; state.sourceNode = srcNode;
+    const mr = new MediaRecorder(stream);
+    state.mediaRecorder = mr;
+    mr.ondataavailable = e => state.audioChunks.push(e.data);
     mr.onstop = async () => {
-      stream.getTracks().forEach(t => t.stop())
-      const blob = new Blob(state.audioChunks, { type: 'audio/webm' })
-      state.audioBlob = blob
-      await analyzeRecording(blob)
-      btnPlayBack.disabled = false
-      recStatus.textContent = '録音完了'
-    }
-    mr.start()
-    state.recording = true
-    btnRec.classList.add('recording')
-    btnRec.textContent = '■'
-    recStatus.textContent = '録音中…'
-
-    // Live waveform + realtime pitch
-    const dataArr = new Uint8Array(analyser.fftSize)
-    const float32 = new Float32Array(analyser.fftSize)
-    const PITCH_HIST_MAX = 120
-
-    function liveLoop() {
-      if (!state.recording) return
-      state.animFrame = requestAnimationFrame(liveLoop)
-      analyser.getByteTimeDomainData(dataArr)
-      drawWaveformLive(dataArr)
-
-      analyser.getFloatTimeDomainData(float32)
-      const res = detectPitch(float32, ac.sampleRate)
+      stream.getTracks().forEach(t=>t.stop());
+      const blob = new Blob(state.audioChunks, { type:'audio/webm' });
+      state.audioBlob = blob;
+      await analyzeRecording(blob);
+      btnPlayBack.disabled = false;
+      recStatus.textContent = '録音完了';
+    };
+    mr.start();
+    state.recording = true;
+    btnRec.classList.add('recording'); btnRec.textContent='■';
+    recStatus.textContent='録音中…';
+    const dataArr = new Uint8Array(analyser.fftSize);
+    const float32 = new Float32Array(analyser.fftSize);
+    const HIST_MAX = 120;
+    function loop() {
+      if (!state.recording) return;
+      state.animFrame = requestAnimationFrame(loop);
+      analyser.getByteTimeDomainData(dataArr);
+      drawWaveLive(dataArr);
+      analyser.getFloatTimeDomainData(float32);
+      const res = detectPitch(float32, ac.sampleRate);
       if (res && res.confidence > 0.65) {
-        const ni = freqToNote(res.hz)
-        if (ni) {
-          pitchNote.textContent = ni.name
-          pitchHz.textContent   = `${Math.round(res.hz)} Hz`
-          state.pitchHistory.push(ni.midiR)
-        }
-      } else {
-        pitchNote.textContent = '—'
-        pitchHz.textContent   = '—'
-        state.pitchHistory.push(null)
-      }
-      if (state.pitchHistory.length > PITCH_HIST_MAX)
-        state.pitchHistory.shift()
-      drawPitchRoll()
+        const ni = freqToNote(res.hz);
+        if (ni) { pitchNote.textContent=ni.name; pitchHz.textContent=Math.round(res.hz)+' Hz'; state.pitchHistory.push(ni.midiR); }
+      } else { pitchNote.textContent='—'; pitchHz.textContent='—'; state.pitchHistory.push(null); }
+      if (state.pitchHistory.length > HIST_MAX) state.pitchHistory.shift();
+      drawPitchRoll();
     }
-    liveLoop()
-
-  } catch (err) {
-    showToast('マイクのアクセスが拒否されました')
-    console.error(err)
-  }
+    loop();
+  } catch(e) { showToast('マイクアクセスが拒否されました'); }
 }
-
 function stopRecording() {
-  if (!state.mediaRecorder) return
-  state.recording = false
-  cancelAnimationFrame(state.animFrame)
-  state.mediaRecorder.stop()
-  btnRec.classList.remove('recording')
-  btnRec.textContent = '●'
-  recStatus.textContent = '解析中…'
-  pitchNote.textContent = '—'
-  pitchHz.textContent   = '—'
+  if (!state.mediaRecorder) return;
+  state.recording = false;
+  cancelAnimationFrame(state.animFrame);
+  state.mediaRecorder.stop();
+  btnRec.classList.remove('recording'); btnRec.textContent='●';
+  recStatus.textContent='解析中…';
+  pitchNote.textContent='—'; pitchHz.textContent='—';
 }
 
-/* ═══════════════════════════════════════════════════
-   PLAYBACK (recorded audio)
-════════════════════════════════════════════════════ */
+/* ═══════════════════════════════
+   PLAYBACK
+═══════════════════════════════ */
 btnPlayBack.addEventListener('click', () => {
-  if (!state.audioBlob) return
-  const url = URL.createObjectURL(state.audioBlob)
-  const audio = new Audio(url)
-  btnPlayBack.textContent = '⏸ 停止'
-  btnPlayBack.disabled = true
-  audio.play()
-  audio.onended = () => {
-    btnPlayBack.textContent = '▶ 再生'
-    btnPlayBack.disabled = false
-    URL.revokeObjectURL(url)
-  }
-})
-
-/* ═══════════════════════════════════════════════════
-   CLEAR DETECTED
-════════════════════════════════════════════════════ */
+  if (!state.audioBlob) return;
+  const url = URL.createObjectURL(state.audioBlob);
+  const audio = new Audio(url);
+  btnPlayBack.textContent='⏸ 停止'; btnPlayBack.disabled=true;
+  audio.play();
+  audio.onended = () => { btnPlayBack.textContent='▶ 再生'; btnPlayBack.disabled=false; URL.revokeObjectURL(url); };
+});
 btnClearDet.addEventListener('click', () => {
-  state.detectedNotes = []
-  renderDetectedNotes()
-})
+  state.detectedNotes=[]; state.correctedNotes=[];
+  renderDetectedNotes(); maybeShowAiPanel();
+});
 
-/* ═══════════════════════════════════════════════════
+/* ═══════════════════════════════
+   SYNTH PREVIEW (BPM連動)
+═══════════════════════════════ */
+function previewNotes(notes, onEnd) {
+  if (!ac) ac = new AC();
+  if (ac.state==='suspended') ac.resume();
+  stopPreviewSynth();
+  const SPB = getSPB(); // FIX: 動的BPM
+  const now = ac.currentTime;
+  const gain = ac.createGain(); gain.gain.value=0.4; gain.connect(ac.destination);
+  const oscs = [];
+  notes.forEach(n => {
+    const hz = n.hz || noteToFreq(n.midiR || 60);
+    const osc = ac.createOscillator(); osc.type='sine'; osc.frequency.value=hz;
+    const g = ac.createGain();
+    const t0 = now + n.start * SPB;
+    const t1 = t0 + n.dur * SPB;
+    g.gain.setValueAtTime(0,t0);
+    g.gain.linearRampToValueAtTime(0.6,t0+0.02);
+    g.gain.setValueAtTime(0.6,Math.max(t0+0.02,t1-0.03));
+    g.gain.linearRampToValueAtTime(0,t1);
+    osc.connect(g); g.connect(gain);
+    osc.start(t0); osc.stop(t1+0.01);
+    oscs.push(osc);
+  });
+  state.previewSynth = oscs;
+  state.previewPlaying = true;
+  const totalBeats = Math.max(...notes.map(n=>n.start+n.dur), 0);
+  const totalSec = totalBeats * SPB + 0.3;
+  state._previewTimer = setTimeout(() => {
+    stopPreviewSynth();
+    if (onEnd) onEnd();
+  }, totalSec * 1000);
+}
+function stopPreviewSynth() {
+  if (state.previewSynth) { state.previewSynth.forEach(o=>{try{o.stop();}catch(_){}}); state.previewSynth=null; }
+  clearTimeout(state._previewTimer);
+  state.previewPlaying=false;
+  btnPrevPlay.textContent='▶ 試聴';
+  btnPrevPlay.classList.remove('playing');
+}
+
+/* ═══════════════════════════════
    COMMIT → CARD
-════════════════════════════════════════════════════ */
-btnCommit.addEventListener('click', () => {
-  const notes = state.detectedNotes
-  if (notes.length === 0) return
-
-  const name = phraseInput.value.trim() || `フレーズ ${state.cards.length + 1}`
+   FIX: optionalName引数を追加（候補モード用）
+═══════════════════════════════ */
+btnCommit.addEventListener('click', () => commitCard(false));
+function commitCard(fromAi, optionalName) {
+  const rawNotes = state.detectedNotes;
+  const aiNotes = state.correctedNotes;
+  const useAi = fromAi || (state.aiMode==='auto' && aiNotes.length > 0);
+  const finalNotes = useAi ? aiNotes : rawNotes;
+  // FIX: conf が undefined の場合のフォールバック
+  const safeNotes = (notes) => notes.map(n => ({
+    name: n.name, midiR: n.midiR || 60,
+    hz: n.hz || noteToFreq(n.midiR || 60),
+    start: n.start || 0, dur: n.dur || 0.25,
+    conf: n.conf ?? n.confidence ?? 0.8,
+  }));
+  if (!finalNotes.length && !rawNotes.length) return;
+  const name = optionalName || phraseInput.value.trim() || `フレーズ ${state.cards.length+1}`;
   const card = {
-    id:      Date.now(),
+    id: Date.now(),
     name,
     emotion: state.selectedEmotion,
-    notes:   notes.map(n => ({
-      name:  n.name,
-      midiR: n.midiR,
-      hz:    n.hz,
-      start: n.startQ,
-      dur:   n.durQ,
-      conf:  n.confidence,
-    })),
-    blob:    state.audioBlob,
+    aiMode: state.aiMode,
+    hasAi: useAi,
+    bpm: getBpm(), // FIX: BPMを保存
+    notes: safeNotes(finalNotes),
+    rawNotes: safeNotes(rawNotes),
+    aiComment: state.aiComment,
+    blob: state.audioBlob,
     createdAt: new Date().toISOString(),
-  }
-  state.cards.push(card)
-  phraseInput.value = ''
-  state.detectedNotes = []
-  renderDetectedNotes()
-  renderCardList()
-  selectCard(card.id)
-  showToast(`「${name}」を保存しました`)
-})
+  };
+  state.cards.push(card);
+  phraseInput.value='';
+  state.detectedNotes=[]; state.correctedNotes=[];
+  renderDetectedNotes();
+  renderCardList();
+  selectCard(card.id);
+  maybeShowAiPanel();
+  saveCardsToStorage();
+  showToast(`「${name}」を保存しました`);
+}
 
-/* ═══════════════════════════════════════════════════
-   CARD LIST RENDER
-════════════════════════════════════════════════════ */
+/* ═══════════════════════════════
+   CARD LIST (並び替えボタン追加)
+═══════════════════════════════ */
 function renderCardList() {
-  cardList.innerHTML = ''
-  if (state.cards.length === 0) {
-    cardList.appendChild(emptyMsg)
-    return
-  }
-  state.cards.forEach(card => {
-    const el = document.createElement('div')
-    el.className = 'phrase-card' + (card.id === state.activeCardId ? ' active' : '')
-    el.dataset.id = card.id
-
-    const uniqNotes = [...new Set(card.notes.map(n => n.name))]
-
+  cardList.innerHTML = '';
+  if (!state.cards.length) { cardList.appendChild(emptyMsg); return; }
+  state.cards.forEach((card, idx) => {
+    const el = document.createElement('div');
+    el.className = 'phrase-card' + (card.id===state.activeCardId?' active':'');
+    const uniqNotes = [...new Set(card.notes.map(n=>n.name))];
     el.innerHTML = `
       <div class="card-label">フレーズ</div>
       <div class="card-title">${escHtml(card.name)}</div>
-      <div class="card-notes">${uniqNotes.map(n =>
-        `<span class="note-pill">${n}</span>`).join('')}
-      </div>
+      <div class="card-notes">${uniqNotes.map(n=>`<span class="note-pill${card.hasAi?' ai':''}">${n}</span>`).join('')}</div>
       <div class="card-meta">
-        <span class="card-emotion-badge">${emotionLabels[card.emotion] || card.emotion}</span>
+        <span class="card-emotion-badge">${emotionLabels[card.emotion]||card.emotion}</span>
+        ${card.hasAi?`<span class="card-ai-badge">AI補正済み</span>`:''}
         <span>${card.notes.length}音符</span>
+        ${card.bpm ? `<span>${card.bpm}BPM</span>` : ''}
       </div>
-      <button class="card-delete" data-del="${card.id}" title="削除">✕</button>
-    `
-    el.addEventListener('click', e => {
-      if (e.target.closest('.card-delete')) return
-      selectCard(card.id)
-    })
-    el.querySelector('.card-delete').addEventListener('click', e => {
-      e.stopPropagation()
-      deleteCard(card.id)
-    })
-    cardList.appendChild(el)
-  })
+      <div class="card-actions">
+        <button class="card-btn" title="上へ" onclick="event.stopPropagation();moveCard(${idx},-1)">↑</button>
+        <button class="card-btn" title="下へ" onclick="event.stopPropagation();moveCard(${idx},1)">↓</button>
+        <button class="card-btn delete" title="削除" onclick="event.stopPropagation();deleteCard(${card.id})">✕</button>
+      </div>
+    `;
+    el.addEventListener('click', e => { if(e.target.closest('.card-actions')) return; selectCard(card.id); });
+    cardList.appendChild(el);
+  });
+}
+
+// FIX: フレーズ並び替え
+function moveCard(idx, dir) {
+  const newIdx = idx + dir;
+  if (newIdx < 0 || newIdx >= state.cards.length) return;
+  [state.cards[idx], state.cards[newIdx]] = [state.cards[newIdx], state.cards[idx]];
+  renderCardList();
+  saveCardsToStorage();
 }
 
 function selectCard(id) {
-  state.activeCardId = id
-  renderCardList()
-  const card = state.cards.find(c => c.id === id)
-  if (!card) { previewPanel.classList.remove('visible'); return }
-  showPreview(card)
+  state.activeCardId = id;
+  renderCardList();
+  const card = state.cards.find(c=>c.id===id);
+  if (!card) { previewPanel.classList.remove('visible'); return; }
+  $('preview-title').textContent = card.name;
+  $('preview-emotion').textContent = emotionLabels[card.emotion]||card.emotion;
+  $('preview-ai-tag').textContent = card.hasAi ? '✦ AI補正済み' : '';
+  $('preview-notes').innerHTML = card.notes.map(n=>`<span class="preview-note${card.hasAi?' ai':''}">${n.name}</span>`).join('');
+  previewPanel.classList.add('visible');
+  stopPreviewSynth();
 }
-
 function deleteCard(id) {
-  state.cards = state.cards.filter(c => c.id !== id)
-  if (state.activeCardId === id) {
-    state.activeCardId = null
-    previewPanel.classList.remove('visible')
-  }
-  renderCardList()
+  state.cards = state.cards.filter(c=>c.id!==id);
+  if (state.activeCardId===id) { state.activeCardId=null; previewPanel.classList.remove('visible'); }
+  renderCardList();
+  saveCardsToStorage();
 }
 
-/* ═══════════════════════════════════════════════════
-   PREVIEW PANEL
-════════════════════════════════════════════════════ */
-function showPreview(card) {
-  previewTitle.textContent = card.name
-  previewEmot.textContent  = emotionLabels[card.emotion] || card.emotion
-  previewNotes.innerHTML   = card.notes.map(n =>
-    `<span class="preview-note">${n.name}</span>`).join('')
-  previewPanel.classList.add('visible')
-  stopPreviewSynth()
-}
-
+/* ═══════════════════════════════
+   PREVIEW PLAY
+═══════════════════════════════ */
 btnPrevPlay.addEventListener('click', () => {
-  if (state.previewPlaying) {
-    stopPreviewSynth()
-    return
-  }
-  const card = state.cards.find(c => c.id === state.activeCardId)
-  if (!card) return
-  playSynth(card)
-})
+  if (state.previewPlaying) { stopPreviewSynth(); return; }
+  const card = state.cards.find(c=>c.id===state.activeCardId);
+  if (!card) return;
+  previewNotes(card.notes, () => {});
+  btnPrevPlay.textContent='■ 停止';
+  btnPrevPlay.classList.add('playing');
+  state.previewPlaying=true;
+});
 
-function playSynth(card) {
-  if (!ac) ac = new AC()
-  if (ac.state === 'suspended') ac.resume()
-  stopPreviewSynth()
+/* ═══════════════════════════════
+   EMOTION TAGS
+═══════════════════════════════ */
+$('emotion-row').addEventListener('click', e => {
+  const btn = e.target.closest('.emotion-tag');
+  if (!btn) return;
+  document.querySelectorAll('.emotion-tag').forEach(b=>b.classList.remove('selected'));
+  btn.classList.add('selected');
+  state.selectedEmotion = btn.dataset.emotion;
+});
 
-  const BPM        = 120
-  const secPerBeat = 60 / BPM
-  const now        = ac.currentTime
-  const gainNode   = ac.createGain()
-  gainNode.gain.setValueAtTime(0.4, now)
-  gainNode.connect(ac.destination)
-
-  const oscs = []
-  card.notes.forEach(n => {
-    const osc = ac.createOscillator()
-    osc.type = 'sine'
-    osc.frequency.setValueAtTime(n.hz, now)
-    const g = ac.createGain()
-    const t0 = now + n.start * secPerBeat
-    const t1 = t0 + n.dur  * secPerBeat
-    g.gain.setValueAtTime(0, t0)
-    g.gain.linearRampToValueAtTime(0.6, t0 + 0.02)
-    g.gain.setValueAtTime(0.6, t1 - 0.03)
-    g.gain.linearRampToValueAtTime(0, t1)
-    osc.connect(g)
-    g.connect(gainNode)
-    osc.start(t0)
-    osc.stop(t1 + 0.01)
-    oscs.push(osc)
-  })
-
-  state.previewPlaying = true
-  state.previewSynth   = oscs
-  btnPrevPlay.textContent = '■ 停止'
-  btnPrevPlay.classList.add('playing')
-
-  // Auto-stop
-  const totalBeats = Math.max(...card.notes.map(n => n.start + n.dur), 0)
-  const totalSec   = totalBeats * secPerBeat + 0.2
-  state._previewTimer = setTimeout(() => {
-    stopPreviewSynth()
-  }, totalSec * 1000)
-}
-
-function stopPreviewSynth() {
-  if (state.previewSynth) {
-    state.previewSynth.forEach(osc => { try { osc.stop() } catch(e){} })
-    state.previewSynth = null
-  }
-  clearTimeout(state._previewTimer)
-  state.previewPlaying = false
-  btnPrevPlay.textContent = '▶ 試聴'
-  btnPrevPlay.classList.remove('playing')
-}
-
-/* ═══════════════════════════════════════════════════
+/* ═══════════════════════════════
    EXPORT
-════════════════════════════════════════════════════ */
+═══════════════════════════════ */
 btnExport.addEventListener('click', () => {
-  const exportData = state.cards.map(c => ({
-    id:        c.id,
-    name:      c.name,
-    emotion:   c.emotion,
-    bpm:       120,
-    notes:     c.notes,
-    createdAt: c.createdAt,
-  }))
-  const json = JSON.stringify(exportData, null, 2)
-  const blob = new Blob([json], { type: 'application/json' })
-  const url  = URL.createObjectURL(blob)
-  const a    = document.createElement('a')
-  a.href     = url
-  a.download = `vocal-lab-v2-${Date.now()}.json`
-  a.click()
-  URL.revokeObjectURL(url)
-  showToast('エクスポートしました')
-})
+  const data = state.cards.map(c => ({
+    id:c.id, name:c.name, emotion:c.emotion, aiMode:c.aiMode, hasAi:c.hasAi,
+    bpm: c.bpm || 120, notes:c.notes, rawNotes:c.rawNotes, aiComment:c.aiComment, createdAt:c.createdAt,
+  }));
+  const blob = new Blob([JSON.stringify(data,null,2)], { type:'application/json' });
+  const url = URL.createObjectURL(blob);
+  const a = document.createElement('a'); a.href=url; a.download=`vocal-lab-v3-${Date.now()}.json`;
+  a.click(); URL.revokeObjectURL(url);
+  showToast('エクスポートしました');
+});
 
-/* ═══════════════════════════════════════════════════
-   TOAST
-════════════════════════════════════════════════════ */
+/* ═══════════════════════════════
+   JSON インポート (新機能: ファイル選択)
+═══════════════════════════════ */
+$('btn-import-json').addEventListener('click', () => $('import-file-input').click());
+$('import-file-input').addEventListener('change', e => {
+  const file = e.target.files[0];
+  if (!file) return;
+  const reader = new FileReader();
+  reader.onload = ev => {
+    try {
+      const data = JSON.parse(ev.target.result);
+      const cards = normalizeImportedCards(data);
+      if (!cards.length) throw new Error('有効なカードがありません');
+      const merge = confirm(`${cards.length}件のカードを読み込みます。\n現在のカードに追加しますか？\n（キャンセルで上書き）`);
+      if (merge) {
+        state.cards = [...state.cards, ...cards];
+      } else {
+        state.cards = cards;
+        state.activeCardId = cards[0]?.id || null;
+      }
+      saveCardsToStorage();
+      renderCardList();
+      if (state.activeCardId) selectCard(state.activeCardId);
+      showToast(`${cards.length}件のカードを読み込みました`);
+    } catch(err) {
+      showToast('読み込みエラー: ' + err.message);
+    }
+  };
+  reader.readAsText(file);
+  e.target.value = '';
+});
+
+/* ═══════════════════════════════
+   SCORE-EDITOR 連携
+   FIX: URLパス判定を安全な方法に変更
+═══════════════════════════════ */
+$('btn-send-score').addEventListener('click', () => {
+  if (!state.cards.length) { showToast('カードがありません'); return; }
+  const melodyNotes = [];
+  let beatOffset = 0;
+  state.cards.forEach(card => {
+    const maxDur = card.notes.reduce((m,n) => Math.max(m, n.start + n.dur), 0);
+    card.notes.forEach(n => {
+      melodyNotes.push({
+        pitch: n.midiR || 60,
+        startBeat: parseFloat((beatOffset + n.start).toFixed(3)),
+        durationBeats: parseFloat(n.dur.toFixed(3)),
+        vel: Math.round((n.conf ?? 0.8) * 80 + 20), // FIX: conf undefined対応
+      });
+    });
+    beatOffset += Math.max(maxDur, 4);
+  });
+  const payload = {
+    version: '1.0',
+    source: 'vocal-lab',
+    name: `vocal-lab (${state.cards.length}フレーズ)`,
+    bpm: getBpm(), // FIX: 動的BPM
+    timeSig: 4,
+    melody: { notes: melodyNotes },
+    chords: null,
+    bass: { notes: [] },
+    drums: { notes: [] },
+    exported: new Date().toISOString(),
+  };
+  const b64 = btoa(unescape(encodeURIComponent(JSON.stringify(payload))));
+  // FIX: パス判定をパスセグメントで安全に行う
+  const segments = window.location.pathname.split('/').filter(Boolean);
+  const inAppsDir = segments.includes('apps');
+  const seUrl = inAppsDir ? 'score-editor-v2.html' : 'apps/score-editor-v2.html';
+  window.location.href = seUrl + '#import=' + encodeURIComponent(b64);
+});
+
+/* ═══════════════════════════════
+   TOAST / UTILS
+═══════════════════════════════ */
 function showToast(msg) {
-  toastEl.textContent = msg
-  toastEl.classList.add('show')
-  clearTimeout(toastEl._timer)
-  toastEl._timer = setTimeout(() => toastEl.classList.remove('show'), 2400)
+  const t=$('toast'); t.textContent=msg; t.classList.add('show');
+  clearTimeout(t._t); t._t=setTimeout(()=>t.classList.remove('show'),2500);
+}
+function escHtml(s) { return s.replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;'); }
+
+/* ═══════════════════════════════
+   INDEXEDDB ストレージ
+   - blobも保存可能（LocalStorage上限5MB を突破）
+   - LocalStorageからの自動マイグレーション付き
+═══════════════════════════════ */
+const DB_NAME = 'vocal-lab-v3';
+const DB_VERSION = 1;
+const STORE_CARDS = 'cards';
+const STORE_META = 'meta';
+
+let db = null;
+
+function openDB() {
+  return new Promise((resolve, reject) => {
+    if (db) { resolve(db); return; }
+    const req = indexedDB.open(DB_NAME, DB_VERSION);
+    req.onupgradeneeded = e => {
+      const d = e.target.result;
+      if (!d.objectStoreNames.contains(STORE_CARDS)) {
+        d.createObjectStore(STORE_CARDS, { keyPath: 'id' });
+      }
+      if (!d.objectStoreNames.contains(STORE_META)) {
+        d.createObjectStore(STORE_META);
+      }
+    };
+    req.onsuccess = e => { db = e.target.result; resolve(db); };
+    req.onerror = e => reject(e.target.error);
+  });
 }
 
-function escHtml(s) {
-  return s.replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;')
+async function saveCardsToStorage() {
+  try {
+    const d = await openDB();
+    const tx = d.transaction(STORE_CARDS, 'readwrite');
+    const store = tx.objectStore(STORE_CARDS);
+    // 全削除してから全書き込み（順序保持のため）
+    await new Promise((res, rej) => {
+      const r = store.clear();
+      r.onsuccess = res; r.onerror = rej;
+    });
+    for (const card of state.cards) {
+      await new Promise((res, rej) => {
+        const r = store.put(card); // blobも含めてそのまま保存
+        r.onsuccess = res; r.onerror = rej;
+      });
+    }
+    // 順序をmetaストアに保存
+    const metaTx = d.transaction(STORE_META, 'readwrite');
+    const metaStore = metaTx.objectStore(STORE_META);
+    await new Promise((res, rej) => {
+      const r = metaStore.put(state.cards.map(c => c.id), 'card_order');
+      r.onsuccess = res; r.onerror = rej;
+    });
+  } catch(e) {
+    console.warn('IndexedDB save failed, falling back to localStorage:', e);
+    // フォールバック: blobを除いてLocalStorageへ
+    try {
+      const saveable = state.cards.map(c => { const { blob, ...rest } = c; return rest; });
+      localStorage.setItem('vl3_cards', JSON.stringify(saveable));
+    } catch(e2) { console.warn('localStorage fallback also failed:', e2); }
+  }
 }
 
-/* ═══════════════════════════════════════════════════
+async function loadCardsFromStorage() {
+  try {
+    const d = await openDB();
+    // 順序を取得
+    const order = await new Promise((res, rej) => {
+      const tx = d.transaction(STORE_META, 'readonly');
+      const r = tx.objectStore(STORE_META).get('card_order');
+      r.onsuccess = () => res(r.result || []);
+      r.onerror = rej;
+    });
+    // 全カードを取得
+    const all = await new Promise((res, rej) => {
+      const tx = d.transaction(STORE_CARDS, 'readonly');
+      const r = tx.objectStore(STORE_CARDS).getAll();
+      r.onsuccess = () => res(r.result || []);
+      r.onerror = rej;
+    });
+    if (!all.length) {
+      // IndexedDBが空 → LocalStorageからマイグレーション
+      await migrateFromLocalStorage();
+      return;
+    }
+    // 順序通りに並べ替え
+    const map = Object.fromEntries(all.map(c => [c.id, c]));
+    const ordered = order.length
+      ? order.map(id => map[id]).filter(Boolean)
+      : all;
+    if (!ordered.length) return;
+    state.cards = ordered;
+    renderCardList();
+    showToast(`${ordered.length}件のカードを復元しました`);
+  } catch(e) {
+    console.warn('IndexedDB load failed:', e);
+    await migrateFromLocalStorage();
+  }
+}
+
+async function migrateFromLocalStorage() {
+  try {
+    const raw = localStorage.getItem('vl3_cards');
+    if (!raw) return;
+    const cards = JSON.parse(raw);
+    if (!Array.isArray(cards) || !cards.length) return;
+    state.cards = cards;
+    renderCardList();
+    showToast(`${cards.length}件のカードを復元しました（移行完了）`);
+    // IndexedDBに書き込んでLocalStorageは保持（念のため）
+    await saveCardsToStorage();
+  } catch(e) { console.warn('localStorage migration failed:', e); }
+}
+
+function normalizeImportedCards(data) {
+  // score-editor からの melody ペイロードにも対応
+  if (data.source && data.melody && data.melody.notes) {
+    // score-editor → vocal-lab 逆インポート
+    return [{
+      id: Date.now(),
+      name: data.name || 'score-editorから',
+      emotion: 'neutral',
+      aiMode: 'off',
+      hasAi: false,
+      bpm: data.bpm || 120,
+      notes: data.melody.notes.map(n => ({
+        name: noteName(n.pitch || 60),
+        midiR: n.pitch || 60,
+        hz: noteToFreq(n.pitch || 60),
+        start: n.startBeat ?? 0,
+        dur: n.durationBeats ?? 1,
+        conf: (n.vel || 80) / 100,
+      })),
+      rawNotes: [],
+      aiComment: 'score-editorからインポート',
+      createdAt: new Date().toISOString(),
+    }];
+  }
+  const cards = Array.isArray(data) ? data : (Array.isArray(data?.cards) ? data.cards : []);
+  return cards.map((card, idx) => ({
+    id: card.id || Date.now() + idx,
+    name: card.name || `フレーズ ${idx + 1}`,
+    emotion: card.emotion || 'neutral',
+    aiMode: card.aiMode || 'off',
+    hasAi: !!card.hasAi,
+    bpm: card.bpm || 120,
+    notes: (card.notes || []).map(n => ({
+      name: n.name || noteName(n.midiR || n.pitch || 60),
+      midiR: n.midiR || n.pitch || 60,
+      hz: n.hz || noteToFreq(n.midiR || n.pitch || 60),
+      start: n.start ?? n.startBeat ?? 0,
+      dur: n.dur ?? n.durationBeats ?? 1,
+      conf: n.conf ?? n.confidence ?? 0.8,
+    })),
+    rawNotes: (card.rawNotes || card.notes || []).map(n => ({
+      name: n.name || noteName(n.midiR || n.pitch || 60),
+      midiR: n.midiR || n.pitch || 60,
+      hz: n.hz || noteToFreq(n.midiR || n.pitch || 60),
+      start: n.start ?? n.startBeat ?? 0,
+      dur: n.dur ?? n.durationBeats ?? 1,
+      conf: n.conf ?? n.confidence ?? 0.8,
+    })),
+    aiComment: card.aiComment || '',
+    createdAt: card.createdAt || new Date().toISOString(),
+  })).filter(card => card.notes.length);
+}
+
+function checkIncomingImport() {
+  const m = window.location.hash.match(/import=([^&]+)/);
+  if (!m) return false;
+  try {
+    const json = decodeURIComponent(escape(atob(decodeURIComponent(m[1]))));
+    const parsed = JSON.parse(json);
+    const cards = normalizeImportedCards(parsed);
+    if (!cards.length) throw new Error('カードが含まれていません');
+    state.cards = cards;
+    state.activeCardId = cards[0].id;
+    // BPMをUIに反映（score-editorから受信したBPMを適用）
+    const srcBpm = parsed.bpm || cards[0]?.bpm;
+    if (srcBpm && srcBpm >= 40 && srcBpm <= 240) {
+      $('bpm-input').value = srcBpm;
+    }
+    saveCardsToStorage(); // async だが await しない（初期化を止めない）
+    renderCardList();
+    selectCard(cards[0].id);
+    history.replaceState(null, '', window.location.pathname + window.location.search);
+    const src = parsed.source ? `（${parsed.source}から）` : '';
+    showToast(`${cards.length}件のカードを読み込みました${src}`);
+    return true;
+  } catch(e) {
+    console.warn('checkIncomingImport failed:', e);
+    showToast('受信データの読み込みに失敗しました');
+    return false;
+  }
+}
+
+/* ═══════════════════════════════
+   INDEX.HTML「今の気持ち」連携
+   index.htmlの #mood=xxx&note=yyy ハッシュを受け取り、
+   感情タグの自動選択とフレーズ名の下書きに反映する
+═══════════════════════════════ */
+const MOOD_TO_EMOTION = {
+  happy: 'happy',
+  sad: 'sad',
+  energetic: 'tense',
+  calm: 'neutral',
+  nostalgic: 'nostalgic',
+  angry: 'dark',
+};
+function dismissMoodBanner() {
+  $('mood-banner').classList.remove('show');
+}
+function checkIncomingMood() {
+  const hash = window.location.hash.replace(/^#/, '');
+  if (!hash || !/(^|&)(mood|note)=/.test(hash)) return false;
+  try {
+    const params = new URLSearchParams(hash);
+    const mood = params.get('mood');
+    const note = params.get('note');
+    if (!mood && !note) return false;
+
+    let appliedEmotionLabel = '';
+    if (mood && MOOD_TO_EMOTION[mood]) {
+      const emo = MOOD_TO_EMOTION[mood];
+      const btn = document.querySelector(`.emotion-tag[data-emotion="${emo}"]`);
+      if (btn) {
+        document.querySelectorAll('.emotion-tag').forEach(b=>b.classList.remove('selected'));
+        btn.classList.add('selected');
+        state.selectedEmotion = emo;
+        appliedEmotionLabel = emotionLabels[emo] || emo;
+      }
+    }
+    if (note) {
+      phraseInput.value = note;
+      const candInput = $('candidate-phrase-name');
+      if (candInput) candInput.value = note;
+    }
+
+    const banner = $('mood-banner');
+    const bannerText = $('mood-banner-text');
+    const parts = [];
+    if (appliedEmotionLabel) parts.push(`感情タグ「${appliedEmotionLabel}」`);
+    if (note) parts.push(`メモ「${note}」`);
+    bannerText.textContent = `今の気持ちを反映しました: ${parts.join(' / ')}`;
+    banner.classList.add('show');
+
+    history.replaceState(null, '', window.location.pathname + window.location.search);
+    showToast('今の気持ちを反映しました');
+    return true;
+  } catch(e) {
+    console.warn('checkIncomingMood failed:', e);
+    return false;
+  }
+}
+
+/* ═══════════════════════════════
    INIT
-════════════════════════════════════════════════════ */
-renderCardList()
+═══════════════════════════════ */
+(async () => {
+  const _saved = localStorage.getItem('vl3_claude_key');
+  if (_saved) $('apikey-input').value = _saved;
+  const hadImport = checkIncomingImport();
+  if (!hadImport) {
+    await loadCardsFromStorage();
+  }
+  checkIncomingMood();
+  renderCardList();
+  setAiMode('auto');
+})();
 </script>
 </body>
 </html>
