@@ -2,7 +2,10 @@
 <html lang="ja">
 <head>
 <meta charset="UTF-8">
-<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover,user-scalable=no">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+<meta name="apple-mobile-web-app-title" content="music-suite">
 <title>music-suite</title>
 <style>
 :root{
@@ -292,7 +295,7 @@ html,body{min-height:100vh;background:var(--bg);color:var(--tx);font-family:'Int
   <div class="section-head">
     <span class="section-title">🎹 GarageBandへ渡す</span>
   </div>
-  <div class="section-hint">score-editor で書き出した MIDI を、AirDrop 経由で iPhone / Mac の GarageBand に渡すまでの流れです。</div>
+  <div class="section-hint">score-editor で書き出した MIDI を、iCloud Drive 経由で iPhone の GarageBand に渡すまでの流れです（Macをお使いの場合はAirDropも使えます）。</div>
 
   <div class="gb-steps">
     <div class="gb-step">
@@ -302,8 +305,8 @@ html,body{min-height:100vh;background:var(--bg);color:var(--tx);font-family:'Int
     </div>
     <div class="gb-step">
       <div class="gb-step-num">2</div>
-      <div class="gb-step-title">AirDrop で送る</div>
-      <div class="gb-step-desc">書き出した .mid ファイルを iPhone / Mac へ AirDrop（または iCloud Drive 経由）で転送します。</div>
+      <div class="gb-step-title">iCloud Drive で送る</div>
+      <div class="gb-step-desc">書き出した .mid ファイルを「iCloud Drive」フォルダ（下の保存先メモ参照）に置くと、iPhoneのFilesアプリに自動で同期されます。Macをお使いの場合はAirDropでも送れます。</div>
     </div>
     <div class="gb-step">
       <div class="gb-step-num">3</div>
@@ -382,7 +385,7 @@ html,body{min-height:100vh;background:var(--bg);color:var(--tx);font-family:'Int
       <div class="flow-app"><div class="flow-dot" style="background:var(--gb-hi)"></div>GarageBand</div>
       <div class="flow-items">
         <div class="flow-item">MIDI (.mid) 受信</div>
-        <div class="flow-item">AirDrop / iCloud Drive経由</div>
+        <div class="flow-item">iCloud Drive / AirDrop経由</div>
         <div class="flow-item">トラック自動割り当て</div>
       </div>
     </div>
