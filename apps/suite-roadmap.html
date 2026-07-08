@@ -1,0 +1,407 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover, maximum-scale=1">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="theme-color" content="#F7F7F8">
+<title>suite-roadmap</title>
+<style>
+:root {
+  --bg: #F7F7F8; --card: #FFFFFF; --accent: #007AFF; --green: #34C759;
+  --orange: #FF9500; --purple: #AF52DE; --red: #FF3B30;
+  --text: #1C1C1E; --sub: #8A8A8E; --border: #E5E5EA; --radius: 14px;
+}
+* { box-sizing: border-box; -webkit-tap-highlight-color: transparent; }
+html, body { margin:0; padding:0; background:var(--bg); color:var(--text);
+  font-family:-apple-system,BlinkMacSystemFont,"Hiragino Sans",sans-serif; }
+body { padding-bottom: calc(env(safe-area-inset-bottom) + 20px); }
+header {
+  position: sticky; top: 0; z-index: 10;
+  background: rgba(247,247,248,0.94); backdrop-filter: blur(10px);
+  padding: calc(env(safe-area-inset-top) + 10px) 16px 10px;
+  border-bottom: 1px solid var(--border);
+}
+header h1 { font-size: 17px; font-weight: 700; margin: 0; }
+header .sub { font-size: 11px; color: var(--sub); margin-top: 2px; }
+main { max-width: 720px; margin: 0 auto; padding: 12px 16px; }
+.panel { background: var(--card); border: 1px solid var(--border); border-radius: var(--radius); padding: 14px; margin-bottom: 12px; }
+.panel-label { font-size: 11px; font-weight: 700; color: var(--sub); text-transform: uppercase; letter-spacing: .05em; margin-bottom: 8px; }
+.summary-row { display: flex; gap: 10px; }
+.summary-card { flex: 1; background: var(--bg); border-radius: 10px; padding: 10px; text-align: center; }
+.summary-card .val { font-size: 17px; font-weight: 700; color: var(--purple); }
+.summary-card .lbl { font-size: 10px; color: var(--sub); margin-top: 2px; }
+.chip-row { display: flex; flex-wrap: wrap; gap: 5px; margin-top: 8px; }
+.chip { font-size: 12px; background: rgba(175,82,222,0.08); color: var(--purple); padding: 4px 9px; border-radius: 100px; font-weight: 600; }
+
+.step-card {
+  background: var(--card); border: 1px solid var(--border); border-radius: var(--radius);
+  padding: 14px; margin-bottom: 10px; display: flex; gap: 12px; align-items: flex-start;
+  transition: opacity .2s;
+}
+.step-card.done { opacity: 0.5; }
+.step-check {
+  width: 26px; height: 26px; border-radius: 50%; border: 2px solid var(--border); flex-shrink: 0;
+  display: flex; align-items: center; justify-content: center; font-size: 14px; margin-top: 2px; cursor: pointer;
+}
+.step-card.done .step-check { background: var(--green); border-color: var(--green); color: #fff; }
+.step-body { flex: 1; min-width: 0; }
+.step-num { font-size: 10px; color: var(--sub); font-weight: 700; text-transform: uppercase; }
+.step-title { font-size: 15px; font-weight: 700; margin: 2px 0 4px; }
+.step-desc { font-size: 13px; color: var(--sub); line-height: 1.6; }
+.step-action {
+  margin-top: 10px; display: inline-block; background: var(--accent); color: #fff;
+  border: none; border-radius: 8px; padding: 9px 16px; font-size: 13px; font-weight: 700; cursor: pointer;
+}
+.step-action.secondary { background: var(--card); color: var(--accent); border: 1px solid var(--accent); }
+.step-note { font-size: 11px; color: var(--orange); margin-top: 6px; }
+
+.empty { text-align: center; color: var(--sub); font-size: 13px; padding: 30px 16px; line-height: 1.8; }
+.form-row { margin: 10px 0; }
+.form-row label { font-size: 12px; color: var(--sub); font-weight: 600; display: block; margin-bottom: 4px; }
+.form-row input, .form-row textarea { width: 100%; padding: 9px; border: 1px solid var(--border); border-radius: 8px; font-size: 14px; }
+.manual-btn { width: 100%; background: var(--accent); color: #fff; border: none; border-radius: 10px; padding: 12px; font-weight: 700; font-size: 14px; margin-top: 8px; }
+</style>
+</head>
+<body>
+<header>
+  <h1>🛠 suite-roadmap</h1>
+  <div class="sub">コード進行 → music-suiteで実際に作り込むまでの手順</div>
+</header>
+
+<main>
+  <div class="panel" id="summaryPanel" style="display:none;">
+    <div class="panel-label">受け取った解析結果</div>
+    <div class="summary-row">
+      <div class="summary-card"><div class="val" id="sumBpm">--</div><div class="lbl">BPM</div></div>
+      <div class="summary-card"><div class="val" id="sumKey">--</div><div class="lbl">キー</div></div>
+      <div class="summary-card"><div class="val" id="sumChords">--</div><div class="lbl">コード数</div></div>
+    </div>
+    <div class="chip-row" id="chordChips"></div>
+  </div>
+
+  <div id="stepsArea"></div>
+
+  <div class="panel" id="manualPanel" style="display:none;">
+    <div class="panel-label">chord-analyzerから送られてきたデータがありません。手動で入力する場合:</div>
+    <div class="form-row"><label>BPM</label><input type="number" id="manualBpm" value="100"></div>
+    <div class="form-row"><label>キー(例: C, Am)</label><input type="text" id="manualKey" value="C"></div>
+    <div class="form-row"><label>コード進行(カンマ区切り。例: C, G, Am, F)</label><input type="text" id="manualChords" value="C, G, Am, F"></div>
+    <button class="manual-btn" id="manualStartBtn">この内容でステップを作る</button>
+  </div>
+
+  <div class="empty" id="emptyState" style="display:none;">
+    chord-analyzerで曲を解析後「🛠 作り込みステップへ」を押すと、ここに手順が表示されます。
+  </div>
+</main>
+
+<script>
+const TRANSFER_KEY = 'ca_transfer';
+const SETTINGS_KEY = 'sr_settings';
+const PROGRESS_KEY = 'sr_progress';
+
+function getSettings(){ try{ return JSON.parse(localStorage.getItem(SETTINGS_KEY))||{}; }catch(_){ return {}; } }
+function setSettings(s){ localStorage.setItem(SETTINGS_KEY, JSON.stringify(s)); }
+function getProgress(){ try{ return JSON.parse(localStorage.getItem(PROGRESS_KEY))||{}; }catch(_){ return {}; } }
+function setProgress(p){ localStorage.setItem(PROGRESS_KEY, JSON.stringify(p)); }
+
+let data = null; // { bpm, key, keyRoot, keyMode, chords: [{name, root, quality, roman, ...}] }
+
+const NOTE_NAMES = ['C','C#','D','D#','E','F','F#','G','G#','A','A#','B'];
+const SCALE_INTERVALS = { major: [0,2,4,5,7,9,11], minor: [0,2,3,5,7,8,10] };
+
+function noteNameToIndex(name) {
+  const idx = NOTE_NAMES.indexOf(name.replace('m','').trim());
+  return idx >= 0 ? idx : 0;
+}
+
+// ============================================================
+// 受信: chord-analyzerから(localStorage) / URLハッシュ(手動共有時)
+// ============================================================
+function checkIncoming() {
+  const hash = location.hash;
+  const m = hash.match(/import=([^&]+)/);
+  if (m) {
+    try {
+      const json = decodeURIComponent(escape(atob(decodeURIComponent(m[1]))));
+      data = JSON.parse(json);
+      history.replaceState(null, '', location.pathname);
+      return true;
+    } catch(e) { console.error('hash import failed', e); }
+  }
+  const raw = localStorage.getItem(TRANSFER_KEY);
+  if (raw) {
+    try {
+      data = JSON.parse(raw);
+      localStorage.removeItem(TRANSFER_KEY);
+      return true;
+    } catch(e) { console.error('transfer parse failed', e); }
+  }
+  return false;
+}
+
+document.getElementById('manualStartBtn').addEventListener('click', () => {
+  const bpm = parseInt(document.getElementById('manualBpm').value, 10) || 100;
+  const keyStr = document.getElementById('manualKey').value.trim() || 'C';
+  const isMinor = keyStr.toLowerCase().endsWith('m');
+  const keyRoot = noteNameToIndex(keyStr);
+  const chordNames = document.getElementById('manualChords').value.split(',').map(s => s.trim()).filter(Boolean);
+  data = {
+    bpm, key: keyStr, keyRoot, keyMode: isMinor ? 'minor' : 'major',
+    chords: chordNames.map(name => ({
+      name, root: noteNameToIndex(name), quality: name.toLowerCase().includes('m') && !name.toLowerCase().includes('maj') ? 'minor' : 'major', roman: ''
+    }))
+  };
+  render();
+});
+
+// ============================================================
+// 描画
+// ============================================================
+function render() {
+  if (!data) {
+    document.getElementById('emptyState').style.display = 'block';
+    document.getElementById('manualPanel').style.display = 'block';
+    return;
+  }
+  document.getElementById('emptyState').style.display = 'none';
+  document.getElementById('manualPanel').style.display = 'none';
+  document.getElementById('summaryPanel').style.display = 'block';
+
+  document.getElementById('sumBpm').textContent = data.bpm;
+  document.getElementById('sumKey').textContent = data.key;
+  document.getElementById('sumChords').textContent = data.chords.length;
+  document.getElementById('chordChips').innerHTML = data.chords.map(c => `<span class="chip">${c.name}${c.roman ? ' ('+c.roman+')' : ''}</span>`).join('');
+
+  renderSteps();
+}
+
+function renderSteps() {
+  const progress = getProgress();
+  const steps = buildSteps();
+  const area = document.getElementById('stepsArea');
+  area.innerHTML = steps.map((s, i) => `
+    <div class="step-card ${progress[i] ? 'done' : ''}" data-i="${i}">
+      <div class="step-check">${progress[i] ? '✓' : ''}</div>
+      <div class="step-body">
+        <div class="step-num">STEP ${i+1}</div>
+        <div class="step-title">${s.title}</div>
+        <div class="step-desc">${s.desc}</div>
+        ${s.action ? `<button class="step-action" data-action="${i}">${s.actionLabel}</button>` : ''}
+        ${s.note ? `<div class="step-note">${s.note}</div>` : ''}
+      </div>
+    </div>
+  `).join('');
+
+  area.querySelectorAll('.step-check').forEach(el => {
+    el.addEventListener('click', () => {
+      const i = el.closest('.step-card').dataset.i;
+      const p = getProgress();
+      p[i] = !p[i];
+      setProgress(p);
+      renderSteps();
+    });
+  });
+  area.querySelectorAll('[data-action]').forEach(btn => {
+    btn.addEventListener('click', () => steps[btn.dataset.action].action());
+  });
+}
+
+// ============================================================
+// ステップ定義: chord-lab → beat-lab → vocal-lab → score-editor-v2
+// ============================================================
+// music-suite側の実スキーマに合わせた変換ヘルパー
+const CHORD_LAB_KEYS = ['C','D','E','F','G','A','B','Am','Dm','Em']; // chord-labが対応する10種のみ
+function toChordLabKey(keyStr, keyMode) {
+  const base = keyStr.replace('m', '');
+  const candidate = keyMode === 'minor' ? base + 'm' : base;
+  if (CHORD_LAB_KEYS.includes(candidate)) return candidate;
+  // 対応外のキーはCメジャー/Aマイナーに丸める(近似)
+  return keyMode === 'minor' ? 'Am' : 'C';
+}
+
+function midiFromNote(noteName, octave) {
+  return 12 * (octave + 1) + NOTE_NAMES.indexOf(noteName);
+}
+function hzFromMidi(midi) {
+  return 440 * Math.pow(2, (midi - 69) / 12);
+}
+
+function buildChordLabPayload() {
+  const key = toChordLabKey(data.key, data.keyMode);
+  return {
+    version: '1.0',
+    source: 'chord-analyzer',
+    bpm: data.bpm,
+    key,
+    name: `${data.key} progression (from chord-analyzer)`,
+    melody: { notes: [] },
+    chords: {
+      sections: [{
+        progression: data.chords.map(c => ({ chord: c.name, beats: 4 }))
+      }]
+    },
+    bass: { notes: [] },
+    drums: { notes: [] }
+  };
+}
+
+// beat-labの実ROWS.pitch値(確認済み)
+const DRUM_PITCH = { kick: 36, snare: 38, clap: 39, hat: 42, ohat: 46, crash: 49, ride: 51, tom1: 50, tom2: 45, perc: 75 };
+
+function buildBeatLabPayload() {
+  const bars = Math.max(1, data.chords.length);
+  const notes = [];
+  for (let bar = 0; bar < bars; bar++) {
+    const base = bar * 4; // 4/4想定、1小節=4拍
+    notes.push({ pitch: DRUM_PITCH.kick,  startBeat: base + 0,   vel: 110 });
+    notes.push({ pitch: DRUM_PITCH.kick,  startBeat: base + 2,   vel: 100 });
+    notes.push({ pitch: DRUM_PITCH.snare, startBeat: base + 1,   vel: 115 });
+    notes.push({ pitch: DRUM_PITCH.snare, startBeat: base + 3,   vel: 115 });
+    for (let b = 0; b < 4; b += 0.5) {
+      notes.push({ pitch: DRUM_PITCH.hat, startBeat: base + b, vel: 75 });
+    }
+  }
+  return {
+    version: '1.0', source: 'chord-analyzer', bpm: data.bpm, key: toChordLabKey(data.key, data.keyMode),
+    name: `${data.key} beat (from chord-analyzer)`,
+    melody: { notes: [] }, chords: null, bass: { notes: [] },
+    drums: { notes }
+  };
+}
+
+function buildVocalLabPayload() {
+  let cursor = 0;
+  const notes = data.chords.map((c) => {
+    const noteName = NOTE_NAMES[c.root];
+    const midi = midiFromNote(noteName, 4);
+    const note = { name: `${noteName}4`, midiR: midi, hz: hzFromMidi(midi), start: cursor, dur: 4, confidence: 1 };
+    cursor += 4;
+    return note;
+  });
+  // vocal-lab-v3 の実カード配列形式(ファイルJSONインポート用)
+  return [{
+    id: (crypto.randomUUID ? crypto.randomUUID() : 'sr_' + Date.now()),
+    name: `${data.key} melody sketch`,
+    emotion: '',
+    aiMode: '',
+    hasAi: false,
+    bpm: data.bpm,
+    notes,
+    rawNotes: notes,
+    aiComment: 'chord-analyzerの検出結果から自動生成したルート音たたき台です。',
+    createdAt: Date.now()
+  }];
+}
+
+function downloadVocalLabJson() {
+  const cards = buildVocalLabPayload();
+  const blob = new Blob([JSON.stringify(cards, null, 2)], { type: 'application/json' });
+  const url = URL.createObjectURL(blob);
+  const a = document.createElement('a');
+  a.href = url; a.download = `vocal-lab-v3-${Date.now()}.json`;
+  document.body.appendChild(a); a.click(); document.body.removeChild(a);
+  setTimeout(() => URL.revokeObjectURL(url), 3000);
+  alert('JSONをダウンロードしました。\nvocal-labを開いて「📥 JSON読み込み」からこのファイルを選択してください。');
+}
+
+// コード品質ごとの構成音インターバル(chord-analyzerのquality分類に対応)
+const CHORD_INTERVALS = {
+  major: [0,4,7], minor: [0,3,7], dom7: [0,4,7,10], maj7: [0,4,7,11],
+  min7: [0,3,7,10], sus4: [0,5,7], dim: [0,3,6]
+};
+
+function buildScoreEditorChords() {
+  let beat = 0;
+  const progression = data.chords.map(c => {
+    const rootMidi = midiFromNote(NOTE_NAMES[c.root], 4);
+    const intervals = CHORD_INTERVALS[c.quality] || CHORD_INTERVALS.major;
+    const item = { chord: c.name, beats: 4, notes: intervals.map(iv => rootMidi + iv) };
+    beat += 4;
+    return item;
+  });
+  return { sections: [{ progression }] };
+}
+
+function buildBassLine() {
+  // score-editor-v2の melody.notes 形式に合わせる: {pitch, startBeat, durationBeats, vel}
+  let cursor = 0;
+  return data.chords.map(c => {
+    const pitch = midiFromNote(NOTE_NAMES[c.root], 2); // ベース域(オクターブ2)
+    const note = { pitch, startBeat: cursor, durationBeats: 4, vel: 90 };
+    cursor += 4;
+    return note;
+  });
+}
+function buildScaleNotes() {
+  const iv = SCALE_INTERVALS[data.keyMode] || SCALE_INTERVALS.major;
+  return iv.map(i => NOTE_NAMES[(data.keyRoot + i) % 12]);
+}
+
+function openApp(settingKey, promptLabel, defaultUrl, payload) {
+  const s = getSettings();
+  const url = s[settingKey] || prompt(promptLabel, defaultUrl);
+  if (!url) return;
+  setSettings({ ...s, [settingKey]: url });
+  const json = JSON.stringify(payload);
+  const b64 = btoa(unescape(encodeURIComponent(json)));
+  const target = url + (url.includes('#') ? '' : '#') + 'import=' + encodeURIComponent(b64);
+  window.open(target, '_blank');
+}
+
+function buildSteps() {
+  const scaleNotes = buildScaleNotes();
+  const bassLine = buildBassLine();
+  const chordLabKey = toChordLabKey(data.key, data.keyMode);
+
+  return [
+    {
+      title: '① chord-labでコード進行を入力する',
+      desc: `検出されたコード進行(${data.chords.map(c=>c.name).join(' → ')})を送ります。キーは chord-lab が対応する${CHORD_LAB_KEYS.join('/')}のいずれかに変換して渡します(検出キー: ${data.key} → ${chordLabKey})。まずはこの進行を鳴らして、実際の響きを確認しましょう。`,
+      actionLabel: 'chord-labを開く',
+      action: () => openApp('chordLabUrl', 'chord-labのURL', 'https://norinori-jan.github.io/music-suite/apps/chord-lab.html', buildChordLabPayload()),
+      note: chordLabKey !== data.key ? `⚠️ chord-labは${CHORD_LAB_KEYS.join('/')}のみ対応のため、キーを${chordLabKey}に近似しています。` : ''
+    },
+    {
+      title: '② beat-labでドラムパターンを作る',
+      desc: `BPM ${data.bpm}、コード数と同じ${data.chords.length}小節分の基本パターン(キック・スネア・ハイハット)を叩き台として送ります。ここから抜き差ししてグルーヴを作ってください。`,
+      actionLabel: 'beat-labを開く',
+      action: () => openApp('beatLabUrl', 'beat-labのURL', 'https://norinori-jan.github.io/music-suite/apps/beat-lab.html', buildBeatLabPayload())
+    },
+    {
+      title: '③ ベースラインの叩き台を確認する',
+      desc: `各コードのルート音(${bassLine.map(b => NOTE_NAMES[b.pitch % 12]).join(', ')})を初期案として用意しました。まずはこれで鳴らし、経過音を足すなどして動きをつけると本格的になります。`,
+      actionLabel: 'score-editorでベースを見る',
+      action: () => openApp('scoreEditorUrl', 'score-editor-v2のURL', 'https://norinori-jan.github.io/music-suite/apps/score-editor-v2.html', {
+        version: '1.0', source: 'suite-roadmap', name: `${data.key} bass sketch`, bpm: data.bpm, timeSig: '4/4',
+        melody: { notes: [] }, chords: buildScoreEditorChords(), bass: { notes: bassLine }, drums: { notes: [] }
+      })
+    },
+    {
+      title: '④ vocal-labでメロディを作る',
+      desc: `キー${data.key}の${data.keyMode==='major'?'メジャー':'マイナー'}スケール(${scaleNotes.join(' - ')})をもとに、各コードのルート音を1拍ずつ置いた「たたき台メロディ」をJSONとして用意します。vocal-labは自動遷移ではなく**ファイル選択でのインポート**のため、ダウンロード後に手動で読み込んでください。`,
+      actionLabel: 'JSONをダウンロード',
+      action: () => downloadVocalLabJson(),
+      note: '📥 vocal-labを開き「📥 JSON読み込み」ボタンから、ダウンロードしたファイルを選択してください。'
+    },
+    {
+      title: '⑤ score-editor-v2で全部まとめる',
+      desc: 'コード・ベース・ドラム・メロディが揃ったら、score-editor-v2で1つの曲としてまとめます。ここまでのステップを行き来しながら微調整するのが自然な流れです。',
+      actionLabel: 'score-editor-v2を開く(ベース付き)',
+      action: () => openApp('scoreEditorUrl', 'score-editor-v2のURL', 'https://norinori-jan.github.io/music-suite/apps/score-editor-v2.html', {
+        version: '1.0', source: 'suite-roadmap', name: `${data.key} full sketch`, bpm: data.bpm, timeSig: '4/4',
+        melody: { notes: [] }, chords: buildScoreEditorChords(), bass: { notes: bassLine }, drums: { notes: [] }
+      })
+    }
+  ];
+}
+
+// ============================================================
+// Init
+// ============================================================
+checkIncoming();
+render();
+</script>
+</body>
+</html>
+

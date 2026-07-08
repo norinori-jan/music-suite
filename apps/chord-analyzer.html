@@ -1,0 +1,449 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover, maximum-scale=1">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="theme-color" content="#F7F7F8">
+<title>chord-analyzer</title>
+<style>
+:root {
+  --bg: #F7F7F8; --card: #FFFFFF; --accent: #007AFF; --green: #34C759;
+  --orange: #FF9500; --purple: #AF52DE; --red: #FF3B30;
+  --text: #1C1C1E; --sub: #8A8A8E; --border: #E5E5EA; --radius: 14px;
+}
+* { box-sizing: border-box; -webkit-tap-highlight-color: transparent; }
+html, body { margin: 0; padding: 0; background: var(--bg); color: var(--text);
+  font-family: -apple-system, BlinkMacSystemFont, "Hiragino Sans", sans-serif; }
+body { padding-bottom: calc(env(safe-area-inset-bottom) + 20px); }
+header {
+  position: sticky; top: 0; z-index: 10;
+  background: rgba(247,247,248,0.94); backdrop-filter: blur(10px);
+  padding: calc(env(safe-area-inset-top) + 10px) 16px 10px;
+  border-bottom: 1px solid var(--border);
+}
+header h1 { font-size: 17px; font-weight: 700; margin: 0; }
+header .sub { font-size: 11px; color: var(--sub); margin-top: 2px; }
+main { max-width: 720px; margin: 0 auto; padding: 12px 16px; }
+.panel { background: var(--card); border: 1px solid var(--border); border-radius: var(--radius); padding: 14px; margin-bottom: 12px; }
+.panel-label { font-size: 11px; font-weight: 700; color: var(--sub); text-transform: uppercase; letter-spacing: .05em; margin-bottom: 10px; }
+.input-row { display: flex; gap: 8px; }
+.input-row label {
+  flex: 1; text-align: center; padding: 14px; border-radius: 10px; border: 1px dashed var(--accent);
+  background: rgba(0,122,255,0.05); font-size: 14px; font-weight: 600; color: var(--accent); cursor: pointer;
+}
+.input-row input[type=file] { display: none; }
+.status-line { font-size: 12px; color: var(--sub); margin-top: 8px; min-height: 16px; }
+.progress-bar { height: 6px; background: var(--border); border-radius: 3px; overflow: hidden; margin-top: 8px; display: none; }
+.progress-bar.visible { display: block; }
+.progress-fill { height: 100%; background: var(--accent); width: 0%; transition: width .15s; }
+
+.summary-row { display: flex; gap: 10px; margin-bottom: 4px; }
+.summary-card { flex: 1; background: var(--bg); border-radius: 10px; padding: 10px; text-align: center; }
+.summary-card .val { font-size: 18px; font-weight: 700; color: var(--purple); }
+.summary-card .lbl { font-size: 10px; color: var(--sub); margin-top: 2px; }
+
+.chord-timeline { display: flex; flex-wrap: wrap; gap: 6px; margin-top: 10px; }
+.chord-chip {
+  background: var(--card); border: 1.5px solid var(--accent); border-radius: 10px;
+  padding: 8px 10px; text-align: center; min-width: 62px;
+}
+.chord-chip .name { font-size: 14px; font-weight: 700; color: var(--text); }
+.chord-chip .roman { font-size: 11px; color: var(--purple); font-weight: 700; margin-top: 1px; }
+.chord-chip .time { font-size: 9px; color: var(--sub); margin-top: 1px; }
+
+.roman-summary { display: flex; flex-wrap: wrap; gap: 4px; margin-top: 8px; }
+.roman-badge { font-size: 13px; font-weight: 700; background: rgba(175,82,222,0.1); color: var(--purple); padding: 4px 10px; border-radius: 100px; }
+.arrow { color: var(--sub); font-size: 12px; align-self: center; }
+
+.export-bar { display: flex; gap: 8px; margin-top: 14px; }
+.export-bar button { flex: 1; padding: 12px; border-radius: 10px; border: none; font-size: 13px; font-weight: 700; color: #fff; }
+.empty { text-align: center; color: var(--sub); font-size: 13px; padding: 24px 12px; }
+.note-box { font-size: 12px; color: var(--sub); background: var(--bg); border-radius: 8px; padding: 10px; margin-top: 10px; line-height: 1.6; }
+</style>
+</head>
+<body>
+<header>
+  <h1>🎧 chord-analyzer</h1>
+  <div class="sub">既存曲(伴奏あり)からコード進行・キー・テンポを解析</div>
+</header>
+
+<main>
+  <div class="panel">
+    <div class="panel-label">音源ファイルを選ぶ</div>
+    <div class="input-row">
+      <label for="fileInput">📁 曲のファイルを選択(mp3 / m4a / wav)</label>
+      <input type="file" id="fileInput" accept="audio/*">
+    </div>
+    <div class="status-line" id="inputStatus"></div>
+    <div class="progress-bar" id="progressBar"><div class="progress-fill" id="progressFill"></div></div>
+    <div class="status-line" id="progressText"></div>
+  </div>
+
+  <div class="panel" id="resultPanel" style="display:none;">
+    <div class="panel-label">解析結果</div>
+    <div class="summary-row">
+      <div class="summary-card"><div class="val" id="bpmVal">--</div><div class="lbl">推定BPM</div></div>
+      <div class="summary-card"><div class="val" id="keyVal">--</div><div class="lbl">推定キー</div></div>
+      <div class="summary-card"><div class="val" id="chordCountVal">--</div><div class="lbl">検出コード数</div></div>
+    </div>
+
+    <div class="panel-label" style="margin-top:16px;">コード進行(時系列)</div>
+    <div class="chord-timeline" id="chordTimeline"></div>
+
+    <div class="panel-label" style="margin-top:16px;">機能分析(ローマ数字表記)</div>
+    <div class="roman-summary" id="romanSummary"></div>
+    <div class="note-box" id="modulationNote" style="display:none;color:var(--orange);"></div>
+    <div class="note-box">
+      キーに対する相対的な役割を表示しています。例えば「I → V → vi → IV」は
+      いわゆる王道進行と呼ばれる、J-POPや洋楽で非常によく使われる型です。
+      同じローマ数字パターンが繰り返し出てくる曲は、その型を軸に構成されています。
+    </div>
+
+    <div class="export-bar">
+      <button style="background:var(--accent);" id="toQuickRefBtn">📤 quick-refへ解説を送る</button>
+      <button style="background:var(--purple);" id="toRoadmapBtn">🛠 作り込みステップへ</button>
+    </div>
+  </div>
+
+  <div class="empty" id="emptyState">曲ファイルを選ぶと、ここにコード進行の解析結果が出ます。</div>
+</main>
+
+<script>
+// ============================================================
+// FFT (radix-2, in-place, サイズは2の累乗が必要)
+// ============================================================
+function fft(re, im) {
+  const n = re.length;
+  if (n <= 1) return;
+  // ビット反転並べ替え
+  for (let i = 1, j = 0; i < n; i++) {
+    let bit = n >> 1;
+    for (; j & bit; bit >>= 1) j ^= bit;
+    j ^= bit;
+    if (i < j) { [re[i], re[j]] = [re[j], re[i]]; [im[i], im[j]] = [im[j], im[i]]; }
+  }
+  for (let len = 2; len <= n; len <<= 1) {
+    const ang = -2 * Math.PI / len;
+    const wr = Math.cos(ang), wi = Math.sin(ang);
+    for (let i = 0; i < n; i += len) {
+      let curWr = 1, curWi = 0;
+      for (let j = 0; j < len / 2; j++) {
+        const ur = re[i + j], ui = im[i + j];
+        const vr = re[i + j + len/2] * curWr - im[i + j + len/2] * curWi;
+        const vi = re[i + j + len/2] * curWi + im[i + j + len/2] * curWr;
+        re[i + j] = ur + vr; im[i + j] = ui + vi;
+        re[i + j + len/2] = ur - vr; im[i + j + len/2] = ui - vi;
+        const nextWr = curWr * wr - curWi * wi;
+        curWi = curWr * wi + curWi * wr;
+        curWr = nextWr;
+      }
+    }
+  }
+}
+
+// ============================================================
+// クロマ特徴量(12音のエネルギー分布)を1フレームから計算
+// ============================================================
+const NOTE_NAMES = ['C','C#','D','D#','E','F','F#','G','G#','A','A#','B'];
+
+function frameToChroma(frame, sampleRate) {
+  const N = frame.length;
+  const re = new Float64Array(N);
+  const im = new Float64Array(N);
+  // ハン窓
+  for (let i = 0; i < N; i++) {
+    const w = 0.5 - 0.5 * Math.cos((2 * Math.PI * i) / (N - 1));
+    re[i] = frame[i] * w;
+  }
+  fft(re, im);
+
+  const chroma = new Array(12).fill(0);
+  const minFreq = 55;   // A1くらいから
+  const maxFreq = 1760; // A6くらいまで
+  for (let bin = 1; bin < N / 2; bin++) {
+    const freq = (bin * sampleRate) / N;
+    if (freq < minFreq || freq > maxFreq) continue;
+    const mag = Math.sqrt(re[bin]*re[bin] + im[bin]*im[bin]);
+    const midi = 69 + 12 * Math.log2(freq / 440);
+    const pc = ((Math.round(midi) % 12) + 12) % 12;
+    chroma[pc] += mag;
+  }
+  const sum = chroma.reduce((a,b)=>a+b, 0) || 1;
+  return chroma.map(v => v / sum);
+}
+
+// ============================================================
+// コードテンプレート(24種: メジャー/マイナー トライアド × 12ルート)
+// ============================================================
+function buildChordTemplates() {
+  const templates = [];
+  const QUALITIES = [
+    { suffix: '',     iv: [0,4,7],   quality: 'major' },
+    { suffix: 'm',    iv: [0,3,7],   quality: 'minor' },
+    { suffix: '7',    iv: [0,4,7,10],quality: 'dom7'  },
+    { suffix: 'maj7', iv: [0,4,7,11],quality: 'maj7'  },
+    { suffix: 'm7',   iv: [0,3,7,10],quality: 'min7'  },
+    { suffix: 'sus4', iv: [0,5,7],   quality: 'sus4'  },
+    { suffix: 'dim',  iv: [0,3,6],   quality: 'dim'   }
+  ];
+  for (let root = 0; root < 12; root++) {
+    QUALITIES.forEach(q => {
+      const vec = new Array(12).fill(0);
+      q.iv.forEach(iv => vec[(root+iv)%12] = 1);
+      templates.push({ name: `${NOTE_NAMES[root]}${q.suffix}`, root, quality: q.quality, vec });
+    });
+  }
+  return templates;
+}
+const CHORD_TEMPLATES = buildChordTemplates();
+
+function cosineSim(a, b) {
+  let dot=0, na=0, nb=0;
+  for (let i=0;i<a.length;i++){ dot+=a[i]*b[i]; na+=a[i]*a[i]; nb+=b[i]*b[i]; }
+  if (na===0||nb===0) return 0;
+  return dot/(Math.sqrt(na)*Math.sqrt(nb));
+}
+function matchChord(chroma) {
+  let best = null, bestScore = -1;
+  CHORD_TEMPLATES.forEach(t => {
+    const s = cosineSim(chroma, t.vec);
+    if (s > bestScore) { bestScore = s; best = t; }
+  });
+  return { ...best, confidence: bestScore };
+}
+
+// ============================================================
+// キー推定(Krumhansl-Schmucklerプロファイル)
+// ============================================================
+const MAJOR_PROFILE = [6.35,2.23,3.48,2.33,4.38,4.09,2.52,5.19,2.39,3.66,2.29,2.88];
+const MINOR_PROFILE = [6.33,2.68,3.52,5.38,2.60,3.53,2.54,4.75,3.98,2.69,3.34,3.17];
+
+function detectKey(aggChroma) {
+  let best = { root:0, mode:'major', score:-Infinity };
+  for (let root=0; root<12; root++) {
+    let majorScore=0, minorScore=0;
+    for (let i=0;i<12;i++){
+      majorScore += aggChroma[(root+i)%12] * MAJOR_PROFILE[i];
+      minorScore += aggChroma[(root+i)%12] * MINOR_PROFILE[i];
+    }
+    if (majorScore > best.score) best = { root, mode:'major', score:majorScore };
+    if (minorScore > best.score) best = { root, mode:'minor', score:minorScore };
+  }
+  return best;
+}
+
+// ============================================================
+// ローマ数字変換(検出キーに対する相対表記)
+// ============================================================
+const MAJOR_ROMAN = ['I','bII','II','bIII','III','IV','#IV','V','bVI','VI','bVII','VII'];
+const MAJOR_ROMAN_MINOR_CHORD = ['i','bii','ii','biii','iii','iv','#iv','v','bvi','vi','bvii','vii'];
+
+const QUALITY_SUFFIX = { major:'', minor:'', dom7:'7', maj7:'maj7', min7:'7', sus4:'sus4', dim:'dim' };
+const MAJOR_FAMILY = new Set(['major','maj7','dom7','sus4']);
+
+function toRoman(chord, key) {
+  const semitoneFromRoot = ((chord.root - key.root) % 12 + 12) % 12;
+  const base = MAJOR_FAMILY.has(chord.quality) ? MAJOR_ROMAN[semitoneFromRoot] : MAJOR_ROMAN_MINOR_CHORD[semitoneFromRoot];
+  return base + (QUALITY_SUFFIX[chord.quality] || '');
+}
+
+// ============================================================
+// テンポ推定(オンセット包絡線の自己相関)
+// ============================================================
+function detectTempo(energyEnvelope, hopSec) {
+  const n = energyEnvelope.length;
+  const flux = new Array(n).fill(0);
+  for (let i=1;i<n;i++){
+    const d = energyEnvelope[i] - energyEnvelope[i-1];
+    flux[i] = d > 0 ? d : 0;
+  }
+  const minBPM=60, maxBPM=180;
+  const minLag = Math.floor((60/maxBPM)/hopSec);
+  const maxLag = Math.ceil((60/minBPM)/hopSec);
+  let bestLag=minLag, bestScore=-Infinity;
+  for (let lag=minLag; lag<=maxLag && lag<n; lag++){
+    let score=0;
+    for (let i=0;i+lag<n;i++) score += flux[i]*flux[i+lag];
+    if (score>bestScore){ bestScore=score; bestLag=lag; }
+  }
+  return Math.round(60 / (bestLag * hopSec));
+}
+
+// ============================================================
+// メイン解析処理
+// ============================================================
+const audioCtx = new (window.AudioContext || window.webkitAudioContext)();
+let chordSegments = [];
+let detectedKey = null;
+let detectedBpm = null;
+let modulationInfo = null;
+
+document.getElementById('fileInput').addEventListener('change', async (e) => {
+  const file = e.target.files[0];
+  if (!file) return;
+  document.getElementById('inputStatus').textContent = '読み込み中…';
+  document.getElementById('progressBar').classList.add('visible');
+
+  const arrayBuf = await file.arrayBuffer();
+  const audioBuffer = await audioCtx.decodeAudioData(arrayBuf);
+  document.getElementById('inputStatus').textContent =
+    `解析中: ${file.name}(${audioBuffer.duration.toFixed(0)}秒)`;
+
+  await analyze(audioBuffer);
+});
+
+async function analyze(audioBuffer) {
+  const sampleRate = audioBuffer.sampleRate;
+  const data = audioBuffer.getChannelData(0);
+  const FRAME_SIZE = 4096;
+  const HOP = 2048;
+  const hopSec = HOP / sampleRate;
+
+  const totalFrames = Math.floor((data.length - FRAME_SIZE) / HOP);
+  const chromaFrames = [];
+  const energyEnvelope = [];
+  const aggChroma = new Array(12).fill(0);
+
+  for (let f = 0; f < totalFrames; f++) {
+    const start = f * HOP;
+    const frame = data.subarray(start, start + FRAME_SIZE);
+    const chroma = frameToChroma(frame, sampleRate);
+    chromaFrames.push(chroma);
+    for (let i=0;i<12;i++) aggChroma[i] += chroma[i];
+
+    let rms=0; for (let i=0;i<frame.length;i++) rms += frame[i]*frame[i];
+    energyEnvelope.push(Math.sqrt(rms/frame.length));
+
+    if (f % 30 === 0) {
+      document.getElementById('progressFill').style.width = `${(f/totalFrames)*100}%`;
+      document.getElementById('progressText').textContent = `${Math.round((f/totalFrames)*100)}%`;
+      await new Promise(r => setTimeout(r, 0));
+    }
+  }
+  document.getElementById('progressFill').style.width = '100%';
+
+  // --- コードをフレームごとに判定 → 連続する同一コードを1区間にまとめる ---
+  const CHORD_WINDOW = 4; // 約4フレーム(≈0.17秒×4)ごとに判定して安定化
+  const rawChords = [];
+  for (let i = 0; i < chromaFrames.length; i += CHORD_WINDOW) {
+    const slice = chromaFrames.slice(i, i + CHORD_WINDOW);
+    const avg = new Array(12).fill(0);
+    slice.forEach(c => c.forEach((v,idx) => avg[idx] += v));
+    for (let k=0;k<12;k++) avg[k] /= slice.length;
+    const match = matchChord(avg);
+    rawChords.push({ time: i * hopSec, ...match });
+  }
+
+  const segments = [];
+  let cur = null;
+  rawChords.forEach(c => {
+    if (!cur) { cur = { name: c.name, root: c.root, quality: c.quality, startTime: c.time, endTime: c.time }; return; }
+    if (c.name === cur.name) { cur.endTime = c.time; }
+    else { segments.push(cur); cur = { name: c.name, root: c.root, quality: c.quality, startTime: c.time, endTime: c.time }; }
+  });
+  if (cur) segments.push(cur);
+
+  // 短すぎる(1区間0.3秒未満)区間は前後にマージ
+  chordSegments = segments.filter(s => (s.endTime - s.startTime) >= 0.3);
+  if (chordSegments.length === 0) chordSegments = segments;
+
+  // --- キー・テンポ推定 ---
+  detectedKey = detectKey(aggChroma);
+  detectedBpm = detectTempo(energyEnvelope, hopSec);
+
+  // --- 簡易転調チェック(前半/後半でキーを別々に推定) ---
+  const mid = Math.floor(chromaFrames.length / 2);
+  const firstHalf = new Array(12).fill(0);
+  const secondHalf = new Array(12).fill(0);
+  chromaFrames.slice(0, mid).forEach(c => c.forEach((v,i) => firstHalf[i] += v));
+  chromaFrames.slice(mid).forEach(c => c.forEach((v,i) => secondHalf[i] += v));
+  const keyFirst = detectKey(firstHalf);
+  const keySecond = detectKey(secondHalf);
+  modulationInfo = (keyFirst.root !== keySecond.root || keyFirst.mode !== keySecond.mode)
+    ? { first: keyFirst, second: keySecond }
+    : null;
+
+  document.getElementById('progressBar').classList.remove('visible');
+  document.getElementById('inputStatus').textContent = `✅ 解析完了`;
+  renderResults();
+}
+
+// ============================================================
+// 結果表示
+// ============================================================
+function renderResults() {
+  document.getElementById('emptyState').style.display = 'none';
+  document.getElementById('resultPanel').style.display = 'block';
+
+  document.getElementById('bpmVal').textContent = detectedBpm;
+  document.getElementById('keyVal').textContent = `${NOTE_NAMES[detectedKey.root]}${detectedKey.mode==='major'?'':'m'}`;
+  document.getElementById('chordCountVal').textContent = chordSegments.length;
+
+  const timeline = document.getElementById('chordTimeline');
+  timeline.innerHTML = chordSegments.map(s => {
+    const roman = toRoman(s, detectedKey);
+    const mm = Math.floor(s.startTime/60), ss = Math.floor(s.startTime%60);
+    return `<div class="chord-chip">
+      <div class="name">${s.name}</div>
+      <div class="roman">${roman}</div>
+      <div class="time">${mm}:${String(ss).padStart(2,'0')}</div>
+    </div>`;
+  }).join('');
+
+  const romanSeq = chordSegments.map(s => toRoman(s, detectedKey));
+  const el = document.getElementById('romanSummary');
+  el.innerHTML = romanSeq.map((r,i) => `<span class="roman-badge">${r}</span>${i<romanSeq.length-1?'<span class="arrow">→</span>':''}`).join('');
+
+  const modBox = document.getElementById('modulationNote');
+  if (modulationInfo) {
+    const f = modulationInfo.first, s2 = modulationInfo.second;
+    modBox.style.display = 'block';
+    modBox.textContent = `⚠️ 曲の前半と後半でキーが異なって検出されました(前半: ${NOTE_NAMES[f.root]}${f.mode==='major'?'メジャー':'マイナー'} / 後半: ${NOTE_NAMES[s2.root]}${s2.mode==='major'?'メジャー':'マイナー'})。転調している曲か、判定が不安定な可能性があります。`;
+  } else {
+    modBox.style.display = 'none';
+  }
+}
+
+// ============================================================
+// 連携
+// ============================================================
+const SETTINGS_KEY = 'ca_settings';
+function getSettings(){ try{ return JSON.parse(localStorage.getItem(SETTINGS_KEY))||{}; }catch(_){ return {}; } }
+
+document.getElementById('toQuickRefBtn').addEventListener('click', () => {
+  const s = getSettings();
+  const url = s.quickRefUrl || prompt('quick-refのURLを入力してください', 'https://norinori-jan.github.io/quick-ref/');
+  if (!url) return;
+  localStorage.setItem(SETTINGS_KEY, JSON.stringify({...s, quickRefUrl:url}));
+
+  const romanSeq = chordSegments.map(s2 => toRoman(s2, detectedKey)).join(' → ');
+  const chordSeq = chordSegments.map(s2 => s2.name).join(' → ');
+  const body = `キー: ${NOTE_NAMES[detectedKey.root]}${detectedKey.mode==='major'?' メジャー':' マイナー'}\nBPM: ${detectedBpm}\n\nコード進行:\n${chordSeq}\n\n機能分析:\n${romanSeq}`;
+  const payload = { title: 'chord-analyzer: コード進行メモ', body, tags:['music','chord-analyzer'], createdAt: new Date().toISOString() };
+  localStorage.setItem('cv_transfer', JSON.stringify(payload));
+  window.open(url, '_blank');
+});
+
+document.getElementById('toRoadmapBtn').addEventListener('click', () => {
+  const s = getSettings();
+  const url = s.roadmapUrl || prompt('suite-roadmap のURLを入力してください', 'https://norinori-jan.github.io/suite-roadmap/');
+  if (!url) return;
+  localStorage.setItem(SETTINGS_KEY, JSON.stringify({...s, roadmapUrl:url}));
+
+  const payload = {
+    version: 1, source: 'chord-analyzer', bpm: detectedBpm,
+    key: `${NOTE_NAMES[detectedKey.root]}${detectedKey.mode==='major'?'':'m'}`,
+    keyRoot: detectedKey.root, keyMode: detectedKey.mode,
+    chords: chordSegments.map(s2 => ({
+      name: s2.name, root: s2.root, quality: s2.quality,
+      startTime: s2.startTime, endTime: s2.endTime, roman: toRoman(s2, detectedKey)
+    }))
+  };
+  localStorage.setItem('ca_transfer', JSON.stringify(payload));
+  window.open(url, '_blank');
+});
+</script>
+</body>
+</html>
+
