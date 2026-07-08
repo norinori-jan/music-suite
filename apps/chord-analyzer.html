@@ -60,6 +60,26 @@ main { max-width: 720px; margin: 0 auto; padding: 12px 16px; }
 .export-bar button { flex: 1; padding: 12px; border-radius: 10px; border: none; font-size: 13px; font-weight: 700; color: #fff; }
 .empty { text-align: center; color: var(--sub); font-size: 13px; padding: 24px 12px; }
 .note-box { font-size: 12px; color: var(--sub); background: var(--bg); border-radius: 8px; padding: 10px; margin-top: 10px; line-height: 1.6; }
+
+.struct-grid { display: flex; gap: 8px; margin-top: 6px; }
+.struct-card { flex: 1; background: var(--bg); border-radius: 10px; padding: 10px 8px; text-align: center; }
+.struct-card .sv { font-size: 20px; font-weight: 700; color: var(--accent); }
+.struct-card .sl { font-size: 10px; color: var(--sub); margin-top: 3px; font-weight: 600; }
+.struct-card .st { font-size: 9px; color: var(--purple); margin-top: 2px; font-weight: 700; }
+.struct-bar-track { height: 4px; background: var(--border); border-radius: 2px; margin-top: 6px; overflow: hidden; }
+.struct-bar-fill { height: 100%; background: var(--accent); border-radius: 2px; }
+
+.ai-key-row { display: flex; gap: 6px; margin-top: 12px; }
+.ai-key-row input { flex: 1; padding: 8px; border: 1px solid var(--border); border-radius: 8px; font-size: 12px; }
+.ai-key-row button { padding: 8px 12px; border: none; border-radius: 8px; background: var(--purple); color: #fff; font-size: 12px; font-weight: 700; }
+.struct-ai-btn {
+  width: 100%; margin-top: 8px; padding: 11px; border: none; border-radius: 10px;
+  background: linear-gradient(135deg, var(--purple), var(--accent)); color: #fff;
+  font-size: 13px; font-weight: 700; cursor: pointer;
+}
+.struct-ai-btn:disabled { opacity: 0.4; }
+.struct-ai-loading { font-size: 12px; color: var(--purple); text-align: center; padding: 8px; }
+.struct-ai-result { font-size: 13px; color: var(--text); background: var(--bg); border-radius: 10px; padding: 12px; margin-top: 8px; line-height: 1.8; white-space: pre-wrap; }
 </style>
 </head>
 <body>
@@ -99,6 +119,20 @@ main { max-width: 720px; margin: 0 auto; padding: 12px 16px; }
       いわゆる王道進行と呼ばれる、J-POPや洋楽で非常によく使われる型です。
       同じローマ数字パターンが繰り返し出てくる曲は、その型を軸に構成されています。
     </div>
+
+    <div class="panel-label" style="margin-top:16px;">構造分析(非対称性・緊張・予測不可能性)</div>
+    <div class="struct-grid" id="structGrid"></div>
+    <div class="note-box">
+      3つの指標はすべて既存の解析データ(リズムの間隔・音量の変化・和音の繰り返しパターン)から
+      直接計算した客観的な数値です。「良い/悪い」ではなく、曲の構造がどの方向に振れているかの目安として見てください。
+    </div>
+    <div class="ai-key-row">
+      <input type="password" id="caApiKey" placeholder="Claude APIキー(sk-ant-...)">
+      <button id="caApiKeySave">保存</button>
+    </div>
+    <button class="struct-ai-btn" id="btnStructAi">🌌 AIに構造を解説してもらう</button>
+    <div class="struct-ai-loading" id="structAiLoading" style="display:none;">AIが構造を解説中…</div>
+    <div class="struct-ai-result" id="structAiResult" style="display:none;"></div>
 
     <div class="export-bar">
       <button style="background:var(--accent);" id="toQuickRefBtn">📤 quick-refへ解説を送る</button>
@@ -278,6 +312,7 @@ let chordSegments = [];
 let detectedKey = null;
 let detectedBpm = null;
 let modulationInfo = null;
+let structFeatures = null;
 
 document.getElementById('fileInput').addEventListener('change', async (e) => {
   const file = e.target.files[0];
@@ -364,10 +399,192 @@ async function analyze(audioBuffer) {
     ? { first: keyFirst, second: keySecond }
     : null;
 
+  // --- 構造分析(層1: 客観的な特徴量) ---
+  structFeatures = computeStructuralFeatures(chromaFrames, energyEnvelope, hopSec);
+
   document.getElementById('progressBar').classList.remove('visible');
   document.getElementById('inputStatus').textContent = `✅ 解析完了`;
   renderResults();
 }
+
+// ============================================================
+// 構造分析(層1: 客観的な特徴量)
+// 既存のchromaFrames / energyEnvelopeから追加の信号処理なしで計算する
+// ============================================================
+function mean(arr) { return arr.length ? arr.reduce((a,b)=>a+b,0) / arr.length : 0; }
+function clamp(v, lo, hi) { return Math.max(lo, Math.min(hi, v)); }
+function cosineSim(a, b) {
+  let dot=0, na=0, nb=0;
+  for (let i=0;i<a.length;i++) { dot += a[i]*b[i]; na += a[i]*a[i]; nb += b[i]*b[i]; }
+  const denom = Math.sqrt(na) * Math.sqrt(nb);
+  return denom > 0 ? dot / denom : 0;
+}
+
+// 音量の立ち上がり(オンセット)検出 → 拍・打点の間隔のばらつきを見る
+function detectOnsets(energyEnvelope, hopSec) {
+  const flux = [];
+  for (let i=1;i<energyEnvelope.length;i++) flux.push(Math.max(0, energyEnvelope[i]-energyEnvelope[i-1]));
+  const threshold = mean(flux) * 1.5;
+  const onsets = [];
+  let lastOnset = -Infinity;
+  const MIN_GAP = 0.12; // 秒。近すぎる誤検出を間引く
+  for (let i=0;i<flux.length;i++) {
+    const t = i * hopSec;
+    const isPeak = flux[i] > threshold
+      && (i===0 || flux[i] >= flux[i-1])
+      && (i===flux.length-1 || flux[i] >= flux[i+1]);
+    if (isPeak && (t - lastOnset) > MIN_GAP) { onsets.push(t); lastOnset = t; }
+  }
+  return onsets;
+}
+
+function computeStructuralFeatures(chromaFrames, energyEnvelope, hopSec) {
+  // ---- 非対称性: オンセット間隔(拍・打点の間隔)のばらつき ----
+  const onsets = detectOnsets(energyEnvelope, hopSec);
+  const intervals = [];
+  for (let i=1;i<onsets.length;i++) intervals.push(onsets[i]-onsets[i-1]);
+  const intervalMean = mean(intervals);
+  const intervalStd = Math.sqrt(mean(intervals.map(v => (v-intervalMean)**2)));
+  const asymmetryRaw = intervalMean > 0 ? intervalStd / intervalMean : 0; // 変動係数
+  const asymmetryScore = clamp(Math.round(asymmetryRaw * 120), 0, 100);
+
+  // ---- 緊張: 音量(RMS)の変動幅・急変の頻度 ----
+  const energyDiffs = [];
+  for (let i=1;i<energyEnvelope.length;i++) energyDiffs.push(Math.abs(energyEnvelope[i]-energyEnvelope[i-1]));
+  const energyMean = mean(energyEnvelope) || 1e-9;
+  const fluctuationRaw = mean(energyDiffs) / energyMean;
+  const rapidChanges = energyDiffs.filter(d => d > energyMean * 0.5).length;
+  const rapidChangeRate = energyDiffs.length ? rapidChanges / energyDiffs.length : 0;
+  const tensionScore = clamp(Math.round((fluctuationRaw * 200 + rapidChangeRate * 100) / 2), 0, 100);
+
+  // ---- 予測不可能性: 自己類似度マトリクス(時間窓ごとにコード的な音の分布を比較) ----
+  const WINDOWS = 48;
+  const step = Math.max(1, Math.floor(chromaFrames.length / WINDOWS));
+  const segs = [];
+  for (let i=0; i<chromaFrames.length; i+=step) {
+    const slice = chromaFrames.slice(i, i+step);
+    if (!slice.length) continue;
+    const avg = new Array(12).fill(0);
+    slice.forEach(c => c.forEach((v,idx) => avg[idx] += v));
+    for (let k=0;k<12;k++) avg[k] /= slice.length;
+    segs.push(avg);
+  }
+  let simSum = 0, simCount = 0;
+  for (let i=0;i<segs.length;i++) {
+    for (let j=i+1;j<segs.length;j++) { simSum += cosineSim(segs[i], segs[j]); simCount++; }
+  }
+  const avgSimilarity = simCount ? simSum / simCount : 0; // 0(全く似ていない)〜1(常に同じ)
+  const unpredictabilityScore = clamp(Math.round((1 - avgSimilarity) * 100), 0, 100);
+
+  return {
+    asymmetryScore, tensionScore, unpredictabilityScore,
+    onsetCount: onsets.length,
+    avgSimilarity: Math.round(avgSimilarity * 100) / 100,
+  };
+}
+
+function structLabel(score) {
+  if (score < 33) return '低い';
+  if (score < 66) return '中程度';
+  return '高い';
+}
+
+function renderStructGrid() {
+  const el = document.getElementById('structGrid');
+  const f = structFeatures;
+  if (!f) { el.innerHTML = ''; return; }
+  const cards = [
+    { label: '非対称性', sub: 'リズムの間隔のばらつき', value: f.asymmetryScore },
+    { label: '緊張', sub: '音量変化の急峻さ', value: f.tensionScore },
+    { label: '予測不可能性', sub: '繰り返しからの逸脱度', value: f.unpredictabilityScore },
+  ];
+  el.innerHTML = cards.map(c => `
+    <div class="struct-card">
+      <div class="sv">${c.value}</div>
+      <div class="sl">${c.label}</div>
+      <div class="struct-bar-track"><div class="struct-bar-fill" style="width:${c.value}%"></div></div>
+      <div class="st">${structLabel(c.value)}</div>
+    </div>
+  `).join('');
+}
+
+// ============================================================
+// 構造分析(層2: AIによる解釈)
+// ============================================================
+const CA_KEY_STORAGE = 'ca_claude_key';
+function getCaApiKey() {
+  return document.getElementById('caApiKey').value.trim() || localStorage.getItem(CA_KEY_STORAGE) || '';
+}
+document.getElementById('caApiKeySave').addEventListener('click', () => {
+  const key = document.getElementById('caApiKey').value.trim();
+  if (key) { localStorage.setItem(CA_KEY_STORAGE, key); alert('APIキーを保存しました'); }
+});
+
+async function runStructuralAI() {
+  const key = getCaApiKey();
+  if (!key) { alert('Claude APIキーを入力してください'); return; }
+  if (!structFeatures) { alert('先に曲を解析してください'); return; }
+
+  const btn = document.getElementById('btnStructAi');
+  const loading = document.getElementById('structAiLoading');
+  const resultEl = document.getElementById('structAiResult');
+  btn.disabled = true; loading.style.display = 'block'; resultEl.style.display = 'none';
+
+  const f = structFeatures;
+  const chordSeq = chordSegments.map(s => s.name).join(' → ');
+  const romanSeq = chordSegments.map(s => toRoman(s, detectedKey)).join(' → ');
+
+  const systemPrompt = `あなたは音楽構造と、非対称性・偶然性・流れといった物理的/美学的な「構造」の概念の両方に通じたアナリストです。
+ロッケンハウス的な視点――非対称性・緊張・偶然・流れ――で、楽曲の構造を数値から言葉にして解説します。
+以下の3つの客観的な指標(0〜100、既存の信号処理から直接計算した値)をもとに、
+音楽的な観点(リズム・和声・展開)と、非対称性や偶然性といった構造的な概念との対応を、
+比喩に頼りすぎず、しかし詩的な視点も交えながら200〜300字程度の日本語で解説してください。
+数値をそのまま読み上げるのではなく、意味のある解釈を述べてください。断定的な「正解」ではなく、
+ひとつの見方として提示する姿勢を保ってください。`;
+
+  const userPrompt = `曲の情報:
+キー: ${detectedKey ? NOTE_NAMES[detectedKey.root] + (detectedKey.mode==='major'?' メジャー':' マイナー') : '不明'}
+BPM: ${detectedBpm}
+コード進行: ${chordSeq}
+機能分析(ローマ数字): ${romanSeq}
+
+構造指標(0〜100):
+- 非対称性(リズム間隔のばらつき): ${f.asymmetryScore}
+- 緊張(音量変化の急峻さ): ${f.tensionScore}
+- 予測不可能性(繰り返しからの逸脱度): ${f.unpredictabilityScore}
+
+この曲の構造を解説してください。`;
+
+  try {
+    const res = await fetch('https://api.anthropic.com/v1/messages', {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+        'x-api-key': key,
+        'anthropic-version': '2023-06-01',
+        'anthropic-dangerous-direct-browser-access': 'true',
+      },
+      body: JSON.stringify({
+        model: 'claude-sonnet-4-6',
+        max_tokens: 600,
+        system: systemPrompt,
+        messages: [{ role: 'user', content: userPrompt }],
+      }),
+    });
+    if (!res.ok) { const t = await res.text(); throw new Error('Claude API error ' + res.status + ': ' + t.slice(0,200)); }
+    const resData = await res.json();
+    const text = (resData.content||[]).filter(b=>b.type==='text').map(b=>b.text).join('');
+    resultEl.textContent = text.trim();
+    resultEl.style.display = 'block';
+  } catch(e) {
+    resultEl.textContent = 'エラー: ' + e.message;
+    resultEl.style.display = 'block';
+  } finally {
+    btn.disabled = false;
+    loading.style.display = 'none';
+  }
+}
+document.getElementById('btnStructAi').addEventListener('click', runStructuralAI);
 
 // ============================================================
 // 結果表示
@@ -403,6 +620,10 @@ function renderResults() {
   } else {
     modBox.style.display = 'none';
   }
+
+  renderStructGrid();
+  document.getElementById('structAiResult').style.display = 'none';
+  document.getElementById('structAiResult').textContent = '';
 }
 
 // ============================================================
@@ -443,7 +664,12 @@ document.getElementById('toRoadmapBtn').addEventListener('click', () => {
   localStorage.setItem('ca_transfer', JSON.stringify(payload));
   window.open(url, '_blank');
 });
+
+// 保存済みのClaude APIキーを復元
+(() => {
+  const saved = localStorage.getItem(CA_KEY_STORAGE);
+  if (saved) document.getElementById('caApiKey').value = saved;
+})();
 </script>
 </body>
 </html>
-

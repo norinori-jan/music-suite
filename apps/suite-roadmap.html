@@ -271,38 +271,22 @@ function buildBeatLabPayload() {
 }
 
 function buildVocalLabPayload() {
+  // FIX: vocal-lab(v3)は実際には #import= ハッシュでの自動受信に対応している
+  // (normalizeImportedCards が data.source + data.melody.notes 形式を1枚のカードとして取り込む)。
+  // そのため chord-lab / beat-lab / score-editor と同じ openApp() 方式に統一する。
   let cursor = 0;
   const notes = data.chords.map((c) => {
     const noteName = NOTE_NAMES[c.root];
     const midi = midiFromNote(noteName, 4);
-    const note = { name: `${noteName}4`, midiR: midi, hz: hzFromMidi(midi), start: cursor, dur: 4, confidence: 1 };
+    const note = { pitch: midi, startBeat: cursor, durationBeats: 4, vel: 90 };
     cursor += 4;
     return note;
   });
-  // vocal-lab-v3 の実カード配列形式(ファイルJSONインポート用)
-  return [{
-    id: (crypto.randomUUID ? crypto.randomUUID() : 'sr_' + Date.now()),
-    name: `${data.key} melody sketch`,
-    emotion: '',
-    aiMode: '',
-    hasAi: false,
-    bpm: data.bpm,
-    notes,
-    rawNotes: notes,
-    aiComment: 'chord-analyzerの検出結果から自動生成したルート音たたき台です。',
-    createdAt: Date.now()
-  }];
-}
-
-function downloadVocalLabJson() {
-  const cards = buildVocalLabPayload();
-  const blob = new Blob([JSON.stringify(cards, null, 2)], { type: 'application/json' });
-  const url = URL.createObjectURL(blob);
-  const a = document.createElement('a');
-  a.href = url; a.download = `vocal-lab-v3-${Date.now()}.json`;
-  document.body.appendChild(a); a.click(); document.body.removeChild(a);
-  setTimeout(() => URL.revokeObjectURL(url), 3000);
-  alert('JSONをダウンロードしました。\nvocal-labを開いて「📥 JSON読み込み」からこのファイルを選択してください。');
+  return {
+    version: '1.0', source: 'chord-analyzer',
+    name: `${data.key} melody sketch`, bpm: data.bpm, timeSig: '4/4',
+    melody: { notes }, chords: null, bass: { notes: [] }, drums: { notes: [] },
+  };
 }
 
 // コード品質ごとの構成音インターバル(chord-analyzerのquality分類に対応)
@@ -379,10 +363,9 @@ function buildSteps() {
     },
     {
       title: '④ vocal-labでメロディを作る',
-      desc: `キー${data.key}の${data.keyMode==='major'?'メジャー':'マイナー'}スケール(${scaleNotes.join(' - ')})をもとに、各コードのルート音を1拍ずつ置いた「たたき台メロディ」をJSONとして用意します。vocal-labは自動遷移ではなく**ファイル選択でのインポート**のため、ダウンロード後に手動で読み込んでください。`,
-      actionLabel: 'JSONをダウンロード',
-      action: () => downloadVocalLabJson(),
-      note: '📥 vocal-labを開き「📥 JSON読み込み」ボタンから、ダウンロードしたファイルを選択してください。'
+      desc: `キー${data.key}の${data.keyMode==='major'?'メジャー':'マイナー'}スケール(${scaleNotes.join(' - ')})をもとに、各コードのルート音を1拍ずつ置いた「たたき台メロディ」を1枚のフレーズカードとして送ります。他のステップと同じくワンタップで開いて自動的に読み込まれます。`,
+      actionLabel: 'vocal-labを開く',
+      action: () => openApp('vocalLabUrl', 'vocal-labのURL', 'https://norinori-jan.github.io/music-suite/apps/vocal-lab.html', buildVocalLabPayload())
     },
     {
       title: '⑤ score-editor-v2で全部まとめる',
@@ -404,4 +387,3 @@ render();
 </script>
 </body>
 </html>
-
