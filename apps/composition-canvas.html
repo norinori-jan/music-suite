@@ -307,7 +307,7 @@ async function analyzeAudioBuffer(arrayBuf, displayName) {
     state.lastSegments = segments;
 
     // C：カード表示
-    renderNoteCards(segments);
+    renderNoteCards(segments, displayName);
 
     showToast(
       `${notes.length}フレーム → ${segments.length}音に統合(${displayName || ''})`
@@ -373,8 +373,8 @@ function segmentNotes(notes) {
 /* ───────────────────────────────
    メロディログ出力（テキスト保存）
 ────────────────────────────── */
-function exportMelodyLog(notes) {
-  const text = notes.join(", ");
+function exportMelodyLog(segments, songName) {
+  const text = segments.map(s => `${s.note}×${s.length}`).join(", ");
   const blob = new Blob([text], { type: "text/plain" });
   const url = URL.createObjectURL(blob);
 
@@ -388,10 +388,12 @@ function exportMelodyLog(notes) {
 /* ───────────────────────────────
    メロディログを Google スプレッドシートへ送信（任意）
 ────────────────────────────── */
-async function exportMelodyToSheet(notes) {
+async function exportMelodyToSheet(segments, songName) {
   const payload = {
     timestamp: new Date().toISOString(),
-    notes: notes.join(", ")
+    songName: songName || "(無題)",
+    noteCount: segments.length,
+    notes: segments.map(s => `${s.note}×${s.length}`).join(", ")
   };
 
   try {
@@ -459,7 +461,7 @@ function openEditDialog(card) {
 /* ───────────────────────────────
    C+E+G+H：音名カード生成
 ────────────────────────────── */
-function renderNoteCards(segments) {
+function renderNoteCards(segments, songName) {
   const canvas = document.getElementById("canvas");
   canvas.innerHTML = "";
 
@@ -508,8 +510,8 @@ function renderNoteCards(segments) {
     }
   });
 
-  exportMelodyLog(segments);
-  exportMelodyToSheet(segments);
+  exportMelodyLog(segments, songName);
+  exportMelodyToSheet(segments, songName);
 
   console.log("描画カード数:", segments.length);
 
