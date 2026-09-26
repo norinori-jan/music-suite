@@ -648,7 +648,7 @@ document.getElementById('toQuickRefBtn').addEventListener('click', () => {
 
 document.getElementById('toRoadmapBtn').addEventListener('click', () => {
   const s = getSettings();
-  const url = s.roadmapUrl || prompt('suite-roadmap のURLを入力してください', 'https://norinori-jan.github.io/suite-roadmap/');
+  const url = s.roadmapUrl || prompt('suite-roadmap のURLを入力してください', 'suite-roadmap.html');
   if (!url) return;
   localStorage.setItem(SETTINGS_KEY, JSON.stringify({...s, roadmapUrl:url}));
 

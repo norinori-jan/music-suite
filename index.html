@@ -6,7 +6,7 @@
 <meta name="apple-mobile-web-app-capable" content="yes">
 <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
 <meta name="apple-mobile-web-app-title" content="music-suite">
-<title>music-suite</title>
+<title>music-suite - Music Analysis Edition</title>
 <style>
 :root{
   --bg:#0a0a0d;--bg2:#121217;--bg3:#1a1a22;--bg4:#22222e;
@@ -28,7 +28,7 @@ html,body{min-height:100vh;background:var(--bg);color:var(--tx);font-family:'Int
 .hero-logo{font-size:11px;font-weight:600;letter-spacing:0.18em;text-transform:uppercase;color:var(--tx3);margin-bottom:12px;}
 .hero-title{font-size:32px;font-weight:700;letter-spacing:-0.02em;color:var(--tx);margin-bottom:8px;}
 .hero-title span{color:var(--acc-hi);}
-.hero-sub{font-size:14px;color:var(--tx2);max-width:480px;margin:0 auto 40px;}
+.hero-sub{font-size:14px;color:var(--tx2);max-width:520px;margin:0 auto 40px;}
 
 /* ── APP GRID ── */
 .app-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(260px,1fr));gap:14px;max-width:900px;margin:0 auto;padding:0 24px 48px;}
@@ -71,6 +71,58 @@ html,body{min-height:100vh;background:var(--bg);color:var(--tx);font-family:'Int
 .btn-sm.primary{border-color:var(--acc);background:var(--acc-bg);color:var(--acc-hi);}
 .btn-sm.gb{border-color:var(--gb-bd);background:var(--gb-bg);color:var(--gb-hi);}
 
+/* ── WORKS (楽曲登録) ── */
+.works-box{background:var(--bg2);border:0.5px solid var(--bd);border-radius:var(--r-lg);padding:18px 20px;margin-bottom:16px;}
+.work-add-form{display:none;gap:8px;flex-wrap:wrap;margin-top:12px;padding-top:12px;border-top:0.5px solid var(--bd);}
+.work-add-form.show{display:flex;}
+.work-add-form input{
+  flex:1;min-width:140px;background:var(--bg3);border:0.5px solid var(--bd2);border-radius:var(--r);
+  padding:9px 12px;color:var(--tx);font-size:13px;outline:none;
+}
+.work-add-form input:focus{border-color:var(--acc);}
+
+.work-list{display:flex;flex-direction:column;gap:10px;margin-top:14px;}
+.work-card{background:var(--bg3);border:0.5px solid var(--bd2);border-radius:var(--r);padding:14px 16px;}
+.work-head{display:flex;align-items:center;justify-content:space-between;gap:10px;cursor:pointer;}
+.work-name{font-size:14px;font-weight:600;}
+.work-meta{font-size:11px;color:var(--tx3);margin-top:2px;}
+.work-del{width:22px;height:22px;border:none;background:none;color:var(--tx3);cursor:pointer;border-radius:4px;font-size:13px;flex-shrink:0;}
+.work-del:hover{color:var(--red);background:var(--red-bg);}
+
+.work-body{display:none;margin-top:12px;padding-top:12px;border-top:0.5px solid var(--bd);}
+.work-body.show{display:block;}
+.section-chip-row{display:flex;gap:6px;flex-wrap:wrap;margin-bottom:10px;}
+.section-chip{
+  font-size:11px;padding:6px 12px;border-radius:20px;border:0.5px solid var(--bd2);
+  background:none;color:var(--tx2);cursor:pointer;transition:all 0.15s;
+}
+.section-chip:hover{background:var(--bg4);color:var(--tx);}
+.section-chip.active{border-color:var(--acc);background:var(--acc-bg);color:var(--acc-hi);}
+.section-add-row{display:flex;gap:8px;}
+.section-add-row input{
+  flex:1;background:var(--bg2);border:0.5px solid var(--bd2);border-radius:var(--r);
+  padding:8px 12px;color:var(--tx);font-size:12px;outline:none;
+}
+.section-add-row input:focus{border-color:var(--acc);}
+.work-existing-sections{display:flex;flex-direction:column;gap:4px;margin-top:10px;}
+.work-section-item{
+  display:flex;align-items:center;gap:8px;font-size:11px;color:var(--tx2);
+  padding:6px 8px;border-radius:6px;cursor:pointer;
+}
+.work-section-item:hover{background:var(--bg4);}
+
+.sample-toggle{font-size:11px;color:var(--tx3);cursor:pointer;text-decoration:underline;margin-top:10px;display:inline-block;}
+.sample-box{display:none;margin-top:12px;}
+.sample-box.show{display:block;}
+
+/* ── ANALYZER PRESET (サンプル) ── */
+.preset-box{background:var(--bg2);border:0.5px solid var(--bd);border-radius:var(--r-lg);padding:18px 20px;margin-bottom:24px;}
+.preset-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(200px,1fr));gap:10px;margin-top:10px;}
+.preset-card{background:var(--bg3);border:0.5px solid var(--bd2);border-radius:var(--r);padding:12px;cursor:pointer;transition:all 0.15s;}
+.preset-card:hover{border-color:var(--acc-hi);transform:translateY(-1px);}
+.preset-title{font-size:12px;font-weight:600;color:var(--tx);margin-bottom:4px;}
+.preset-desc{font-size:11px;color:var(--tx2);line-height:1.4;}
+
 /* ── PROJECT LIST ── */
 .project-list{display:flex;flex-direction:column;gap:6px;}
 .project-item{
@@ -101,6 +153,35 @@ html,body{min-height:100vh;background:var(--bg);color:var(--tx);font-family:'Int
 }
 .import-area:hover,.import-area.drag-over{border-color:var(--acc);color:var(--acc-hi);background:var(--acc-bg);}
 .import-area input{display:none;}
+
+/* ── QUICK-REF MATERIALS ── */
+.materials-banner{
+  display:flex;align-items:center;gap:12px;background:var(--bg2);border:0.5px solid var(--bd);
+  border-radius:var(--r-lg);padding:14px 16px;cursor:pointer;transition:border-color 0.15s,background 0.15s;
+}
+.materials-banner:hover{border-color:var(--bd2);background:var(--bg3);}
+.mb-icon{font-size:20px;flex-shrink:0;}
+.mb-text{flex:1;min-width:0;}
+.mb-title{font-size:13px;font-weight:600;color:var(--tx);}
+.mb-sub{font-size:11px;color:var(--tx3);margin-top:1px;}
+.mb-toggle{font-size:13px;color:var(--acc-hi);white-space:nowrap;}
+#materialList{display:flex;flex-direction:column;gap:8px;margin-top:10px;}
+.material-card{
+  display:flex;gap:10px;align-items:flex-start;background:var(--bg3);border:0.5px solid var(--bd2);
+  border-radius:var(--r);padding:10px 12px;
+}
+.material-card.excluded{opacity:0.45;}
+.mc-toggle{
+  width:20px;height:20px;border-radius:6px;border:0.5px solid var(--bd2);background:none;color:var(--acc-hi);
+  cursor:pointer;flex-shrink:0;font-size:11px;
+}
+.mc-body{flex:1;min-width:0;}
+.mc-title{font-size:12px;font-weight:600;color:var(--tx);}
+.mc-snippet{font-size:11px;color:var(--tx2);margin-top:2px;line-height:1.5;}
+.mc-chips{display:flex;gap:4px;flex-wrap:wrap;margin-top:6px;}
+.mc-chip{font-size:10px;padding:1px 7px;border-radius:20px;border:0.5px solid var(--bd2);color:var(--tx3);}
+.state-box{font-size:11px;color:var(--tx3);text-align:center;padding:10px;}
+.state-box a{color:var(--acc-hi);}
 
 /* ── QUICK MOOD ── */
 .mood-box{background:var(--bg2);border:0.5px solid var(--bd);border-radius:var(--r-lg);padding:18px 20px;}
@@ -170,8 +251,8 @@ html,body{min-height:100vh;background:var(--bg);color:var(--tx);font-family:'Int
 <!-- HERO -->
 <div class="hero">
   <div class="hero-logo">music-suite</div>
-  <h1 class="hero-title">思いついた音楽を<br><span>最速で形にする</span></h1>
-  <p class="hero-sub">鼻歌からコード進行、ドラムパターン、スコアまで。<br>4つのツールが共通データで連携します。</p>
+  <h1 class="hero-title">好きな曲を<br><span>解体して分析・構築する</span></h1>
+  <p class="hero-sub">自分で分析したい曲を登録し、主題・和声・リズム・全体構成に分解。<br>4つのツールとキャンバスで自由に再構成・GarageBandへ接続できます。</p>
 </div>
 
 <!-- APP GRID -->
@@ -180,12 +261,12 @@ html,body{min-height:100vh;background:var(--bg);color:var(--tx);font-family:'Int
   <a class="app-card vocal" href="apps/vocal-lab-v3.html">
     <div class="card-icon">🎤</div>
     <div><span class="card-name">vocal-lab</span><span class="card-version">v3 AI</span></div>
-    <div class="card-desc">鼻歌を録音してピッチ検出、AIが自動補正または3候補を提案してメロディをカード化。感情タグでスケールを制御。</div>
+    <div class="card-desc">主題フレーズのキャプチャと抽出。民族スケールなどの補正に対応し、カード化して管理。</div>
     <div class="card-tags">
-      <span class="card-tag">録音</span>
+      <span class="card-tag">主題分解</span>
       <span class="card-tag">ピッチ検出</span>
-      <span class="card-tag">AI補正</span>
-      <span class="card-tag">候補選択</span>
+      <span class="card-tag">スケール補正</span>
+      <span class="card-tag">フレーズ管理</span>
     </div>
     <div class="card-arrow">→</div>
   </a>
@@ -193,10 +274,10 @@ html,body{min-height:100vh;background:var(--bg);color:var(--tx);font-family:'Int
   <a class="app-card chord" href="apps/chord-lab.html">
     <div class="card-icon">🎹</div>
     <div><span class="card-name">chord-lab</span><span class="card-version">v1</span></div>
-    <div class="card-desc">ダイアトニックパレットからコード進行を組み立て。AIが新規生成・編集。MIDI / JSON エクスポート対応。</div>
+    <div class="card-desc">転調パターンや特徴的なコード進行を分解・モデリング。</div>
     <div class="card-tags">
-      <span class="card-tag">コード進行</span>
-      <span class="card-tag">AI生成</span>
+      <span class="card-tag">和声アナリーゼ</span>
+      <span class="card-tag">転調パターン</span>
       <span class="card-tag">MIDI出力</span>
     </div>
     <div class="card-arrow">→</div>
@@ -205,23 +286,23 @@ html,body{min-height:100vh;background:var(--bg);color:var(--tx);font-family:'Int
   <a class="app-card beat" href="apps/beat-lab.html">
     <div class="card-icon">🥁</div>
     <div><span class="card-name">beat-lab</span><span class="card-version">v1</span></div>
-    <div class="card-desc">16ステップシーケンサーでドラムパターンを作成。AIがジャンル・フィール別に自動生成。MIDI書き出し対応。</div>
+    <div class="card-desc">拍子・シンコペーション・オスティナート刻みをステップ抽出。</div>
     <div class="card-tags">
-      <span class="card-tag">ステップ入力</span>
-      <span class="card-tag">AI生成</span>
-      <span class="card-tag">MIDI出力</span>
+      <span class="card-tag">拍子分解</span>
+      <span class="card-tag">シンコペーション</span>
+      <span class="card-tag">刻み抽出</span>
     </div>
     <div class="card-arrow">→</div>
   </a>
 
   <a class="app-card" href="apps/canvas.html" style="border-color:rgba(236,72,153,0.2);">
     <div class="card-icon">🗺️</div>
-    <div><span class="card-name">作曲キャンバス</span><span class="card-version" style="background:rgba(236,72,153,0.1);color:#f472b6;">new</span></div>
-    <div class="card-desc">フレーズカードを自由に配置・グルーピング。サビ/Aメロ/没案などのゾーンで構成を可視化。vocal-lab v3と自動連携。</div>
+    <div><span class="card-name">構造キャンバス</span><span class="card-version" style="background:rgba(236,72,153,0.1);color:#f472b6;">分析強化</span></div>
+    <div class="card-desc">提示部・展開部などのゾーンを作成し、楽式の構造に従ってフレーズカードをドラッグ配置。</div>
     <div class="card-tags">
-      <span class="card-tag">ドラッグ配置</span>
-      <span class="card-tag">グルーピング</span>
-      <span class="card-tag">構成管理</span>
+      <span class="card-tag">楽式マッピング</span>
+      <span class="card-tag">主題マッピング</span>
+      <span class="card-tag">スコア連携</span>
     </div>
     <div class="card-arrow">→</div>
   </a>
@@ -229,35 +310,125 @@ html,body{min-height:100vh;background:var(--bg);color:var(--tx);font-family:'Int
   <a class="app-card score" href="apps/score-editor-v2.html">
     <div class="card-icon">🎼</div>
     <div><span class="card-name">score-editor</span><span class="card-version">v2</span></div>
-    <div class="card-desc">ピアノロール・ドラムグリッド・アレンジメントビューを統合。vocal-lab / canvas / chord-lab / beat-lab の JSON を直接インポート可能。</div>
+    <div class="card-desc">複数パートのマルチトラック統合。全JSONを取り込んでフルスコアとして構築・MIDI出力。</div>
     <div class="card-tags">
+      <span class="card-tag">マルチパートスコア</span>
       <span class="card-tag">ピアノロール</span>
-      <span class="card-tag">DRUM</span>
-      <span class="card-tag">AI生成</span>
-      <span class="card-tag">MIDI出力</span>
+      <span class="card-tag">MIDI Format 1</span>
+    </div>
+    <div class="card-arrow">→</div>
+  </a>
+
+  <a class="app-card" href="apps/composition-canvas.html" style="border-color:rgba(34,211,238,0.2);">
+    <div class="card-icon">🎧</div>
+    <div><span class="card-name">composition-canvas</span><span class="card-version" style="background:rgba(34,211,238,0.1);color:#67e8f9;">音源解析</span></div>
+    <div class="card-desc">手持ちの音源ファイルをYINピッチ検出でメロディ抽出し、音名カードとして配置・score-editorへ送信。</div>
+    <div class="card-tags">
+      <span class="card-tag">音源解析</span>
+      <span class="card-tag">ピッチ検出</span>
+      <span class="card-tag">score連携</span>
+    </div>
+    <div class="card-arrow">→</div>
+  </a>
+
+  <a class="app-card" href="apps/chord-analyzer.html" style="border-color:rgba(251,113,133,0.2);">
+    <div class="card-icon">🔍</div>
+    <div><span class="card-name">chord-analyzer</span><span class="card-version" style="background:rgba(251,113,133,0.1);color:#fda4af;">解析</span></div>
+    <div class="card-desc">曲のBPM・キー・コード進行を解析し、suite-roadmapへ結果を引き渡して作り込みステップを開始。</div>
+    <div class="card-tags">
+      <span class="card-tag">BPM検出</span>
+      <span class="card-tag">キー判定</span>
+      <span class="card-tag">コード進行抽出</span>
+    </div>
+    <div class="card-arrow">→</div>
+  </a>
+
+  <a class="app-card" href="apps/suite-roadmap.html" style="border-color:rgba(96,165,250,0.2);">
+    <div class="card-icon">🛠</div>
+    <div><span class="card-name">suite-roadmap</span><span class="card-version" style="background:rgba(96,165,250,0.1);color:#93c5fd;">手順ガイド</span></div>
+    <div class="card-desc">chord-analyzerの解析結果を受け取り、chord-lab→beat-lab→vocal-lab→score-editorの順で作り込む手順を案内。</div>
+    <div class="card-tags">
+      <span class="card-tag">作り込み手順</span>
+      <span class="card-tag">自動データ生成</span>
     </div>
     <div class="card-arrow">→</div>
   </a>
 
 </div>
 
+<!-- WORKS: 楽曲分析プロジェクト（汎用） -->
+<div class="section">
+  <div class="section-head">
+    <span class="section-title">🎼 楽曲分析プロジェクト</span>
+    <button class="btn-sm primary" onclick="toggleWorkAddForm()">＋ 新しい曲を登録</button>
+  </div>
+  <div class="section-hint">分析したい曲を登録し、主題・和声・リズム・全体構成のセクションを好きなだけ追加して各アプリに送れます。</div>
+
+  <div class="works-box">
+    <div class="work-add-form" id="workAddForm">
+      <input type="text" id="newWorkName" placeholder="曲名（例：ラヴェル 弦楽四重奏曲 第1楽章）">
+      <input type="text" id="newWorkComposer" placeholder="作曲家（任意）">
+      <input type="text" id="newWorkKey" placeholder="調性・拍子など（任意）">
+      <button class="btn-sm primary" onclick="addWork()">登録</button>
+    </div>
+
+    <div class="work-list" id="work-list"></div>
+
+    <span class="sample-toggle" onclick="toggleSample()">サンプル例を見る（プロコフィエフ Op.34）</span>
+    <div class="sample-box" id="sample-box">
+      <div class="preset-box" style="margin-top:10px;">
+        <div class="preset-grid">
+          <div class="preset-card" onclick="loadOp34ThemeA()">
+            <div class="preset-title">1. 第1主題 (クレズマー)</div>
+            <div class="preset-desc">Clパートのト短調 (g-moll) 跳躍主題。跳躍と半音装飾音のフレーズカードデータ。</div>
+          </div>
+          <div class="preset-card" onclick="loadOp34ThemeB()">
+            <div class="preset-title">2. 第2主題 (カンタービレ)</div>
+            <div class="preset-desc">Vc / Pf による変ロ長調 (B♭-dur) の歌唱的旋律。和聲カードと連結。</div>
+          </div>
+          <div class="preset-card" onclick="loadOp34FullStructure()">
+            <div class="preset-title">3. ソナタ形式全構造スコア</div>
+            <div class="preset-desc">提示部・展開部・再現部をマッピングした、メロディ・和声・ベース・ドラムの空トラックテンプレート。</div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- QUICK-REF MATERIALS -->
+<div class="section">
+  <div class="section-head">
+    <span class="section-title">📥 quick-ref 素材</span>
+  </div>
+  <div class="section-hint">quick-refから送られた素材（メモ・音源メタ等）を受信します。クラウド同期設定が必要です。</div>
+  <div class="materials-banner" id="materialsBanner" onclick="toggleMaterialsList()">
+    <span class="mb-icon" id="mbIcon">📭</span>
+    <div class="mb-text">
+      <div class="mb-title" id="mbTitle">素材なし</div>
+      <div class="mb-sub" id="mbSub">quick-ref から素材を送ってください</div>
+    </div>
+    <span class="mb-toggle" id="mbToggle">▼</span>
+  </div>
+  <div id="materialList" style="display:none;"></div>
+</div>
+
 <!-- QUICK MOOD -->
 <div class="section">
   <div class="section-head">
-    <span class="section-title">今の気持ち</span>
+    <span class="section-title">今の気持ち / 音楽的着想メモ</span>
   </div>
-  <div class="section-hint">思いついたその場でメモ。感情タグはそのまま vocal-lab の AI補正のヒントになります。</div>
+  <div class="section-hint">分析時のインスピレーションをメモ。感情タグはそのまま vocal-lab の AI補正のヒントになります。</div>
   <div class="mood-box">
     <div class="mood-input-row">
-      <input type="text" id="mood-text" placeholder="どんな曲にしたい？ 一言メモ（例：夜明けに聴きたい感じ）">
+      <input type="text" id="mood-text" placeholder="例：この曲特有の哀愁と跳躍感を強調したい">
     </div>
     <div class="mood-chips" id="mood-chips">
-      <button class="mood-chip" data-mood="happy">😊 happy</button>
-      <button class="mood-chip" data-mood="sad">😢 sad</button>
-      <button class="mood-chip" data-mood="energetic">🔥 energetic</button>
-      <button class="mood-chip" data-mood="calm">🌙 calm</button>
       <button class="mood-chip" data-mood="nostalgic">🍂 nostalgic</button>
-      <button class="mood-chip" data-mood="angry">⚡ angry</button>
+      <button class="mood-chip" data-mood="energetic">🔥 allegro / energetic</button>
+      <button class="mood-chip" data-mood="sad">😢 cantabile / sad</button>
+      <button class="mood-chip" data-mood="calm">🌙 tranquil</button>
+      <button class="mood-chip" data-mood="angry">⚡ staccato / sharp</button>
     </div>
     <div class="mood-actions">
       <span class="mood-last" id="mood-last"></span>
@@ -285,45 +456,71 @@ html,body{min-height:100vh;background:var(--bg);color:var(--tx);font-family:'Int
     <label class="import-area" id="drop-area">
       <input type="file" accept=".json" onchange="importProject(this)">
       <div>📂 JSONファイルをここにドロップ</div>
-      <div style="margin-top:4px;font-size:11px;">vocal-lab / chord-lab / beat-lab のエクスポートJSONを読み込みます</div>
+      <div style="margin-top:4px;font-size:11px;">vocal-lab / chord-lab / beat-lab / score-editor のエクスポートJSONを読み込みます</div>
     </label>
+  </div>
+</div>
+
+<!-- CLOUD SYNC -->
+<div class="section">
+  <div class="section-head">
+    <span class="section-title">☁️ クラウド同期（端末をまたぐ）</span>
+  </div>
+  <div class="section-hint">曲登録・プロジェクトデータをsync-worker経由でクラウドに保存し、他の端末から取得できます。</div>
+  <div class="works-box">
+    <div class="gb-path-box" style="margin-bottom:8px;">
+      <span class="gb-path-label">エンドポイント</span>
+      <input type="text" id="syncEndpointInput" placeholder="https://sync-worker.xxxx.workers.dev">
+    </div>
+    <div class="gb-path-box">
+      <span class="gb-path-label">トークン</span>
+      <input type="password" id="syncTokenInput" placeholder="同期トークン">
+    </div>
+    <div class="mood-actions" style="margin-top:12px;">
+      <span class="mood-last" id="sync-last"></span>
+      <div style="display:flex;gap:6px;">
+        <button class="btn-sm" onclick="saveSyncSettings()">設定を保存</button>
+        <button class="btn-sm" onclick="pullFromCloud(true)">☁️ ダウンロード</button>
+        <button class="btn-sm primary" onclick="pushToCloud()">☁️ アップロード</button>
+      </div>
+    </div>
   </div>
 </div>
 
 <!-- GARAGEBAND -->
 <div class="section">
   <div class="section-head">
-    <span class="section-title">🎹 GarageBandへ渡す</span>
+    <span class="section-title">🎹 GarageBandへ渡す (マルチトラック対応)</span>
   </div>
-  <div class="section-hint">score-editor で書き出した MIDI を、iCloud Drive 経由で iPhone の GarageBand に渡すまでの流れです（Macをお使いの場合はAirDropも使えます）。</div>
+  <div class="section-hint">score-editor で書き出したトラックの .mid を iCloud Drive 経由で iPhone / Mac の GarageBand へ書き出します。</div>
 
   <div class="gb-steps">
     <div class="gb-step">
       <div class="gb-step-num">1</div>
       <div class="gb-step-title">score-editor で MIDI書き出し</div>
-      <div class="gb-step-desc">全トラックを統合し、Format 1 の .mid ファイルとして書き出します。</div>
+      <div class="gb-step-desc">全トラックを Format 1 の .mid ファイルとして統合書き出し。</div>
     </div>
     <div class="gb-step">
       <div class="gb-step-num">2</div>
-      <div class="gb-step-title">iCloud Drive で送る</div>
-      <div class="gb-step-desc">書き出した .mid ファイルを「iCloud Drive」フォルダ（下の保存先メモ参照）に置くと、iPhoneのFilesアプリに自動で同期されます。Macをお使いの場合はAirDropでも送れます。</div>
+      <div class="gb-step-title">iCloud Drive へ保存</div>
+      <div class="gb-step-desc">指定フォルダに保存すれば iPhone のファイルアプリに即時同期されます。</div>
     </div>
     <div class="gb-step">
       <div class="gb-step-num">3</div>
-      <div class="gb-step-title">GarageBandで開く</div>
-      <div class="gb-step-desc">「共有」→「ファイルで開く」から GarageBand を選択。各トラックが自動でパートに割り当てられます。</div>
+      <div class="gb-step-title">GarageBand で読み込み</div>
+      <div class="gb-step-desc">各トラックが自動的に個別のソフトウェア音源トラックに分割割り当てされます。</div>
     </div>
   </div>
 
   <div class="gb-formats">
-    <div class="gb-formats-title">対応フォーマット・トラック</div>
+    <div class="gb-formats-title">標準出力チャンネル割り当て</div>
     <div class="gb-format-grid">
-      <span class="gb-format-tag">MIDI Format 1 (.mid)</span>
-      <span class="gb-format-tag">Vocal Melody</span>
-      <span class="gb-format-tag">Canvas Melody</span>
-      <span class="gb-format-tag">Chord (ch1)</span>
-      <span class="gb-format-tag">Bass (ch2)</span>
-      <span class="gb-format-tag">Beat Drums (ch10 GM)</span>
+      <span class="gb-format-tag">Ch 1: Clarinet</span>
+      <span class="gb-format-tag">Ch 2: Violin I</span>
+      <span class="gb-format-tag">Ch 3: Violin II</span>
+      <span class="gb-format-tag">Ch 4: Viola</span>
+      <span class="gb-format-tag">Ch 5: Cello</span>
+      <span class="gb-format-tag">Ch 6: Piano</span>
     </div>
   </div>
 
@@ -344,49 +541,49 @@ html,body{min-height:100vh;background:var(--bg);color:var(--tx);font-family:'Int
     <div class="flow-card">
       <div class="flow-app"><div class="flow-dot" style="background:var(--acc)"></div>vocal-lab v3</div>
       <div class="flow-items">
-        <div class="flow-item">フレーズカード (JSON)</div>
-        <div class="flow-item">rawNotes + AI補正後</div>
-        <div class="flow-item">感情タグ付き</div>
+        <div class="flow-item">主題・モチーフフレーズ</div>
+        <div class="flow-item">装飾音・スケール補正</div>
+        <div class="flow-item">感情・表現タグ</div>
       </div>
     </div>
     <div class="flow-card">
-      <div class="flow-app"><div class="flow-dot" style="background:#ec4899"></div>作曲キャンバス</div>
+      <div class="flow-app"><div class="flow-dot" style="background:#ec4899"></div>構造キャンバス</div>
       <div class="flow-items">
-        <div class="flow-item">vl3_cards を自動読み込み</div>
-        <div class="flow-item">構成順にメロディ結合</div>
-        <div class="flow-item">score-editor へ送信</div>
+        <div class="flow-item">楽式ゾーンの配置</div>
+        <div class="flow-item">主題カードのグループ化</div>
+        <div class="flow-item">全構成マッピング</div>
       </div>
     </div>
     <div class="flow-card">
       <div class="flow-app"><div class="flow-dot" style="background:var(--green)"></div>chord-lab</div>
       <div class="flow-items">
-        <div class="flow-item">コード進行 (JSON)</div>
-        <div class="flow-item">MIDI (ch1:コード / ch2:ベース)</div>
-        <div class="flow-item">score-editor へ送信</div>
+        <div class="flow-item">転調パターン</div>
+        <div class="flow-item">コード進行の分解</div>
+        <div class="flow-item">伴奏パターン</div>
       </div>
     </div>
     <div class="flow-card">
       <div class="flow-app"><div class="flow-dot" style="background:var(--amber)"></div>beat-lab</div>
       <div class="flow-items">
-        <div class="flow-item">ドラムパターン (JSON)</div>
-        <div class="flow-item">MIDI (ch10 GMドラム)</div>
-        <div class="flow-item">score-editor へ送信</div>
+        <div class="flow-item">拍子・シンコペーション</div>
+        <div class="flow-item">刻みパターン抽出</div>
+        <div class="flow-item">打楽器置き換えリズム</div>
       </div>
     </div>
     <div class="flow-card">
       <div class="flow-app"><div class="flow-dot" style="background:var(--ai-hi)"></div>score-editor v2</div>
       <div class="flow-items">
-        <div class="flow-item">全トラック統合</div>
-        <div class="flow-item">vocal/canvas/chord/beat受信</div>
-        <div class="flow-item">MIDI (Format 1) 書き出し</div>
+        <div class="flow-item">マルチパート統合</div>
+        <div class="flow-item">セクションマーカー配置</div>
+        <div class="flow-item">MIDI Format 1 書き出し</div>
       </div>
     </div>
     <div class="flow-card">
       <div class="flow-app"><div class="flow-dot" style="background:var(--gb-hi)"></div>GarageBand</div>
       <div class="flow-items">
-        <div class="flow-item">MIDI (.mid) 受信</div>
-        <div class="flow-item">iCloud Drive / AirDrop経由</div>
-        <div class="flow-item">トラック自動割り当て</div>
+        <div class="flow-item">マルチチャンネル MIDI 受信</div>
+        <div class="flow-item">iCloud Drive / AirDrop</div>
+        <div class="flow-item">パートごとの音源割当</div>
       </div>
     </div>
   </div>
@@ -396,8 +593,7 @@ html,body{min-height:100vh;background:var(--bg);color:var(--tx);font-family:'Int
 <div class="footer">
   <div class="footer-logo">music-suite</div>
   <div class="footer-links">
-    <a class="footer-link" href="apps/vocal-lab-v2.html">vocal-lab v2（旧版）</a>
-    <a class="footer-link" href="apps/vocal-lab.html">vocal-lab v1（旧版）</a>
+    <a class="footer-link" href="apps/README.md">README</a>
   </div>
 </div>
 
@@ -421,7 +617,7 @@ function renderProjects() {
   const list = document.getElementById('project-list');
   const projects = loadProjects();
   if (!projects.length) {
-    list.innerHTML = '<div class="empty-proj">プロジェクトがありません。各アプリのJSONエクスポートをインポートしてください。</div>';
+    list.innerHTML = '<div class="empty-proj">プロジェクトがありません。曲を登録してセクションを追加するか、各アプリのJSONをインポートしてください。</div>';
     return;
   }
   list.innerHTML = '';
@@ -442,8 +638,8 @@ function renderProjects() {
       </div>
       <div class="proj-badges">
         ${p.cards?.length ? `<span class="proj-badge vocal">${p.cards.length}フレーズ</span>` : ''}
-        ${p.chords ? `<span class="proj-badge chord">コード</span>` : ''}
-        ${p.drums?.notes?.length ? `<span class="proj-badge beat">ドラム</span>` : ''}
+        ${src === 'chord-lab' && p.chords ? `<span class="proj-badge chord">コード</span>` : ''}
+        ${src === 'beat-lab' && p.drums?.notes?.length ? `<span class="proj-badge beat">ドラム</span>` : ''}
         <span class="proj-badge ${badgeClass}">${escHtml(src)}</span>
       </div>
       <button class="proj-del" onclick="deleteProject(${idx},event)" title="削除">✕</button>
@@ -456,9 +652,9 @@ function renderProjects() {
 function detectSource(p) {
   if (p.source) return p.source;
   if (p.cards)  return 'vocal-lab';
+  if (p.melody || p.bass) return 'score-editor';
   if (p.chords) return 'chord-lab';
-  if (p.drums && !p.tracks) return 'beat-lab';
-  if (p.tracks) return 'score-editor';
+  if (p.drums)  return 'beat-lab';
   return 'unknown';
 }
 
@@ -472,7 +668,6 @@ function openProject(p) {
   };
   const url = map[src];
   if (!url) { showToast('対応アプリが見つかりません'); return; }
-  // URLハッシュでデータを渡す（chord-lab/beat-lab/score-editor共通方式）
   const json = JSON.stringify(p);
   const b64  = btoa(unescape(encodeURIComponent(json)));
   window.location.href = url + '#import=' + encodeURIComponent(b64);
@@ -494,7 +689,6 @@ function importProject(input) {
   r.onload = ev => {
     try {
       const raw = JSON.parse(ev.target.result);
-      // vocal-lab は配列（カードのリスト）として出力されるので包む
       const data = Array.isArray(raw)
         ? { source:'vocal-lab', name:'vocal-lab project', cards: raw, updatedAt: new Date().toISOString() }
         : raw;
@@ -510,6 +704,228 @@ function importProject(input) {
   };
   r.readAsText(file);
   input.value = '';
+}
+
+/* ── WORKS（楽曲登録・汎用セクション分解） ── */
+const WORKS_KEY = 'msuite_works';
+
+const SECTION_TYPES = [
+  { key: 'vocal-lab',    icon: '🎤', label: '主題',   defaultName: '第1主題',   url: 'apps/vocal-lab-v3.html' },
+  { key: 'chord-lab',    icon: '🎹', label: '和声',   defaultName: '和声進行',   url: 'apps/chord-lab.html' },
+  { key: 'beat-lab',     icon: '🥁', label: 'リズム', defaultName: 'リズムパターン', url: 'apps/beat-lab.html' },
+  { key: 'score-editor', icon: '🎼', label: '全体構成', defaultName: '全体構成スコア', url: 'apps/score-editor-v2.html' },
+];
+
+function loadWorks() {
+  try { return JSON.parse(localStorage.getItem(WORKS_KEY) || '[]'); }
+  catch(_) { return []; }
+}
+function saveWorks(works) {
+  localStorage.setItem(WORKS_KEY, JSON.stringify(works));
+}
+
+function toggleWorkAddForm() {
+  document.getElementById('workAddForm').classList.toggle('show');
+}
+
+function addWork() {
+  const name = document.getElementById('newWorkName').value.trim();
+  if (!name) { showToast('曲名を入力してください'); return; }
+  const composer = document.getElementById('newWorkComposer').value.trim();
+  const key = document.getElementById('newWorkKey').value.trim();
+
+  const works = loadWorks();
+  works.push({
+    id: 'work-' + Date.now(),
+    name, composer, key,
+    createdAt: new Date().toISOString(),
+    expanded: true
+  });
+  saveWorks(works);
+
+  document.getElementById('newWorkName').value = '';
+  document.getElementById('newWorkComposer').value = '';
+  document.getElementById('newWorkKey').value = '';
+  document.getElementById('workAddForm').classList.remove('show');
+
+  renderWorks();
+  showToast(`「${name}」を登録しました`);
+}
+
+function deleteWork(workId, e) {
+  e.stopPropagation();
+  const works = loadWorks().filter(w => w.id !== workId);
+  saveWorks(works);
+  renderWorks();
+  showToast('曲を削除しました（生成済みのプロジェクトデータは残ります）');
+}
+
+function toggleWorkExpand(workId) {
+  const works = loadWorks();
+  const w = works.find(x => x.id === workId);
+  if (w) w.expanded = !w.expanded;
+  saveWorks(works);
+  renderWorks();
+}
+
+function skeletonForType(typeKey, sectionLabel, workName) {
+  const fullName = `${workName} - ${sectionLabel}`;
+  const base = { name: fullName, updatedAt: new Date().toISOString() };
+  switch (typeKey) {
+    case 'vocal-lab':
+      return { ...base, source: 'vocal-lab', cards: [] };
+    case 'chord-lab':
+      return { ...base, source: 'chord-lab', chords: { sections: [{ progression: [] }] } };
+    case 'beat-lab':
+      return { ...base, source: 'beat-lab', drums: { notes: [] } };
+    case 'score-editor':
+      return {
+        ...base, source: 'score-editor', bpm: 100, timeSig: 4,
+        melody: { notes: [] },
+        chords: { sections: [{ progression: [] }] },
+        bass: { notes: [] },
+        drums: { notes: [] }
+      };
+    default:
+      return base;
+  }
+}
+
+function addWorkSection(workId, typeKey) {
+  const works = loadWorks();
+  const w = works.find(x => x.id === workId);
+  if (!w) return;
+
+  const type = SECTION_TYPES.find(t => t.key === typeKey);
+  const input = document.getElementById('section-name-' + workId);
+  const label = (input?.value || '').trim() || type.defaultName;
+
+  const data = skeletonForType(typeKey, label, w.name);
+
+  const projects = loadProjects();
+  projects.push(data);
+  saveProjects(projects);
+
+  if (!w.sections) w.sections = [];
+  w.sections.push({ label, type: typeKey, createdAt: new Date().toISOString() });
+  saveWorks(works);
+
+  if (input) input.value = '';
+  renderWorks();
+  renderProjects();
+
+  const json = JSON.stringify(data);
+  const b64  = btoa(unescape(encodeURIComponent(json)));
+  window.location.href = type.url + '#import=' + encodeURIComponent(b64);
+}
+
+function renderWorks() {
+  const list = document.getElementById('work-list');
+  const works = loadWorks();
+
+  if (!works.length) {
+    list.innerHTML = '<div class="empty-proj">まだ曲が登録されていません。「＋ 新しい曲を登録」から始めてください。</div>';
+    return;
+  }
+
+  list.innerHTML = '';
+  works.slice().reverse().forEach(w => {
+    const el = document.createElement('div');
+    el.className = 'work-card';
+
+    const metaParts = [w.composer, w.key].filter(Boolean);
+    const sectionCount = (w.sections || []).length;
+
+    el.innerHTML = `
+      <div class="work-head" onclick="toggleWorkExpand('${w.id}')">
+        <div>
+          <div class="work-name">${escHtml(w.name)}</div>
+          <div class="work-meta">${escHtml(metaParts.join(' ・ '))}${metaParts.length ? ' ・ ' : ''}${sectionCount}セクション</div>
+        </div>
+        <button class="work-del" onclick="deleteWork('${w.id}', event)" title="削除">✕</button>
+      </div>
+      <div class="work-body ${w.expanded ? 'show' : ''}" id="work-body-${w.id}">
+        <div class="section-chip-row">
+          ${SECTION_TYPES.map(t => `<button class="section-chip" onclick="focusSectionInput('${w.id}','${t.key}')">${t.icon} ${t.label}を追加</button>`).join('')}
+        </div>
+        <div class="section-add-row">
+          <input type="text" id="section-name-${w.id}" placeholder="セクション名（例：第1主題、序奏 など）">
+        </div>
+        <div class="work-existing-sections">
+          ${(w.sections || []).map(s => {
+            const t = SECTION_TYPES.find(x => x.key === s.type);
+            return `<div class="work-section-item">${t ? t.icon : '📄'} ${escHtml(s.label)}</div>`;
+          }).join('')}
+        </div>
+      </div>
+    `;
+    list.appendChild(el);
+  });
+}
+
+// セクション種別ボタンを押すと、入力欄の名前（空なら種別ごとのデフォルト名）でそのまま追加する
+function focusSectionInput(workId, typeKey) {
+  addWorkSection(workId, typeKey);
+}
+
+/* ── PRESET LOADERS (PROKOFIEV OP.34 サンプル) ── */
+function toggleSample() {
+  document.getElementById('sample-box').classList.toggle('show');
+}
+
+function loadOp34ThemeA() {
+  const themeAData = {
+    source: 'vocal-lab',
+    name: 'Op.34 第1主題 (クレズマー/g-moll)',
+    updatedAt: new Date().toISOString(),
+    cards: [
+      { id: 'theme-a1', name: 'Cl 主題モチーフA1', notes: [67, 70, 69, 67, 66, 67], scale: 'Klezmer/HarmonicMinor', emotion: 'nostalgic' },
+      { id: 'theme-a2', name: 'Cl 主題モチーフA2 (跳躍)', notes: [67, 74, 73, 70, 69, 67], scale: 'Klezmer/HarmonicMinor', emotion: 'energetic' }
+    ]
+  };
+  savePresetAndOpen(themeAData, 'apps/vocal-lab-v3.html');
+}
+
+function loadOp34ThemeB() {
+  const themeBData = {
+    source: 'chord-lab',
+    name: 'Op.34 第2主題 (B♭-dur 和声)',
+    updatedAt: new Date().toISOString(),
+    chords: [
+      { chord: 'Bb', duration: 2 },
+      { chord: 'F/A', duration: 2 },
+      { chord: 'Gm', duration: 2 },
+      { chord: 'Dm/F', duration: 2 },
+      { chord: 'Eb', duration: 2 },
+      { chord: 'Cm7', duration: 2 },
+      { chord: 'F7', duration: 2 }
+    ]
+  };
+  savePresetAndOpen(themeBData, 'apps/chord-lab.html');
+}
+
+function loadOp34FullStructure() {
+  const fullData = {
+    source: 'score-editor',
+    name: 'Op.34 全曲構造スコア',
+    updatedAt: new Date().toISOString(),
+    bpm: 100, timeSig: 4,
+    melody: { notes: [] },
+    chords: { sections: [{ progression: [] }] },
+    bass: { notes: [] },
+    drums: { notes: [] }
+  };
+  savePresetAndOpen(fullData, 'apps/score-editor-v2.html');
+}
+
+function savePresetAndOpen(data, appUrl) {
+  const projects = loadProjects();
+  projects.push(data);
+  saveProjects(projects);
+  renderProjects();
+  const json = JSON.stringify(data);
+  const b64  = btoa(unescape(encodeURIComponent(json)));
+  window.location.href = appUrl + '#import=' + encodeURIComponent(b64);
 }
 
 /* ── DRAG & DROP ── */
@@ -619,6 +1035,141 @@ function copyIcloudPath() {
   );
 }
 
+/* ── CLOUD SYNC (sync-worker経由、端末をまたぐ) ── */
+const SYNC_ENDPOINT_KEY = 'msuite_sync_endpoint';
+const SYNC_TOKEN_KEY    = 'msuite_sync_token';
+
+function renderSyncSettings() {
+  document.getElementById('syncEndpointInput').value = localStorage.getItem(SYNC_ENDPOINT_KEY) || '';
+  document.getElementById('syncTokenInput').value    = localStorage.getItem(SYNC_TOKEN_KEY) || '';
+}
+function saveSyncSettings() {
+  const endpoint = document.getElementById('syncEndpointInput').value.trim().replace(/\/$/, '');
+  const token    = document.getElementById('syncTokenInput').value.trim();
+  localStorage.setItem(SYNC_ENDPOINT_KEY, endpoint);
+  localStorage.setItem(SYNC_TOKEN_KEY, token);
+  showToast('同期設定を保存しました');
+}
+function getSyncConfig() {
+  return {
+    endpoint: localStorage.getItem(SYNC_ENDPOINT_KEY) || '',
+    token: localStorage.getItem(SYNC_TOKEN_KEY) || ''
+  };
+}
+async function pushToCloud() {
+  const { endpoint, token } = getSyncConfig();
+  if (!endpoint || !token) { showToast('先にエンドポイントとトークンを保存してください'); return; }
+  const payload = { works: loadWorks(), projects: loadProjects() };
+  try {
+    const res = await fetch(`${endpoint}/sync/music-suite`, {
+      method: 'PUT',
+      headers: { 'Content-Type': 'application/json', Authorization: `Bearer ${token}` },
+      body: JSON.stringify({ data: payload })
+    });
+    if (!res.ok) throw new Error('HTTP ' + res.status);
+    document.getElementById('sync-last').textContent = '最終アップロード: ' + new Date().toLocaleString('ja-JP',{month:'short',day:'numeric',hour:'2-digit',minute:'2-digit'});
+    showToast('クラウドにアップロードしました');
+  } catch (e) {
+    showToast('アップロード失敗: ' + e.message);
+  }
+}
+async function pullFromCloud(manual) {
+  const { endpoint, token } = getSyncConfig();
+  if (!endpoint || !token) { if (manual) showToast('先にエンドポイントとトークンを保存してください'); return; }
+  if (manual && !confirm('クラウドのデータでこの端末の曲・プロジェクトを上書きします。よろしいですか？')) return;
+  try {
+    const res = await fetch(`${endpoint}/sync/music-suite`, {
+      headers: { Authorization: `Bearer ${token}` }
+    });
+    if (res.status === 404) { if (manual) showToast('クラウドにまだデータがありません'); return; }
+    if (!res.ok) throw new Error('HTTP ' + res.status);
+    const remote = await res.json();
+    if (remote?.data) {
+      if (Array.isArray(remote.data.works))    saveWorks(remote.data.works);
+      if (Array.isArray(remote.data.projects)) saveProjects(remote.data.projects);
+      renderWorks();
+      renderProjects();
+      document.getElementById('sync-last').textContent = '最終ダウンロード: ' + new Date().toLocaleString('ja-JP',{month:'short',day:'numeric',hour:'2-digit',minute:'2-digit'});
+      if (manual) showToast('クラウドから取得しました');
+    }
+  } catch (e) {
+    if (manual) showToast('ダウンロード失敗: ' + e.message);
+  }
+}
+
+/* ── QUICK-REF MATERIALS（受信のみ。送信側はquick-refに実装） ── */
+const MATERIALS_KEY = 'msuite_materials';
+let materials = [];
+let includedIds = new Set();
+let materialsOpen = false;
+
+async function pullMaterialsFromCloud() {
+  const { endpoint, token } = getSyncConfig();
+  if (!endpoint || !token) return;
+  try {
+    const res = await fetch(`${endpoint}/sync/music-suite-materials`, {
+      headers: { Authorization: `Bearer ${token}` }
+    });
+    if (!res.ok) return;
+    const remote = await res.json();
+    if (remote?.data) localStorage.setItem(MATERIALS_KEY, JSON.stringify(remote.data));
+  } catch (e) { console.error('materials pull failed', e); }
+}
+
+function loadMaterials() {
+  const raw = localStorage.getItem(MATERIALS_KEY);
+  if (!raw) return;
+  try {
+    const data = JSON.parse(raw);
+    materials = data.materials || [];
+    includedIds = new Set(materials.map((_, i) => i));
+    const tag = data.tag ? `#${data.tag}` : '全項目';
+    const dateStr = data.exportedAt
+      ? new Date(data.exportedAt).toLocaleString('ja-JP',{month:'numeric',day:'numeric',hour:'2-digit',minute:'2-digit'})
+      : '';
+    document.getElementById('mbIcon').textContent  = materials.length ? '📥' : '📭';
+    document.getElementById('mbTitle').textContent = materials.length ? `${materials.length}件 (${tag})` : '素材なし';
+    document.getElementById('mbSub').textContent   = materials.length ? `受信 ${dateStr}` : 'quick-ref から素材を送ってください';
+  } catch (e) {}
+}
+
+function renderMaterialList() {
+  const el = document.getElementById('materialList');
+  if (!materials.length) {
+    el.innerHTML = `<div class="state-box">quick-ref から「music-suiteに送る」を実行してください</div>`;
+    return;
+  }
+  el.innerHTML = '';
+  materials.forEach((m, i) => {
+    const inc = includedIds.has(i);
+    const card = document.createElement('div');
+    card.className = `material-card ${inc ? '' : 'excluded'}`;
+    const snippet = m.body || (m.fields || []).map(f => `${f.key}: ${f.value}`).join(' / ') || '';
+    const tags = (m.tags || []).map(t => `<span class="mc-chip">#${escHtml(t)}</span>`).join('');
+    card.innerHTML = `
+      <button class="mc-toggle" data-i="${i}">${inc ? '✓' : ''}</button>
+      <div class="mc-body">
+        <div class="mc-title">${escHtml(m.title || '(無題)')}</div>
+        ${snippet ? `<div class="mc-snippet">${escHtml(snippet)}</div>` : ''}
+        ${tags ? `<div class="mc-chips">${tags}</div>` : ''}
+      </div>`;
+    card.querySelector('.mc-toggle').addEventListener('click', (e) => {
+      e.stopPropagation();
+      if (includedIds.has(i)) includedIds.delete(i); else includedIds.add(i);
+      renderMaterialList();
+    });
+    el.appendChild(card);
+  });
+}
+
+function toggleMaterialsList() {
+  materialsOpen = !materialsOpen;
+  const listEl = document.getElementById('materialList');
+  listEl.style.display = materialsOpen ? 'flex' : 'none';
+  if (materialsOpen) { listEl.style.flexDirection = 'column'; renderMaterialList(); }
+  document.getElementById('mbToggle').textContent = materialsOpen ? '▲' : '▼';
+}
+
 /* ── UTILS ── */
 function escHtml(s) { return String(s||'').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;'); }
 function showToast(msg) {
@@ -628,9 +1179,21 @@ function showToast(msg) {
 }
 
 /* ── INIT ── */
+renderWorks();
 renderProjects();
 renderMood();
 renderIcloudPath();
+renderSyncSettings();
+loadMaterials();
+(async () => {
+  // 初回起動（この端末にまだ何も無い場合）だけ自動でクラウドから取得する。
+  // 既にローカルにデータがある場合は、上書き事故を避けるため手動の「☁️ ダウンロード」ボタンに委ねる。
+  if (!loadWorks().length && !loadProjects().length) {
+    await pullFromCloud(false);
+  }
+  await pullMaterialsFromCloud();
+  loadMaterials();
+})();
 </script>
 </body>
 </html>

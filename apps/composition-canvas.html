@@ -531,13 +531,15 @@ function sendToScoreEditor() {
 
   const encoded =
     btoa(
-      encodeURIComponent(
-        JSON.stringify(project)
+      unescape(
+        encodeURIComponent(
+          JSON.stringify(project)
+        )
       )
     );
 
   window.location.href =
-    "score-editor-v2.html#import=" + encoded;
+    "score-editor-v2.html#import=" + encodeURIComponent(encoded);
 }
 /* ───────────────────────────────
    ページ読み込み時
