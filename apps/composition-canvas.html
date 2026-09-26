@@ -302,8 +302,8 @@ async function analyzeAudioBuffer(arrayBuf, displayName) {
     const segments = segmentNotes(notes);
     console.log("segments:", segments);
 
-    // 保存
-    state.lastNotes = notes;
+    // 保存(sendToScoreEditor()は{note, length}形式を期待するのでsegmentsを入れる)
+    state.lastNotes = segments;
     state.lastSegments = segments;
 
     // C：カード表示
