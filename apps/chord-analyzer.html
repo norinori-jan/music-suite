@@ -54,6 +54,14 @@ main { max-width: 720px; margin: 0 auto; padding: 12px 16px; }
 
 .roman-summary { display: flex; flex-wrap: wrap; gap: 4px; margin-top: 8px; }
 .roman-badge { font-size: 13px; font-weight: 700; background: rgba(175,82,222,0.1); color: var(--purple); padding: 4px 10px; border-radius: 100px; }
+.roman-count { font-size: 11px; font-weight: 600; opacity: 0.7; }
+.section-timeline { display:flex; flex-direction:column; gap:6px; }
+.section-block { display:flex; align-items:center; gap:10px; background: rgba(255,255,255,0.03); border:1px solid rgba(255,255,255,0.08); border-radius:10px; padding:8px 12px; }
+.section-block .sec-time { font-size:11px; color: var(--sub, #888); min-width:88px; }
+.section-block .sec-label { font-size:13px; font-weight:700; }
+.section-block .sec-repeat { font-size:11px; opacity:0.75; }
+.section-block.high { border-color: rgba(255,159,10,0.4); background: rgba(255,159,10,0.08); }
+.section-block.low { border-color: rgba(120,120,140,0.3); }
 .arrow { color: var(--sub); font-size: 12px; align-self: center; }
 
 .export-bar { display: flex; gap: 8px; margin-top: 14px; }
@@ -106,6 +114,14 @@ main { max-width: 720px; margin: 0 auto; padding: 12px 16px; }
       <div class="summary-card"><div class="val" id="bpmVal">--</div><div class="lbl">推定BPM</div></div>
       <div class="summary-card"><div class="val" id="keyVal">--</div><div class="lbl">推定キー</div></div>
       <div class="summary-card"><div class="val" id="chordCountVal">--</div><div class="lbl">検出コード数</div></div>
+    </div>
+
+    <div class="panel-label" style="margin-top:16px;">曲の構成(推定)</div>
+    <div class="section-timeline" id="sectionTimeline"></div>
+    <div class="note-box">
+      4秒単位のブロックで和音の響き(クロマ特徴量)が似ている区間をまとめ、周囲との音量差から
+      イントロ・サビなどの「候補」を推定しています。同じパターンが後で繰り返し出てくる区間には🔁が付きます。
+      あくまで機械的な目安なので、実際の構成とは異なる場合があります。
     </div>
 
     <div class="panel-label" style="margin-top:16px;">コード進行(時系列)</div>
@@ -313,6 +329,7 @@ let detectedKey = null;
 let detectedBpm = null;
 let modulationInfo = null;
 let structFeatures = null;
+let sectionInfo = [];
 
 document.getElementById('fileInput').addEventListener('change', async (e) => {
   const file = e.target.files[0];
@@ -379,9 +396,28 @@ async function analyze(audioBuffer) {
   });
   if (cur) segments.push(cur);
 
-  // 短すぎる(1区間0.3秒未満)区間は前後にマージ
-  chordSegments = segments.filter(s => (s.endTime - s.startTime) >= 0.3);
-  if (chordSegments.length === 0) chordSegments = segments;
+  // 短すぎる(1区間0.3秒未満)区間は削除せず、直前の区間に吸収する(先頭は例外的にそのまま残す)
+  const MIN_SEG_DURATION = 0.3;
+  const absorbed = [];
+  segments.forEach(seg => {
+    const dur = seg.endTime - seg.startTime;
+    if (dur < MIN_SEG_DURATION && absorbed.length > 0) {
+      absorbed[absorbed.length - 1].endTime = seg.endTime;
+    } else {
+      absorbed.push({ ...seg });
+    }
+  });
+  // 吸収した結果、同じコード名の区間が隣り合ってしまった場合は1つにまとめる
+  const collapsed = [];
+  absorbed.forEach(seg => {
+    const last = collapsed[collapsed.length - 1];
+    if (last && last.name === seg.name) {
+      last.endTime = seg.endTime;
+    } else {
+      collapsed.push({ ...seg });
+    }
+  });
+  chordSegments = collapsed.length ? collapsed : segments;
 
   // --- キー・テンポ推定 ---
   detectedKey = detectKey(aggChroma);
@@ -401,6 +437,7 @@ async function analyze(audioBuffer) {
 
   // --- 構造分析(層1: 客観的な特徴量) ---
   structFeatures = computeStructuralFeatures(chromaFrames, energyEnvelope, hopSec);
+  sectionInfo = detectSections(chromaFrames, energyEnvelope, hopSec);
 
   document.getElementById('progressBar').classList.remove('visible');
   document.getElementById('inputStatus').textContent = `✅ 解析完了`;
@@ -418,6 +455,84 @@ function cosineSim(a, b) {
   for (let i=0;i<a.length;i++) { dot += a[i]*b[i]; na += a[i]*a[i]; nb += b[i]*b[i]; }
   const denom = Math.sqrt(na) * Math.sqrt(nb);
   return denom > 0 ? dot / denom : 0;
+}
+
+// ============================================================
+// 曲の構成推定(層1.5: イントロ/Aメロ/サビ候補・繰り返しパターン検出)
+// 4秒ブロックのクロマをまとめ、似ているブロックを連結して区間化し、
+// エネルギー水準と繰り返し有無からラベルの当たりをつける(あくまで目安)
+// ============================================================
+function detectSections(chromaFrames, energyEnvelope, hopSec) {
+  if (!chromaFrames.length) return [];
+  const BLOCK_SEC = 4;
+  const framesPerBlock = Math.max(1, Math.round(BLOCK_SEC / hopSec));
+
+  const blocks = [];
+  for (let i = 0; i < chromaFrames.length; i += framesPerBlock) {
+    const chromaSlice = chromaFrames.slice(i, i + framesPerBlock);
+    const energySlice = energyEnvelope.slice(i, i + framesPerBlock);
+    const avgChroma = new Array(12).fill(0);
+    chromaSlice.forEach(c => c.forEach((v, idx) => avgChroma[idx] += v));
+    for (let k = 0; k < 12; k++) avgChroma[k] /= chromaSlice.length;
+    blocks.push({
+      startTime: i * hopSec,
+      endTime: Math.min(chromaFrames.length, i + framesPerBlock) * hopSec,
+      chroma: avgChroma,
+      energy: mean(energySlice)
+    });
+  }
+
+  // 隣接ブロックのクロマが似ていれば同じ区間(run)としてまとめる
+  const SIMILARITY_MERGE = 0.93;
+  const runs = [];
+  blocks.forEach(b => {
+    const last = runs[runs.length - 1];
+    if (last && cosineSim(last.chroma, b.chroma) >= SIMILARITY_MERGE) {
+      last.endTime = b.endTime;
+      for (let k = 0; k < 12; k++) last.chroma[k] = (last.chroma[k] + b.chroma[k]) / 2;
+      last.energy = (last.energy + b.energy) / 2;
+    } else {
+      runs.push({ startTime: b.startTime, endTime: b.endTime, chroma: [...b.chroma], energy: b.energy });
+    }
+  });
+  if (!runs.length) return [];
+
+  // エネルギーの平均・標準偏差(区間ごとの相対的な盛り上がりを見るため)
+  const energies = runs.map(r => r.energy);
+  const avgE = mean(energies);
+  const stdE = Math.sqrt(mean(energies.map(e => (e - avgE) ** 2)));
+
+  // 区間同士のクロマ類似度から「同じパターンの繰り返し」をグループ化
+  const REPEAT_THRESHOLD = 0.88;
+  const groupOf = new Array(runs.length).fill(null);
+  let nextGroupId = 1;
+  for (let i = 0; i < runs.length; i++) {
+    for (let j = i + 1; j < runs.length; j++) {
+      if (groupOf[j] !== null) continue;
+      if (cosineSim(runs[i].chroma, runs[j].chroma) >= REPEAT_THRESHOLD) {
+        if (groupOf[i] === null) groupOf[i] = nextGroupId++;
+        groupOf[j] = groupOf[i];
+      }
+    }
+  }
+  const groupCounts = {};
+  groupOf.forEach(g => { if (g !== null) groupCounts[g] = (groupCounts[g] || 0) + 1; });
+
+  return runs.map((r, i) => {
+    let label;
+    if (i === 0 && r.energy < avgE - 0.3 * stdE) label = 'イントロ候補';
+    else if (i === runs.length - 1 && r.energy < avgE - 0.3 * stdE) label = 'アウトロ候補';
+    else if (r.energy > avgE + 0.4 * stdE) label = 'サビ候補';
+    else label = 'Aメロ/Bメロ候補';
+    const group = groupOf[i];
+    return {
+      startTime: r.startTime,
+      endTime: r.endTime,
+      energy: r.energy,
+      label,
+      repeatCount: group !== null ? groupCounts[group] : 1
+    };
+  });
 }
 
 // 音量の立ち上がり(オンセット)検出 → 拍・打点の間隔のばらつきを見る
@@ -597,6 +712,20 @@ function renderResults() {
   document.getElementById('keyVal').textContent = `${NOTE_NAMES[detectedKey.root]}${detectedKey.mode==='major'?'':'m'}`;
   document.getElementById('chordCountVal').textContent = chordSegments.length;
 
+  const sectionEl = document.getElementById('sectionTimeline');
+  sectionEl.innerHTML = sectionInfo.map(s => {
+    const mm1 = Math.floor(s.startTime/60), ss1 = Math.floor(s.startTime%60);
+    const mm2 = Math.floor(s.endTime/60), ss2 = Math.floor(s.endTime%60);
+    const cls = s.label === 'サビ候補' ? 'high' : (s.label === 'イントロ候補' || s.label === 'アウトロ候補') ? 'low' : '';
+    const repeat = s.repeatCount > 1 ? `<span class="sec-repeat">🔁 同じパターン計${s.repeatCount}回</span>` : '';
+    return `<div class="section-block ${cls}">
+      <span class="sec-time">${mm1}:${String(ss1).padStart(2,'0')}–${mm2}:${String(ss2).padStart(2,'0')}</span>
+      <span class="sec-label">${s.label}</span>
+      ${repeat}
+    </div>`;
+  }).join('');
+
+
   const timeline = document.getElementById('chordTimeline');
   timeline.innerHTML = chordSegments.map(s => {
     const roman = toRoman(s, detectedKey);
@@ -609,8 +738,18 @@ function renderResults() {
   }).join('');
 
   const romanSeq = chordSegments.map(s => toRoman(s, detectedKey));
+  // 表示上、隣り合う同じローマ数字ラベルは「×N」でまとめる(転送データ自体には影響しない)
+  const romanGroups = [];
+  romanSeq.forEach(r => {
+    const last = romanGroups[romanGroups.length - 1];
+    if (last && last.roman === r) { last.count++; }
+    else { romanGroups.push({ roman: r, count: 1 }); }
+  });
   const el = document.getElementById('romanSummary');
-  el.innerHTML = romanSeq.map((r,i) => `<span class="roman-badge">${r}</span>${i<romanSeq.length-1?'<span class="arrow">→</span>':''}`).join('');
+  el.innerHTML = romanGroups.map((g,i) => {
+    const label = g.count > 1 ? `${g.roman} <span class="roman-count">×${g.count}</span>` : g.roman;
+    return `<span class="roman-badge">${label}</span>${i<romanGroups.length-1?'<span class="arrow">→</span>':''}`;
+  }).join('');
 
   const modBox = document.getElementById('modulationNote');
   if (modulationInfo) {
@@ -643,7 +782,7 @@ document.getElementById('toQuickRefBtn').addEventListener('click', () => {
   const body = `キー: ${NOTE_NAMES[detectedKey.root]}${detectedKey.mode==='major'?' メジャー':' マイナー'}\nBPM: ${detectedBpm}\n\nコード進行:\n${chordSeq}\n\n機能分析:\n${romanSeq}`;
   const payload = { title: 'chord-analyzer: コード進行メモ', body, tags:['music','chord-analyzer'], createdAt: new Date().toISOString() };
   localStorage.setItem('cv_transfer', JSON.stringify(payload));
-  window.open(url, '_blank');
+  window.location.href = url;
 });
 
 document.getElementById('toRoadmapBtn').addEventListener('click', () => {
@@ -662,7 +801,7 @@ document.getElementById('toRoadmapBtn').addEventListener('click', () => {
     }))
   };
   localStorage.setItem('ca_transfer', JSON.stringify(payload));
-  window.open(url, '_blank');
+  window.location.href = url;
 });
 
 // 保存済みのClaude APIキーを復元
