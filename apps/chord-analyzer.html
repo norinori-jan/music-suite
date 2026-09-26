@@ -103,6 +103,10 @@ main { max-width: 720px; margin: 0 auto; padding: 12px 16px; }
       <label for="fileInput">📁 曲のファイルを選択(mp3 / m4a / wav)</label>
       <input type="file" id="fileInput" accept="audio/*">
     </div>
+    <div class="input-row">
+      <button type="button" id="cloudUploadBtn">☁️ クラウドにアップロード</button>
+      <button type="button" id="cloudOpenBtn">☁️ クラウドから開く</button>
+    </div>
     <div class="status-line" id="inputStatus"></div>
     <div class="progress-bar" id="progressBar"><div class="progress-fill" id="progressFill"></div></div>
     <div class="status-line" id="progressText"></div>
@@ -331,19 +335,101 @@ let modulationInfo = null;
 let structFeatures = null;
 let sectionInfo = [];
 
+let lastFile = null;
+
 document.getElementById('fileInput').addEventListener('change', async (e) => {
   const file = e.target.files[0];
   if (!file) return;
+  lastFile = file;
+  const arrayBuf = await file.arrayBuffer();
+  await analyzeFromArrayBuffer(arrayBuf, file.name);
+});
+
+/* ── クラウド同期(sync-worker /attachments/music-suite) ── */
+/* music-suiteのindex.htmlで設定したエンドポイント/トークンをそのまま使う */
+const CLOUD_ENDPOINT_KEY = 'msuite_sync_endpoint';
+const CLOUD_TOKEN_KEY = 'msuite_sync_token';
+
+function getCloudConfig() {
+  return {
+    endpoint: (localStorage.getItem(CLOUD_ENDPOINT_KEY) || '').replace(/\/$/, ''),
+    token: localStorage.getItem(CLOUD_TOKEN_KEY) || ''
+  };
+}
+
+document.getElementById('cloudUploadBtn').addEventListener('click', async () => {
+  if (!lastFile) { alert('先に曲のファイルを選択してください'); return; }
+  const { endpoint, token } = getCloudConfig();
+  if (!endpoint || !token) {
+    alert('music-suiteのトップページ(index.html)で先に「☁️ クラウド同期」のエンドポイント/トークンを設定してください');
+    return;
+  }
+  document.getElementById('inputStatus').textContent = 'アップロード中…';
+  try {
+    const id = 'audio-' + Date.now();
+    const buf = await lastFile.arrayBuffer();
+    const res = await fetch(`${endpoint}/attachments/music-suite/${id}`, {
+      method: 'PUT',
+      headers: {
+        Authorization: `Bearer ${token}`,
+        'X-Item-Id': id,
+        'X-Mime-Type': lastFile.type || 'audio/mpeg',
+        'X-File-Name': encodeURIComponent(lastFile.name),
+        'X-Updated-At': String(Date.now())
+      },
+      body: buf
+    });
+    if (!res.ok) throw new Error('HTTP ' + res.status);
+    document.getElementById('inputStatus').textContent = `「${lastFile.name}」をクラウドにアップロードしました`;
+  } catch (e) {
+    document.getElementById('inputStatus').textContent = 'アップロード失敗: ' + e.message;
+  }
+});
+
+document.getElementById('cloudOpenBtn').addEventListener('click', async () => {
+  const { endpoint, token } = getCloudConfig();
+  if (!endpoint || !token) {
+    alert('先にmusic-suiteのトップページでクラウド同期を設定してください');
+    return;
+  }
+  try {
+    const listRes = await fetch(`${endpoint}/attachments/music-suite`, {
+      headers: { Authorization: `Bearer ${token}` }
+    });
+    if (!listRes.ok) throw new Error('HTTP ' + listRes.status);
+    const data = await listRes.json();
+    const list = (data.attachments || []).filter(a => (a.mimeType || '').startsWith('audio'));
+    if (!list.length) { alert('クラウドに音源がありません。PC側で先にアップロードしてください'); return; }
+    const menu = list
+      .map((a, i) => `${i + 1}: ${a.name || a.id} (${new Date(a.updatedAt).toLocaleString('ja-JP')})`)
+      .join('\n');
+    const choice = prompt(`読み込む番号を入力してください:\n${menu}`, '1');
+    const idx = parseInt(choice, 10) - 1;
+    if (isNaN(idx) || !list[idx]) return;
+
+    document.getElementById('inputStatus').textContent = 'ダウンロード中…';
+    const res = await fetch(`${endpoint}/attachments/music-suite/${list[idx].id}`, {
+      headers: { Authorization: `Bearer ${token}` }
+    });
+    if (!res.ok) throw new Error('HTTP ' + res.status);
+    const arrayBuf = await res.arrayBuffer();
+    const name = decodeURIComponent(res.headers.get('X-File-Name') || list[idx].name || 'cloud-audio');
+    await analyzeFromArrayBuffer(arrayBuf, name);
+  } catch (e) {
+    document.getElementById('inputStatus').textContent = 'クラウドからの読み込みに失敗: ' + e.message;
+  }
+});
+
+async function analyzeFromArrayBuffer(arrayBuf, name) {
   document.getElementById('inputStatus').textContent = '読み込み中…';
   document.getElementById('progressBar').classList.add('visible');
 
-  const arrayBuf = await file.arrayBuffer();
   const audioBuffer = await audioCtx.decodeAudioData(arrayBuf);
   document.getElementById('inputStatus').textContent =
-    `解析中: ${file.name}(${audioBuffer.duration.toFixed(0)}秒)`;
+    `解析中: ${name}(${audioBuffer.duration.toFixed(0)}秒)`;
 
   await analyze(audioBuffer);
-});
+}
 
 async function analyze(audioBuffer) {
   const sampleRate = audioBuffer.sampleRate;
