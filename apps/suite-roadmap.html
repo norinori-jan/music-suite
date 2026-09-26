@@ -330,7 +330,7 @@ function openApp(settingKey, promptLabel, defaultUrl, payload) {
   const json = JSON.stringify(payload);
   const b64 = btoa(unescape(encodeURIComponent(json)));
   const target = url + (url.includes('#') ? '' : '#') + 'import=' + encodeURIComponent(b64);
-  window.open(target, '_blank');
+  window.location.href = target;
 }
 
 function buildSteps() {
@@ -343,20 +343,20 @@ function buildSteps() {
       title: '① chord-labでコード進行を入力する',
       desc: `検出されたコード進行(${data.chords.map(c=>c.name).join(' → ')})を送ります。キーは chord-lab が対応する${CHORD_LAB_KEYS.join('/')}のいずれかに変換して渡します(検出キー: ${data.key} → ${chordLabKey})。まずはこの進行を鳴らして、実際の響きを確認しましょう。`,
       actionLabel: 'chord-labを開く',
-      action: () => openApp('chordLabUrl', 'chord-labのURL', 'https://norinori-jan.github.io/music-suite/apps/chord-lab.html', buildChordLabPayload()),
+      action: () => openApp('chordLabUrl', 'chord-labのURL', 'chord-lab.html', buildChordLabPayload()),
       note: chordLabKey !== data.key ? `⚠️ chord-labは${CHORD_LAB_KEYS.join('/')}のみ対応のため、キーを${chordLabKey}に近似しています。` : ''
     },
     {
       title: '② beat-labでドラムパターンを作る',
       desc: `BPM ${data.bpm}、コード数と同じ${data.chords.length}小節分の基本パターン(キック・スネア・ハイハット)を叩き台として送ります。ここから抜き差ししてグルーヴを作ってください。`,
       actionLabel: 'beat-labを開く',
-      action: () => openApp('beatLabUrl', 'beat-labのURL', 'https://norinori-jan.github.io/music-suite/apps/beat-lab.html', buildBeatLabPayload())
+      action: () => openApp('beatLabUrl', 'beat-labのURL', 'beat-lab.html', buildBeatLabPayload())
     },
     {
       title: '③ ベースラインの叩き台を確認する',
       desc: `各コードのルート音(${bassLine.map(b => NOTE_NAMES[b.pitch % 12]).join(', ')})を初期案として用意しました。まずはこれで鳴らし、経過音を足すなどして動きをつけると本格的になります。`,
       actionLabel: 'score-editorでベースを見る',
-      action: () => openApp('scoreEditorUrl', 'score-editor-v2のURL', 'https://norinori-jan.github.io/music-suite/apps/score-editor-v2.html', {
+      action: () => openApp('scoreEditorUrl', 'score-editor-v2のURL', 'score-editor-v2.html', {
         version: '1.0', source: 'suite-roadmap', name: `${data.key} bass sketch`, bpm: data.bpm, timeSig: '4/4',
         melody: { notes: [] }, chords: buildScoreEditorChords(), bass: { notes: bassLine }, drums: { notes: [] }
       })
@@ -365,13 +365,13 @@ function buildSteps() {
       title: '④ vocal-labでメロディを作る',
       desc: `キー${data.key}の${data.keyMode==='major'?'メジャー':'マイナー'}スケール(${scaleNotes.join(' - ')})をもとに、各コードのルート音を1拍ずつ置いた「たたき台メロディ」を1枚のフレーズカードとして送ります。他のステップと同じくワンタップで開いて自動的に読み込まれます。`,
       actionLabel: 'vocal-labを開く',
-      action: () => openApp('vocalLabUrl', 'vocal-labのURL', 'https://norinori-jan.github.io/music-suite/apps/vocal-lab.html', buildVocalLabPayload())
+      action: () => openApp('vocalLabUrl', 'vocal-labのURL', 'vocal-lab-v3.html', buildVocalLabPayload())
     },
     {
       title: '⑤ score-editor-v2で全部まとめる',
       desc: 'コード・ベース・ドラム・メロディが揃ったら、score-editor-v2で1つの曲としてまとめます。ここまでのステップを行き来しながら微調整するのが自然な流れです。',
       actionLabel: 'score-editor-v2を開く(ベース付き)',
-      action: () => openApp('scoreEditorUrl', 'score-editor-v2のURL', 'https://norinori-jan.github.io/music-suite/apps/score-editor-v2.html', {
+      action: () => openApp('scoreEditorUrl', 'score-editor-v2のURL', 'score-editor-v2.html', {
         version: '1.0', source: 'suite-roadmap', name: `${data.key} full sketch`, bpm: data.bpm, timeSig: '4/4',
         melody: { notes: [] }, chords: buildScoreEditorChords(), bass: { notes: bassLine }, drums: { notes: [] }
       })
