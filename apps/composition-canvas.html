@@ -43,6 +43,11 @@
 🎼 score-editorへ送る
 </button>
 
+<button class="btn primary"
+        onclick="sendToVocalLab()">
+🎤 vocal-labへ送る
+</button>
+
 <!-- hidden input はこれ1個だけ -->
 <input
   type="file"
@@ -596,54 +601,57 @@ function loadCardPositions() {
 /* ───────────────────────────────
    score-editor-v2へ送信
 ────────────────────────────── */
-function sendToScoreEditor() {
-
-  if (!state.lastNotes || state.lastNotes.length === 0) {
-    showToast("送信するメロディがありません");
-    return;
-  }
-
+function buildMelodyProject(sourceName) {
   const melody = [];
-
   let beat = 0;
 
   state.lastNotes.forEach(seg => {
-
     melody.push({
       pitch: noteToMidi(seg.note),
       startBeat: beat,
       durationBeats: seg.length / 4,
       vel: 90
     });
-
     beat += seg.length / 4;
   });
 
-  const project = {
+  return {
     version: "1.0",
-    source: "composition-canvas",
+    source: sourceName,
     name: "Imported Melody",
     bpm: 120,
     timeSig: 4,
-
-    melody: {
-      notes: melody
-    },
-
+    melody: { notes: melody },
     exported: new Date().toISOString()
   };
+}
 
-  const encoded =
-    btoa(
-      unescape(
-        encodeURIComponent(
-          JSON.stringify(project)
-        )
-      )
-    );
+function encodeForImport(project) {
+  return encodeURIComponent(
+    btoa(unescape(encodeURIComponent(JSON.stringify(project))))
+  );
+}
 
-  window.location.href =
-    "score-editor-v2.html#import=" + encodeURIComponent(encoded);
+function sendToScoreEditor() {
+  if (!state.lastNotes || state.lastNotes.length === 0) {
+    showToast("送信するメロディがありません");
+    return;
+  }
+  const project = buildMelodyProject("composition-canvas");
+  window.location.href = "score-editor-v2.html#import=" + encodeForImport(project);
+}
+
+function sendToVocalLab() {
+  if (!state.lastNotes || state.lastNotes.length === 0) {
+    showToast("送信するメロディがありません");
+    return;
+  }
+  // vocal-lab側のnormalizeImportedCards()には
+  // {source, melody:{notes:[{pitch,startBeat,durationBeats,vel}]}}形式を
+  // フレーズカードへ自動変換する専用ロジックが既にあるため、
+  // score-editor向けと全く同じペイロードをそのまま送れる。
+  const project = buildMelodyProject("composition-canvas");
+  window.location.href = "vocal-lab-v3.html#import=" + encodeForImport(project);
 }
 /* ───────────────────────────────
    ページ読み込み時
