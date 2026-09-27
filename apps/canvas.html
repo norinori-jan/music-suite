@@ -2,7 +2,7 @@
 <html lang="ja">
 <head>
 <meta charset="UTF-8">
-<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover,user-scalable=no">
+<meta name="viewport" content="width=device-width,initial-scale=1, viewport-fit=cover">
 <meta name="apple-mobile-web-app-capable" content="yes">
 <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
 <meta name="apple-mobile-web-app-title" content="作曲キャンバス">
@@ -19,6 +19,19 @@
   --ai:#a855f7;--ai-hi:#c084fc;--ai-bg:rgba(168,85,247,0.1);--ai-bd:rgba(168,85,247,0.25);
   --purple:#8b5cf6;--pink:#ec4899;--pink-bg:rgba(236,72,153,0.1);--pink-bd:rgba(236,72,153,0.3);
   --r:10px;
+}
+@media (prefers-color-scheme: light) {
+  :root{
+    --bg:#f7f7fa;--bg2:#ffffff;--bg3:#eef0f5;--bg4:#e3e6ee;
+    --bd:rgba(0,0,0,0.08);--bd2:rgba(0,0,0,0.14);
+    --tx:#1a1a22;--tx2:#5b5970;--tx3:#8886a0;
+    --acc:#5b52c7;--acc-hi:#4842a8;--acc-bg:rgba(91,82,199,0.08);--acc-bd:rgba(91,82,199,0.3);
+    --green:#128a5e;--green-hi:#0e6e4a;--green-bg:rgba(18,138,94,0.08);--green-bd:rgba(18,138,94,0.3);
+    --amber:#b9740a;--amber-hi:#8f5c08;--amber-bg:rgba(185,116,10,0.08);--amber-bd:rgba(185,116,10,0.3);
+    --red:#c53a3a;--red-bg:rgba(197,58,58,0.08);--red-bd:rgba(197,58,58,0.3);
+    --ai:#8b3fd6;--ai-hi:#6f2fb0;--ai-bg:rgba(139,63,214,0.08);--ai-bd:rgba(139,63,214,0.25);
+    --purple:#6d43c9;--pink:#c22d76;--pink-bg:rgba(194,45,118,0.08);--pink-bd:rgba(194,45,118,0.3);
+  }
 }
 *{box-sizing:border-box;margin:0;padding:0;}
 html,body{height:100%;overflow:hidden;background:var(--bg);color:var(--tx);
