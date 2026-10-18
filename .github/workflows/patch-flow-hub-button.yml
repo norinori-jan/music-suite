@@ -1,0 +1,40 @@
+name: patch flow-hub return button
+
+on:
+  push:
+    paths:
+      - '.github/workflows/patch-flow-hub-button.yml'
+
+permissions:
+  contents: write
+
+jobs:
+  patch:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - name: Add flow-hub return button
+        run: |
+          python3 - <<'PY'
+          from pathlib import Path
+          p = Path('index.html')
+          s = p.read_text(encoding='utf-8-sig')
+          marker = '<a id="flowHubReturn"'
+          if marker not in s:
+              button = '''<a id="flowHubReturn" href="./flow-hub-return.html" style="position:fixed;top:14px;left:14px;z-index:9999;display:inline-flex;align-items:center;gap:6px;padding:9px 13px;border:1px solid var(--bd2);border-radius:999px;background:var(--bg2);color:var(--tx);text-decoration:none;font-size:12px;font-weight:600;box-shadow:0 6px 20px rgba(0,0,0,.18)">🧭 flow-hubへ戻る</a>'''
+              if '<body>' not in s:
+                  raise SystemExit('body marker not found')
+              s = s.replace('<body>', '<body>' + button, 1)
+              p.write_text(s, encoding='utf-8')
+          PY
+      - name: Commit patch
+        run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git add index.html
+          if git diff --cached --quiet; then
+            echo "No changes needed"
+            exit 0
+          fi
+          git commit -m "Add flow-hub return button"
+          git push
