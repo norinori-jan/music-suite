@@ -1,0 +1,43 @@
+name: patch activity tracking
+
+on:
+  push:
+    paths:
+      - '.github/workflows/patch-activity-tracking.yml'
+
+permissions:
+  contents: write
+
+jobs:
+  patch:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - name: Inject activity tracker into music-suite pages
+        run: |
+          python3 - <<'PY'
+          from pathlib import Path
+          files=[Path('index.html'),Path('apps/vocal-lab-v3.html'),Path('apps/canvas.html'),Path('apps/chord-lab.html'),Path('apps/beat-lab.html'),Path('apps/score-editor-v2.html')]
+          for p in files:
+              if not p.exists():
+                  continue
+              s=p.read_text(encoding='utf-8-sig')
+              marker='<script src="./activity.js"></script>' if p.parent.name=='apps' else '<script src="./activity.js"></script>'
+              if marker in s:
+                  continue
+              if '</head>' not in s:
+                  raise SystemExit(f'head marker not found: {p}')
+              s=s.replace('</head>',marker+'</head>',1)
+              p.write_text(s,encoding='utf-8')
+          PY
+      - name: Commit patch
+        run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git add index.html apps/*.html
+          if git diff --cached --quiet; then
+            echo "No changes needed"
+            exit 0
+          fi
+          git commit -m "Track music-suite production activity"
+          git push
