@@ -6,12 +6,11 @@
     'music-suite':'https://norinori-jan.github.io/music-suite/',
     'vocal-lab-v3':'https://norinori-jan.github.io/music-suite/apps/vocal-lab-v3.html',
     'canvas':'https://norinori-jan.github.io/music-suite/apps/canvas.html',
-    'composition-canvas':'https://norinori-jan.github.io/music-suite/apps/composition-canvas.html',
     'chord-lab':'https://norinori-jan.github.io/music-suite/apps/chord-lab.html',
     'beat-lab':'https://norinori-jan.github.io/music-suite/apps/beat-lab.html',
     'score-editor-v2':'https://norinori-jan.github.io/music-suite/apps/score-editor-v2.html'
   };
-  const labels={'vocal-lab-v3':'Vocal Lab','canvas':'Canvas','composition-canvas':'Composition Canvas','chord-lab':'Chord Lab','beat-lab':'Beat Lab','score-editor-v2':'Score Editor','music-suite':'music-suite'};
+  const labels={'vocal-lab-v3':'Vocal Lab','canvas':'Canvas','chord-lab':'Chord Lab','beat-lab':'Beat Lab','score-editor-v2':'Score Editor','music-suite':'music-suite'};
   const stageLabels={capture:'素材・メロディ',compose:'作曲',arrange:'構成・アレンジ',produce:'最終編集・出力',plan:'制作計画'};
   function read(){try{return JSON.parse(localStorage.getItem(SESSION)||'[]')}catch(e){return[]}}
   function clean(v){return String(v||'').replace(/\s+/g,' ').trim().slice(0,120)}
@@ -28,13 +27,13 @@
     if(apps.includes('vocal-lab-v3'))outputs.push('メロディ／フレーズ');
     if(apps.includes('chord-lab'))outputs.push('コード進行');
     if(apps.includes('beat-lab'))outputs.push('ドラムパターン');
-    if(apps.includes('canvas')||apps.includes('composition-canvas'))outputs.push('曲構成');
+    if(apps.includes('canvas'))outputs.push('曲構成');
     if(apps.includes('score-editor-v2'))outputs.push('最終スコア／MIDI');
-    let next={app:'music-suite',action:'review',label:'作った曲を振り返る'};
-    if(current&&current.app==='vocal-lab-v3')next={app:'music-suite',action:'arrange',label:'フレーズをCanvasで構成する'};
-    else if(current&&(current.app==='canvas'||current.app==='composition-canvas'))next={app:'music-suite',action:'edit',label:'Score Editorで仕上げる'};
-    else if(current&&(current.app==='chord-lab'||current.app==='beat-lab'))next={app:'music-suite',action:'edit',label:'Score Editorへ送って編曲する'};
-    else if(current&&current.app==='score-editor-v2')next={app:'music-suite',action:'review',label:'完成した曲を振り返る'};
+    let next={app:'music-suite',action:'review',label:'作った曲を振り返る',sourceRef:urls['music-suite']};
+    if(current&&current.app==='vocal-lab-v3')next={app:'canvas',action:'arrange',label:'フレーズをCanvasで構成する',sourceRef:urls.canvas};
+    else if(current&&current.app==='canvas')next={app:'score-editor-v2',action:'edit',label:'Score Editorで仕上げる',sourceRef:urls['score-editor-v2']};
+    else if(current&&(current.app==='chord-lab'||current.app==='beat-lab'))next={app:'score-editor-v2',action:'edit',label:'Score Editorへ送って編曲する',sourceRef:urls['score-editor-v2']};
+    else if(current&&current.app==='score-editor-v2')next={app:'music-suite',action:'review',label:'完成した曲を振り返る',sourceRef:urls['music-suite']};
     const activity={
       app:APP,
       stage:current?current.stage:'plan',
@@ -56,7 +55,7 @@
       sourceRef,
       intent:'music.review',
       context:{text:activity.summary,tags:['music','production'].concat(apps),emotion:null,focus:'review'},
-      payload:{stage:activity.stage,status:'completed',activity,nextAction:next.action,message:'music-suiteでの制作内容を確認し、次の工程を選べます。',recommendation:{...next,sourceRef}},
+      payload:{stage:activity.stage,status:'completed',activity,nextAction:next.action,message:'music-suiteでの制作内容を確認し、次の工程を選べます。',recommendation:next},
       next:{app:'flow-hub',action:'review'},
       returnTo:'https://norinori-jan.github.io/flow-hub/'
     };
