@@ -22,15 +22,17 @@
     const project=(window.MusicActivity&&window.MusicActivity.projectName)?window.MusicActivity.projectName():null;
     const appsUsed=apps.map(a=>labels[a]||a);
     const actions=events.map(e=>clean(e.action)).filter(Boolean);
-    const completionWords=/保存|書き出し|出力|エクスポート|export|save|送信|送る|確定|完成|完了/i;
+    const completionWords=/完成|完了|確定|書き出し|出力|エクスポート|export/i;
+    const outputWords=/保存|書き出し|出力|エクスポート|export|save/i;
     const completedActions=events.filter(e=>completionWords.test(clean(e.action)));
+    const outputActions=events.filter(e=>outputWords.test(clean(e.action)));
     const completedSteps=unique(completedActions.map(e=>clean(e.action)));
     const outputs=[];
-    if(completedActions.some(e=>e.app==='vocal-lab-v3'))outputs.push('メロディ／フレーズ（保存・出力操作あり）');
-    if(completedActions.some(e=>e.app==='chord-lab'))outputs.push('コード進行（保存・出力操作あり）');
-    if(completedActions.some(e=>e.app==='beat-lab'))outputs.push('ドラムパターン（保存・出力操作あり）');
-    if(completedActions.some(e=>e.app==='canvas'))outputs.push('曲構成（保存・出力操作あり）');
-    if(completedActions.some(e=>e.app==='score-editor-v2'))outputs.push('最終スコア／MIDI（保存・出力操作あり）');
+    if(outputActions.some(e=>e.app==='vocal-lab-v3'))outputs.push('メロディ／フレーズ（保存・出力操作あり）');
+    if(outputActions.some(e=>e.app==='chord-lab'))outputs.push('コード進行（保存・出力操作あり）');
+    if(outputActions.some(e=>e.app==='beat-lab'))outputs.push('ドラムパターン（保存・出力操作あり）');
+    if(outputActions.some(e=>e.app==='canvas'))outputs.push('曲構成（保存・出力操作あり）');
+    if(outputActions.some(e=>e.app==='score-editor-v2'))outputs.push('最終スコア／MIDI（保存・出力操作あり）');
     let next={app:'music-suite',action:'review',label:'作った曲を振り返る',sourceRef:urls['music-suite']};
     if(current&&current.app==='vocal-lab-v3')next={app:'canvas',action:'arrange',label:'フレーズをCanvasで構成する',sourceRef:urls.canvas};
     else if(current&&current.app==='canvas')next={app:'score-editor-v2',action:'edit',label:'Score Editorで仕上げる',sourceRef:urls['score-editor-v2']};
@@ -48,6 +50,7 @@
       completedSteps,
       outputs,
       actions:actions.slice(-20),
+      status:'recorded',
       summary:project?`${project}：${appsUsed.length?appsUsed.join(' → '):'music-suite'} を操作しました。`:`${appsUsed.length?appsUsed.join(' → '):'music-suite'} を操作しました。`
     };
     return {
