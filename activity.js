@@ -31,6 +31,7 @@
     if(!semanticTypes.has(type)) throw new TypeError('Unknown semantic event: '+type);
     return push({at:new Date().toISOString(),app,stage,kind:'semantic',type,detail:cleanText(detail),...(meta||{})});
   }
+  function mark(type,detail,meta){return semantic(type,detail,meta)}
   function clearSession(){write(SESSION,[])}
   function session(){return read(SESSION)}
   function all(){return read(KEY)}
@@ -49,7 +50,7 @@
     if(/開く|open|起動/i.test(t)) return 'opened';
     return null;
   }
-  window.MusicActivity={record,semantic,clearSession,session,all,projectName,app,stage};
+  window.MusicActivity={record,semantic,mark,clearSession,session,all,projectName,app,stage};
   if(!session().some(e=>e.kind==='semantic'&&e.type==='opened')) semantic('opened',labelMap[app]||app);
   document.addEventListener('click',function(e){
     const el=e.target.closest('button,a,[role="button"],[data-action],[data-tab]');
@@ -58,7 +59,7 @@
     if(!text)return;
     record('click',text);
     const type=el.dataset.activityEvent||inferSemantic(text);
-    if(type) semantic(type,text,{source:'ui'});
+    if(type) semantic(type,text,{source:el.dataset.activityEvent?'explicit-ui':'ui'});
   },true);
   document.addEventListener('change',function(e){
     const el=e.target;
