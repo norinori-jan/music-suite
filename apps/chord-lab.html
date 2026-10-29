@@ -416,6 +416,7 @@ select.inp{cursor:pointer}
         </div>
         <div class="export-row">
           <button class="btn pri" onclick="sendToScoreEditor()">🔗 ROLLへ送信して開く</button>
+          <button class="btn" onclick="msSheet(buildExportData())">🎼 楽譜（lead-sheet）で見る</button>
         </div>
       </div>
 
@@ -1173,7 +1174,8 @@ function exportMIDI(){
 // ════════════════════════════════════════════════════════
 // EXPORT — JSON (for iCloud / score-editor-v2 / beat-lab)
 // ════════════════════════════════════════════════════════
-function buildExportData(){
+function buildExportData(){ const d=_buildExportData(); try{msRegister(d)}catch(e){} return d; }
+function _buildExportData(){
   const sec=PROJ.sections.find(s=>s.id===APP.qcSection);
   const progression=sec?.progression||[];
   let beat=0;
@@ -1348,6 +1350,14 @@ document.addEventListener('keydown',e=>{
   setStatus('ok','CHORD//LAB 起動完了 — PROGでコード進行を作成、PROGRESSIONSでプリセット選択');
   checkIncomingImport();
 })();
+</script>
+<script>
+/* ── music-suite 連携：曲の一覧（msuite_projects）への登録と、lead-sheet（楽譜）へ送る ──
+   書き出し・送信のたびに、同じ名前＋同じ種類の曲を上書き登録します（増えません）。 */
+function msRegister(d){try{if(!d||typeof d!=='object'||Array.isArray(d))return;var K='msuite_projects',a=[];try{a=JSON.parse(localStorage.getItem(K)||'[]');if(!Array.isArray(a))a=[]}catch(e){a=[]}
+  var nm=d.name||d.projectName||'無題',src=d.source||'unknown',j=Object.assign({},d,{name:nm,source:src,updatedAt:new Date().toISOString()});
+  var i=a.findIndex(function(x){return (x.name||x.projectName||'無題')===nm&&(x.source||'')===src});if(i>=0)a[i]=j;else a.push(j);localStorage.setItem(K,JSON.stringify(a))}catch(e){}}
+function msSheet(d){if(!d)return;msRegister(d);var u=location.origin+'/lead-sheet/#import='+encodeURIComponent(btoa(unescape(encodeURIComponent(JSON.stringify(d)))));if(u.length>60000){alert('曲が大きすぎて、リンクで送れません。JSONで渡してください');return}location.href=u}
 </script>
 </body>
 </html>

@@ -165,6 +165,7 @@ select.inp{cursor:pointer}.lbl{font-size:7px;color:var(--mu);letter-spacing:.1em
   <!-- FIX: vocal-lab へ戻るボタン -->
   <button class="btn" id="btn-send-vocal" onclick="sendToVocalLab()" style="border-color:rgba(127,119,221,0.4);color:#afa9ec">🎤 vocal-lab へ</button>
   <label class="btn" style="display:inline-flex;align-items:center;cursor:pointer">📥 JSON<input type="file" accept=".json" onchange="importFromJSON(this)" style="display:none"></label>
+  <button class="btn" onclick="msSheet(scoreExportData())">🎼 楽譜</button>
   <button class="btn" onclick="exportMIDI()">⬇ MIDI</button>
   <button class="btn" onclick="undoA()">↩</button>
   <button class="btn" onclick="redoA()">↪</button>
@@ -872,7 +873,7 @@ function setBpm(v){PROJ.bpm=parseInt(v);['bpm-val','bpm-val2'].forEach(id=>{cons
 /* ═══════════════════════════════
    MIDI EXPORT
 ═══════════════════════════════ */
-function exportMIDI(){if(!PROJ.tracks.length){setStatus('err','トラックがありません');return;}const bpm=PROJ.bpm,ppq=480;const vl=v=>{if(v<0x80)return[v];const b=[];b.unshift(v&0x7f);v>>=7;while(v){b.unshift((v&0x7f)|0x80);v>>=7;}return b;};const s2b=s=>[...s].map(c=>c.charCodeAt(0));const meta=(t,s)=>{const b=s2b(s);return[0,0xFF,t,...vl(b.length),...b];};const tempoTrk=()=>{const us=Math.round(60000000/bpm);return[...meta(0x03,PROJ.name||'Score'),0,0xFF,0x51,3,(us>>16)&0xFF,(us>>8)&0xFF,us&0xFF,0,0xFF,0x58,4,4,2,24,8,0,0xFF,0x2F,0];};const buildTrk=(track,ch)=>{const evs=[];track.notes.forEach(n=>{const st=Math.round(n.startBeat*ppq),dt=Math.round(n.durationBeats*ppq);evs.push({t:st,d:[0x90|ch,n.pitch,n.vel||80]});evs.push({t:st+dt,d:[0x80|ch,n.pitch,0]});});evs.sort((a,b)=>a.t-b.t);const d=[...meta(0x03,track.name),0,0xC0|ch,track.prog||0];let last=0;evs.forEach(e=>{d.push(...vl(e.t-last),...e.d);last=e.t;});d.push(0,0xFF,0x2F,0);return d;};const chunk=(tag,data)=>{const l=data.length;return[...s2b(tag),(l>>24)&0xFF,(l>>16)&0xFF,(l>>8)&0xFF,l&0xFF,...data];};const n=1+PROJ.tracks.length;const hdr=[0x4D,0x54,0x68,0x64,0,0,0,6,0,1,(n>>8)&0xFF,n&0xFF,(ppq>>8)&0xFF,ppq&0xFF];const all=[chunk('MTrk',tempoTrk()),...PROJ.tracks.map((t,i)=>chunk('MTrk',buildTrk(t,i%16)))];const midi=new Uint8Array([...hdr,...all.flat()]);const blob=new Blob([midi],{type:'audio/midi'});const url=URL.createObjectURL(blob);const a=document.createElement('a');a.href=url;a.download=`${(PROJ.name||'score').replace(/\s+/g,'-')}-${Date.now()}.mid`;document.body.appendChild(a);a.click();setTimeout(()=>{URL.revokeObjectURL(url);a.remove();},1000);setStatus('ok','MIDIをエクスポートしました');}
+function exportMIDI(){if(!PROJ.tracks.length){setStatus('err','トラックがありません');return;}try{msRegister(scoreExportData())}catch(e){}const bpm=PROJ.bpm,ppq=480;const vl=v=>{if(v<0x80)return[v];const b=[];b.unshift(v&0x7f);v>>=7;while(v){b.unshift((v&0x7f)|0x80);v>>=7;}return b;};const s2b=s=>[...s].map(c=>c.charCodeAt(0));const meta=(t,s)=>{const b=s2b(s);return[0,0xFF,t,...vl(b.length),...b];};const tempoTrk=()=>{const us=Math.round(60000000/bpm);return[...meta(0x03,PROJ.name||'Score'),0,0xFF,0x51,3,(us>>16)&0xFF,(us>>8)&0xFF,us&0xFF,0,0xFF,0x58,4,4,2,24,8,0,0xFF,0x2F,0];};const buildTrk=(track,ch)=>{const evs=[];track.notes.forEach(n=>{const st=Math.round(n.startBeat*ppq),dt=Math.round(n.durationBeats*ppq);evs.push({t:st,d:[0x90|ch,n.pitch,n.vel||80]});evs.push({t:st+dt,d:[0x80|ch,n.pitch,0]});});evs.sort((a,b)=>a.t-b.t);const d=[...meta(0x03,track.name),0,0xC0|ch,track.prog||0];let last=0;evs.forEach(e=>{d.push(...vl(e.t-last),...e.d);last=e.t;});d.push(0,0xFF,0x2F,0);return d;};const chunk=(tag,data)=>{const l=data.length;return[...s2b(tag),(l>>24)&0xFF,(l>>16)&0xFF,(l>>8)&0xFF,l&0xFF,...data];};const n=1+PROJ.tracks.length;const hdr=[0x4D,0x54,0x68,0x64,0,0,0,6,0,1,(n>>8)&0xFF,n&0xFF,(ppq>>8)&0xFF,ppq&0xFF];const all=[chunk('MTrk',tempoTrk()),...PROJ.tracks.map((t,i)=>chunk('MTrk',buildTrk(t,i%16)))];const midi=new Uint8Array([...hdr,...all.flat()]);const blob=new Blob([midi],{type:'audio/midi'});const url=URL.createObjectURL(blob);const a=document.createElement('a');a.href=url;a.download=`${(PROJ.name||'score').replace(/\s+/g,'-')}-${Date.now()}.mid`;document.body.appendChild(a);a.click();setTimeout(()=>{URL.revokeObjectURL(url);a.remove();},1000);setStatus('ok','MIDIをエクスポートしました');}
 
 /* ═══════════════════════════════
    UNDO/REDO
@@ -995,7 +996,14 @@ function checkIncomingImport() {
    FIX: score-editor → vocal-lab 逆送信
    melody全ノートをvocal-lab v3カード形式に変換して#importで送信
 ═══════════════════════════════ */
+function scoreExportData() {
+  const tr = t => PROJ.tracks.filter(x => x.type === t).flatMap(x => x.notes.map(n => ({pitch:n.pitch,startBeat:n.startBeat,durationBeats:n.durationBeats,vel:n.vel||80})));
+  const secs = (PROJ.sections||[]).filter(s => s.progression && s.progression.length).map(s => ({tag:s.name, progression:s.progression.map(c => ({chord:c.name, beats:c.beats||4}))}));
+  return { version:'1.0', source:'score-editor', name: PROJ.name || document.getElementById('project-name')?.value || 'score-editor', bpm:PROJ.bpm, key:PROJ.key||'C', timeSig:PROJ.timeSig||4,
+    melody:{notes:tr('melody')}, chords: secs.length ? {key:PROJ.key||'C', sections:secs} : null, bass:{notes:tr('bass')}, drums:{notes:tr('drum')}, exported:new Date().toISOString() };
+}
 function sendToVocalLab() {
+  try{msRegister(scoreExportData())}catch(e){}
   const melTrack = PROJ.tracks.find(t => t.type==='melody');
   if(!melTrack || !melTrack.notes.length) {
     setStatus('err', 'メロディトラックがありません');
@@ -1025,7 +1033,7 @@ function sendToVocalLab() {
   // vocal-labのパスを推定（score-editorと同フォルダ想定）
   const segments = window.location.pathname.split('/').filter(Boolean);
   const inAppsDir = segments.includes('apps');
-  const vlUrl = inAppsDir ? 'vocal-lab.html' : 'apps/vocal-lab.html';
+  const vlUrl = inAppsDir ? 'vocal-lab-v3.html' : 'apps/vocal-lab-v3.html';
   window.location.href = vlUrl + '#import=' + encodeURIComponent(b64);
 }
 
@@ -1059,6 +1067,14 @@ document.addEventListener("click", async () => {
     console.log("AudioContext resumed");
   }
 }, { once: true });
+</script>
+<script>
+/* ── music-suite 連携：曲の一覧（msuite_projects）への登録と、lead-sheet（楽譜）へ送る ──
+   書き出し・送信のたびに、同じ名前＋同じ種類の曲を上書き登録します（増えません）。 */
+function msRegister(d){try{if(!d||typeof d!=='object'||Array.isArray(d))return;var K='msuite_projects',a=[];try{a=JSON.parse(localStorage.getItem(K)||'[]');if(!Array.isArray(a))a=[]}catch(e){a=[]}
+  var nm=d.name||d.projectName||'無題',src=d.source||'unknown',j=Object.assign({},d,{name:nm,source:src,updatedAt:new Date().toISOString()});
+  var i=a.findIndex(function(x){return (x.name||x.projectName||'無題')===nm&&(x.source||'')===src});if(i>=0)a[i]=j;else a.push(j);localStorage.setItem(K,JSON.stringify(a))}catch(e){}}
+function msSheet(d){if(!d)return;msRegister(d);var u=location.origin+'/lead-sheet/#import='+encodeURIComponent(btoa(unescape(encodeURIComponent(JSON.stringify(d)))));if(u.length>60000){alert('曲が大きすぎて、リンクで送れません。JSONで渡してください');return}location.href=u}
 </script>
 </body>
 </html>

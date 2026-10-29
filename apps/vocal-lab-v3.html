@@ -256,6 +256,7 @@ body{background:var(--bg);color:var(--text);font-family:'Inter','Hiragino Sans',
     <button class="btn-export" id="btn-import-json" style="border-color:rgba(29,158,117,0.3);color:var(--green-hi)">📥 JSON インポート</button>
     <input type="file" id="import-file-input" accept=".json" style="display:none">
     <button class="btn-export" id="btn-send-score" style="border-color:rgba(168,85,247,0.3);color:#c084fc">🎼 score-editor へ送る</button>
+    <button class="btn-export" id="btn-send-sheet" style="border-color:rgba(245,200,66,0.35);color:#F5C842">📄 楽譜（lead-sheet）で見る</button>
     <!-- score-editor からの受信は checkIncomingImport() で自動処理 -->
   </div>
 </aside>
@@ -1229,6 +1230,7 @@ $('emotion-row').addEventListener('click', e => {
    EXPORT
 ═══════════════════════════════ */
 btnExport.addEventListener('click', () => {
+  try{ msRegister({source:'vocal-lab', name:'vocal-lab 最新', cards: state.cards.map(c => ({id:c.id,name:c.name,emotion:c.emotion,bpm:c.bpm||120,notes:c.notes,createdAt:c.createdAt})) }); }catch(e){}
   const data = state.cards.map(c => ({
     id:c.id, name:c.name, emotion:c.emotion, aiMode:c.aiMode, hasAi:c.hasAi,
     bpm: c.bpm || 120, notes:c.notes, rawNotes:c.rawNotes, aiComment:c.aiComment, createdAt:c.createdAt,
@@ -1276,8 +1278,11 @@ $('import-file-input').addEventListener('change', e => {
    SCORE-EDITOR 連携
    FIX: URLパス判定を安全な方法に変更
 ═══════════════════════════════ */
-$('btn-send-score').addEventListener('click', () => {
+$('btn-send-sheet').addEventListener('click', () => {
   if (!state.cards.length) { showToast('カードがありません'); return; }
+  const p = vocalMelodyPayload(); p.name = 'vocal-lab 最新'; msSheet(p);
+});
+function vocalMelodyPayload() {
   const melodyNotes = [];
   let beatOffset = 0;
   state.cards.forEach(card => {
@@ -1304,6 +1309,12 @@ $('btn-send-score').addEventListener('click', () => {
     drums: { notes: [] },
     exported: new Date().toISOString(),
   };
+  return payload;
+}
+$('btn-send-score').addEventListener('click', () => {
+  if (!state.cards.length) { showToast('カードがありません'); return; }
+  const payload = vocalMelodyPayload();
+  try { msRegister(Object.assign({}, payload, { name: 'vocal-lab 最新' })); } catch(e) {}
   const b64 = btoa(unescape(encodeURIComponent(JSON.stringify(payload))));
   // FIX: パス判定をパスセグメントで安全に行う
   const segments = window.location.pathname.split('/').filter(Boolean);
@@ -1590,6 +1601,14 @@ function checkIncomingMood() {
   renderCardList();
   setAiMode('auto');
 })();
+</script>
+<script>
+/* ── music-suite 連携：曲の一覧（msuite_projects）への登録と、lead-sheet（楽譜）へ送る ──
+   書き出し・送信のたびに、同じ名前＋同じ種類の曲を上書き登録します（増えません）。 */
+function msRegister(d){try{if(!d||typeof d!=='object'||Array.isArray(d))return;var K='msuite_projects',a=[];try{a=JSON.parse(localStorage.getItem(K)||'[]');if(!Array.isArray(a))a=[]}catch(e){a=[]}
+  var nm=d.name||d.projectName||'無題',src=d.source||'unknown',j=Object.assign({},d,{name:nm,source:src,updatedAt:new Date().toISOString()});
+  var i=a.findIndex(function(x){return (x.name||x.projectName||'無題')===nm&&(x.source||'')===src});if(i>=0)a[i]=j;else a.push(j);localStorage.setItem(K,JSON.stringify(a))}catch(e){}}
+function msSheet(d){if(!d)return;msRegister(d);var u=location.origin+'/lead-sheet/#import='+encodeURIComponent(btoa(unescape(encodeURIComponent(JSON.stringify(d)))));if(u.length>60000){alert('曲が大きすぎて、リンクで送れません。JSONで渡してください');return}location.href=u}
 </script>
 </body>
 </html>
