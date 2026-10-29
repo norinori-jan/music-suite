@@ -1069,12 +1069,44 @@ document.addEventListener("click", async () => {
 }, { once: true });
 </script>
 <script>
-/* ── music-suite 連携：曲の一覧（msuite_projects）への登録と、lead-sheet（楽譜）へ送る ──
-   書き出し・送信のたびに、同じ名前＋同じ種類の曲を上書き登録します（増えません）。 */
-function msRegister(d){try{if(!d||typeof d!=='object'||Array.isArray(d))return;var K='msuite_projects',a=[];try{a=JSON.parse(localStorage.getItem(K)||'[]');if(!Array.isArray(a))a=[]}catch(e){a=[]}
+/* ── music-suite 連携：曲の一覧（msuite_projects / msuite_works）の登録・クラウド同期（マージ方式）──
+   ・同じ名前＋同じ種類の曲は上書き登録（増えません）
+   ・同期は「合体」：新しい方を残し、削除した曲は戻りません（上書きで消えることはありません） */
+var MS_P='msuite_projects',MS_W='msuite_works',MS_D='msuite_deleted',MS_EP='msuite_sync_endpoint',MS_TK='msuite_sync_token',MS_LAST='msuite_last_sync';
+function msJ(k,d){try{var v=JSON.parse(localStorage.getItem(k));return v==null?d:v}catch(e){return d}}
+function msSet(k,v){try{localStorage.setItem(k,JSON.stringify(v))}catch(e){}}
+function msSrc(p){return p.source||(p.cards?'vocal-lab':(p.melody||p.bass)?'score-editor':p.chords?'chord-lab':p.drums?'beat-lab':'unknown')}
+function msKeyP(p){return 'p:'+msSrc(p)+'\u0001'+(p.name||p.projectName||'無題')}
+function msTs(p){return Date.parse(p&&(p.updatedAt||p.exported||p.createdAt))||0}
+function msTomb(key){var d=msJ(MS_D,{});d[key]=Date.now();msSet(MS_D,d);if(typeof msSyncSoon==='function')msSyncSoon()}
+function msRegister(d){try{if(!d||typeof d!=='object'||Array.isArray(d))return;var a=msJ(MS_P,[]);if(!Array.isArray(a))a=[];
   var nm=d.name||d.projectName||'無題',src=d.source||'unknown',j=Object.assign({},d,{name:nm,source:src,updatedAt:new Date().toISOString()});
-  var i=a.findIndex(function(x){return (x.name||x.projectName||'無題')===nm&&(x.source||'')===src});if(i>=0)a[i]=j;else a.push(j);localStorage.setItem(K,JSON.stringify(a))}catch(e){}}
+  var i=a.findIndex(function(x){return (x.name||x.projectName||'無題')===nm&&msSrc(x)===src});if(i>=0)a[i]=j;else a.push(j);msSet(MS_P,a);msSyncSoon()}catch(e){}}
 function msSheet(d){if(!d)return;msRegister(d);var u=location.origin+'/lead-sheet/#import='+encodeURIComponent(btoa(unescape(encodeURIComponent(JSON.stringify(d)))));if(u.length>60000){alert('曲が大きすぎて、リンクで送れません。JSONで渡してください');return}location.href=u}
+function msMerge(L,R){
+  var dead=Object.assign({},R.deleted||{});var ld=L.deleted||{};Object.keys(ld).forEach(function(k){dead[k]=Math.max(dead[k]||0,ld[k])});
+  var map={};(R.projects||[]).concat(L.projects||[]).forEach(function(p){if(!p||typeof p!=='object')return;var k=msKeyP(p),o=map[k];if(!o||msTs(p)>=msTs(o))map[k]=p});
+  var projects=Object.keys(map).filter(function(k){return !(dead[k]&&dead[k]>=msTs(map[k]))}).map(function(k){return map[k]});
+  var wm={};(R.works||[]).concat(L.works||[]).forEach(function(w){if(!w||!w.id)return;var o=wm[w.id];
+    if(!o){wm[w.id]=Object.assign({},w);return}
+    var nw=(Date.parse(w.updatedAt||w.createdAt)||0)>=(Date.parse(o.updatedAt||o.createdAt)||0)?w:o;var m=Object.assign({},nw);
+    var seen={},secs=[];(o.sections||[]).concat(w.sections||[]).forEach(function(s){var k=s.type+'\u0001'+s.label;if(!seen[k]){seen[k]=1;secs.push(s)}});m.sections=secs;wm[w.id]=m});
+  var works=Object.keys(wm).filter(function(id){var t=dead['w:'+id];return !(t&&t>=(Date.parse(wm[id].createdAt)||0))}).map(function(id){return wm[id]});
+  return{works:works,projects:projects,deleted:dead}}
+var msBusy=false,msTimer=null;
+function msCfg(){var ep=(localStorage.getItem(MS_EP)||'').trim().replace(/\/$/,''),tk=(localStorage.getItem(MS_TK)||'').trim();return ep&&tk?{ep:ep,tk:tk}:null}
+async function msSyncNow(){var c=msCfg();if(!c)return{ok:false,msg:'同期の設定がありません'};if(msBusy)return{ok:false,msg:'同期中です'};msBusy=true;
+  try{var au={Authorization:'Bearer '+c.tk},r=await fetch(c.ep+'/sync/music-suite',{headers:au});
+    if(r.status===401||r.status===403)throw new Error('トークンが違います('+r.status+')');
+    var remote={works:[],projects:[],deleted:{}};
+    if(r.status!==404){if(!r.ok)throw new Error('受信に失敗('+r.status+')');var j=await r.json();if(j&&j.data){remote={works:j.data.works||[],projects:j.data.projects||[],deleted:j.data.deleted||{}}}}
+    var local={works:msJ(MS_W,[]),projects:msJ(MS_P,[]),deleted:msJ(MS_D,{})};
+    var m=msMerge(local,remote);msSet(MS_W,m.works);msSet(MS_P,m.projects);msSet(MS_D,m.deleted);
+    var same=JSON.stringify(msMerge(remote,remote))===JSON.stringify(m);
+    if(!same||r.status===404){var pr=await fetch(c.ep+'/sync/music-suite',{method:'PUT',headers:Object.assign({'Content-Type':'application/json'},au),body:JSON.stringify({data:m})});if(!pr.ok)throw new Error('送信に失敗('+pr.status+')')}
+    localStorage.setItem(MS_LAST,String(Date.now()));return{ok:true,works:m.works.length,projects:m.projects.length}}
+  catch(e){return{ok:false,msg:String(e&&e.message||e)}}finally{msBusy=false}}
+function msSyncSoon(){if(!msCfg())return;clearTimeout(msTimer);msTimer=setTimeout(function(){msSyncNow().then(function(r){if(typeof msAfterSync==='function')msAfterSync(r)})},1500)}
 </script>
 </body>
 </html>
