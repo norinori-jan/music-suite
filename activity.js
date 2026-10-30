@@ -8,12 +8,12 @@
   const app=page==='index.html'?'music-suite':page.replace(/\.html$/,'');
   const stageMap={
     'vocal-lab-v3':'capture','canvas':'arrange','composition-canvas':'arrange',
-    'chord-lab':'compose','beat-lab':'compose','score-editor-v2':'produce','music-suite':'plan'
+    'chord-lab':'compose','beat-lab':'compose','compose-spark':'compose','chord-analyzer':'capture','score-editor-v2':'produce','music-suite':'plan'
   };
   const stage=stageMap[app]||'produce';
   const labelMap={
     'vocal-lab-v3':'Vocal Lab',canvas:'Canvas','composition-canvas':'Composition Canvas',
-    'chord-lab':'Chord Lab','beat-lab':'Beat Lab','score-editor-v2':'Score Editor','music-suite':'music-suite'
+    'chord-lab':'Chord Lab','beat-lab':'Beat Lab','score-editor-v2':'Score Editor','music-suite':'music-suite','compose-spark':'ひらめき','chord-analyzer':'Chord Analyzer'
   };
   const semanticTypes=new Set(['opened','edited','saved','exported','completed','sent','reviewed']);
   function read(k){try{return JSON.parse(localStorage.getItem(k)||'[]')}catch(e){return[]}}

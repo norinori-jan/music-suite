@@ -683,6 +683,7 @@ function renderProjects() {
         <span class="proj-badge ${badgeClass}">${escHtml(src)}</span>
       </div>
       <button class="proj-sheet" onclick="openAsSheet(${idx},event)" title="楽譜（lead-sheet）で見る">🎼 楽譜</button>
+      <button class="proj-sheet" onclick="openQr(${idx},event)" title="quick-ref に送る">📝</button>
       <button class="proj-del" onclick="deleteProject(${idx},event)" title="削除">✕</button>
     `;
     el.addEventListener('click', () => openProject(p));
@@ -718,6 +719,14 @@ function openProject(p) {
   window.location.href = url + '#import=' + encodeURIComponent(b64);
 }
 
+function sendToQuickRef(p) {
+  try {
+    localStorage.setItem('ms_transfer', JSON.stringify({ source: p.source || 'music-suite', name: p.name, bpm: p.bpm, key: p.key, chords: p.chords, melody: p.melody }));
+    showToast('quick-ref で「🎼 music-suite」ボタンを押すと取り込めます');
+    setTimeout(() => { window.location.href = '../quick-ref/'; }, 900);
+  } catch (e) { showToast('送れませんでした'); }
+}
+function openQr(idx, e) { e.stopPropagation(); const p = loadProjects()[idx]; if (p) sendToQuickRef(p); }
 function sendToSheet(p) {
   const b64 = btoa(unescape(encodeURIComponent(JSON.stringify(p))));
   const url = location.origin + '/lead-sheet/#import=' + encodeURIComponent(b64);

@@ -8,9 +8,10 @@
     'canvas':'https://norinori-jan.github.io/music-suite/apps/canvas.html',
     'chord-lab':'https://norinori-jan.github.io/music-suite/apps/chord-lab.html',
     'beat-lab':'https://norinori-jan.github.io/music-suite/apps/beat-lab.html',
-    'score-editor-v2':'https://norinori-jan.github.io/music-suite/apps/score-editor-v2.html'
+    'score-editor-v2':'https://norinori-jan.github.io/music-suite/apps/score-editor-v2.html',
+    'compose-spark':'https://norinori-jan.github.io/music-suite/apps/compose-spark.html'
   };
-  const labels={'vocal-lab-v3':'Vocal Lab','canvas':'Canvas','chord-lab':'Chord Lab','beat-lab':'Beat Lab','score-editor-v2':'Score Editor','music-suite':'music-suite'};
+  const labels={'vocal-lab-v3':'Vocal Lab','canvas':'Canvas','chord-lab':'Chord Lab','beat-lab':'Beat Lab','score-editor-v2':'Score Editor','music-suite':'music-suite','compose-spark':'ひらめき'};
   const stageLabels={capture:'素材・メロディ',compose:'作曲',arrange:'構成・アレンジ',produce:'最終編集・出力',plan:'制作計画'};
   // 「保存した」だけでは次工程へ進めない。制作上の到達点を completed/sent/exported として扱う。
   const advancement=new Set(['exported','completed','sent']);
@@ -34,6 +35,7 @@
     const outputs=[];
     if(advancedFor(semantic,'vocal-lab-v3'))outputs.push('メロディ／フレーズ');
     if(advancedFor(semantic,'chord-lab'))outputs.push('コード進行');
+    if(advancedFor(semantic,'compose-spark'))outputs.push('コード進行・メロディ案');
     if(advancedFor(semantic,'beat-lab'))outputs.push('ドラムパターン');
     if(advancedFor(semantic,'canvas'))outputs.push('曲構成');
     if(advancedFor(semantic,'score-editor-v2'))outputs.push('最終スコア／MIDI');
@@ -50,7 +52,7 @@
         ? {app:'score-editor-v2',action:'edit',label:'Score Editorで仕上げる',sourceRef:urls['score-editor-v2']}
         : {app:'canvas',action:'continue',label:'Canvasで曲構成を続ける',sourceRef:urls.canvas};
       nextMessage=currentAdvanced?'曲構成の到達点を確認しました。次はScore Editorです。':'曲構成はまだ途中です。まずCanvasで続けます。';
-    }else if(currentApp==='chord-lab'||currentApp==='beat-lab'){
+    }else if(currentApp==='chord-lab'||currentApp==='beat-lab'||currentApp==='compose-spark'){
       next=currentAdvanced
         ? {app:'score-editor-v2',action:'edit',label:'Score Editorへ送って編曲する',sourceRef:urls['score-editor-v2']}
         : {app:currentApp,action:'continue',label:`${labels[currentApp]}で制作を続ける`,sourceRef:urls[currentApp]};
