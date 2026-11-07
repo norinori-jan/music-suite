@@ -1683,25 +1683,34 @@ function checkIncomingMood() {
   if (/(^|&)source=speak-native(&|$)/.test(hash)) {
     try {
       const params = new URLSearchParams(hash);
-      const note = (params.get('note') || '').slice(0, 3000);
+      const note = (params.get('note') || '').slice(0, 5000);
+      const dialogueRaw = params.get('dialogue');
+      const dialogue = dialogueRaw ? JSON.parse(dialogueRaw) : null;
       if (note) {
         phraseInput.value = note;
         const candInput = $('candidate-phrase-name');
         if (candInput) candInput.value = note.slice(0, 80);
         $('lyric-original').value = note;
-        $('lyric-title').value = note.split(/[.!?\\n]/)[0].trim().slice(0, 72) || 'English phrase';
+        $('lyric-title').value = (params.get('title') || note.split(/[.!?\\n]/)[0]).trim().slice(0, 100) || 'English phrase';
         lyricOpenStudio();
+        if (dialogue && Array.isArray(dialogue.lines)) {
+          const meta = document.createElement('div');
+          meta.className = 'lyric-saved-item';
+          meta.textContent = '会話集：' + (dialogue.scene || '場面') + ' ／ ' + (dialogue.title || '会話') + ' ／ ' + dialogue.lines.length + '行（話者情報・日本語訳を含むデータを受信）';
+          $('lyric-analysis').prepend(meta);
+          window.__speakNativeDialogue = dialogue;
+        }
         const banner = $('mood-banner');
         const bannerText = $('mood-banner-text');
-        if (bannerText) bannerText.textContent = 'speak-native から英語入力を受信しました。フレーズ下書きとして編集できます。';
+        if (bannerText) bannerText.textContent = 'speak-native の会話集から英文を受信しました。原文を保持して歌詞カードにできます。';
         if (banner) banner.classList.add('show');
         history.replaceState(null, '', window.location.pathname + window.location.search);
-        showToast('英語入力をフレーズ下書きに取り込みました');
+        showToast('会話集の英文をフレーズ下書きに取り込みました');
         return true;
       }
     } catch (e) {
       console.warn('speak-native import failed', e);
-      showToast('英語入力を取り込めませんでした');
+      showToast('会話集の英文を取り込めませんでした');
     }
   }
   if (!hash || !/(^|&)(mood|note)=/.test(hash)) return false;
