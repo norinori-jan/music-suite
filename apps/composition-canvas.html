@@ -7,8 +7,11 @@
     .btn { margin: 4px; padding: 6px 10px; cursor:pointer; }
     .primary { background: #4caf50; color: white; }
     .spacer { display:inline-block; width:8px; }
-    #canvas { position:relative; display:grid!important; grid-template-columns:repeat(2,minmax(0,1fr))!important; grid-auto-flow:row; align-content:start; align-items:stretch; gap:8px; width:100%; min-width:0; min-height:120px; height:auto; max-height:65vh; overflow-y:auto; overflow-x:hidden; box-sizing:border-box; border:1px solid #ccc; margin-top:10px; padding:8px; }
+    #canvas { position:relative!important; display:grid!important; grid-template-columns:repeat(2,minmax(0,1fr))!important; grid-auto-flow:row!important; align-content:start!important; align-items:stretch!important; gap:8px!important; width:100%!important; min-width:0!important; min-height:120px; height:auto!important; max-height:65vh; overflow-y:auto!important; overflow-x:hidden!important; box-sizing:border-box!important; border:1px solid #ccc; margin:10px 0 0!important; padding:8px!important; }
     @media (min-width:700px) { #canvas { grid-template-columns:repeat(4,minmax(0,1fr))!important; } }
+    #note-sequence-player { display:block!important; position:relative!important; width:100%!important; max-width:100%!important; margin:14px 0!important; box-sizing:border-box!important; overflow:visible!important; }
+    #note-sequence-player textarea { display:block!important; position:relative!important; width:100%!important; max-width:100%!important; min-height:150px; box-sizing:border-box!important; }
+    #canvas .card { display:block!important; position:static!important; inset:auto!important; float:none!important; transform:none!important; width:100%!important; min-width:0!important; max-width:100%!important; margin:0!important; box-sizing:border-box!important; overflow-wrap:anywhere!important; word-break:break-word!important; }
     #note-sequence-player { width:100%; max-width:100%; box-sizing:border-box; overflow:hidden; }
     #note-sequence-player textarea { display:block; width:100%; max-width:100%; min-height:150px; box-sizing:border-box; resize:vertical; }
     .card { position:absolute; padding:10px; background:#fff; border:1px solid #aaa; border-radius:6px; }
@@ -534,10 +537,14 @@ function openEditDialog(card) {
   if (newColor) card.style.backgroundColor = newColor;
 
   if (newLength) {
-    card.dataset.length = newLength;
-    card.style.width = lengthToWidth(newLength) + "px";
+    const parsedLength=Number(newLength);
+    if(Number.isFinite(parsedLength)&&parsedLength>0&&parsedLength<=64){
+      card.dataset.length=String(parsedLength);
+      card.style.removeProperty('width');
+    }
   }
-
+  syncCardsToState();
+  saveCardPositions(false);
   showToast("カードを編集しました");
 }
 
@@ -717,19 +724,19 @@ function restoreLyricCanvasProject(project){
 let noteSequenceAudio = null;
 let noteSequenceNodes = [];
 function parseNoteSequenceText(raw) {
-  const tokens = String(raw || '').split(/[、,;\s]+/).map(s => s.trim()).filter(Boolean);
-  const notes = [];
-  for (const token of tokens) {
-    const m = token.match(/^([A-Ga-g]#?-?\d+)\s*[×xX*]\s*(\d+(?:\.\d+)?)$/);
-    if (!m) throw new Error('形式を読み取れません: ' + token + '（例 C4×4）');
-    const note = m[1].toUpperCase();
-    const length = Number(m[2]);
-    if (!Number.isFinite(length) || length <= 0 || length > 64) throw new Error('拍数が不正です: ' + token);
-    const midi = noteToMidi(note);
-    if (!Number.isFinite(midi)) throw new Error('音名が不正です: ' + token);
-    notes.push({note, length});
+  const source=String(raw||'').replace(/[＊ｘＸ]/g,'×').replace(/[，、；]/g,',').trim();
+  if(!source)throw new Error('音符列が空です。例：C4×4, E4×4, G4×4');
+  const tokens=source.split(/[\s,;]+/).map(x=>x.trim()).filter(Boolean);
+  const notes=[];
+  for(const token of tokens){
+    const m=token.match(/^([A-Ga-g]#?-?\d+)\s*[×xX*]\s*(\d+(?:\.\d+)?)$/);
+    if(!m)throw new Error('「'+token+'」を読み取れません。C4×4 の形式で入力してください。');
+    const note=m[1].toUpperCase(),length=Number(m[2]),midi=noteToMidi(note);
+    if(!Number.isFinite(length)||length<=0||length>64)throw new Error('「'+token+'」の拍数は0より大きく64以下にしてください。');
+    if(!Number.isFinite(midi))throw new Error('「'+note+'」は読み取れない音名です。');
+    notes.push({note,length});
   }
-  if (!notes.length) throw new Error('音符列が空です。C4×4 の形式で貼り付けてください。');
+  if(!notes.length)throw new Error('音符がありません。C4×4 の形式で貼り付けてください。');
   return notes;
 }
 function stopNoteSequence() {
@@ -776,116 +783,92 @@ async function playNoteSequence() {
   }, totalMs);
 }
 function loadNoteSequenceToCanvas() {
-  const status = document.getElementById('note-sequence-status');
-  try {
-    const notes = parseNoteSequenceText(document.getElementById('note-sequence-input').value);
-    // 入力値の length は拍数。キャンバス内部は4=1拍の旧単位なので4倍して保持する。
-    state.lastNotes = notes.map(n => ({note:n.note,length:n.length * 4}));
-    renderNoteCards(state.lastNotes, 'Pasted note sequence');
-    status.textContent = notes.length + '音を音符カードとして読み込みました。';
-  } catch (e) { status.textContent = e.message; }
+  const input=document.getElementById('note-sequence-input');
+  const status=document.getElementById('note-sequence-status');
+  try{
+    const notes=parseNoteSequenceText(input?.value);
+    const cards=notes.map(n=>({note:n.note,length:n.length*4}));
+    renderNoteCards(cards,'Pasted note sequence');
+    state.lastNotes=cards.map(n=>({note:n.note,length:n.length}));
+    saveCardPositions(false);
+    status.textContent='読み込み完了：'+notes.length+'音をカードに配置しました。次は「🥁 リズムを作る」へ進めます。';
+    document.getElementById('canvas')?.scrollIntoView({behavior:'smooth',block:'nearest'});
+    return true;
+  }catch(e){
+    status.textContent='読み込みできません：'+e.message;
+    input?.focus();
+    return false;
+  }
 }
 
 function renderNoteCards(segments, songName) {
-  const canvas = document.getElementById("canvas");
-  canvas.innerHTML = "";
-  canvas.classList.add("note-card-grid");
-
-  segments.forEach((seg, i) => {
-    const note = seg.note;
-    const len = seg.length;
-    const card = document.createElement("div");
-    card.className = "card";
-    card.innerText = note;
-    card.dataset.note = note;
-    card.dataset.length = len;
-    card.draggable = true;
-    card.addEventListener("dragstart", (e) => {
-      e.dataTransfer.setData("text/plain", i);
-    });
-    card.addEventListener("click", () => openEditDialog(card));
-    card.addEventListener("dblclick", () => {
-      card.remove();
-      showToast(note + " を削除しました");
-    });
+  const canvas=document.getElementById('canvas');
+  if(!canvas)throw new Error('音符カード表示領域が見つかりません。');
+  canvas.replaceChildren();
+  canvas.classList.add('note-card-grid');
+  const normalized=(Array.isArray(segments)?segments:[]).map(seg=>({
+    note:String(seg.note||'C4'),length:Number(seg.length)||4,
+    lyric:seg.lyric||'',lyricRole:seg.lyricRole||'',lyricSection:seg.lyricSection||'',color:seg.color||''
+  }));
+  normalized.forEach((seg,i)=>{
+    const card=document.createElement('div');
+    card.className='card';
+    card.dataset.note=seg.note;
+    card.dataset.length=String(seg.length);
+    card.dataset.lyric=seg.lyric;
+    card.dataset.lyricRole=seg.lyricRole;
+    card.dataset.lyricSection=seg.lyricSection;
+    card.textContent=seg.note;
+    card.style.position='static';
+    card.style.width='100%';
+    if(seg.color)card.style.backgroundColor=seg.color;
+    card.addEventListener('click',()=>openEditDialog(card));
+    card.addEventListener('dblclick',()=>{card.remove();syncCardsToState();saveCardPositions(false);showToast(seg.note+' を削除しました');});
     canvas.appendChild(card);
   });
-
-  console.log("描画カード数:", segments.length);
-  showToast("音名カードを画面幅に合わせて配置しました");
+  syncCardsToState();
+  console.log('描画カード数:',normalized.length);
+  return normalized.length;
+}
+function syncCardsToState(){
+  state.lastNotes=[...document.querySelectorAll('#canvas .card')].map(card=>({
+    note:card.dataset.note||card.textContent.trim(),
+    length:Number(card.dataset.length)||4
+  }));
 }
 
 /* ───────────────────────────────
    F：カード保存
 ────────────────────────────── */
-function saveCardPositions() {
-  const canvas = document.getElementById("canvas");
-  const cards = canvas.querySelectorAll(".card");
-
-  const data = [];
-
-  cards.forEach(card => {
-    data.push({
-      note: card.innerText,
-      x: parseInt(card.style.left),
-      y: parseInt(card.style.top),
-      color: card.style.backgroundColor || "#ffffff",
-      length: card.dataset.length || "4"
-    });
-  });
-
-  localStorage.setItem("savedCardLayout", JSON.stringify(data));
-  showToast("カード位置と内容を保存しました");
+function saveCardPositions(showMessage=true) {
+  const cards=[...document.querySelectorAll('#canvas .card')];
+  const data=cards.map(card=>({
+    note:card.dataset.note||card.textContent.trim(),
+    color:card.style.backgroundColor||'#ffffff',
+    length:Number(card.dataset.length)||4,
+    lyric:card.dataset.lyric||'',
+    lyricRole:card.dataset.lyricRole||'',
+    lyricSection:card.dataset.lyricSection||''
+  }));
+  try{localStorage.setItem('savedCardLayout',JSON.stringify(data));}catch(e){console.warn('card save failed',e);}
+  syncCardsToState();
+  if(showMessage)showToast('音符と歌詞の内容を保存しました');
+  return data;
 }
 
 /* ───────────────────────────────
    F：カード復元
 ────────────────────────────── */
 function loadCardPositions() {
-  const saved = localStorage.getItem("savedCardLayout");
-  if (!saved) return;
-
-  const data = JSON.parse(saved);
-
-  const canvas = document.getElementById("canvas");
-  canvas.innerHTML = "";
-  canvas.classList.add("note-card-grid");
-
-  // ★ score-editor送信用に復元
-  state.lastNotes = [];
-
-  data.forEach(item => {
-    const card = document.createElement("div");
-    card.className = "card";
-    card.innerText = item.note;
-
-    card.style.backgroundColor = item.color || "#ffffff";
-
-    card.dataset.length = item.length || "4";
-
-    card.draggable = true;
-
-    card.addEventListener(
-      "click",
-      () => openEditDialog(card)
-    );
-
-    canvas.appendChild(card);
-
-    // ★ 復元したカードを送信用データへ
-    state.lastNotes.push({
-      note: item.note,
-      length: Number(item.length) || 4
-    });
-  });
-
-  console.log(
-    "復元:",
-    state.lastNotes.length,
-    "カード"
-  );
-
-  showToast("カード位置と内容を復元しました");
+  let data=[];
+  try{data=JSON.parse(localStorage.getItem('savedCardLayout')||'[]');}catch(e){console.warn('saved card data ignored',e);}
+  if(!Array.isArray(data)||!data.length)return false;
+  const clean=data.filter(item=>item&&typeof item.note==='string').map(item=>({
+    note:item.note,length:Number(item.length)||4,color:item.color||'',
+    lyric:item.lyric||'',lyricRole:item.lyricRole||'',lyricSection:item.lyricSection||''
+  }));
+  renderNoteCards(clean,'Saved note cards');
+  return true;
 }
 /* ───────────────────────────────
    score-editor-v2へ送信
@@ -1021,11 +1004,18 @@ function sendToVocalLab() {
 /* ───────────────────────────────
    ページ読み込み時
 ────────────────────────────── */
-window.addEventListener("load", () => {
-  loadCardPositions();
-  if(!parseIncomingLyrics()){
-    try{restoreLyricCanvasProject(JSON.parse(localStorage.getItem('compositionLyricProject')||'null'))}catch(e){console.warn('saved lyric project restore failed',e)}
+window.addEventListener('load',()=>{
+  let restored=false;
+  try{restored=parseIncomingLyrics()===true;}catch(e){console.warn('incoming project restore failed',e);}
+  if(!restored){
+    try{
+      const savedLyric=JSON.parse(localStorage.getItem('compositionLyricProject')||'null');
+      if(savedLyric&&restoreLyricCanvasProject(savedLyric))restored=true;
+    }catch(e){console.warn('saved lyric project restore failed',e);}
   }
+  if(!restored)loadCardPositions();
+  const input=document.getElementById('note-sequence-input');
+  if(input){input.addEventListener('input',()=>{const status=document.getElementById('note-sequence-status');if(status)status.textContent='入力中です。「音符カードに読み込む」を押すとカードになります。';});}
 });
 
 function showToast(msg) {
