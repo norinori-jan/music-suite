@@ -329,6 +329,15 @@ body{background:var(--bg);color:var(--text);font-family:'Inter','Hiragino Sans',
       <input id="lyric-title" maxlength="100" placeholder="例：A thought on the way home">
       <label for="lyric-original">英語の原文（変更せずに保存）</label>
       <textarea id="lyric-original" maxlength="5000" placeholder="英会話で入力した英文"></textarea>
+      <section id="duet-studio" style="display:none;border:1px solid var(--ai-dim);border-radius:10px;padding:12px;gap:9px;flex-direction:column">
+        <strong>🎭 会話からデュエットを作る</strong><div id="duet-story" class="muted" style="font-size:12px">話者・感情・物語を保ってA/B/サビに再構成します。</div>
+        <label for="duet-a">A役（Mia）</label><textarea id="duet-a" maxlength="3000"></textarea>
+        <label for="duet-b">B役（Ken）</label><textarea id="duet-b" maxlength="3000"></textarea>
+        <label for="duet-chorus">二人で歌うサビ</label><textarea id="duet-chorus" maxlength="3000"></textarea>
+        <label for="duet-bridge">ブリッジ</label><textarea id="duet-bridge" maxlength="3000"></textarea>
+        <div class="lyric-actions"><button type="button" id="duet-analyze">音節・強調候補を分析</button><button type="button" class="lyric-primary" id="duet-open-canvas">Composition Canvasで編集</button></div>
+        <div id="duet-analysis" class="lyric-saved-list" aria-live="polite"></div>
+      </section>
       <label for="lyric-adapted">歌詞用に整えた表現（任意）</label>
       <textarea id="lyric-adapted" maxlength="5000" placeholder="リズム・韻・歌いやすさを考えて書き換えた英文"></textarea>
       <div class="lyric-actions"><button id="lyric-ai-generate">✦ AIで歌詞候補を3案作る</button></div>
@@ -1588,6 +1597,31 @@ function lyricExportCards(){
   const blob=new Blob([JSON.stringify({source:'vocal-lab-lyrics',version:1,exported:new Date().toISOString(),cards},null,2)],{type:'application/json'});
   const url=URL.createObjectURL(blob),a=document.createElement('a');a.href=url;a.download='music-suite-lyric-cards-'+Date.now()+'.json';a.click();setTimeout(()=>URL.revokeObjectURL(url),1000);
 }
+function duetSourceLines(){const d=window.__speakNativeDialogue;return d&&Array.isArray(d.lines)?d.lines:[]}
+function duetBuildFromDialogue(){
+ const lines=duetSourceLines();if(!lines.length)return false;
+ const a=lines.filter(x=>Number(x.sp)===0),b=lines.filter(x=>Number(x.sp)===1);
+ $('duet-a').value=["It's almost midnight, I should close my eyes","But every time I try, I picture your side","I wanna cross the ocean, appear at your door","Then I hear you say, let's wait a little more"].join('\n');
+ $('duet-b').value=["Your morning finds me counting every mile","I check the flights, then answer with a smile","The waiting's harder than I thought it'd be","Your little stories keep you close to me"].join('\n');
+ $('duet-chorus').value=["Two time zones, one heartbeat","Your night is holding my day","Keep talking till the sunrise","Love will find another way"].join('\n');
+ $('duet-bridge').value=["Tell me about your coffee, even when it's cold","I'll tell you all the small things I couldn't hold","We said we'd wait until the summer skies","So I'll meet you in the morning through your eyes"].join('\n');
+ $('duet-story').textContent='原文 '+lines.length+'行をA役 '+a.length+'行／B役 '+b.length+'行に分離。物語の核：時差・会えない距離・夏まで待つ約束・何気ない会話。歌詞は原文を素材にした初稿です。';
+ $('duet-studio').style.display='flex';return true;
+}
+function duetSections(){return [{role:'A',label:'Mia / A verse',text:$('duet-a').value.trim()},{role:'B',label:'Ken / B verse',text:$('duet-b').value.trim()},{role:'DUET',label:'Chorus',text:$('duet-chorus').value.trim()},{role:'DUET',label:'Bridge',text:$('duet-bridge').value.trim()}].filter(x=>x.text)}
+function duetAnalyze(){
+ const sections=duetSections();if(!sections.length){showToast('歌詞を入力してください');return}
+ const rows=sections.map(s=>{const words=s.text.match(/[A-Za-z]+(?:'[A-Za-z]+)?/g)||[];const count=words.reduce((n,w)=>n+Math.max(1,lyricSyllables(w).length),0);const focus=words.filter(w=>/^(two|time|zones|heart|night|day|love|wait|summer|voice|home|morning|miles|close|talking|sunrise)$/i.test(w));return '<div class="lyric-saved-item"><strong>'+escHtml(s.label)+'</strong><div>推定音節 '+count+' ／ '+words.length+'語 ／ 4音節/小節換算 約'+Math.max(1,Math.ceil(count/4))+'小節</div><div>意味上の強調候補：'+(focus.length?focus.map(escHtml).join(' · '):'内容語を歌唱時に確認')+'</div></div>'});
+ $('duet-analysis').innerHTML=rows.join('')+'<small class="muted">音節数は母音字による概算。強調候補は意味上の目安で、発音辞書による判定ではありません。</small>';
+ window.__duetAnalysis=sections.map(s=>({role:s.role,label:s.label,text:s.text,syllables:(s.text.match(/[A-Za-z]+(?:'[A-Za-z]+)?/g)||[]).reduce((n,w)=>n+Math.max(1,lyricSyllables(w).length),0)}));
+}
+function duetOpenCanvas(){
+ const sections=duetSections();if(!sections.length){showToast('歌詞を入力してください');return}
+ const d=window.__speakNativeDialogue||{},original=duetSourceLines().map(x=>(Number(x.sp)===0?'A':'B')+': '+x.en).join('\n');
+ const payload={version:2,source:'vocal-lab-lyric-link',kind:'duet',title:$('lyric-title').value.trim()||'Two Time Zones',story:'遠距離恋愛。時差で生活時間がずれても、夏まで待つ約束と何気ない会話が二人をつなぐ。',emotion:'nostalgic',bpm:Number($('bpm-input').value)||104,sections,original,sourceDialogue:d,notes:[],analysis:window.__duetAnalysis||null};
+ const encoded=btoa(unescape(encodeURIComponent(JSON.stringify(payload))));
+ window.open('./composition-canvas.html#lyrics='+encodeURIComponent(encoded),'_blank','noopener,noreferrer');
+}
 function lyricSyllables(word){
   const w=String(word||'').toLowerCase().replace(/[^a-z']/g,'');
   if(!w)return [];
@@ -1699,6 +1733,7 @@ function checkIncomingMood() {
           meta.textContent = '会話集：' + (dialogue.scene || '場面') + ' ／ ' + (dialogue.title || '会話') + ' ／ ' + dialogue.lines.length + '行（話者情報・日本語訳を含むデータを受信）';
           $('lyric-analysis').prepend(meta);
           window.__speakNativeDialogue = dialogue;
+          duetBuildFromDialogue();
         }
         const banner = $('mood-banner');
         const bannerText = $('mood-banner-text');
@@ -1768,6 +1803,8 @@ function checkIncomingMood() {
   lyricRenderSaved();
   $('btn-open-lyric-studio').addEventListener('click',lyricOpenStudio);
   $('lyric-ai-generate').addEventListener('click',lyricGenerateCandidates);
+  $('duet-analyze').addEventListener('click',duetAnalyze);
+  $('duet-open-canvas').addEventListener('click',duetOpenCanvas);
   $('lyric-analyze').addEventListener('click',lyricAnalyze);
   $('lyric-link-notes').addEventListener('click',lyricLinkSelectedNotes);
   $('lyric-open-canvas').addEventListener('click',lyricOpenComposition);
