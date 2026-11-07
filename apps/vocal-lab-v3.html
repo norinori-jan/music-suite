@@ -332,6 +332,8 @@ body{background:var(--bg);color:var(--text);font-family:'Inter','Hiragino Sans',
       <label for="lyric-adapted">歌詞用に整えた表現（任意）</label>
       <textarea id="lyric-adapted" maxlength="5000" placeholder="リズム・韻・歌いやすさを考えて書き換えた英文"></textarea>
       <div class="lyric-actions"><button id="lyric-ai-generate">✦ AIで歌詞候補を3案作る</button></div>
+      <div class="lyric-actions"><button id="lyric-analyze">音節・強勢・メロディ長を分析</button><button id="lyric-link-notes">選択中の音符カードと結びつける</button><button id="lyric-open-canvas">Composition Canvasで編集</button></div>
+      <div id="lyric-analysis" class="lyric-saved-list" aria-live="polite"></div>
       <div id="lyric-ai-candidates" class="lyric-saved-list"></div>
       <div class="lyric-actions">
         <button class="lyric-primary" id="lyric-save">歌詞カードとして保存</button>
@@ -1586,6 +1588,62 @@ function lyricExportCards(){
   const blob=new Blob([JSON.stringify({source:'vocal-lab-lyrics',version:1,exported:new Date().toISOString(),cards},null,2)],{type:'application/json'});
   const url=URL.createObjectURL(blob),a=document.createElement('a');a.href=url;a.download='music-suite-lyric-cards-'+Date.now()+'.json';a.click();setTimeout(()=>URL.revokeObjectURL(url),1000);
 }
+function lyricSyllables(word){
+  const w=String(word||'').toLowerCase().replace(/[^a-z']/g,'');
+  if(!w)return [];
+  if(w.length<=3)return [w];
+  const groups=w.match(/[aeiouy]+/g)||[];
+  let count=groups.length;
+  if(/e$/.test(w)&&!/(le|ye)$/.test(w)&&count>1)count--;
+  if(/(tion|sion)$/.test(w)&&count>1)count=Math.max(1,count-1);
+  count=Math.max(1,count);
+  // English syllabification is approximate; preserve whole word when uncertain.
+  if(count===1)return [w];
+  const chunks=[];let pos=0;
+  for(let i=0;i<count;i++){
+    const remain=count-i, target=Math.ceil((w.length-pos)/remain);
+    let end=Math.min(w.length-1,pos+target);
+    if(i<count-1){while(end<w.length-1&&!/[aeiouy]/.test(w[end]))end++;while(end<w.length-1&&/[aeiouy]/.test(w[end+1]))end++}
+    chunks.push(w.slice(pos,end+1));pos=end+1;
+  }
+  if(pos<w.length)chunks[chunks.length-1]+=w.slice(pos);
+  return chunks.filter(Boolean);
+}
+function lyricAnalyze(){
+  const text=($('lyric-adapted').value.trim()||$('lyric-original').value.trim());
+  if(!text){showToast('分析する英文を入力してください');return}
+  const words=text.match(/[A-Za-z]+(?:'[A-Za-z]+)?|[^\\sA-Za-z]+/g)||[];
+  const parts=words.map(w=>/^[A-Za-z]/.test(w)?lyricSyllables(w):[w]);
+  const syllables=parts.flat();
+  const count=syllables.filter(x=>/[A-Za-z]/.test(x)).length;
+  const durations=count?Math.max(1,Math.ceil(count/4)):0;
+  // Heuristic stress estimate: lexical stress is approximate, not phonetic dictionary output.
+  const stressed=parts.flatMap((p,i)=>p.map((x,j)=>({x,stress:j===0&&p.length>1?'推定強勢':(j===p.length-1&&p.length>2?'弱':'通常')})));
+  const el=$('lyric-analysis');
+  el.innerHTML='<div class="lyric-saved-item"><strong>音節の分割（概算）</strong><div>'+stressed.map(x=>'<span style="display:inline-block;margin:2px;padding:3px 5px;border-radius:5px;background:'+(x.stress==='推定強勢'?'var(--accent-bg)':'var(--bg3)')+'">'+escHtml(x.x)+(x.stress==='推定強勢'?' · 強':'')+'</span>').join('')+'</div><div>推定音節数：'+count+'　／　4拍子の1小節4音節換算：約'+durations+'小節</div><small class="muted">発音辞書を使わない概算です。実際の音節・語強勢は辞書や発音で確認してください。</small></div>';
+  window.__lyricAnalysis={text,syllables,count,suggestedBars:durations};
+  return window.__lyricAnalysis;
+}
+function lyricLinkSelectedNotes(){
+  const card=state.cards.find(x=>x.id===state.activeCardId);
+  if(!card){showToast('先にvocal-labの音符カードを選択してください');return}
+  const cards=lyricCardsRead(),original=$('lyric-original').value.trim(),adapted=$('lyric-adapted').value.trim();
+  const title=$('lyric-title').value.trim()||original.slice(0,48);
+  let target=cards.find(x=>x.title===title)||(cards.find(x=>x.original===original));
+  if(!target){target={id:'lyric-'+Date.now(),type:'lyric-phrase',title,original,adapted,source:'speak-native',createdAt:new Date().toISOString()};cards.push(target)}
+  target.linkedNoteCardId=card.id;target.noteCard={name:card.name,bpm:card.bpm,emotion:card.emotion,notes:card.notes.map(n=>({name:n.name,midiR:n.midiR,start:n.start,dur:n.dur}))};
+  if(!lyricCardsWrite(cards))return;
+  lyricRenderSaved();showToast('歌詞カードと「'+card.name+'」を結びつけました');
+}
+function lyricOpenComposition(){
+  const original=$('lyric-original').value.trim(),lyrics=$('lyric-adapted').value.trim()||original;
+  if(!lyrics){showToast('先に歌詞を入力してください');return}
+  const card=state.cards.find(x=>x.id===state.activeCardId);
+  const payload={version:1,source:'vocal-lab-lyric-link',title:$('lyric-title').value.trim()||'English lyric',original,lyrics,bpm:card?.bpm||120,emotion:card?.emotion||state.selectedEmotion||'neutral',notes:card?.notes||[],analysis:window.__lyricAnalysis||null};
+  const encoded=btoa(unescape(encodeURIComponent(JSON.stringify(payload))));
+  const url='../apps/composition-canvas.html#lyrics='+encodeURIComponent(encoded);
+  window.open(url,'_blank','noopener,noreferrer');
+}
 async function lyricGenerateCandidates(){
   const original=$('lyric-original').value.trim();
   if(!original){showToast('先に英語の原文を入力してください');return}
@@ -1701,6 +1759,9 @@ function checkIncomingMood() {
   lyricRenderSaved();
   $('btn-open-lyric-studio').addEventListener('click',lyricOpenStudio);
   $('lyric-ai-generate').addEventListener('click',lyricGenerateCandidates);
+  $('lyric-analyze').addEventListener('click',lyricAnalyze);
+  $('lyric-link-notes').addEventListener('click',lyricLinkSelectedNotes);
+  $('lyric-open-canvas').addEventListener('click',lyricOpenComposition);
   $('lyric-save').addEventListener('click',lyricSaveCard);
   $('lyric-export').addEventListener('click',lyricExportCards);
   $('lyric-clear').addEventListener('click',lyricClearDraft);
