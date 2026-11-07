@@ -1546,6 +1546,28 @@ function dismissMoodBanner() {
 }
 function checkIncomingMood() {
   const hash = window.location.hash.replace(/^#/, '');
+  // speak-native / table-pad から送られた英文をフレーズ下書きとして受信
+  if (/(^|&)source=speak-native(&|$)/.test(hash)) {
+    try {
+      const params = new URLSearchParams(hash);
+      const note = (params.get('note') || '').slice(0, 3000);
+      if (note) {
+        phraseInput.value = note;
+        const candInput = $('candidate-phrase-name');
+        if (candInput) candInput.value = note.slice(0, 80);
+        const banner = $('mood-banner');
+        const bannerText = $('mood-banner-text');
+        if (bannerText) bannerText.textContent = 'speak-native から英語入力を受信しました。フレーズ下書きとして編集できます。';
+        if (banner) banner.classList.add('show');
+        history.replaceState(null, '', window.location.pathname + window.location.search);
+        showToast('英語入力をフレーズ下書きに取り込みました');
+        return true;
+      }
+    } catch (e) {
+      console.warn('speak-native import failed', e);
+      showToast('英語入力を取り込めませんでした');
+    }
+  }
   if (!hash || !/(^|&)(mood|note)=/.test(hash)) return false;
   try {
     const params = new URLSearchParams(hash);
