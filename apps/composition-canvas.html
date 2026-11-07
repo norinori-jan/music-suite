@@ -788,8 +788,8 @@ function loadNoteSequenceToCanvas() {
   try{
     const notes=parseNoteSequenceText(input?.value);
     const cards=notes.map(n=>({note:n.note,length:n.length*4}));
+    // renderNoteCards / syncCardsToState が旧内部単位（4=1拍）で state を統一する
     renderNoteCards(cards,'Pasted note sequence');
-    state.lastNotes=cards.map(n=>({note:n.note,length:n.length}));
     saveCardPositions(false);
     status.textContent='読み込み完了：'+notes.length+'音をカードに配置しました。次は「🥁 リズムを作る」へ進めます。';
     document.getElementById('canvas')?.scrollIntoView({behavior:'smooth',block:'nearest'});
