@@ -251,6 +251,13 @@ body{padding-bottom:env(safe-area-inset-bottom)}
   <span id="smsg">BEAT//LAB 起動完了 — STEP からパターンを作成してください</span>
 </div>
 
+<div id="mixbar" style="display:flex;align-items:center;gap:12px;flex-wrap:wrap;padding:7px 12px;background:var(--s1);border-bottom:1px solid var(--bd);font-size:10px">
+  <label style="display:flex;align-items:center;gap:5px"><input type="checkbox" id="melody-enabled" checked> 🎹 メロディも再生</label>
+  <label style="display:flex;align-items:center;gap:5px">メロディ音量 <input id="melody-volume" type="range" min="0" max="100" value="65" style="width:82px"></label>
+  <label style="display:flex;align-items:center;gap:5px">ドラム音量 <input id="drum-volume" type="range" min="0" max="100" value="80" style="width:82px"></label>
+  <span id="mix-status" style="color:var(--mu)">メロディとドラムを同時に試聴できます</span>
+</div>
+
 <!-- TABS -->
 <div id="tabs">
   <button class="tab active" id="tab-step"   onclick="switchView('step')">⊞ STEP</button>
@@ -268,7 +275,7 @@ body{padding-bottom:env(safe-area-inset-bottom)}
       <div class="lbl" style="margin:0">小節数</div>
       <select class="inp" id="step-bars" style="width:60px;font-size:9px" onchange="renderStepGrid()">
         <option value="1">1</option><option value="2" selected>2</option>
-        <option value="4">4</option><option value="8">8</option>
+        <option value="4">4</option><option value="8">8</option><option value="16">16</option><option value="24">24</option><option value="32">32</option>
       </select>
       <div class="lbl" style="margin:0">分割</div>
       <select class="inp" id="step-div" style="width:60px;font-size:9px" onchange="renderStepGrid()">
@@ -609,9 +616,9 @@ function shiftPattern(dir){
 function duplicateBars(){
   const sel=document.getElementById('step-bars');
   const cur=APP.bars;
-  const opts=[1,2,4,8];
+  const opts=[1,2,4,8,16,24,32];
   const next=opts.find(o=>o>cur)||cur*2;
-  if(next>8){setStatus('err','最大8小節です');return;}
+  if(next>32){setStatus('err','最大32小節です');return;}
   saveUndo();
   const oldSteps=totalSteps();
   sel.value=next;
@@ -639,11 +646,17 @@ function toggleSwing(){
 // ════════════════════════════════════════════════════════
 // PLAYBACK
 // ════════════════════════════════════════════════════════
-let synthKick=null,synthSnare=null,synthMetal=null,synthPerc=null;
-function getKick(){ if(!synthKick){synthKick=new Tone.MembraneSynth({pitchDecay:.05,octaves:6,envelope:{attack:.001,decay:.25,sustain:0,release:.1}}).toDestination();synthKick.volume.value=-4;} return synthKick; }
-function getSnare(){ if(!synthSnare){synthSnare=new Tone.NoiseSynth({noise:{type:'white'},envelope:{attack:.001,decay:.15,sustain:0,release:.03}}).toDestination();synthSnare.volume.value=-9;} return synthSnare; }
-function getMetal(){ if(!synthMetal){synthMetal=new Tone.MetalSynth({frequency:400,envelope:{attack:.001,decay:.25,release:.01},harmonicity:5.1,modulationIndex:32,resonance:4000,octaves:1.5}).toDestination();synthMetal.volume.value=-16;} return synthMetal; }
-function getPerc(){ if(!synthPerc){synthPerc=new Tone.MembraneSynth({pitchDecay:.02,octaves:3,envelope:{attack:.001,decay:.1,sustain:0,release:.05}}).toDestination();synthPerc.volume.value=-10;} return synthPerc; }
+let synthKick=null,synthSnare=null,synthMetal=null,synthPerc=null,melodySynth=null,drumBus=null,melodyBus=null;
+function getDrumBus(){if(!drumBus)drumBus=new Tone.Gain(Number(document.getElementById('drum-volume')?.value||80)/100).toDestination();return drumBus;}
+function getMelodyBus(){if(!melodyBus)melodyBus=new Tone.Gain(Number(document.getElementById('melody-volume')?.value||65)/100).toDestination();return melodyBus;}
+function getMelodySynth(){if(!melodySynth){melodySynth=new Tone.PolySynth(Tone.Synth,{oscillator:{type:'triangle'},envelope:{attack:.015,decay:.12,sustain:.55,release:.22}}).connect(getMelodyBus());melodySynth.volume.value=-5;}return melodySynth;}
+function updateMixVolumes(){if(drumBus)drumBus.gain.rampTo(Number(document.getElementById('drum-volume').value)/100,.05);if(melodyBus)melodyBus.gain.rampTo(Number(document.getElementById('melody-volume').value)/100,.05);}
+document.getElementById('drum-volume').addEventListener('input',updateMixVolumes);
+document.getElementById('melody-volume').addEventListener('input',updateMixVolumes);
+function getKick(){ if(!synthKick){synthKick=new Tone.MembraneSynth({pitchDecay:.05,octaves:6,envelope:{attack:.001,decay:.25,sustain:0,release:.1}}).connect(getDrumBus());synthKick.volume.value=-4;} return synthKick; }
+function getSnare(){ if(!synthSnare){synthSnare=new Tone.NoiseSynth({noise:{type:'white'},envelope:{attack:.001,decay:.15,sustain:0,release:.03}}).connect(getDrumBus());synthSnare.volume.value=-9;} return synthSnare; }
+function getMetal(){ if(!synthMetal){synthMetal=new Tone.MetalSynth({frequency:400,envelope:{attack:.001,decay:.25,release:.01},harmonicity:5.1,modulationIndex:32,resonance:4000,octaves:1.5}).connect(getDrumBus());synthMetal.volume.value=-16;} return synthMetal; }
+function getPerc(){ if(!synthPerc){synthPerc=new Tone.MembraneSynth({pitchDecay:.02,octaves:3,envelope:{attack:.001,decay:.1,sustain:0,release:.05}}).connect(getDrumBus());synthPerc.volume.value=-10;} return synthPerc; }
 
 async function playHit(pitch, vel=1){
   await Tone.start();
@@ -678,6 +691,21 @@ async function togglePlay(){
       if(el)el.classList.add('playing-step');
       if(vel) playHit(row.pitch,vel);
     });
+    const currentBeat=APP.playStep/stepsPerBeat;
+    const melody=window.__compositionBaseProject?.melody?.notes||[];
+    if(document.getElementById('melody-enabled').checked){
+      const bpm=PROJ_BPM();
+      melody.forEach(n=>{
+        if(Math.abs((Number(n.startBeat)||0)-currentBeat)<(0.0001+1/(stepsPerBeat*2))){
+          const pitch=Number(n.pitch);
+          if(Number.isFinite(pitch)){
+            const duration=Math.max(.06,(Number(n.durationBeats)||.25)*60/bpm*.92);
+            const velocity=Math.max(.05,Math.min(1,(Number(n.vel)||88)/127));
+            getMelodySynth().triggerAttackRelease(Tone.Frequency(pitch,'midi').toNote(),duration,undefined,velocity);
+          }
+        }
+      });
+    }
     let ms=baseMs;
     if(APP.swing && APP.playStep%2===0) ms*=1.66;
     else if(APP.swing && APP.playStep%2===1) ms*=0.34;
@@ -1206,7 +1234,15 @@ function importJSON(input){
       APP.timeSig=data.timeSig||4; APP.div=data.div||16; APP.bars=Math.min(8,data.bars||2);
       APP.pattern={};
       const stepsPerBeat=APP.div/4;
+      const melodyNotes=data.melody?.notes||[];
       const drumNotes=data.drums?.notes||[];
+      const maxBeat=Math.max(0,...melodyNotes.map(n=>(Number(n.startBeat)||0)+(Number(n.durationBeats)||0)),...drumNotes.map(n=>(Number(n.startBeat)||0)+(Number(n.durationBeats)||0)));
+      const requiredBars=Math.max(2,Math.ceil(maxBeat/(APP.timeSig||4)));
+      APP.bars=Math.min(32,Math.max(APP.bars,requiredBars));
+      document.getElementById('step-bars').value=APP.bars;
+      document.getElementById('step-div').value=APP.div;
+      document.getElementById('step-timesig').value=APP.timeSig;
+      window.__compositionBaseProject=data;
       drumNotes.forEach(n=>{
         const row=ROWS.find(r=>r.pitch===n.pitch);
         if(!row)return;
@@ -1267,6 +1303,8 @@ function checkIncomingImport(){
     if(data&&data.fromCompositionCanvas)window.__compositionBaseProject=data;
     saveUndo();
     if(data.bpm){document.getElementById('bpm-sl').value=data.bpm;setBpm(data.bpm);}
+    if(data.timeSig){APP.timeSig=Number(data.timeSig);document.getElementById('step-timesig').value=APP.timeSig;}
+    if(data.div){APP.div=Number(data.div);document.getElementById('step-div').value=APP.div;}
     if(data.name)document.getElementById('project-name').value=data.name;
     if(data.drums?.notes){
       APP.pattern={};
