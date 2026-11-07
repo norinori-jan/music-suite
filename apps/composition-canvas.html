@@ -696,10 +696,10 @@ function restoreLyricCanvasProject(project){
 let noteSequenceAudio = null;
 let noteSequenceNodes = [];
 function parseNoteSequenceText(raw) {
-  const tokens = String(raw || '').split(/[、,;\\s]+/).map(s => s.trim()).filter(Boolean);
+  const tokens = String(raw || '').split(/[、,;\s]+/).map(s => s.trim()).filter(Boolean);
   const notes = [];
   for (const token of tokens) {
-    const m = token.match(/^([A-Ga-g]#?-?\\d+)\\s*[×xX*]\\s*(\\d+(?:\\.\\d+)?)$/);
+    const m = token.match(/^([A-Ga-g]#?-?\d+)\s*[×xX*]\s*(\d+(?:\.\d+)?)$/);
     if (!m) throw new Error('形式を読み取れません: ' + token + '（例 C4×4）');
     const note = m[1].toUpperCase();
     const length = Number(m[2]);
