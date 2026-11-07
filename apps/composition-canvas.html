@@ -632,7 +632,7 @@ function generateLyricMusicSketch(){
     const midi=60+root+scale[scaleIndex]+(octave-4)*12;
     const pitch=((midi-60)%12+12)%12;
     const note=LYRIC_NOTE_NAMES[pitch]+(4+Math.floor((midi-60)/12));
-    return {note,length: i%4===3?2:1,word:item.word,lyric:item.phrase,role:item.role,section:item.label,startBeat:i};
+    return {note,length:4,word:item.word,lyric:item.phrase,role:item.role,section:item.label,startBeat:i};
   });
   state.lastNotes=notes.map(n=>({note:n.note,length:n.length}));
   renderNoteCards(state.lastNotes,(window.__incomingLyricProject||{}).title||'Lyric sketch');
@@ -657,6 +657,7 @@ function saveLyricCanvasProject(){
 function restoreLyricCanvasProject(project){
   if(!project||project.source!=='composition-canvas-lyrics')return false;
   window.__incomingLyricProject=project;window.__musicProjectId=project.projectId||window.__musicProjectId||('song-'+Date.now());
+  window.__lyricMusicSketch=project.generatedMusic||null;
   document.getElementById('lyric-panel').classList.add('show');
   document.getElementById('lyric-meta').textContent=(project.title||project.name||'English lyric')+' · '+(project.bpm||120)+' BPM · '+(project.emotion||'neutral');
   if(Array.isArray(project.sections)&&project.sections.length){lyricSectionsWrite(project.sections);document.getElementById('canvas-lyrics').value=''}
