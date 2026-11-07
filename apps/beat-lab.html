@@ -1306,6 +1306,11 @@ function checkIncomingImport(){
     if(data.timeSig){APP.timeSig=Number(data.timeSig);document.getElementById('step-timesig').value=APP.timeSig;}
     if(data.div){APP.div=Number(data.div);document.getElementById('step-div').value=APP.div;}
     if(data.name)document.getElementById('project-name').value=data.name;
+    const importedMelody=data.melody?.notes||[];
+    const importedDrums=data.drums?.notes||[];
+    const maxBeat=Math.max(0,...importedMelody.map(n=>(Number(n.startBeat)||0)+(Number(n.durationBeats)||0)),...importedDrums.map(n=>(Number(n.startBeat)||0)+(Number(n.durationBeats)||0)));
+    APP.bars=Math.min(32,Math.max(1,Math.ceil(maxBeat/(APP.timeSig||4))));
+    document.getElementById('step-bars').value=APP.bars;
     if(data.drums?.notes){
       APP.pattern={};
       const stepsPerBeat=APP.div/4;
