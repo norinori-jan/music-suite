@@ -275,6 +275,11 @@ body{padding-bottom:env(safe-area-inset-bottom)}
   <button class="btn pri" onclick="createSongArrangement()">✨ 曲の展開を作る</button>
   <select id="arrangement-section-select" class="inp" style="min-width:170px;font-size:10px" onchange="selectArrangementSection(this.value)" disabled><option value="">展開を作成してください</option></select>
   <button class="btn" onclick="saveCurrentSectionGroove()" id="section-save-btn" disabled>この区間にリズムを保存</button>
+  <label style="display:flex;align-items:center;gap:4px"><input id="effect-fill" type="checkbox" checked onchange="setArrangementEffect('fillBeforeChorus',this.checked)">サビ前フィル</label>
+  <label style="display:flex;align-items:center;gap:4px"><input id="effect-final" type="checkbox" checked onchange="setArrangementEffect('finalVariation',this.checked)">最後の1小節</label>
+  <select id="effect-break-bar" class="inp" style="width:75px;font-size:10px" aria-label="ブレイクする小節"></select>
+  <button class="btn" onclick="toggleBreakBar()">ブレイク切替</button>
+  <span id="effect-break-status" style="color:var(--mu)">ブレイクなし</span>
   <span id="arrangement-status" style="color:var(--mu)">イントロ→Aメロ→サビ→ブリッジ→ラストを設定します</span>
 </div>
 
@@ -495,6 +500,7 @@ const APP={
   view:'step', aiModel:'claude', aiMode:'new',
   undoStack:[], redoStack:[],
   sections:null, activeSectionId:null,
+  arrangementEffects:{fillBeforeChorus:true,breakBars:[],finalVariation:true},
 };
 
 const VEL_LEVELS=[1,0.85,0.65,0.4]; // tap cycles: off->full->med->soft->off
@@ -644,12 +650,22 @@ function sectionPatternFrom(base,id){
   Object.entries(base||{}).forEach(([key,vel])=>{const row=key.split(':')[0];if((id==='intro'||id==='bridge')&&['crash','ride','tom1','tom2','clap'].includes(row))return;if(id==='bridge'&&row==='kick'&&Number(key.split(':')[1])%Math.max(1,APP.div/4)!==0)return;out[key]=Math.max(.2,Math.min(1,Number(vel)*scale));});
   const spb=APP.timeSig*(APP.div/4);if(id==='chorus'||id==='final')out[pk('crash',0)]=1;if(id==='final'&&spb>0)out[pk('crash',spb)]=.85;return out;
 }
+function ensureArrangementEffects(){if(!APP.arrangementEffects||typeof APP.arrangementEffects!=='object')APP.arrangementEffects={fillBeforeChorus:true,breakBars:[],finalVariation:true};const e=APP.arrangementEffects;e.fillBeforeChorus=e.fillBeforeChorus!==false;e.finalVariation=e.finalVariation!==false;e.breakBars=Array.isArray(e.breakBars)?[...new Set(e.breakBars.map(Number).filter(n=>Number.isInteger(n)&&n>=1&&n<=APP.bars))].sort((a,b)=>a-b):[];return e;}
+function renderArrangementEffects(){const e=ensureArrangementEffects();const f=document.getElementById('effect-fill'),v=document.getElementById('effect-final'),sel=document.getElementById('effect-break-bar'),status=document.getElementById('effect-break-status');if(f)f.checked=e.fillBeforeChorus;if(v)v.checked=e.finalVariation;if(sel){const old=Number(sel.value)||1;sel.innerHTML='';for(let n=1;n<=APP.bars;n++){const o=document.createElement('option');o.value=n;o.textContent=n+'小節';sel.appendChild(o);}sel.value=Math.min(APP.bars,old);}if(status)status.textContent=e.breakBars.length?'ブレイク：'+e.breakBars.join('・')+'小節':'ブレイクなし';}
+function setArrangementEffect(key,value){const e=ensureArrangementEffects();if(key==='fillBeforeChorus'||key==='finalVariation')e[key]=!!value;try{msRegister(buildExportData());}catch(err){}}
+function toggleBreakBar(){const e=ensureArrangementEffects(),sel=document.getElementById('effect-break-bar'),bar=Number(sel?.value)||1;const i=e.breakBars.indexOf(bar);if(i>=0)e.breakBars.splice(i,1);else e.breakBars.push(bar);e.breakBars.sort((a,b)=>a-b);renderArrangementEffects();try{msRegister(buildExportData());}catch(err){}}
+function drumEffectVelocity(rowId,step,section,localStep){const e=ensureArrangementEffects(),spb=APP.timeSig*(APP.div/4),bar=Math.floor(step/spb)+1;if(e.breakBars.includes(bar))return 0;
+  const chorus=APP.sections?.find(x=>x.id==='chorus');if(e.fillBeforeChorus&&chorus&&bar===chorus.startBar-1){const inBar=step%spb,fillStart=Math.max(0,spb-2*(APP.div/4)),offset=inBar-fillStart;if(offset>=0){if(rowId==='snare'&&offset%(Math.max(1,APP.div/8))===0)return .95;if(rowId==='tom1'&&offset===Math.max(0,spb-2))return .9;if(rowId==='tom2'&&offset===Math.max(0,spb-1))return .95;if(rowId==='crash'&&offset===spb-1)return 1;}}
+  if(e.finalVariation&&bar===APP.bars){const inBar=step%spb;if(rowId==='crash'&&inBar===spb-1)return 1;if(rowId==='kick'&&inBar===spb-1)return 1;if(rowId==='snare'&&inBar===spb-2)return .9;}
+  return null;
+}
 function createSongArrangement(){
   if(APP.playing)stopPlay();
   const bars=Math.min(32,Math.max(5,APP.bars));APP.bars=bars;document.getElementById('step-bars').value=bars;
   const defs=[{id:'intro',label:'イントロ',weight:1},{id:'verse',label:'Aメロ',weight:2},{id:'chorus',label:'サビ',weight:2},{id:'bridge',label:'ブリッジ',weight:1},{id:'final',label:'ラスト',weight:2}];
   let cursor=0;
-  APP.sections=defs.map((d,i)=>{const remaining=defs.length-i-1;const proposed=i===defs.length-1?bars-cursor:Math.round(d.weight*bars/8);const len=i===defs.length-1?bars-cursor:Math.max(1,Math.min(proposed,bars-cursor-remaining));const x={id:d.id,label:d.label,startBar:cursor+1,endBar:cursor+len,pattern:sectionPatternFrom(APP.pattern,d.id)};cursor+=len;return x;});
+  APP.sections=defs.map((d,i)=>{const remaining=defs.length-i-1;const proposed=i===defs.length-1?bars-cursor:Math.round(d.weight*bars/8);const len=i===defs.length-1?bars-cursor:Math.max(1,Math.min(proposed,bars-cursor-remaining));const x={id:d.id,label:d.label,startBar:cursor+1,endBar:cursor+len,pattern:sectionPatternFrom(APP.pattern,d.id),effects:{}};cursor+=len;return x;});
+  APP.arrangementEffects={fillBeforeChorus:true,breakBars:[],finalVariation:true};renderArrangementEffects();
   APP.activeSectionId='intro';APP.pattern=cloneRhythmData(APP.sections[0].pattern);renderArrangementControls();renderStepGrid();arrangementStatus('展開を作成しました。区間を選んでリズムを編集してください');
 }
 function renderArrangementControls(){
@@ -672,7 +688,7 @@ function sectionAtStep(step){if(!Array.isArray(APP.sections)||!APP.sections.leng
 function sectionPatternStep(section,step){const spb=APP.timeSig*(APP.div/4),start=(section.startBar-1)*spb,len=(section.endBar-section.startBar+1)*spb;return (step-start)%Math.max(1,len);}
 function restoreSongArrangement(data){
   if(!data||!Array.isArray(data.sections)||!data.sections.length)return false;
-  APP.sections=cloneRhythmData(data.sections);APP.bars=Math.min(32,Math.max(5,Number(data.bars)||APP.bars));document.getElementById('step-bars').value=APP.bars;
+  APP.sections=cloneRhythmData(data.sections);APP.arrangementEffects=cloneRhythmData(data.effects||{fillBeforeChorus:true,breakBars:[],finalVariation:true});APP.bars=Math.min(32,Math.max(5,Number(data.bars)||APP.bars));document.getElementById('step-bars').value=APP.bars;renderArrangementEffects();
   APP.activeSectionId=APP.sections[0].id;APP.pattern=cloneRhythmData(APP.sections[0].pattern);renderArrangementControls();return true;
 }
 function renderStepGrid(){
@@ -861,7 +877,7 @@ async function togglePlay(){
     const sectionStep=activeSection?sectionPatternStep(activeSection,APP.playStep):APP.playStep;
     const drumPattern=activeSection?.pattern||APP.pattern;
     ROWS.forEach(row=>{
-      const k=pk(row.id,sectionStep),vel=drumPattern[k];
+      const k=pk(row.id,sectionStep),baseVel=drumPattern[k],effectVel=drumEffectVelocity(row.id,APP.playStep,activeSection,sectionStep),vel=effectVel===null?baseVel:effectVel;
       const el=document.getElementById(`sc-${row.id}-${sectionStep}`);
       if(el)el.classList.add('playing-step');
       if(vel)playHit(row.pitch,vel);
@@ -1369,7 +1385,7 @@ function _buildExportData(){
     bass: base.bass||{notes:[]},
     melody: base.melody||{notes:[]},
     drums: { notes },
-    arrangement: sections.length?{version:1,bars:APP.bars,sections:sections.map(x=>({id:x.id,label:x.label,startBar:x.startBar,endBar:x.endBar,pattern:cloneRhythmData(x.pattern)}))}:base.arrangement||null,
+    arrangement: sections.length?{version:1,bars:APP.bars,effects:cloneRhythmData(ensureArrangementEffects()),sections:sections.map(x=>({id:x.id,label:x.label,startBar:x.startBar,endBar:x.endBar,pattern:cloneRhythmData(x.pattern),effects:cloneRhythmData(x.effects||{})}))}:base.arrangement||null,
     chords: base.chords||base.generatedMusic?.chords||null,
     exported: new Date().toISOString(),
     rhythmVariations: readRhythmVariations()
@@ -1549,6 +1565,7 @@ document.addEventListener('keydown',e=>{
   checkIncomingImport();
   setStatus('ok','BEAT//LAB 起動完了 — STEPでパターン編集、PATTERNSでプリセット選択');
   renderRhythmVariationSelect();
+  renderArrangementEffects();
   if(window.__compositionBaseProject?.arrangement)restoreSongArrangement(window.__compositionBaseProject.arrangement);
   renderArrangementControls();
 
