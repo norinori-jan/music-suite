@@ -1340,6 +1340,7 @@ function vocalMelodyPayload() {
   });
   const payload = {
     version: '1.0',
+    projectId: window.__musicProjectId || ('song-' + Date.now()),
     source: 'vocal-lab',
     name: `vocal-lab (${state.cards.length}フレーズ)`,
     bpm: getBpm(), // FIX: 動的BPM
@@ -1549,6 +1550,7 @@ function checkIncomingImport() {
     const cards = normalizeImportedCards(parsed);
     if (!cards.length) throw new Error('カードが含まれていません');
     state.cards = cards;
+    window.__musicProjectId = parsed.projectId || window.__musicProjectId || ('song-' + Date.now());
     state.activeCardId = cards[0].id;
     // BPMをUIに反映（score-editorから受信したBPMを適用）
     const srcBpm = parsed.bpm || cards[0]?.bpm;
@@ -1618,7 +1620,7 @@ function duetAnalyze(){
 function duetOpenCanvas(){
  const sections=duetSections();if(!sections.length){showToast('歌詞を入力してください');return}
  const d=window.__speakNativeDialogue||{},original=duetSourceLines().map(x=>(Number(x.sp)===0?'A':'B')+': '+x.en).join('\n');
- const payload={version:2,source:'vocal-lab-lyric-link',kind:'duet',title:$('lyric-title').value.trim()||'Two Time Zones',story:'遠距離恋愛。時差で生活時間がずれても、夏まで待つ約束と何気ない会話が二人をつなぐ。',emotion:'nostalgic',bpm:Number($('bpm-input').value)||104,sections,original,sourceDialogue:d,notes:[],analysis:window.__duetAnalysis||null};
+ const payload={version:2,projectId:window.__musicProjectId||('song-'+Date.now()),source:'vocal-lab-lyric-link',kind:'duet',title:$('lyric-title').value.trim()||'Two Time Zones',story:'遠距離恋愛。時差で生活時間がずれても、夏まで待つ約束と何気ない会話が二人をつなぐ。',emotion:'nostalgic',bpm:Number($('bpm-input').value)||104,sections,original,sourceDialogue:d,notes:[],analysis:window.__duetAnalysis||null};
  const encoded=btoa(unescape(encodeURIComponent(JSON.stringify(payload))));
  window.open('./composition-canvas.html#lyrics='+encodeURIComponent(encoded),'_blank','noopener,noreferrer');
 }
