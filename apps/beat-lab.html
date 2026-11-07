@@ -1415,31 +1415,37 @@ function importJSON(input){
       if(data.bpm){document.getElementById('bpm-sl').value=data.bpm;setBpm(data.bpm);}
       if(data.timeSig)document.getElementById('step-timesig').value=data.timeSig;
       if(data.div)document.getElementById('step-div').value=data.div;
-      if(data.bars)document.getElementById('step-bars').value=Math.min(8,data.bars);
-      APP.timeSig=data.timeSig||4; APP.div=data.div||16; APP.bars=Math.min(8,data.bars||2);
+      APP.timeSig=Math.max(1,Math.min(16,Number(data.timeSig)||4));
+      APP.div=[4,8,16,32].includes(Number(data.div))?Number(data.div):16;
+      APP.bars=Math.min(32,Math.max(2,Number(data.bars)||2));
       APP.pattern={};
       const stepsPerBeat=APP.div/4;
-      const melodyNotes=data.melody?.notes||[];
-      const drumNotes=data.drums?.notes||[];
+      const melodyNotes=Array.isArray(data.melody?.notes)?data.melody.notes:[];
+      const drumNotes=Array.isArray(data.drums?.notes)?data.drums.notes:[];
       const maxBeat=Math.max(0,...melodyNotes.map(n=>(Number(n.startBeat)||0)+(Number(n.durationBeats)||0)),...drumNotes.map(n=>(Number(n.startBeat)||0)+(Number(n.durationBeats)||0)));
       const requiredBars=Math.max(2,Math.ceil(maxBeat/(APP.timeSig||4)));
-      APP.bars=Math.min(32,Math.max(APP.bars,requiredBars));
+      APP.bars=Math.min(32,Math.max(APP.bars,requiredBars,Number(data.arrangement?.bars)||0));
       document.getElementById('step-bars').value=APP.bars;
       document.getElementById('step-div').value=APP.div;
       document.getElementById('step-timesig').value=APP.timeSig;
       window.__compositionBaseProject=data;
-      drumNotes.forEach(n=>{
       if(Array.isArray(data.rhythmVariations))restoreRhythmVariations(data.rhythmVariations);
-
-        const row=ROWS.find(r=>r.pitch===n.pitch);
+      drumNotes.forEach(n=>{
+        const row=ROWS.find(r=>r.pitch===Number(n.pitch));
         if(!row)return;
-        const step=Math.round(n.startBeat*stepsPerBeat);
-        const vel=Math.max(0.4,Math.min(1,(n.vel||80)/127));
+        const step=Math.round(Number(n.startBeat)*stepsPerBeat);
+        if(!Number.isFinite(step)||step<0||step>=APP.bars*APP.timeSig*stepsPerBeat)return;
+        const vel=Math.max(0.2,Math.min(1,(Number(n.vel)||80)/127));
         APP.pattern[pk(row.id,step)]=vel;
       });
       if(data.name)document.getElementById('project-name').value=data.name;
+      if(data.arrangement)restoreSongArrangement(data.arrangement);
+      else{APP.sections=null;APP.activeSectionId=null;APP.arrangementEffects={fillBeforeChorus:true,breakBars:[],finalVariation:true};}
+      renderArrangementEffects();
       switchView('step');
-      setStatus('ok','JSONをインポートしました — '+drumNotes.length+'ノート');
+      renderStepGrid();
+      setStatus('ok','JSONをインポートしました — '+drumNotes.length+'ノート'+(data.arrangement?'・曲の展開も復元':''));
+
     }catch(e){
       setStatus('err','JSONパース失敗: '+e.message);
     }
