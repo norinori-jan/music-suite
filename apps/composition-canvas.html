@@ -9,6 +9,14 @@
     .spacer { display:inline-block; width:8px; }
     #canvas { position:relative; width:100%; height:80vh; border:1px solid #ccc; margin-top:10px; }
     .card { position:absolute; padding:10px; background:#fff; border:1px solid #aaa; border-radius:6px; }
+    #lyric-panel{display:none;margin:12px 0;padding:14px;border:1px solid #8b78c8;border-radius:10px;background:#171525;color:#f2efff}
+    #lyric-panel.show{display:block}
+    #lyric-panel textarea{width:100%;min-height:90px;box-sizing:border-box;padding:10px;border-radius:8px;background:#242137;color:#fff;border:1px solid #625b80;font:inherit}
+    #lyric-panel .lyric-line{display:flex;gap:8px;align-items:center;margin:8px 0;flex-wrap:wrap}
+    #lyric-panel button{padding:8px 12px;min-height:40px;border-radius:7px;border:1px solid #625b80;background:#29253e;color:#fff}
+    .lyric-chip{display:inline-block;padding:5px 8px;margin:3px;border-radius:6px;background:#393151;color:#fff}
+    .card.lyric-linked{background:#f0eaff!important;border-color:#8b78c8}
+
   </style>
 <script src="../activity.js"></script></head>
 
@@ -60,6 +68,18 @@
   accept="audio/*"
   style="display:none">
 
+<section id="lyric-panel">
+  <h3>✍️ 英語歌詞 × メロディ</h3>
+  <div id="lyric-meta" class="lyric-line"></div>
+  <label for="canvas-lyrics">歌詞（行ごとに編集）</label>
+  <textarea id="canvas-lyrics"></textarea>
+  <div id="lyric-syllable-view"></div>
+  <div class="lyric-line">
+    <button type="button" onclick="applyLyricsToCanvas()">歌詞を音符カードに割り当て</button>
+    <button type="button" onclick="saveLyricCanvasProject()">歌詞とメロディを保存</button>
+  </div>
+  <p style="font-size:12px;opacity:.75">歌詞は音符カードの下に表示します。音符カードの位置・音価は従来どおり編集できます。</p>
+</section>
 <div id="canvas"></div>
 
 <script>
@@ -471,6 +491,48 @@ function openEditDialog(card) {
 /* ───────────────────────────────
    C+E+G+H：音名カード生成
 ────────────────────────────── */
+function parseIncomingLyrics(){
+  const hash=location.hash.replace(/^#/, '');
+  if(!hash.startsWith('lyrics='))return;
+  try{
+    const raw=decodeURIComponent(hash.slice(7));
+    const payload=JSON.parse(decodeURIComponent(escape(atob(raw))));
+    if(payload.source!=='vocal-lab-lyric-link')return;
+    window.__incomingLyricProject=payload;
+    document.getElementById('lyric-panel').classList.add('show');
+    document.getElementById('canvas-lyrics').value=payload.lyrics||payload.original||'';
+    document.getElementById('lyric-meta').textContent=(payload.title||'English lyric')+' · '+(payload.bpm||120)+' BPM · '+(payload.emotion||'neutral');
+    const words=(payload.lyrics||'').split(/\\s+/).filter(Boolean);
+    document.getElementById('lyric-syllable-view').innerHTML='<strong>歌詞の語句</strong><div>'+words.map(w=>'<span class="lyric-chip">'+escapeHtmlCanvas(w)+'</span>').join('')+'</div>';
+    if(Array.isArray(payload.notes)&&payload.notes.length){
+      state.lastNotes=payload.notes.map(n=>({note:n.name||'C4',length:4}));
+      renderNoteCards(state.lastNotes.map(n=>({note:n.note,length:n.length})),payload.title||'Vocal Lab lyric');
+    }
+    history.replaceState(null,'',location.pathname+location.search);
+  }catch(e){console.warn('lyric import failed',e);showToast('歌詞データを読み込めませんでした')}
+}
+function escapeHtmlCanvas(v){return String(v).replace(/[&<>"']/g,ch=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[ch]))}
+function applyLyricsToCanvas(){
+  const text=document.getElementById('canvas-lyrics').value.trim();
+  if(!text){showToast('歌詞を入力してください');return}
+  const words=text.split(/\\s+/).filter(Boolean);
+  const cards=[...document.querySelectorAll('#canvas .card')];
+  if(!cards.length){showToast('先にvocal-labから音符カードを送ってください');return}
+  cards.forEach((card,i)=>{
+    const label=words[i]||'';
+    card.dataset.lyric=label;
+    card.classList.add('lyric-linked');
+    let lyric=card.querySelector('.lyric-chip');
+    if(!lyric){lyric=document.createElement('div');lyric.className='lyric-chip';card.appendChild(lyric)}
+    lyric.textContent=label;
+  });
+  showToast('歌詞を音符カードに割り当てました（単語単位の仮割当）');
+}
+function saveLyricCanvasProject(){
+  const payload=window.__incomingLyricProject||{};
+  const project={source:'composition-canvas-lyrics',name:payload.title||'English lyric composition',lyrics:document.getElementById('canvas-lyrics').value,emotion:payload.emotion||'neutral',bpm:payload.bpm||120,notes:[...document.querySelectorAll('#canvas .card')].map(c=>({note:c.childNodes[0]?.textContent||c.textContent,lyric:c.dataset.lyric||'',length:Number(c.dataset.length)||4,x:parseInt(c.style.left)||0,y:parseInt(c.style.top)||0})),updatedAt:new Date().toISOString()};
+  try{msRegister(project);localStorage.setItem('compositionLyricProject',JSON.stringify(project));showToast('歌詞とメロディをローカル保存しました')}catch(e){showToast('保存できませんでした: '+e.message)}
+}
 function renderNoteCards(segments, songName) {
   const canvas = document.getElementById("canvas");
   canvas.innerHTML = "";
@@ -673,6 +735,7 @@ function sendToVocalLab() {
 ────────────────────────────── */
 window.addEventListener("load", () => {
   loadCardPositions();
+  parseIncomingLyrics();
 });
 
 function showToast(msg) {
