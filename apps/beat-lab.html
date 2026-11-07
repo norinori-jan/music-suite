@@ -539,6 +539,7 @@ function saveRhythmVariation(){
   snapshot.name=name;
   if(found>=0)items[found]=snapshot;else items.push(snapshot);
   if(!writeRhythmVariations(items))return;
+  try{const project=buildExportData();project.rhythmVariations=items;if(typeof msRegister==='function')msRegister(project);}catch(e){console.warn('rhythm variation project sync skipped',e)}
   renderRhythmVariationSelect(String(found>=0?found:items.length-1));
   document.getElementById('rhythm-variation-select').value=String(found>=0?found:items.length-1);
   window.__rhythmAB={a:snapshot,b:window.__rhythmAB?.b||null,last:'a'};
