@@ -141,6 +141,31 @@ select.inp{cursor:pointer}.lbl{font-size:7px;color:var(--mu);letter-spacing:.1em
 #toolbar{padding:6px 12px;border-top:1px solid var(--bd2);background:var(--s1);display:flex;align-items:center;gap:8px;flex-wrap:wrap;flex-shrink:0}
 .tbtn{width:28px;height:28px;border-radius:50%;border:1px solid var(--bd2);background:none;color:var(--tx);font-size:11px;cursor:pointer;display:flex;align-items:center;justify-content:center;transition:all .15s}
 .tbtn:hover{border-color:var(--mel);color:var(--mel)}.tbtn.active{background:rgba(255,230,109,.15);border-color:var(--mel);color:var(--mel)}
+/*mobile-fix*/
+@supports(height:100dvh){html,body{height:100dvh}}
+body{padding-bottom:env(safe-area-inset-bottom)}
+@media(max-width:820px){
+ #topbar{flex-wrap:nowrap!important;overflow-x:auto;-webkit-overflow-scrolling:touch;overscroll-behavior-x:contain}
+ #topbar>*{flex-shrink:0}
+ #tabs{overflow-x:auto;-webkit-overflow-scrolling:touch}#tabs>*{flex-shrink:0}
+ .roll-topbar,.drum-topbar,.arr-topbar{flex-wrap:nowrap!important;overflow-x:auto;-webkit-overflow-scrolling:touch}
+ .roll-topbar>*,.drum-topbar>*,.arr-topbar>*{flex-shrink:0}
+}
+
+#view-compose{flex-direction:row}
+@media(max-width:820px){
+ #view-compose{flex-direction:column;overflow-y:auto;-webkit-overflow-scrolling:touch}
+ #step-panel{width:auto;border-right:0;border-bottom:1px solid var(--bd2);flex-shrink:0}
+ #qc-panel{flex:none;overflow:visible}
+ .sp-body,.qc-body{flex:none;overflow:visible}
+ #view-ai{flex-direction:column;overflow-y:auto;-webkit-overflow-scrolling:touch}
+ .ai-left{width:auto;border-right:0;flex-shrink:0;overflow:visible}
+ .ai-body{overflow:visible}.ai-right{flex:none;overflow:visible}
+ .drum-label,.drum-bar-offset{position:sticky;left:0;z-index:3;background:var(--s1);width:64px}
+ .drum-grid-wrap{-webkit-overflow-scrolling:touch}
+ .roll-scroll{touch-action:pan-x pan-y}
+ .arr-main{-webkit-overflow-scrolling:touch}
+}
 </style>
 <script src="../activity.js"></script></head>
 <body>
@@ -714,9 +739,16 @@ function rollMM(e) {
   if(APP.isResizing&&APP.resizeNoteId){const track=PROJ.tracks.find(t=>t.id===APP.dragNoteTrackId);const note=track?.notes.find(n=>n.id===APP.resizeNoteId);if(note){const step=1/APP.gridDiv;note.durationBeats=Math.max(step,snapBeat(pos.rawBeat-note.startBeat+step/2));const el=document.getElementById('rn-'+note.id);if(el)el.style.width=Math.max(3,note.durationBeats*BEAT_W()-1)+'px';}}
 }
 function rollMU(){APP.pendingRollNote=null;APP.isDragging=false;APP.isResizing=false;}
-function rollTS(e){e.preventDefault();rollMD({button:0,clientX:e.touches[0].clientX,clientY:e.touches[0].clientY,target:e.target});}
-function rollTM(e){e.preventDefault();rollMM({clientX:e.touches[0].clientX,clientY:e.touches[0].clientY});}
-function rollTU(){rollMU();}
+/*mobile-fix*/let TCH=null;
+function rollTS(e){const t=e.touches[0];const onNote=!!(e.target.closest&&e.target.closest('.roll-note'));
+  TCH={x:t.clientX,y:t.clientY,t:Date.now(),onNote,moved:false,target:e.target};
+  if(onNote&&APP.rollTool!=='erase'){e.preventDefault();rollMD({button:0,clientX:t.clientX,clientY:t.clientY,target:e.target});}}
+function rollTM(e){const t=e.touches[0];if(!TCH)return;
+  if(Math.abs(t.clientX-TCH.x)>8||Math.abs(t.clientY-TCH.y)>8)TCH.moved=true;
+  if(TCH.onNote&&APP.rollTool!=='erase'){e.preventDefault();rollMM({clientX:t.clientX,clientY:t.clientY});}}
+function rollTU(e){const T=TCH;TCH=null;
+  if(T&&!T.moved&&(!T.onNote||APP.rollTool==='erase')&&Date.now()-T.t<600){rollMD({button:0,clientX:T.x,clientY:T.y,target:T.target});rollMU();return;}
+  rollMU();}
 function getRollPos(e) {
   const canvas=document.getElementById('roll-canvas');
   const wrap=document.getElementById('roll-scroll');

@@ -215,6 +215,22 @@ select.inp{cursor:pointer}
 .export-row{display:flex;gap:8px;flex-wrap:wrap}
 
 .sdot.cl{background:var(--cl)} .sdot.gm{background:var(--gm)} .sdot.oa{background:var(--oa)}
+/*mobile-fix*/
+@supports(height:100dvh){html,body{height:100dvh}}
+body{padding-bottom:env(safe-area-inset-bottom)}
+@media(max-width:820px){
+ #topbar{flex-wrap:nowrap!important;overflow-x:auto;-webkit-overflow-scrolling:touch;overscroll-behavior-x:contain}
+ #topbar>*{flex-shrink:0}
+ #tabs{overflow-x:auto;-webkit-overflow-scrolling:touch}#tabs>*{flex-shrink:0}
+ .roll-topbar,.drum-topbar,.arr-topbar{flex-wrap:nowrap!important;overflow-x:auto;-webkit-overflow-scrolling:touch}
+ .roll-topbar>*,.drum-topbar>*,.arr-topbar>*{flex-shrink:0}
+}
+
+@media(max-width:820px){
+ #view-export,#view-lib{overflow-y:auto;-webkit-overflow-scrolling:touch}
+ #view-ai{flex-direction:column;overflow-y:auto;-webkit-overflow-scrolling:touch}
+ #view-ai>*{flex:none;width:auto;max-width:none;border-right:0;overflow:visible}
+}
 </style>
 <script src="../activity.js"></script></head>
 <body>
