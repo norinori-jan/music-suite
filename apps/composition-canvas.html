@@ -7,7 +7,10 @@
     .btn { margin: 4px; padding: 6px 10px; cursor:pointer; }
     .primary { background: #4caf50; color: white; }
     .spacer { display:inline-block; width:8px; }
-    #canvas { position:relative; width:100%; height:80vh; border:1px solid #ccc; margin-top:10px; }
+    #canvas { position:relative; display:grid; grid-template-columns:repeat(auto-fill,minmax(min(100%,112px),1fr)); align-content:start; gap:6px; width:100%; min-height:120px; height:auto; max-height:65vh; overflow-y:auto; overflow-x:hidden; box-sizing:border-box; border:1px solid #ccc; margin-top:10px; padding:6px; }
+    #note-sequence-player { width:100%; max-width:100%; box-sizing:border-box; overflow:hidden; }
+    #note-sequence-player textarea { display:block; width:100%; max-width:100%; min-height:150px; box-sizing:border-box; resize:vertical; }
+    .card { position:relative; left:auto!important; top:auto!important; width:auto!important; min-width:0; max-width:100%; min-height:72px; box-sizing:border-box; padding:10px; overflow-wrap:anywhere; }
     .card { position:absolute; padding:10px; background:#fff; border:1px solid #aaa; border-radius:6px; }
     #lyric-panel{display:block;margin:12px 0;padding:14px;border:1px solid #8b78c8;border-radius:10px;background:#171525;color:#f2efff}
     #lyric-panel.show{display:block}
@@ -781,58 +784,30 @@ function loadNoteSequenceToCanvas() {
 function renderNoteCards(segments, songName) {
   const canvas = document.getElementById("canvas");
   canvas.innerHTML = "";
-
-  let x = 0;
-  let y = 0;
+  canvas.classList.add("note-card-grid");
 
   segments.forEach((seg, i) => {
-
     const note = seg.note;
     const len = seg.length;
-
     const card = document.createElement("div");
     card.className = "card";
     card.innerText = note;
     card.dataset.note = note;
-
-    card.style.left = x + "px";
-    card.style.top = y + "px";
-
     card.dataset.length = len;
-
-    const width = Math.max(60, len * 12);
-    card.style.width = width + "px";
-
     card.draggable = true;
-
     card.addEventListener("dragstart", (e) => {
       e.dataTransfer.setData("text/plain", i);
     });
-
-    card.addEventListener("click", () => {
-      openEditDialog(card);
-    });
-
+    card.addEventListener("click", () => openEditDialog(card));
     card.addEventListener("dblclick", () => {
       card.remove();
       showToast(note + " を削除しました");
     });
-
     canvas.appendChild(card);
-
-    x += width + 10;
-
-    if (x > window.innerWidth - 200) {
-      x = 0;
-      y += 60;
-    }
   });
 
-
-
   console.log("描画カード数:", segments.length);
-
-  showToast("音名カードをキャンバスに配置しました");
+  showToast("音名カードを画面幅に合わせて配置しました");
 }
 
 /* ───────────────────────────────
