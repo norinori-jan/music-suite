@@ -10,8 +10,10 @@
     #canvas { position:relative; display:grid; grid-template-columns:repeat(auto-fill,minmax(min(100%,112px),1fr)); align-content:start; gap:6px; width:100%; min-height:120px; height:auto; max-height:65vh; overflow-y:auto; overflow-x:hidden; box-sizing:border-box; border:1px solid #ccc; margin-top:10px; padding:6px; }
     #note-sequence-player { width:100%; max-width:100%; box-sizing:border-box; overflow:hidden; }
     #note-sequence-player textarea { display:block; width:100%; max-width:100%; min-height:150px; box-sizing:border-box; resize:vertical; }
-    .card { position:relative; left:auto!important; top:auto!important; width:auto!important; min-width:0; max-width:100%; min-height:72px; box-sizing:border-box; padding:10px; overflow-wrap:anywhere; }
     .card { position:absolute; padding:10px; background:#fff; border:1px solid #aaa; border-radius:6px; }
+    /* キャンバス内の音符カードは絶対配置を解除し、グリッドで折り返す */
+    #canvas.note-card-grid > .card,
+    #canvas > .card { position:relative!important; inset:auto!important; left:auto!important; top:auto!important; float:none!important; transform:none!important; width:auto!important; min-width:0; max-width:100%; min-height:72px; box-sizing:border-box; padding:10px; overflow-wrap:anywhere; }
     #lyric-panel{display:block;margin:12px 0;padding:14px;border:1px solid #8b78c8;border-radius:10px;background:#171525;color:#f2efff}
     #lyric-panel.show{display:block}
     #lyric-panel textarea{width:100%;min-height:90px;box-sizing:border-box;padding:10px;border-radius:8px;background:#242137;color:#fff;border:1px solid #625b80;font:inherit}
@@ -844,6 +846,7 @@ function loadCardPositions() {
 
   const canvas = document.getElementById("canvas");
   canvas.innerHTML = "";
+  canvas.classList.add("note-card-grid");
 
   // ★ score-editor送信用に復元
   state.lastNotes = [];
@@ -853,13 +856,9 @@ function loadCardPositions() {
     card.className = "card";
     card.innerText = item.note;
 
-    card.style.left = item.x + "px";
-    card.style.top = item.y + "px";
     card.style.backgroundColor = item.color || "#ffffff";
 
     card.dataset.length = item.length || "4";
-    card.style.width =
-      Math.max(60, Number(card.dataset.length) * 12) + "px";
 
     card.draggable = true;
 
