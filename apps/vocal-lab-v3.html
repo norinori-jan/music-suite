@@ -263,6 +263,7 @@ body{background:var(--bg);color:var(--text);font-family:'Inter','Hiragino Sans',
     <div class="empty-cards" id="empty-msg">フレーズをまだ保存していません。<br>録音してカードを作りましょう。</div>
   </div>
   <div class="sidebar-footer">
+    <button class="btn-export" id="btn-open-lyric-studio" style="border-color:var(--accent-dim);color:var(--accent-hi)">✍️ 英語フレーズ・歌詞カード</button>
     <button class="btn-export" id="btn-export">JSON エクスポート</button>
     <!-- FIX: 逆インポートボタン追加 -->
     <button class="btn-export" id="btn-import-json" style="border-color:rgba(29,158,117,0.3);color:var(--green-hi)">📥 JSON インポート</button>
@@ -1680,6 +1681,7 @@ function checkIncomingMood() {
   }
   checkIncomingMood();
   lyricRenderSaved();
+  $('btn-open-lyric-studio').addEventListener('click',lyricOpenStudio);
   $('lyric-save').addEventListener('click',lyricSaveCard);
   $('lyric-export').addEventListener('click',lyricExportCards);
   $('lyric-clear').addEventListener('click',lyricClearDraft);
