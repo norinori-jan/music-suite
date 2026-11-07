@@ -257,6 +257,19 @@ body{padding-bottom:env(safe-area-inset-bottom)}
   <label style="display:flex;align-items:center;gap:5px">ドラム音量 <input id="drum-volume" type="range" min="0" max="100" value="80" style="width:82px"></label>
   <span id="mix-status" style="color:var(--mu)">メロディとドラムを同時に試聴できます</span>
 </div>
+<div id="variationbar" style="display:flex;align-items:center;gap:7px;flex-wrap:wrap;padding:7px 12px;background:var(--s2);border-bottom:1px solid var(--bd);font-size:10px">
+  <strong style="color:var(--acc)">🎚 MY RHYTHMS</strong>
+  <select id="rhythm-variation-select" class="inp" style="min-width:135px;max-width:190px;font-size:10px">
+    <option value="">保存したリズムはありません</option>
+  </select>
+  <input id="rhythm-variation-name" class="inp" placeholder="例：お気に入りのバラード" style="width:155px;font-size:10px">
+  <button class="btn" onclick="saveRhythmVariation()">＋ このリズムを保存</button>
+  <button class="btn" onclick="loadRhythmVariation()">読み込む</button>
+  <button class="btn" onclick="toggleRhythmAB()">A/B切替</button>
+  <button class="btn" onclick="deleteRhythmVariation()">削除</button>
+  <span id="variation-status" style="color:var(--mu)">気に入ったリズムを名前付きで残せます</span>
+</div>
+
 
 <!-- TABS -->
 <div id="tabs">
@@ -477,6 +490,117 @@ const APP={
 };
 
 const VEL_LEVELS=[1,0.85,0.65,0.4]; // tap cycles: off->full->med->soft->off
+
+// ── User rhythm variations: saved per song in this browser ──
+function rhythmVariationKey(){
+  const base=window.__compositionBaseProject||{};
+  const name=document.getElementById('project-name')?.value||base.name||base.title||'Untitled Beat';
+  const identity=base.id||base.projectId||name;
+  return 'music-suite:rhythm-variations:v1:'+String(identity).trim().toLowerCase().replace(/[^a-z0-9ぁ-んァ-ヶ一-龠_-]/g,'_');
+}
+function readRhythmVariations(){
+  try{const v=JSON.parse(localStorage.getItem(rhythmVariationKey())||'[]');return Array.isArray(v)?v:[];}
+  catch(e){return [];}
+}
+function writeRhythmVariations(items){
+  try{localStorage.setItem(rhythmVariationKey(),JSON.stringify(items));}
+  catch(e){setVariationStatus('err','保存できません。ブラウザの保存容量を確認してください');return false;}
+  if(window.__compositionBaseProject)window.__compositionBaseProject.rhythmVariations=items;
+  return true;
+}
+function setVariationStatus(type,message){
+  const el=document.getElementById('variation-status');
+  if(el){el.textContent=message;el.style.color=type==='err'?'#ff7777':'var(--mu)';}
+}
+function captureRhythmVariation(){
+  return {pattern:{...APP.pattern},bars:APP.bars,div:APP.div,timeSig:APP.timeSig,bpm:PROJ_BPM(),swing:APP.swing,
+    melodyEnabled:document.getElementById('melody-enabled').checked,
+    melodyVolume:Number(document.getElementById('melody-volume').value),
+    drumVolume:Number(document.getElementById('drum-volume').value),
+    savedAt:new Date().toISOString()};
+}
+function renderRhythmVariationSelect(selectName){
+  const sel=document.getElementById('rhythm-variation-select');
+  if(!sel)return;
+  const items=readRhythmVariations();
+  const previous=selectName!==undefined?selectName:sel.value;
+  sel.innerHTML=items.length?'':'<option value="">保存したリズムはありません</option>';
+  items.forEach((item,i)=>{
+    const opt=document.createElement('option');opt.value=String(i);opt.textContent=item.name;sel.appendChild(opt);
+  });
+  if(items.length){sel.value=items.some((v,i)=>String(i)===previous)?previous:'0';}
+}
+function saveRhythmVariation(){
+  const name=document.getElementById('rhythm-variation-name').value.trim();
+  if(!name){setVariationStatus('err','先にリズムの名前を入力してください');document.getElementById('rhythm-variation-name').focus();return;}
+  const items=readRhythmVariations();
+  const found=items.findIndex(v=>v.name.toLowerCase()===name.toLowerCase());
+  const snapshot=captureRhythmVariation();
+  snapshot.name=name;
+  if(found>=0)items[found]=snapshot;else items.push(snapshot);
+  if(!writeRhythmVariations(items))return;
+  renderRhythmVariationSelect(String(found>=0?found:items.length-1));
+  document.getElementById('rhythm-variation-select').value=String(found>=0?found:items.length-1);
+  window.__rhythmAB={a:snapshot,b:window.__rhythmAB?.b||null,last:'a'};
+  setVariationStatus('ok','「'+name+'」を保存しました');
+}
+function applyRhythmVariation(item){
+  if(!item)return false;
+  stopPlay();
+  APP.pattern={...(item.pattern||{})};
+  APP.bars=Math.min(32,Math.max(1,Number(item.bars)||1));
+  APP.div=[8,16,32].includes(Number(item.div))?Number(item.div):16;
+  APP.timeSig=[3,4,6].includes(Number(item.timeSig))?Number(item.timeSig):4;
+  APP.swing=!!item.swing;
+  document.getElementById('step-bars').value=APP.bars;
+  document.getElementById('step-div').value=APP.div;
+  document.getElementById('step-timesig').value=APP.timeSig;
+  document.getElementById('bpm-sl').value=Number(item.bpm)||120;
+  setBpm(Number(item.bpm)||120);
+  document.getElementById('melody-enabled').checked=item.melodyEnabled!==false;
+  document.getElementById('melody-volume').value=item.melodyVolume??65;
+  document.getElementById('drum-volume').value=item.drumVolume??80;
+  document.getElementById('swing-btn').textContent='SWING '+(APP.swing?'ON':'OFF');
+  document.getElementById('swing-btn').classList.toggle('on',APP.swing);
+  updateMixVolumes();
+  renderStepGrid();
+  return true;
+}
+function loadRhythmVariation(){
+  const index=Number(document.getElementById('rhythm-variation-select').value);
+  const item=readRhythmVariations()[index];
+  if(!item){setVariationStatus('err','読み込むリズムを選んでください');return;}
+  window.__rhythmAB={a:captureRhythmVariation(),b:item,last:'b'};
+  applyRhythmVariation(item);
+  document.getElementById('rhythm-variation-name').value=item.name;
+  setVariationStatus('ok','「'+item.name+'」を読み込みました。再生して聴き比べてください');
+}
+function toggleRhythmAB(){
+  const ab=window.__rhythmAB;
+  if(!ab?.a||!ab?.b){setVariationStatus('err','A/B比較には、保存したリズムを一度読み込んでください');return;}
+  const next=ab.last==='a'?'b':'a';
+  const item=ab[next];
+  const current=captureRhythmVariation();
+  ab[ab.last]=current;
+  applyRhythmVariation(item);
+  ab.last=next;
+  setVariationStatus('ok','比較 '+next.toUpperCase()+'：再生して違いを確認してください');
+}
+function deleteRhythmVariation(){
+  const sel=document.getElementById('rhythm-variation-select');
+  const index=Number(sel.value),items=readRhythmVariations();
+  if(!items[index]){setVariationStatus('err','削除するリズムを選んでください');return;}
+  const removed=items.splice(index,1)[0];
+  if(!writeRhythmVariations(items))return;
+  renderRhythmVariationSelect('');
+  setVariationStatus('ok','「'+removed.name+'」を削除しました');
+}
+function restoreRhythmVariations(items){
+  if(!Array.isArray(items)||!items.length)return;
+  try{localStorage.setItem(rhythmVariationKey(),JSON.stringify(items));renderRhythmVariationSelect();}
+  catch(e){setVariationStatus('err','曲データ内のリズム候補を復元できませんでした');}
+}
+
 
 // ════════════════════════════════════════════════════════
 // UTILS
@@ -1203,7 +1327,8 @@ function _buildExportData(){
     melody: base.melody||{notes:[]},
     drums: { notes },
     chords: base.chords||base.generatedMusic?.chords||null,
-    exported: new Date().toISOString()
+    exported: new Date().toISOString(),
+    rhythmVariations: readRhythmVariations()
   });
 }
 
@@ -1244,6 +1369,8 @@ function importJSON(input){
       document.getElementById('step-timesig').value=APP.timeSig;
       window.__compositionBaseProject=data;
       drumNotes.forEach(n=>{
+      if(Array.isArray(data.rhythmVariations))restoreRhythmVariations(data.rhythmVariations);
+
         const row=ROWS.find(r=>r.pitch===n.pitch);
         if(!row)return;
         const step=Math.round(n.startBeat*stepsPerBeat);
@@ -1375,6 +1502,8 @@ document.addEventListener('keydown',e=>{
   renderStepGrid();
   checkIncomingImport();
   setStatus('ok','BEAT//LAB 起動完了 — STEPでパターン編集、PATTERNSでプリセット選択');
+  renderRhythmVariationSelect();
+
 })();
 
 function applyLibraryPatternSilent(p){
