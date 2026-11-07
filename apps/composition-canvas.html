@@ -57,6 +57,10 @@
 🎼 score-editorへ送る
 </button>
 
+<button class="btn primary" onclick="sendToBeatLab()">
+🥁 リズムを作る
+</button>
+
 <button class="btn primary"
         onclick="sendToVocalLab()">
 🎤 vocal-labへ送る
@@ -568,6 +572,11 @@ function parseIncomingLyrics(){
       if(restored)history.replaceState(null,'',location.pathname+location.search);
       return restored;
     }
+    if(isImport&&payload.source==='composition-canvas'&&payload.fromBeatLab){
+      const restored=restoreBeatLabProject(payload);
+      if(restored)history.replaceState(null,'',location.pathname+location.search);
+      return restored;
+    }
     if(payload.source!=='vocal-lab-lyric-link')return false;
     window.__incomingLyricProject=payload;window.__musicProjectId=payload.projectId||window.__musicProjectId||('song-'+Date.now());document.getElementById('lyric-panel').classList.add('show');
     document.getElementById('lyric-meta').textContent=(payload.title||'English lyric')+' · '+(payload.bpm||120)+' BPM · '+(payload.emotion||'neutral');
@@ -942,6 +951,65 @@ function sendToScoreEditor() {
   const project = buildMelodyProject("composition-canvas");
   try { msRegister(project); } catch(e) {}
   window.location.href = "score-editor-v2.html#import=" + encodeForImport(project);
+}
+
+function sendToBeatLab(){
+  if(!state.lastNotes||!state.lastNotes.length){
+    showToast('先にメロディ候補を生成するか、音符カードを読み込んでください');
+    return;
+  }
+  try{saveLyricCanvasProject()}catch(e){console.warn('lyric snapshot failed',e)}
+  const project=buildMelodyProject('composition-canvas');
+  const incoming=window.__incomingLyricProject||{};
+  project.name=incoming.title||incoming.name||'Say It Before Monday';
+  project.title=project.name;
+  project.bpm=Number(incoming.bpm)||Number(document.getElementById('note-sequence-bpm')?.value)||120;
+  project.timeSig=4;
+  project.generatedMusic=window.__lyricMusicSketch||incoming.generatedMusic||null;
+  project.lyricProject=window.__savedLyricCanvasProject||null;
+  project.lyrics=lyricTextRead();
+  project.sections=lyricSectionsRead();
+  project.fromCompositionCanvas=true;
+  window.location.href='beat-lab.html#import='+encodeForImport(project);
+}
+
+function midiToNoteName(midi){
+  const names=['C','C#','D','D#','E','F','F#','G','G#','A','A#','B'];
+  const n=Math.round(Number(midi));
+  return names[((n%12)+12)%12]+(Math.floor(n/12)-1);
+}
+
+function restoreBeatLabProject(project){
+  if(!project||project.source!=='composition-canvas'||!project.fromBeatLab)return false;
+  window.__incomingLyricProject=project.lyricProject||window.__incomingLyricProject||{};
+  window.__lyricMusicSketch=project.generatedMusic||window.__incomingLyricProject.generatedMusic||null;
+  document.getElementById('lyric-panel').classList.add('show');
+  document.getElementById('lyric-meta').textContent=(project.title||project.name||'Composition')+' · '+(project.bpm||120)+' BPM · リズム編集済み';
+  if(Array.isArray(project.sections)&&project.sections.length)lyricSectionsWrite(project.sections);
+  else if(typeof project.lyrics==='string')document.getElementById('canvas-lyrics').value=project.lyrics;
+  const melodyNotes=project.melody&&Array.isArray(project.melody.notes)?project.melody.notes:[];
+  if(melodyNotes.length){
+    state.lastNotes=melodyNotes.map(n=>({note:typeof n.pitch==='number'?midiToNoteName(n.pitch):String(n.pitch||'C4'),length:Math.max(0.25,Number(n.durationBeats)||1)*4}));
+    renderNoteCards(state.lastNotes,project.title||project.name||'Composition with rhythm');
+    const cards=[...document.querySelectorAll('#canvas .card')];
+    const lyricNotes=project.generatedMusic&&Array.isArray(project.generatedMusic.melody)?project.generatedMusic.melody:[];
+    cards.forEach((card,i)=>{
+      const lyric=lyricNotes[i];if(!lyric)return;
+      card.dataset.lyric=lyric.lyric||lyric.word||'';
+      card.dataset.lyricRole=lyric.role||'';
+      card.dataset.lyricSection=lyric.section||'';
+      if(card.dataset.lyric){
+        card.classList.add('lyric-linked');
+        const label=document.createElement('span');label.className='lyric-assignment';
+        label.textContent=(lyric.role==='A'?'A':lyric.role==='B'?'B':'二人')+' · '+(lyric.word||lyric.lyric);
+        card.appendChild(label);
+      }
+    });
+  }
+  window.__lastDrumProject={bpm:project.bpm||120,timeSig:project.timeSig||4,bars:project.bars||2,div:project.div||16,drums:project.drums||{notes:[]}};
+  if(typeof msRegister==='function')msRegister(project);
+  showToast('メロディを保持したままドラムリズムを取り込みました（'+(project.drums?.notes?.length||0)+'打）');
+  return true;
 }
 
 function sendToSheet() {
