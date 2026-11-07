@@ -968,7 +968,9 @@ function sendToBeatLab(){
   project.timeSig=4;
   project.generatedMusic=window.__lyricMusicSketch||incoming.generatedMusic||null;
   project.drums=window.__lastDrumProject?.drums||{notes:[]};
+  project.arrangement=window.__lastDrumProject?.arrangement||null;
   project.rhythmVariations=window.__lastDrumProject?.rhythmVariations||[];
+  project.arrangement=window.__lastDrumProject?.arrangement||null;
   project.bars=window.__lastDrumProject?.bars||2;
   project.div=window.__lastDrumProject?.div||16;
   project.lyricProject=window.__savedLyricCanvasProject||null;
@@ -1011,7 +1013,7 @@ function restoreBeatLabProject(project){
       }
     });
   }
-  window.__lastDrumProject={bpm:project.bpm||120,timeSig:project.timeSig||4,bars:project.bars||2,div:project.div||16,drums:project.drums||{notes:[]},rhythmVariations:project.rhythmVariations||[]};
+  window.__lastDrumProject={bpm:project.bpm||120,timeSig:project.timeSig||4,bars:project.bars||2,div:project.div||16,drums:project.drums||{notes:[]},rhythmVariations:project.rhythmVariations||[],arrangement:project.arrangement||null};
   saveLyricCanvasProject();
   if(typeof msRegister==='function')msRegister(project);
   showToast('メロディを保持したままドラムリズムを取り込みました（'+(project.drums?.notes?.length||0)+'打）');
