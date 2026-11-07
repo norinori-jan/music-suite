@@ -1592,7 +1592,7 @@ async function lyricGenerateCandidates(){
   const btn=$('lyric-ai-generate');btn.disabled=true;btn.textContent='生成中…';
   try{
     const system='You are an English-language songwriter and lyric editor. Preserve the speaker’s core meaning and emotional truth. Create three distinct singable lyric adaptations. Keep each concise, natural, memorable, and easy to pronounce. Consider stress, syllable flow, and optional end rhyme. Do not invent personal facts. Return valid JSON only: {"candidates":[{"style":"...","text":"...","note":"..."}]}.';
-    const prompt='Original spoken English (keep its meaning):\\n'+original+'\\n\\nCreate exactly 3 lyric adaptations: (1) close to original and conversational, (2) poetic with imagery, (3) rhythmic and memorable with light rhyme if natural. Keep each to 1-4 lines. Notes in Japanese. Return JSON only.';
+    const prompt='Original spoken English (keep its meaning):\n'+original+'\n\nCreate exactly 3 lyric adaptations: (1) close to original and conversational, (2) poetic with imagery, (3) rhythmic and memorable with light rhyme if natural. Keep each to 1-4 lines. Notes in Japanese. Return JSON only.';
     const result=await callClaude(system,prompt);
     const list=Array.isArray(result.candidates)?result.candidates.slice(0,3):[];
     if(!list.length)throw new Error('候補が返りませんでした');
