@@ -374,6 +374,9 @@ async function analyzeAudioBuffer(arrayBuf, displayName) {
 
     // C：カード表示
     renderNoteCards(segments, displayName);
+    // 音声解析時の従来の出力処理はここで明示的に実行する。
+    exportMelodyLog(segments, displayName);
+    exportMelodyToSheet(segments, displayName);
 
     showToast(
       `${notes.length}フレーム → ${segments.length}音に統合(${displayName || ''})`
@@ -758,7 +761,8 @@ function loadNoteSequenceToCanvas() {
   const status = document.getElementById('note-sequence-status');
   try {
     const notes = parseNoteSequenceText(document.getElementById('note-sequence-input').value);
-    state.lastNotes = notes.map(n => ({note:n.note,length:n.length}));
+    // 入力値の length は拍数。キャンバス内部は4=1拍の旧単位なので4倍して保持する。
+    state.lastNotes = notes.map(n => ({note:n.note,length:n.length * 4}));
     renderNoteCards(state.lastNotes, 'Pasted note sequence');
     status.textContent = notes.length + '音を音符カードとして読み込みました。';
   } catch (e) { status.textContent = e.message; }
@@ -814,8 +818,7 @@ function renderNoteCards(segments, songName) {
     }
   });
 
-  exportMelodyLog(segments, songName);
-  exportMelodyToSheet(segments, songName);
+
 
   console.log("描画カード数:", segments.length);
 
