@@ -527,9 +527,16 @@ function lyricRenderPreview(){
   else box.innerHTML='<strong>歌詞の語句</strong><div>'+document.getElementById('canvas-lyrics').value.split(/\s+/).filter(Boolean).map(w=>'<span class="lyric-chip">'+escapeHtmlCanvas(w)+'</span>').join('')+'</div>';
 }
 function parseIncomingLyrics(){
-  const hash=location.hash.replace(/^#/,'');if(!hash.startsWith('lyrics='))return false;
+  const hash=location.hash.replace(/^#/,'');
+  const isLyrics=hash.startsWith('lyrics='),isImport=hash.startsWith('import=');
+  if(!isLyrics&&!isImport)return false;
   try{
-    const raw=decodeURIComponent(hash.slice(7)),payload=JSON.parse(decodeURIComponent(escape(atob(raw))));
+    const raw=decodeURIComponent(hash.slice(isLyrics?7:7)),payload=JSON.parse(decodeURIComponent(escape(atob(raw))));
+    if(isImport&&payload.source==='composition-canvas-lyrics'){
+      const restored=restoreLyricCanvasProject(payload);
+      if(restored)history.replaceState(null,'',location.pathname+location.search);
+      return restored;
+    }
     if(payload.source!=='vocal-lab-lyric-link')return false;
     window.__incomingLyricProject=payload;document.getElementById('lyric-panel').classList.add('show');
     document.getElementById('lyric-meta').textContent=(payload.title||'English lyric')+' · '+(payload.bpm||120)+' BPM · '+(payload.emotion||'neutral');
@@ -564,7 +571,7 @@ function applyLyricsToCanvas(){
 }
 function saveLyricCanvasProject(){
   const incoming=window.__incomingLyricProject||{},cards=[...document.querySelectorAll('#canvas .card')];
-  const project={version:2,source:'composition-canvas-lyrics',kind:incoming.kind||'single',name:incoming.title||'English lyric composition',title:incoming.title||'English lyric composition',story:incoming.story||'',emotion:incoming.emotion||'neutral',bpm:Number(incoming.bpm)||120,original:incoming.original||'',sourceDialogue:incoming.sourceDialogue||null,sections:lyricSectionsRead(),lyrics:lyricTextRead(),analysis:incoming.analysis||null,notes:cards.map((card,index)=>({note:card.firstChild?.textContent||'',lyric:card.dataset.lyric||'',role:card.dataset.lyricRole||'',section:card.dataset.lyricSection||'',length:Number(card.dataset.length)||4,x:parseInt(card.style.left)||0,y:parseInt(card.style.top)||0,color:card.style.backgroundColor||'#ffffff',index})),updatedAt:new Date().toISOString()};
+  const project={version:2,source:'composition-canvas-lyrics',kind:incoming.kind||'single',name:incoming.title||'English lyric composition',title:incoming.title||'English lyric composition',story:incoming.story||'',emotion:incoming.emotion||'neutral',bpm:Number(incoming.bpm)||120,original:incoming.original||'',sourceDialogue:incoming.sourceDialogue||null,sections:lyricSectionsRead(),lyrics:lyricTextRead(),analysis:incoming.analysis||null,notes:cards.map((card,index)=>({note:card.innerText?.replace(/\s*\n\s*/g,' ').trim()||'',lyric:card.dataset.lyric||'',role:card.dataset.lyricRole||'',section:card.dataset.lyricSection||'',length:Number(card.dataset.length)||4,x:parseInt(card.style.left)||0,y:parseInt(card.style.top)||0,color:card.style.backgroundColor||'#ffffff',index})),updatedAt:new Date().toISOString()};
   try{localStorage.setItem('compositionLyricProject',JSON.stringify(project));if(typeof msRegister==='function')msRegister(project);window.__savedLyricCanvasProject=project;showToast('A・B・サビ・ブリッジと音符カードの割当を保存しました')}
   catch(e){showToast('保存できませんでした: '+e.message)}
 }
