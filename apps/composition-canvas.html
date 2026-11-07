@@ -104,6 +104,18 @@
   </div>
   <p style="font-size:12px;opacity:.75">歌詞だけでも保存できます。メロディ候補を生成すると、音符カードとコード進行を追加できます。生成結果は必ず聴いて調整してください。</p>
 </section>
+<section id="note-sequence-player" style="margin:14px 0;padding:14px;border:1px solid #397b83;border-radius:10px;background:#10252b;color:#e8fbff">
+  <h3 style="margin:0 0 8px">🎹 音符列を貼り付けて聴く</h3>
+  <p style="font-size:12px;opacity:.85">例：C4×4, E4×4, G4×4, D4×4（×の後ろは拍数）</p>
+  <textarea id="note-sequence-input" rows="5" style="width:100%;box-sizing:border-box;padding:10px;border-radius:7px;background:#172f36;color:#fff;border:1px solid #47727a;font:inherit" placeholder="ここにメモ帳の音符列を貼り付け"></textarea>
+  <div style="display:flex;gap:8px;align-items:center;flex-wrap:wrap;margin-top:10px">
+    <label>BPM <input id="note-sequence-bpm" type="number" min="40" max="220" value="120" style="width:76px;padding:7px"></label>
+    <button type="button" class="primary" onclick="playNoteSequence()">▶ 再生</button>
+    <button type="button" onclick="stopNoteSequence()">■ 停止</button>
+    <button type="button" onclick="loadNoteSequenceToCanvas()">音符カードに読み込む</button>
+  </div>
+  <div id="note-sequence-status" aria-live="polite" style="font-size:12px;margin-top:8px">音符列を貼り付けて再生できます。</div>
+</section>
 <div id="canvas"></div>
 
 <script>
@@ -681,6 +693,77 @@ function restoreLyricCanvasProject(project){
   }
   lyricRenderPreview();return true;
 }
+let noteSequenceAudio = null;
+let noteSequenceNodes = [];
+function parseNoteSequenceText(raw) {
+  const tokens = String(raw || '').split(/[、,;\\s]+/).map(s => s.trim()).filter(Boolean);
+  const notes = [];
+  for (const token of tokens) {
+    const m = token.match(/^([A-Ga-g]#?-?\\d+)\\s*[×xX*]\\s*(\\d+(?:\\.\\d+)?)$/);
+    if (!m) throw new Error('形式を読み取れません: ' + token + '（例 C4×4）');
+    const note = m[1].toUpperCase();
+    const length = Number(m[2]);
+    if (!Number.isFinite(length) || length <= 0 || length > 64) throw new Error('拍数が不正です: ' + token);
+    const midi = noteToMidi(note);
+    if (!Number.isFinite(midi)) throw new Error('音名が不正です: ' + token);
+    notes.push({note, length});
+  }
+  if (!notes.length) throw new Error('音符列が空です。C4×4 の形式で貼り付けてください。');
+  return notes;
+}
+function stopNoteSequence() {
+  noteSequenceNodes.forEach(node => { try { node.stop(); } catch (_) {} });
+  noteSequenceNodes = [];
+  const status = document.getElementById('note-sequence-status');
+  if (status) status.textContent = '停止しました。';
+}
+async function playNoteSequence() {
+  stopNoteSequence();
+  const status = document.getElementById('note-sequence-status');
+  let notes;
+  try { notes = parseNoteSequenceText(document.getElementById('note-sequence-input').value); }
+  catch (e) { status.textContent = e.message; return; }
+  const bpm = Math.max(40, Math.min(220, Number(document.getElementById('note-sequence-bpm').value) || 120));
+  const AudioCtx = window.AudioContext || window.webkitAudioContext;
+  if (!AudioCtx) { status.textContent = 'このブラウザはWeb Audioに対応していません。'; return; }
+  if (!noteSequenceAudio || noteSequenceAudio.state === 'closed') noteSequenceAudio = new AudioCtx();
+  await noteSequenceAudio.resume();
+  const ctx = noteSequenceAudio;
+  const beatSeconds = 60 / bpm;
+  let at = ctx.currentTime + 0.08;
+  notes.forEach(item => {
+    const midi = noteToMidi(item.note);
+    const frequency = 440 * Math.pow(2, (midi - 69) / 12);
+    const osc = ctx.createOscillator();
+    const gain = ctx.createGain();
+    osc.type = 'triangle';
+    osc.frequency.setValueAtTime(frequency, at);
+    gain.gain.setValueAtTime(0.0001, at);
+    gain.gain.linearRampToValueAtTime(0.16, at + 0.015);
+    gain.gain.setValueAtTime(0.16, Math.max(at + 0.02, at + item.length * beatSeconds - 0.04));
+    gain.gain.linearRampToValueAtTime(0.0001, at + item.length * beatSeconds);
+    osc.connect(gain); gain.connect(ctx.destination);
+    osc.start(at); osc.stop(at + item.length * beatSeconds + 0.02);
+    noteSequenceNodes.push(osc);
+    at += item.length * beatSeconds;
+  });
+  status.textContent = notes.length + '音を再生中（BPM ' + bpm + '）。再生時間 約' + Math.round(notes.reduce((s,n)=>s+n.length,0)*beatSeconds) + '秒';
+  const totalMs = Math.ceil((at - ctx.currentTime) * 1000) + 150;
+  window.setTimeout(() => {
+    if (status && status.textContent.includes('再生中')) status.textContent = notes.length + '音の再生が終わりました。';
+    noteSequenceNodes = [];
+  }, totalMs);
+}
+function loadNoteSequenceToCanvas() {
+  const status = document.getElementById('note-sequence-status');
+  try {
+    const notes = parseNoteSequenceText(document.getElementById('note-sequence-input').value);
+    state.lastNotes = notes.map(n => ({note:n.note,length:n.length}));
+    renderNoteCards(state.lastNotes, 'Pasted note sequence');
+    status.textContent = notes.length + '音を音符カードとして読み込みました。';
+  } catch (e) { status.textContent = e.message; }
+}
+
 function renderNoteCards(segments, songName) {
   const canvas = document.getElementById("canvas");
   canvas.innerHTML = "";
