@@ -86,10 +86,23 @@
   <div id="single-lyric-editor"><label for="canvas-lyrics">歌詞（行ごとに編集）</label><textarea id="canvas-lyrics"></textarea></div>
   <div id="lyric-syllable-view"></div>
   <div class="lyric-line">
-    <button type="button" onclick="applyLyricsToCanvas()">歌詞を音符カードに割り当て</button>
-    <button type="button" onclick="saveLyricCanvasProject()">歌詞とメロディを保存</button>
+    <button type="button" onclick="saveLyricCanvasProject()">歌詞・素材を保存</button>
   </div>
-  <p style="font-size:12px;opacity:.75">歌詞は音符カードの下に表示します。音符カードの位置・音価は従来どおり編集できます。</p>
+  <div style="border:1px solid #625b80;border-radius:8px;padding:12px;margin:12px 0">
+    <strong>🎼 歌詞からメロディ・コードのたたき台を作る</strong>
+    <p style="font-size:12px;opacity:.8">自動作曲の完成版ではなく、歌詞の音節と雰囲気から音符・コード候補を作る編集用スケッチです。あとから音名・音価を変更できます。</p>
+    <div class="lyric-line">
+      <label>Key <select id="lyric-key"><option value="C">C major</option><option value="G">G major</option><option value="D">D major</option><option value="A">A minor</option><option value="E">E minor</option></select></label>
+      <label>雰囲気 <select id="lyric-mood"><option value="hope">希望・前向き</option><option value="bittersweet" selected>切なさ・温かさ</option><option value="calm">穏やか</option><option value="bright">明るい</option></select></label>
+      <label>コード進行 <select id="lyric-progression"><option value="pop">王道（I–V–vi–IV）</option><option value="warm">温かい（I–vi–IV–V）</option><option value="sad">切ない（vi–IV–I–V）</option><option value="simple">シンプル（I–IV–V–I）</option></select></label>
+    </div>
+    <div class="lyric-line">
+      <button type="button" class="primary" onclick="generateLyricMusicSketch()">✨ 歌詞から音符・コード候補を生成</button>
+      <button type="button" onclick="applyLyricsToCanvas()">既存音符に歌詞を割り当て</button>
+    </div>
+    <div id="lyric-music-result" aria-live="polite" style="font-size:13px"></div>
+  </div>
+  <p style="font-size:12px;opacity:.75">歌詞だけでも保存できます。メロディ候補を生成すると、音符カードとコード進行を追加できます。生成結果は必ず聴いて調整してください。</p>
 </section>
 <div id="canvas"></div>
 
@@ -569,9 +582,71 @@ function applyLyricsToCanvas(){
   window.__lyricCardAssignments=cards.map((card,index)=>({index,lyric:card.dataset.lyric||'',role:card.dataset.lyricRole||'',section:card.dataset.lyricSection||''}));
   showToast('歌詞をパート・フレーズ単位で音符カードに割り当てました');
 }
+function lyricEstimateSyllables(word){
+  const w=String(word||'').toLowerCase().replace(/[^a-z']/g,'');
+  if(!w)return 1;
+  if(w.length<=3)return 1;
+  const groups=w.match(/[aeiouy]+/g)||[];
+  let n=Math.max(1,groups.length);
+  if(/e$/.test(w)&&!/(le|ye)$/.test(w)&&n>1)n--;
+  return n;
+}
+const LYRIC_NOTE_NAMES=['C','C#','D','D#','E','F','F#','G','G#','A','A#','B'];
+const LYRIC_SCALES={C:[0,2,4,5,7,9,11],G:[0,2,4,5,7,9,11],D:[0,2,4,6,7,9,11],A:[0,2,3,5,7,8,10],E:[0,2,3,5,7,8,10]};
+const LYRIC_ROOTS={C:0,G:7,D:2,A:9,E:4};
+const LYRIC_PROGRESSIONS={pop:[1,5,6,4],warm:[1,6,4,5],sad:[6,4,1,5],simple:[1,4,5,1]};
+function generateLyricMusicSketch(){
+  const text=lyricTextRead();
+  if(!text){showToast('先に歌詞を入力してください');return}
+  const key=document.getElementById('lyric-key').value;
+  const mood=document.getElementById('lyric-mood').value;
+  const progression=document.getElementById('lyric-progression').value;
+  const scale=LYRIC_SCALES[key],root=LYRIC_ROOTS[key];
+  const degrees=LYRIC_PROGRESSIONS[progression];
+  const chordNames=degrees.map(d=>{
+    const idx=(d-1)%7,third=scale[(idx+2)%7],fifth=scale[(idx+4)%7];
+    const r=(root+scale[idx])%12;
+    const quality=(d===1||d===4||d===5)?'':(key==='A'||key==='E')?'m':'m';
+    return LYRIC_NOTE_NAMES[r]+quality;
+  });
+  const sections=lyricSectionsRead();
+  const sourceLines=sections.length?sections.flatMap(s=>s.text.split(/\n+/).filter(Boolean).map(line=>({role:s.role,label:s.label,text:line}))):text.split(/\n+/).filter(Boolean).map(line=>({role:'LEAD',label:'Lyric',text:line.replace(/^\[[^\]]+\]\s*/,'')}));
+  const syllables=[];
+  sourceLines.forEach(line=>{
+    const words=line.text.match(/[A-Za-z]+(?:'[A-Za-z]+)?/g)||[];
+    words.forEach(word=>{for(let i=0;i<lyricEstimateSyllables(word);i++)syllables.push({word,role:line.role,label:line.label,phrase:line.text})});
+  });
+  if(!syllables.length){showToast('英語の単語を読み取れませんでした');return}
+  const maxNotes=96,selected=syllables.slice(0,maxNotes);
+  const notes=selected.map((item,i)=>{
+    const chordIndex=Math.floor(i/4)%4,degree=degrees[chordIndex],scaleIndex=(degree-1+((i%4===0)?0:(i%4===1)?2:(i%4===2)?4:1))%7;
+    let octave=4;
+    if(mood==='bright')octave=5;
+    if(mood==='calm')octave=4;
+    if(mood==='bittersweet'&&i%8>=4)octave=4;
+    if(mood==='hope'&&i%8>=4)octave=5;
+    const midi=60+root+scale[scaleIndex]+(octave-4)*12;
+    const pitch=((midi-60)%12+12)%12;
+    const note=LYRIC_NOTE_NAMES[pitch]+(4+Math.floor((midi-60)/12));
+    return {note,length: i%4===3?2:1,word:item.word,lyric:item.phrase,role:item.role,section:item.label,startBeat:i};
+  });
+  state.lastNotes=notes.map(n=>({note:n.note,length:n.length}));
+  renderNoteCards(state.lastNotes,(window.__incomingLyricProject||{}).title||'Lyric sketch');
+  const cards=[...document.querySelectorAll('#canvas .card')];
+  cards.forEach((card,i)=>{
+    const n=notes[i];if(!n)return;
+    card.dataset.lyric=n.lyric;card.dataset.lyricRole=n.role;card.dataset.lyricSection=n.section;
+    card.dataset.word=n.word;card.dataset.startBeat=String(n.startBeat);
+    card.classList.add('lyric-linked');
+    const label=document.createElement('span');label.className='lyric-assignment';label.textContent=(n.role==='A'?'A':n.role==='B'?'B':'二人')+' · '+n.word;card.appendChild(label);
+  });
+  window.__lyricMusicSketch={key,mood,progression,chords:chordNames.map((chord,i)=>({bar:i+1,chord,beats:4})),melody:notes.map((n,i)=>({pitch:n.note,startBeat:n.startBeat,durationBeats:n.length,word:n.word,lyric:n.lyric,role:n.role,section:n.section})),method:'rule-based-draft-v1',warning:'音節推定と音高選択による作曲スケッチ。発音・アクセント・和声進行は要調整'};
+  document.getElementById('lyric-music-result').innerHTML='<strong>生成した候補</strong><p>Key: '+escapeHtmlCanvas(key)+' / '+escapeHtmlCanvas(mood)+' / '+chordNames.map(escapeHtmlCanvas).join(' – ')+'</p><p>'+notes.length+'音のメロディ候補を配置しました。音符カードをクリックして音名・音価を調整できます。</p><small>これは歌詞の音節数を目安にした初期案です。自然な英語の強勢や実際の歌いやすさを自動保証するものではありません。</small>';
+  showToast('歌詞からメロディ・コードの初期案を生成しました');
+}
 function saveLyricCanvasProject(){
   const incoming=window.__incomingLyricProject||{},cards=[...document.querySelectorAll('#canvas .card')];
-  const project={version:2,projectId:incoming.projectId||window.__musicProjectId||('song-'+Date.now()),source:'composition-canvas-lyrics',kind:incoming.kind||'single',name:incoming.title||'English lyric composition',title:incoming.title||'English lyric composition',story:incoming.story||'',emotion:incoming.emotion||'neutral',bpm:Number(incoming.bpm)||120,original:incoming.original||'',sourceDialogue:incoming.sourceDialogue||null,sections:lyricSectionsRead(),lyrics:lyricTextRead(),analysis:incoming.analysis||null,notes:cards.map((card,index)=>({note:card.innerText?.replace(/\s*\n\s*/g,' ').trim()||'',lyric:card.dataset.lyric||'',role:card.dataset.lyricRole||'',section:card.dataset.lyricSection||'',length:Number(card.dataset.length)||4,x:parseInt(card.style.left)||0,y:parseInt(card.style.top)||0,color:card.style.backgroundColor||'#ffffff',index})),updatedAt:new Date().toISOString()};
+  const project={version:3,projectId:incoming.projectId||window.__musicProjectId||('song-'+Date.now()),source:'composition-canvas-lyrics',kind:incoming.kind||'single',name:incoming.title||'English lyric composition',title:incoming.title||'English lyric composition',story:incoming.story||'',emotion:incoming.emotion||'neutral',bpm:Number(incoming.bpm)||120,original:incoming.original||'',sourceDialogue:incoming.sourceDialogue||null,sections:lyricSectionsRead(),lyrics:lyricTextRead(),analysis:incoming.analysis||null,translation:incoming.translation||null,generatedMusic:window.__lyricMusicSketch||incoming.generatedMusic||null,notes:cards.map((card,index)=>({note:card.innerText?.replace(/\s*\n\s*/g,' ').trim()||'',lyric:card.dataset.lyric||'',role:card.dataset.lyricRole||'',section:card.dataset.lyricSection||'',length:Number(card.dataset.length)||4,x:parseInt(card.style.left)||0,y:parseInt(card.style.top)||0,color:card.style.backgroundColor||'#ffffff',index})),updatedAt:new Date().toISOString()};
   try{localStorage.setItem('compositionLyricProject',JSON.stringify(project));if(typeof msRegister==='function')msRegister(project);window.__savedLyricCanvasProject=project;showToast('A・B・サビ・ブリッジと音符カードの割当を保存しました')}
   catch(e){showToast('保存できませんでした: '+e.message)}
 }
