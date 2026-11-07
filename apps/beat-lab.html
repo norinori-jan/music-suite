@@ -669,7 +669,7 @@ function saveCurrentSectionGroove(){
   x.pattern=cloneRhythmData(APP.pattern);try{msRegister(buildExportData());}catch(e){console.warn('arrangement register skipped',e);}arrangementStatus(x.label+'のリズムを保存しました');
 }
 function sectionAtStep(step){if(!Array.isArray(APP.sections)||!APP.sections.length)return null;const spb=APP.timeSig*(APP.div/4),bar=Math.floor(step/spb)+1;return APP.sections.find(x=>bar>=x.startBar&&bar<=x.endBar)||null;}
-function sectionPatternStep(section,step){const spb=APP.timeSig*(APP.div/4),start=(section.startBar-1)*spb;return (step-start)%Math.max(1,totalSteps());}
+function sectionPatternStep(section,step){const spb=APP.timeSig*(APP.div/4),start=(section.startBar-1)*spb,len=(section.endBar-section.startBar+1)*spb;return (step-start)%Math.max(1,len);}
 function restoreSongArrangement(data){
   if(!data||!Array.isArray(data.sections)||!data.sections.length)return false;
   APP.sections=cloneRhythmData(data.sections);APP.bars=Math.min(32,Math.max(5,Number(data.bars)||APP.bars));document.getElementById('step-bars').value=APP.bars;
