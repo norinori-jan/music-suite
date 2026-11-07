@@ -967,6 +967,9 @@ function sendToBeatLab(){
   project.bpm=Number(incoming.bpm)||Number(document.getElementById('note-sequence-bpm')?.value)||120;
   project.timeSig=4;
   project.generatedMusic=window.__lyricMusicSketch||incoming.generatedMusic||null;
+  project.drums=window.__lastDrumProject?.drums||{notes:[]};
+  project.bars=window.__lastDrumProject?.bars||2;
+  project.div=window.__lastDrumProject?.div||16;
   project.lyricProject=window.__savedLyricCanvasProject||null;
   project.lyrics=lyricTextRead();
   project.sections=lyricSectionsRead();
