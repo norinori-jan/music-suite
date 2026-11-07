@@ -570,12 +570,28 @@ function saveLyricCanvasProject(){
 }
 function restoreLyricCanvasProject(project){
   if(!project||project.source!=='composition-canvas-lyrics')return false;
-  window.__incomingLyricProject=project;document.getElementById('lyric-panel').classList.add('show');
+  window.__incomingLyricProject=project;
+  document.getElementById('lyric-panel').classList.add('show');
   document.getElementById('lyric-meta').textContent=(project.title||project.name||'English lyric')+' · '+(project.bpm||120)+' BPM · '+(project.emotion||'neutral');
   if(Array.isArray(project.sections)&&project.sections.length){lyricSectionsWrite(project.sections);document.getElementById('canvas-lyrics').value=''}
   else{lyricSectionsWrite([]);document.getElementById('canvas-lyrics').value=project.lyrics||''}
-  const cards=[...document.querySelectorAll('#canvas .card')];
-  (project.notes||[]).forEach((item,i)=>{const card=cards[i];if(!card)return;card.dataset.lyric=item.lyric||'';card.dataset.lyricRole=item.role||'';card.dataset.lyricSection=item.section||'';if(item.lyric){card.classList.add('lyric-linked');const label=document.createElement('span');label.className='lyric-assignment';label.textContent=(item.role==='A'?'A':item.role==='B'?'B':'二人')+' · '+item.lyric;card.appendChild(label)}});
+  if(Array.isArray(project.notes)&&project.notes.length){
+    renderNoteCards(project.notes.map(item=>({note:item.note||'C4',length:Number(item.length)||4})),project.title||project.name||'Saved lyric');
+    const cards=[...document.querySelectorAll('#canvas .card')];
+    project.notes.forEach((item,i)=>{
+      const card=cards[i];if(!card)return;
+      card.style.left=(Number(item.x)||0)+'px';card.style.top=(Number(item.y)||0)+'px';
+      card.style.backgroundColor=item.color||'#ffffff';
+      card.dataset.lyric=item.lyric||'';card.dataset.lyricRole=item.role||'';card.dataset.lyricSection=item.section||'';
+      if(item.lyric){
+        card.classList.add('lyric-linked');
+        const label=document.createElement('span');label.className='lyric-assignment';
+        label.textContent=(item.role==='A'?'A':item.role==='B'?'B':'二人')+' · '+item.lyric;
+        card.appendChild(label);
+      }
+    });
+    state.lastNotes=project.notes.map(item=>({note:item.note||'C4',length:Number(item.length)||4}));
+  }
   lyricRenderPreview();return true;
 }
 function renderNoteCards(segments, songName) {
