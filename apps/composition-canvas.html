@@ -16,6 +16,12 @@
     #lyric-panel button{padding:8px 12px;min-height:40px;border-radius:7px;border:1px solid #625b80;background:#29253e;color:#fff}
     .lyric-chip{display:inline-block;padding:5px 8px;margin:3px;border-radius:6px;background:#393151;color:#fff}
     .card.lyric-linked{background:#f0eaff!important;border-color:#8b78c8}
+    #duet-editors{display:grid;grid-template-columns:repeat(auto-fit,minmax(240px,1fr));gap:10px;margin:12px 0}
+    #duet-editors label{display:block;font-weight:600;margin:4px 0}
+    #duet-editors textarea{width:100%;min-height:112px;box-sizing:border-box;padding:10px;border-radius:8px;background:#242137;color:#fff;border:1px solid #625b80;font:inherit}
+    .lyric-section-label{display:inline-block;margin:4px 6px 4px 0;padding:3px 7px;border-radius:5px;background:#574879;color:#fff;font-size:12px}
+    .lyric-assignment{display:block;font-size:12px;color:#493b68;margin-top:5px;white-space:normal}
+
 
   </style>
 <script src="../activity.js"></script></head>
@@ -71,8 +77,13 @@
 <section id="lyric-panel">
   <h3>✍️ 英語歌詞 × メロディ</h3>
   <div id="lyric-meta" class="lyric-line"></div>
-  <label for="canvas-lyrics">歌詞（行ごとに編集）</label>
-  <textarea id="canvas-lyrics"></textarea>
+  <div id="duet-editors" style="display:none">
+    <div><label for="duet-canvas-a">A：Mia のパート</label><textarea id="duet-canvas-a"></textarea></div>
+    <div><label for="duet-canvas-b">B：Ken のパート</label><textarea id="duet-canvas-b"></textarea></div>
+    <div><label for="duet-canvas-chorus">二人：サビ</label><textarea id="duet-canvas-chorus"></textarea></div>
+    <div><label for="duet-canvas-bridge">二人：ブリッジ</label><textarea id="duet-canvas-bridge"></textarea></div>
+  </div>
+  <div id="single-lyric-editor"><label for="canvas-lyrics">歌詞（行ごとに編集）</label><textarea id="canvas-lyrics"></textarea></div>
   <div id="lyric-syllable-view"></div>
   <div class="lyric-line">
     <button type="button" onclick="applyLyricsToCanvas()">歌詞を音符カードに割り当て</button>
@@ -491,47 +502,81 @@ function openEditDialog(card) {
 /* ───────────────────────────────
    C+E+G+H：音名カード生成
 ────────────────────────────── */
+
+function lyricSectionsRead(){
+  return [['A','Mia / A verse','duet-canvas-a'],['B','Ken / B verse','duet-canvas-b'],['DUET','Chorus','duet-canvas-chorus'],['DUET','Bridge','duet-canvas-bridge']]
+    .map(([role,label,id])=>({role,label,text:document.getElementById(id).value.trim()})).filter(s=>s.text);
+}
+function lyricSectionsWrite(sections){
+  const map={};(Array.isArray(sections)?sections:[]).forEach(s=>map[s.label]=s.text||'');
+  document.getElementById('duet-canvas-a').value=map['Mia / A verse']||'';
+  document.getElementById('duet-canvas-b').value=map['Ken / B verse']||'';
+  document.getElementById('duet-canvas-chorus').value=map.Chorus||'';
+  document.getElementById('duet-canvas-bridge').value=map.Bridge||'';
+  const duet=Object.values(map).some(Boolean);
+  document.getElementById('duet-editors').style.display=duet?'grid':'none';
+  document.getElementById('single-lyric-editor').style.display=duet?'none':'block';
+}
+function lyricTextRead(){
+  const sections=lyricSectionsRead();
+  return sections.length?sections.map(s=>'['+s.label+']\n'+s.text).join('\n\n'):document.getElementById('canvas-lyrics').value.trim();
+}
+function lyricRenderPreview(){
+  const box=document.getElementById('lyric-syllable-view'),sections=lyricSectionsRead();
+  if(sections.length)box.innerHTML='<strong>パート別歌詞</strong><div>'+sections.map(s=>'<div><span class="lyric-section-label">'+escapeHtmlCanvas(s.label)+'</span>'+s.text.split(/\n+/).map(line=>'<span class="lyric-chip">'+escapeHtmlCanvas(line)+'</span>').join('')+'</div>').join('')+'</div>';
+  else box.innerHTML='<strong>歌詞の語句</strong><div>'+document.getElementById('canvas-lyrics').value.split(/\s+/).filter(Boolean).map(w=>'<span class="lyric-chip">'+escapeHtmlCanvas(w)+'</span>').join('')+'</div>';
+}
 function parseIncomingLyrics(){
-  const hash=location.hash.replace(/^#/, '');
-  if(!hash.startsWith('lyrics='))return;
+  const hash=location.hash.replace(/^#/,'');if(!hash.startsWith('lyrics='))return false;
   try{
-    const raw=decodeURIComponent(hash.slice(7));
-    const payload=JSON.parse(decodeURIComponent(escape(atob(raw))));
-    if(payload.source!=='vocal-lab-lyric-link')return;
-    window.__incomingLyricProject=payload;
-    document.getElementById('lyric-panel').classList.add('show');
-    document.getElementById('canvas-lyrics').value=payload.lyrics||payload.original||'';
+    const raw=decodeURIComponent(hash.slice(7)),payload=JSON.parse(decodeURIComponent(escape(atob(raw))));
+    if(payload.source!=='vocal-lab-lyric-link')return false;
+    window.__incomingLyricProject=payload;document.getElementById('lyric-panel').classList.add('show');
     document.getElementById('lyric-meta').textContent=(payload.title||'English lyric')+' · '+(payload.bpm||120)+' BPM · '+(payload.emotion||'neutral');
-    const words=(payload.lyrics||'').split(/\\s+/).filter(Boolean);
-    document.getElementById('lyric-syllable-view').innerHTML='<strong>歌詞の語句</strong><div>'+words.map(w=>'<span class="lyric-chip">'+escapeHtmlCanvas(w)+'</span>').join('')+'</div>';
-    if(Array.isArray(payload.notes)&&payload.notes.length){
-      state.lastNotes=payload.notes.map(n=>({note:n.name||'C4',length:4}));
-      renderNoteCards(state.lastNotes.map(n=>({note:n.note,length:n.length})),payload.title||'Vocal Lab lyric');
-    }
-    history.replaceState(null,'',location.pathname+location.search);
-  }catch(e){console.warn('lyric import failed',e);showToast('歌詞データを読み込めませんでした')}
+    if(payload.kind==='duet'&&Array.isArray(payload.sections)){lyricSectionsWrite(payload.sections);document.getElementById('canvas-lyrics').value=''}
+    else{lyricSectionsWrite([]);document.getElementById('canvas-lyrics').value=payload.lyrics||payload.original||''}
+    if(Array.isArray(payload.notes)&&payload.notes.length){state.lastNotes=payload.notes.map(n=>({note:n.name||n.note||'C4',length:Number(n.length)||4}));renderNoteCards(state.lastNotes,payload.title||'Vocal Lab lyric')}
+    lyricRenderPreview();history.replaceState(null,'',location.pathname+location.search);return true;
+  }catch(e){console.warn('lyric import failed',e);showToast('歌詞データを読み込めませんでした');return false}
 }
 function escapeHtmlCanvas(v){return String(v).replace(/[&<>"']/g,ch=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[ch]))}
 function applyLyricsToCanvas(){
-  const text=document.getElementById('canvas-lyrics').value.trim();
-  if(!text){showToast('歌詞を入力してください');return}
-  const words=text.split(/\\s+/).filter(Boolean);
+  const sections=lyricSectionsRead();
+  const lines=sections.length?sections.flatMap(s=>s.text.split(/\n+/).filter(Boolean).map(text=>({role:s.role,label:s.label,text}))):document.getElementById('canvas-lyrics').value.split(/\n+/).filter(Boolean).map(text=>({role:'LEAD',label:'Lyric',text}));
+  if(!lines.length){showToast('歌詞を入力してください');return}
   const cards=[...document.querySelectorAll('#canvas .card')];
-  if(!cards.length){showToast('先にvocal-labから音符カードを送ってください');return}
-  cards.forEach((card,i)=>{
-    const label=words[i]||'';
-    card.dataset.lyric=label;
-    card.classList.add('lyric-linked');
-    let lyric=card.querySelector('.lyric-chip');
-    if(!lyric){lyric=document.createElement('div');lyric.className='lyric-chip';card.appendChild(lyric)}
-    lyric.textContent=label;
+  if(!cards.length){showToast('歌詞は保持しました。音符カードがまだないため、先にメロディを読み込むかカードを配置してください');return}
+  const weights=lines.map(line=>Math.max(1,(line.text.match(/[A-Za-z]+(?:'[A-Za-z]+)?/g)||[]).length));
+  const total=weights.reduce((x,y)=>x+y,0);let cursor=0;
+  lines.forEach((line,index)=>{
+    const remainLines=lines.length-index,remainCards=cards.length-cursor;
+    const count=index===lines.length-1?remainCards:Math.min(remainCards-(remainLines-1),Math.max(1,Math.round(cards.length*weights[index]/total)));
+    const phrase=line.text.trim();
+    for(let i=cursor;i<cursor+count;i++){
+      const card=cards[i];card.dataset.lyric=phrase;card.dataset.lyricRole=line.role;card.dataset.lyricSection=line.label;card.classList.add('lyric-linked');
+      let label=card.querySelector('.lyric-assignment');if(!label){label=document.createElement('span');label.className='lyric-assignment';card.appendChild(label)}
+      label.textContent=(line.role==='A'?'A':line.role==='B'?'B':'二人')+' · '+phrase;
+    }
+    cursor+=count;
   });
-  showToast('歌詞を音符カードに割り当てました（単語単位の仮割当）');
+  window.__lyricCardAssignments=cards.map((card,index)=>({index,lyric:card.dataset.lyric||'',role:card.dataset.lyricRole||'',section:card.dataset.lyricSection||''}));
+  showToast('歌詞をパート・フレーズ単位で音符カードに割り当てました');
 }
 function saveLyricCanvasProject(){
-  const payload=window.__incomingLyricProject||{};
-  const project={source:'composition-canvas-lyrics',name:payload.title||'English lyric composition',lyrics:document.getElementById('canvas-lyrics').value,emotion:payload.emotion||'neutral',bpm:payload.bpm||120,notes:[...document.querySelectorAll('#canvas .card')].map(c=>({note:c.childNodes[0]?.textContent||c.textContent,lyric:c.dataset.lyric||'',length:Number(c.dataset.length)||4,x:parseInt(c.style.left)||0,y:parseInt(c.style.top)||0})),updatedAt:new Date().toISOString()};
-  try{msRegister(project);localStorage.setItem('compositionLyricProject',JSON.stringify(project));showToast('歌詞とメロディをローカル保存しました')}catch(e){showToast('保存できませんでした: '+e.message)}
+  const incoming=window.__incomingLyricProject||{},cards=[...document.querySelectorAll('#canvas .card')];
+  const project={version:2,source:'composition-canvas-lyrics',kind:incoming.kind||'single',name:incoming.title||'English lyric composition',title:incoming.title||'English lyric composition',story:incoming.story||'',emotion:incoming.emotion||'neutral',bpm:Number(incoming.bpm)||120,original:incoming.original||'',sourceDialogue:incoming.sourceDialogue||null,sections:lyricSectionsRead(),lyrics:lyricTextRead(),analysis:incoming.analysis||null,notes:cards.map((card,index)=>({note:card.firstChild?.textContent||'',lyric:card.dataset.lyric||'',role:card.dataset.lyricRole||'',section:card.dataset.lyricSection||'',length:Number(card.dataset.length)||4,x:parseInt(card.style.left)||0,y:parseInt(card.style.top)||0,color:card.style.backgroundColor||'#ffffff',index})),updatedAt:new Date().toISOString()};
+  try{localStorage.setItem('compositionLyricProject',JSON.stringify(project));if(typeof msRegister==='function')msRegister(project);window.__savedLyricCanvasProject=project;showToast('A・B・サビ・ブリッジと音符カードの割当を保存しました')}
+  catch(e){showToast('保存できませんでした: '+e.message)}
+}
+function restoreLyricCanvasProject(project){
+  if(!project||project.source!=='composition-canvas-lyrics')return false;
+  window.__incomingLyricProject=project;document.getElementById('lyric-panel').classList.add('show');
+  document.getElementById('lyric-meta').textContent=(project.title||project.name||'English lyric')+' · '+(project.bpm||120)+' BPM · '+(project.emotion||'neutral');
+  if(Array.isArray(project.sections)&&project.sections.length){lyricSectionsWrite(project.sections);document.getElementById('canvas-lyrics').value=''}
+  else{lyricSectionsWrite([]);document.getElementById('canvas-lyrics').value=project.lyrics||''}
+  const cards=[...document.querySelectorAll('#canvas .card')];
+  (project.notes||[]).forEach((item,i)=>{const card=cards[i];if(!card)return;card.dataset.lyric=item.lyric||'';card.dataset.lyricRole=item.role||'';card.dataset.lyricSection=item.section||'';if(item.lyric){card.classList.add('lyric-linked');const label=document.createElement('span');label.className='lyric-assignment';label.textContent=(item.role==='A'?'A':item.role==='B'?'B':'二人')+' · '+item.lyric;card.appendChild(label)}});
+  lyricRenderPreview();return true;
 }
 function renderNoteCards(segments, songName) {
   const canvas = document.getElementById("canvas");
@@ -735,7 +780,9 @@ function sendToVocalLab() {
 ────────────────────────────── */
 window.addEventListener("load", () => {
   loadCardPositions();
-  parseIncomingLyrics();
+  if(!parseIncomingLyrics()){
+    try{restoreLyricCanvasProject(JSON.parse(localStorage.getItem('compositionLyricProject')||'null'))}catch(e){console.warn('saved lyric project restore failed',e)}
+  }
 });
 
 function showToast(msg) {
