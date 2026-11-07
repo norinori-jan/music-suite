@@ -232,6 +232,18 @@ body{background:var(--bg);color:var(--text);font-family:'Inter','Hiragino Sans',
 .mood-banner.show{display:flex;}
 .mood-banner .close-x{margin-left:auto;cursor:pointer;color:var(--text3);background:none;border:none;font-size:13px;}
 .mood-banner .close-x:hover{color:var(--text);}
+.lyric-studio{display:none;width:100%;max-width:720px;background:var(--bg2);border:1px solid var(--accent-dim);border-radius:var(--radius);padding:14px;gap:10px;flex-direction:column}
+.lyric-studio.show{display:flex}
+.lyric-studio label{font-size:12px;color:var(--text2);font-weight:600}
+.lyric-studio input,.lyric-studio textarea{width:100%;box-sizing:border-box;background:var(--bg3);color:var(--text);border:1px solid var(--border);border-radius:8px;padding:10px;font:inherit;font-size:14px}
+.lyric-studio textarea{min-height:88px;resize:vertical;line-height:1.55}
+.lyric-studio .lyric-actions{display:flex;gap:8px;flex-wrap:wrap}
+.lyric-studio button{min-height:42px;padding:8px 12px;border:1px solid var(--border-hi);border-radius:8px;background:var(--bg3);color:var(--text);font:inherit;cursor:pointer}
+.lyric-studio .lyric-primary{background:var(--accent-bg);border-color:var(--accent-dim);color:var(--accent-hi)}
+.lyric-saved-list{display:grid;gap:6px}
+.lyric-saved-item{padding:9px;border:1px solid var(--border);border-radius:8px;background:var(--bg3);font-size:12px}
+.lyric-saved-item strong{display:block;margin-bottom:3px}
+
 
 /* TOAST */
 .toast{position:fixed;bottom:22px;left:50%;transform:translateX(-50%) translateY(60px);background:var(--bg3);border:0.5px solid var(--border-hi);border-radius:var(--radius);padding:9px 18px;font-size:12px;color:var(--text);transition:transform 0.25s ease;pointer-events:none;z-index:999;}
@@ -310,6 +322,21 @@ body{background:var(--bg);color:var(--text);font-family:'Inter','Hiragino Sans',
       <span id="mood-banner-text"></span>
       <button class="close-x" onclick="dismissMoodBanner()">✕</button>
     </div>
+    <section class="lyric-studio" id="lyric-studio" aria-label="英語フレーズ・歌詞カード">
+      <div><strong>✍️ 英語フレーズ・歌詞カード</strong><div class="muted" style="font-size:12px;margin-top:4px">speak-nativeの英文を原文として保持し、歌詞用の表現は別欄で編集します。</div></div>
+      <label for="lyric-title">フレーズ名・曲名</label>
+      <input id="lyric-title" maxlength="100" placeholder="例：A thought on the way home">
+      <label for="lyric-original">英語の原文（変更せずに保存）</label>
+      <textarea id="lyric-original" maxlength="5000" placeholder="英会話で入力した英文"></textarea>
+      <label for="lyric-adapted">歌詞用に整えた表現（任意）</label>
+      <textarea id="lyric-adapted" maxlength="5000" placeholder="リズム・韻・歌いやすさを考えて書き換えた英文"></textarea>
+      <div class="lyric-actions">
+        <button class="lyric-primary" id="lyric-save">歌詞カードとして保存</button>
+        <button id="lyric-export">歌詞カードをJSON保存</button>
+        <button id="lyric-clear">入力をクリア</button>
+      </div>
+      <div class="lyric-saved-list" id="lyric-saved-list"></div>
+    </section>
     <!-- WAVEFORM -->
     <div class="waveform-wrap">
       <canvas id="waveform-canvas"></canvas>
@@ -1533,6 +1560,35 @@ function checkIncomingImport() {
    index.htmlの #mood=xxx&note=yyy ハッシュを受け取り、
    感情タグの自動選択とフレーズ名の下書きに反映する
 ═══════════════════════════════ */
+const LYRIC_STORE_KEY = 'vl3_lyric_cards_v1';
+function lyricCardsRead(){try{const a=JSON.parse(localStorage.getItem(LYRIC_STORE_KEY)||'[]');return Array.isArray(a)?a:[]}catch(e){return[]}}
+function lyricCardsWrite(a){try{localStorage.setItem(LYRIC_STORE_KEY,JSON.stringify(a));return true}catch(e){showToast('保存容量が不足しています。JSON保存を利用してください');return false}}
+function lyricRenderSaved(){
+  const el=$('lyric-saved-list');if(!el)return;
+  const cards=lyricCardsRead();
+  el.innerHTML=cards.length?cards.slice().reverse().map(x=>'<div class="lyric-saved-item"><strong>'+escHtml(x.title||'無題')+'</strong><span>'+escHtml((x.adapted||x.original||'').slice(0,150))+'</span></div>').join(''):'<div class="muted" style="font-size:12px">保存した歌詞カードはまだありません。</div>';
+}
+function lyricSaveCard(){
+  const original=$('lyric-original').value.trim(),adapted=$('lyric-adapted').value.trim(),title=$('lyric-title').value.trim();
+  if(!original){showToast('英語の原文を入力してください');return}
+  const card={id:'lyric-'+Date.now(),type:'lyric-phrase',title:title||original.slice(0,48),original,adapted,source:'speak-native',createdAt:new Date().toISOString(),emotion:state.selectedEmotion||'neutral'};
+  const cards=lyricCardsRead();cards.push(card);
+  if(!lyricCardsWrite(cards))return;
+  // 既存music-suiteプロジェクト一覧にも登録し、他の制作画面から参照可能にする
+  if(typeof msRegister==='function')msRegister({source:'vocal-lab-lyrics',name:card.title,lyrics:{original:card.original,adapted:card.adapted},emotion:card.emotion,createdAt:card.createdAt,updatedAt:card.createdAt});
+  lyricRenderSaved();showToast('英語フレーズを歌詞カードとして保存しました');
+}
+function lyricExportCards(){
+  const cards=lyricCardsRead();if(!cards.length){showToast('歌詞カードがありません');return}
+  const blob=new Blob([JSON.stringify({source:'vocal-lab-lyrics',version:1,exported:new Date().toISOString(),cards},null,2)],{type:'application/json'});
+  const url=URL.createObjectURL(blob),a=document.createElement('a');a.href=url;a.download='music-suite-lyric-cards-'+Date.now()+'.json';a.click();setTimeout(()=>URL.revokeObjectURL(url),1000);
+}
+function lyricOpenStudio(){
+  const el=$('lyric-studio');if(el)el.classList.add('show');
+}
+function lyricClearDraft(){
+  $('lyric-title').value='';$('lyric-original').value='';$('lyric-adapted').value='';
+}
 const MOOD_TO_EMOTION = {
   happy: 'happy',
   sad: 'sad',
@@ -1555,6 +1611,9 @@ function checkIncomingMood() {
         phraseInput.value = note;
         const candInput = $('candidate-phrase-name');
         if (candInput) candInput.value = note.slice(0, 80);
+        $('lyric-original').value = note;
+        $('lyric-title').value = note.split(/[.!?\\n]/)[0].trim().slice(0, 72) || 'English phrase';
+        lyricOpenStudio();
         const banner = $('mood-banner');
         const bannerText = $('mood-banner-text');
         if (bannerText) bannerText.textContent = 'speak-native から英語入力を受信しました。フレーズ下書きとして編集できます。';
@@ -1620,6 +1679,10 @@ function checkIncomingMood() {
     await loadCardsFromStorage();
   }
   checkIncomingMood();
+  lyricRenderSaved();
+  $('lyric-save').addEventListener('click',lyricSaveCard);
+  $('lyric-export').addEventListener('click',lyricExportCards);
+  $('lyric-clear').addEventListener('click',lyricClearDraft);
   renderCardList();
   setAiMode('auto');
 })();
