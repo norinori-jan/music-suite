@@ -1428,6 +1428,7 @@ function checkIncomingImport(){
     const json=decodeURIComponent(escape(atob(decodeURIComponent(m[1]))));
     const data=JSON.parse(json);
     if(data&&data.fromCompositionCanvas)window.__compositionBaseProject=data;
+    if(Array.isArray(data.rhythmVariations))restoreRhythmVariations(data.rhythmVariations);
     saveUndo();
     if(data.bpm){document.getElementById('bpm-sl').value=data.bpm;setBpm(data.bpm);}
     if(data.timeSig){APP.timeSig=Number(data.timeSig);document.getElementById('step-timesig').value=APP.timeSig;}
