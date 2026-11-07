@@ -821,7 +821,7 @@ var MS_P='msuite_projects',MS_W='msuite_works',MS_D='msuite_deleted',MS_EP='msui
 function msJ(k,d){try{var v=JSON.parse(localStorage.getItem(k));return v==null?d:v}catch(e){return d}}
 function msSet(k,v){try{localStorage.setItem(k,JSON.stringify(v))}catch(e){}}
 function msSrc(p){return p.source||(p.cards?'vocal-lab':(p.melody||p.bass)?'score-editor':p.chords?'chord-lab':p.drums?'beat-lab':'unknown')}
-function msKeyP(p){return 'p:'+msSrc(p)+'\u0001'+(p.name||p.projectName||'無題')}
+function msKeyP(p){return p.projectId?'id:'+p.projectId:'p:'+msSrc(p)+'\u0001'+(p.name||p.projectName||'無題')}
 function msTs(p){return Date.parse(p&&(p.updatedAt||p.exported||p.createdAt))||0}
 function msTomb(key){var d=msJ(MS_D,{});d[key]=Date.now();msSet(MS_D,d);if(typeof msSyncSoon==='function')msSyncSoon()}
 function msRegister(d){try{if(!d||typeof d!=='object'||Array.isArray(d))return;var a=msJ(MS_P,[]);if(!Array.isArray(a))a=[];
