@@ -7,13 +7,15 @@
     .btn { margin: 4px; padding: 6px 10px; cursor:pointer; }
     .primary { background: #4caf50; color: white; }
     .spacer { display:inline-block; width:8px; }
-    #canvas { position:relative; display:grid; grid-template-columns:repeat(auto-fill,minmax(min(100%,112px),1fr)); align-content:start; gap:6px; width:100%; min-height:120px; height:auto; max-height:65vh; overflow-y:auto; overflow-x:hidden; box-sizing:border-box; border:1px solid #ccc; margin-top:10px; padding:6px; }
+    #canvas { position:relative; display:grid!important; grid-template-columns:repeat(2,minmax(0,1fr))!important; grid-auto-flow:row; align-content:start; align-items:stretch; gap:8px; width:100%; min-width:0; min-height:120px; height:auto; max-height:65vh; overflow-y:auto; overflow-x:hidden; box-sizing:border-box; border:1px solid #ccc; margin-top:10px; padding:8px; }
+    @media (min-width:700px) { #canvas { grid-template-columns:repeat(4,minmax(0,1fr))!important; } }
     #note-sequence-player { width:100%; max-width:100%; box-sizing:border-box; overflow:hidden; }
     #note-sequence-player textarea { display:block; width:100%; max-width:100%; min-height:150px; box-sizing:border-box; resize:vertical; }
     .card { position:absolute; padding:10px; background:#fff; border:1px solid #aaa; border-radius:6px; }
     /* キャンバス内の音符カードは絶対配置を解除し、グリッドで折り返す */
     #canvas.note-card-grid > .card,
-    #canvas > .card { position:relative!important; inset:auto!important; left:auto!important; top:auto!important; float:none!important; transform:none!important; width:auto!important; min-width:0; max-width:100%; min-height:72px; box-sizing:border-box; padding:10px; overflow-wrap:anywhere; }
+    #canvas > .card { display:block!important; position:static!important; inset:auto!important; left:auto!important; right:auto!important; top:auto!important; bottom:auto!important; float:none!important; transform:none!important; width:100%!important; min-width:0!important; max-width:none!important; min-height:72px; margin:0!important; box-sizing:border-box!important; padding:10px; overflow-wrap:anywhere; word-break:break-word; } 
+    #canvas .lyric-assignment { display:block; max-width:100%; margin-top:6px; white-space:normal; overflow-wrap:anywhere; word-break:break-word; }
     #lyric-panel{display:block;margin:12px 0;padding:14px;border:1px solid #8b78c8;border-radius:10px;background:#171525;color:#f2efff}
     #lyric-panel.show{display:block}
     #lyric-panel textarea{width:100%;min-height:90px;box-sizing:border-box;padding:10px;border-radius:8px;background:#242137;color:#fff;border:1px solid #625b80;font:inherit}
@@ -697,7 +699,8 @@ function restoreLyricCanvasProject(project){
     const cards=[...document.querySelectorAll('#canvas .card')];
     project.notes.forEach((item,i)=>{
       const card=cards[i];if(!card)return;
-      card.style.left=(Number(item.x)||0)+'px';card.style.top=(Number(item.y)||0)+'px';
+      // 保存済みの旧座標は復元せず、レスポンシブグリッドに配置する
+      card.style.removeProperty('left');card.style.removeProperty('top');card.style.removeProperty('width');
       card.style.backgroundColor=item.color||'#ffffff';
       card.dataset.lyric=item.lyric||'';card.dataset.lyricRole=item.role||'';card.dataset.lyricSection=item.section||'';
       if(item.lyric){
