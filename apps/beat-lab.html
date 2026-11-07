@@ -419,6 +419,16 @@ body{padding-bottom:env(safe-area-inset-bottom)}
       </div>
 
       <div class="export-card">
+        <div class="export-card-title" style="color:var(--acc)">🎼 作曲キャンバスへ戻す</div>
+        <div class="export-card-desc">
+          作成したドラムリズムをメロディ・歌詞・コード候補と一緒に戻します。メロディは置き換えず、曲の一部として保持します。
+        </div>
+        <div class="export-row">
+          <button class="btn pri" onclick="returnToCompositionCanvas()">🎼 リズムを曲に反映</button>
+        </div>
+      </div>
+
+      <div class="export-card">
         <div class="export-card-title" style="color:var(--ohat)">▶ プレビュー再生</div>
         <div class="export-card-desc">現在のBPMとパターンをそのまま試聴できます。</div>
         <div class="export-row">
@@ -1152,20 +1162,21 @@ function _buildExportData(){
       });
     }
   });
-  return {
+  const base=window.__compositionBaseProject||{};
+  return Object.assign({},base,{
     version:'1.0',
-    source:'beat-lab',
-    name: document.getElementById('project-name').value || 'Untitled Beat',
+    source:base.fromCompositionCanvas?'composition-canvas':'beat-lab',
+    name: document.getElementById('project-name').value || base.name || 'Untitled Beat',
     bpm: PROJ_BPM(),
     timeSig: APP.timeSig,
     bars: APP.bars,
     div: APP.div,
-    bass: { notes: [] },
-    melody: { notes: [] },
-    drums: { notes },          // for score-editor-v2 drum track
-    chords: null,
+    bass: base.bass||{notes:[]},
+    melody: base.melody||{notes:[]},
+    drums: { notes },
+    chords: base.chords||base.generatedMusic?.chords||null,
     exported: new Date().toISOString()
-  };
+  });
 }
 
 function exportJSON(){
@@ -1236,6 +1247,16 @@ function sendToScoreEditor(){
 }
 
 // score-editor-v2側で受け取る場合のヘルパー（このファイル自身が起動時にチェック）
+function returnToCompositionCanvas(){
+  const data=buildExportData();
+  data.source='composition-canvas';
+  data.fromBeatLab=true;
+  data.fromCompositionCanvas=true;
+  const encoded=encodeURIComponent(btoa(unescape(encodeURIComponent(JSON.stringify(data)))));
+  setStatus('ok','リズムを曲に反映してComposition Canvasへ戻ります');
+  window.location.href='composition-canvas.html#import='+encoded;
+}
+
 function checkIncomingImport(){
   const hash=window.location.hash;
   const m=hash.match(/import=([^&]+)/);
@@ -1243,8 +1264,10 @@ function checkIncomingImport(){
   try{
     const json=decodeURIComponent(escape(atob(decodeURIComponent(m[1]))));
     const data=JSON.parse(json);
+    if(data&&data.fromCompositionCanvas)window.__compositionBaseProject=data;
     saveUndo();
     if(data.bpm){document.getElementById('bpm-sl').value=data.bpm;setBpm(data.bpm);}
+    if(data.name)document.getElementById('project-name').value=data.name;
     if(data.drums?.notes){
       APP.pattern={};
       const stepsPerBeat=APP.div/4;
