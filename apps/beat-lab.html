@@ -1566,29 +1566,35 @@ function checkIncomingImport(){
   try{
     const json=decodeURIComponent(escape(atob(decodeURIComponent(m[1]))));
     const data=JSON.parse(json);
+    const report=validateCompositionTimeline(data);
+    if(!report.ok)throw new Error('受信データの時間軸検査に失敗：'+report.errors.join(' / '));
+    const importedMelody=Array.isArray(data.melody?.notes)?data.melody.notes:[];
+    const importedDrums=Array.isArray(data.drums?.notes)?data.drums.notes:[];
+    const maxBeat=Math.max(0,...importedMelody.map(n=>Number(n.startBeat)+Number(n.durationBeats)),...importedDrums.map(n=>Number(n.startBeat)+Number(n.durationBeats)));
+    const requiredBars=Math.max(1,Math.ceil(maxBeat/(Number(data.timeSig)||4)));
+    const targetBars=Math.min(32,Math.max(1,Number(data.bars)||1,requiredBars,Number(data.arrangement?.bars)||0));
+    saveUndo();
     if(data&&data.fromCompositionCanvas)window.__compositionBaseProject=data;
     if(Array.isArray(data.rhythmVariations))restoreRhythmVariations(data.rhythmVariations);
-    saveUndo();
     if(data.bpm){document.getElementById('bpm-sl').value=data.bpm;setBpm(data.bpm);}
-    if(data.timeSig){APP.timeSig=Number(data.timeSig);document.getElementById('step-timesig').value=APP.timeSig;}
-    if(data.div){APP.div=Number(data.div);document.getElementById('step-div').value=APP.div;}
-    if(data.name)document.getElementById('project-name').value=data.name;
-    const importedMelody=data.melody?.notes||[];
-    const importedDrums=data.drums?.notes||[];
-    const maxBeat=Math.max(0,...importedMelody.map(n=>(Number(n.startBeat)||0)+(Number(n.durationBeats)||0)),...importedDrums.map(n=>(Number(n.startBeat)||0)+(Number(n.durationBeats)||0)));
-    APP.bars=Math.min(32,Math.max(1,Math.ceil(maxBeat/(APP.timeSig||4))));
+    APP.timeSig=Math.max(1,Math.min(16,Number(data.timeSig)||4));
+    APP.div=[4,8,16,32].includes(Number(data.div))?Number(data.div):16;
+    APP.bars=targetBars;
+    document.getElementById('step-timesig').value=APP.timeSig;
+    document.getElementById('step-div').value=APP.div;
     document.getElementById('step-bars').value=APP.bars;
-    if(data.drums?.notes){
-      APP.pattern={};
-      const stepsPerBeat=APP.div/4;
-      data.drums.notes.forEach(n=>{
-        const row=ROWS.find(r=>r.pitch===n.pitch);
-        if(!row)return;
-        const step=Math.round(n.startBeat*stepsPerBeat);
-        APP.pattern[pk(row.id,step)]=decodeImportedDrumVelocity(n,data);
-      });
-    }
+    if(data.name)document.getElementById('project-name').value=data.name;
+    APP.pattern={};
+    const stepsPerBeat=APP.div/4;
+    importedDrums.forEach(n=>{
+      const row=ROWS.find(r=>r.pitch===Number(n.pitch));
+      if(!row)return;
+      const step=Math.round(Number(n.startBeat)*stepsPerBeat);
+      if(!Number.isFinite(step)||step<0||step>=APP.bars*APP.timeSig*stepsPerBeat)return;
+      APP.pattern[pk(row.id,step)]=decodeImportedDrumVelocity(n,data);
+    });
     if(data.arrangement)restoreSongArrangement(data.arrangement);
+    else{APP.sections=null;APP.activeSectionId=null;APP.arrangementEffects={fillBeforeChorus:true,breakBars:[],finalVariation:true};}
     history.replaceState(null,'',window.location.pathname);
     setStatus('ok','データを受信しました: '+(data.name||''));
     renderStepGrid();
