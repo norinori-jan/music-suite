@@ -688,7 +688,7 @@ function generateLyricMusicSketch(){
 }
 function saveLyricCanvasProject(){
   const incoming=window.__incomingLyricProject||{},cards=[...document.querySelectorAll('#canvas .card')];
-  const project={version:3,projectId:incoming.projectId||window.__musicProjectId||('song-'+Date.now()),source:'composition-canvas-lyrics',kind:incoming.kind||'single',name:incoming.title||'English lyric composition',title:incoming.title||'English lyric composition',story:incoming.story||'',emotion:incoming.emotion||'neutral',bpm:Number(incoming.bpm)||120,original:incoming.original||'',sourceDialogue:incoming.sourceDialogue||null,sections:lyricSectionsRead(),lyrics:lyricTextRead(),analysis:incoming.analysis||null,translation:incoming.translation||null,generatedMusic:window.__lyricMusicSketch||incoming.generatedMusic||null,rhythm:window.__lastDrumProject||null,notes:cards.map((card,index)=>({note:card.dataset.note||card.firstChild?.textContent||'',lyric:card.dataset.lyric||'',role:card.dataset.lyricRole||'',section:card.dataset.lyricSection||'',length:Number(card.dataset.length)||4,x:parseInt(card.style.left)||0,y:parseInt(card.style.top)||0,color:card.style.backgroundColor||'#ffffff',index})),updatedAt:new Date().toISOString()};
+  const project={version:3,projectId:incoming.projectId||window.__musicProjectId||('song-'+Date.now()),source:'composition-canvas-lyrics',kind:incoming.kind||'single',name:incoming.title||'English lyric composition',title:incoming.title||'English lyric composition',story:incoming.story||'',emotion:incoming.emotion||'neutral',bpm:Number(incoming.bpm)||120,original:incoming.original||'',sourceDialogue:incoming.sourceDialogue||null,sections:lyricSectionsRead(),lyrics:lyricTextRead(),analysis:incoming.analysis||null,translation:incoming.translation||null,generatedMusic:window.__lyricMusicSketch||incoming.generatedMusic||null,rhythm:window.__lastDrumProject||null,melody:window.__lastDrumProject?.melody||null,notes:cards.map((card,index)=>({note:card.dataset.note||card.firstChild?.textContent||'',lyric:card.dataset.lyric||'',role:card.dataset.lyricRole||'',section:card.dataset.lyricSection||'',length:Number(card.dataset.length)||4,x:parseInt(card.style.left)||0,y:parseInt(card.style.top)||0,color:card.style.backgroundColor||'#ffffff',index})),updatedAt:new Date().toISOString()};
   try{localStorage.setItem('compositionLyricProject',JSON.stringify(project));if(typeof msRegister==='function')msRegister(project);window.__savedLyricCanvasProject=project;showToast('A・B・サビ・ブリッジと音符カードの割当を保存しました')}
   catch(e){showToast('保存できませんでした: '+e.message)}
 }
@@ -701,6 +701,7 @@ function restoreLyricCanvasProject(project){
   if(Array.isArray(project.sections)&&project.sections.length){lyricSectionsWrite(project.sections);document.getElementById('canvas-lyrics').value=''}
   else{lyricSectionsWrite([]);document.getElementById('canvas-lyrics').value=project.lyrics||''}
   window.__lastDrumProject=project.rhythm||window.__lastDrumProject||null;
+  if(project.melody&&Array.isArray(project.melody.notes)){window.__lastDrumProject=Object.assign({},window.__lastDrumProject||{},{melody:project.melody});}
   if(Array.isArray(project.notes)&&project.notes.length){
     renderNoteCards(project.notes.map(item=>({note:item.note||'C4',length:Number(item.length)||4})),project.title||project.name||'Saved lyric');
     const cards=[...document.querySelectorAll('#canvas .card')];
@@ -874,18 +875,17 @@ function loadCardPositions() {
    score-editor-v2へ送信
 ────────────────────────────── */
 function buildMelodyProject(sourceName) {
-  const melody = [];
-  let beat = 0;
-
-  state.lastNotes.forEach(seg => {
-    melody.push({
-      pitch: noteToMidi(seg.note),
-      startBeat: beat,
-      durationBeats: seg.length / 4,
-      vel: 90
+  const preservedMelody=window.__lastDrumProject?.melody;
+  const melody=preservedMelody&&Array.isArray(preservedMelody.notes)
+    ? preservedMelody.notes.map(n=>({...n}))
+    : [];
+  if(!melody.length){
+    let beat=0;
+    state.lastNotes.forEach(seg=>{
+      melody.push({pitch:noteToMidi(seg.note),startBeat:beat,durationBeats:seg.length/4,vel:90});
+      beat+=seg.length/4;
     });
-    beat += seg.length / 4;
-  });
+  }
 
   return {
     version: "1.0",
@@ -973,7 +973,7 @@ function restoreBeatLabProject(project){
       }
     });
   }
-  window.__lastDrumProject={bpm:project.bpm||120,timeSig:project.timeSig||4,bars:project.bars||2,div:project.div||16,drums:project.drums||{notes:[]},rhythmVariations:project.rhythmVariations||[],arrangement:project.arrangement||null};
+  window.__lastDrumProject={bpm:project.bpm||120,timeSig:project.timeSig||4,bars:project.bars||2,div:project.div||16,drums:project.drums||{notes:[]},melody:project.melody||{notes:[]},rhythmVariations:project.rhythmVariations||[],arrangement:project.arrangement||null};
   saveLyricCanvasProject();
   if(typeof msRegister==='function')msRegister(project);
   showToast('メロディを保持したままドラムリズムを取り込みました（'+(project.drums?.notes?.length||0)+'打）');
