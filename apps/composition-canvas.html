@@ -875,24 +875,39 @@ function loadCardPositions() {
    score-editor-v2へ送信
 ────────────────────────────── */
 function buildMelodyProject(sourceName) {
-  const preservedMelody=window.__lastDrumProject?.melody;
-  const melody=preservedMelody&&Array.isArray(preservedMelody.notes)
-    ? preservedMelody.notes.map(n=>({...n}))
+  const rhythmProject=window.__lastDrumProject||{};
+  const preservedMelody=rhythmProject.melody;
+  const cards=Array.isArray(state.lastNotes)?state.lastNotes:[];
+  const melody=preservedMelody&&Array.isArray(preservedMelody.notes)&&preservedMelody.notes.length
+    ? preservedMelody.notes.map((n,i)=>{
+        const card=cards[i];
+        if(!card)return {...n};
+        const editedPitch=noteToMidi(card.note);
+        const editedDuration=Number(card.length)/4;
+        return {
+          ...n,
+          pitch:Number.isFinite(editedPitch)?editedPitch:n.pitch,
+          durationBeats:Number.isFinite(editedDuration)&&editedDuration>0?editedDuration:n.durationBeats
+        };
+      })
     : [];
   if(!melody.length){
     let beat=0;
-    state.lastNotes.forEach(seg=>{
-      melody.push({pitch:noteToMidi(seg.note),startBeat:beat,durationBeats:seg.length/4,vel:90});
-      beat+=seg.length/4;
+    cards.forEach(seg=>{
+      const duration=Number(seg.length)/4;
+      melody.push({pitch:noteToMidi(seg.note),startBeat:beat,durationBeats:duration,vel:90});
+      beat+=duration;
     });
   }
 
   return {
     version: "1.0",
     source: sourceName,
-    name: "キャンバス曲 " + new Date().toLocaleDateString("ja-JP"),
-    bpm: 120,
-    timeSig: 4,
+    name: window.__incomingLyricProject?.title||window.__incomingLyricProject?.name||("キャンバス曲 "+new Date().toLocaleDateString("ja-JP")),
+    bpm: Number(rhythmProject.bpm)||Number(window.__incomingLyricProject?.bpm)||Number(document.getElementById('note-sequence-bpm')?.value)||120,
+    timeSig: Number(rhythmProject.timeSig)||4,
+    bars: Number(rhythmProject.bars)||undefined,
+    div: Number(rhythmProject.div)||undefined,
     melody: { notes: melody },
     exported: new Date().toISOString()
   };
@@ -959,9 +974,13 @@ function restoreBeatLabProject(project){
     state.lastNotes=melodyNotes.map(n=>({note:typeof n.pitch==='number'?midiToNoteName(n.pitch):String(n.pitch||'C4'),length:Math.max(0.25,Number(n.durationBeats)||1)*4}));
     renderNoteCards(state.lastNotes,project.title||project.name||'Composition with rhythm');
     const cards=[...document.querySelectorAll('#canvas .card')];
+    const savedCardNotes=Array.isArray(project.lyricProject?.notes)?project.lyricProject.notes:[];
     const lyricNotes=project.generatedMusic&&Array.isArray(project.generatedMusic.melody)?project.generatedMusic.melody:[];
     cards.forEach((card,i)=>{
-      const lyric=lyricNotes[i];if(!lyric)return;
+      const saved=savedCardNotes[i]||null;
+      const generated=lyricNotes[i]||null;
+      const lyric=saved?{lyric:saved.lyric,role:saved.role,section:saved.section}:generated;
+      if(!lyric)return;
       card.dataset.lyric=lyric.lyric||lyric.word||'';
       card.dataset.lyricRole=lyric.role||'';
       card.dataset.lyricSection=lyric.section||'';
