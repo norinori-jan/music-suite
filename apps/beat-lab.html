@@ -1420,6 +1420,7 @@ function _buildExportData(){
   const base=window.__compositionBaseProject||{};
   return Object.assign({},base,{
     version:'1.0',
+    drumVelocityEncoding:'beat-lab-40-127-v1',
     source:base.fromCompositionCanvas?'composition-canvas':'beat-lab',
     name: document.getElementById('project-name').value || base.name || 'Untitled Beat',
     bpm: PROJ_BPM(),
@@ -1436,6 +1437,14 @@ function _buildExportData(){
   });
 }
 
+function decodeImportedDrumVelocity(note,data){
+  const raw=Number(note?.vel);
+  if(!Number.isFinite(raw))return .63;
+  // BEAT//LAB stores editor velocity as MIDI 40-127; external sources use standard 0-127.
+  return data?.drumVelocityEncoding==='beat-lab-40-127-v1'
+    ? Math.max(.2,Math.min(1,(raw-40)/87))
+    : Math.max(.2,Math.min(1,raw/127));
+}
 function validateCompositionTimeline(data){
   const errors=[],warnings=[],bars=Number(data?.bars),timeSig=Number(data?.timeSig)||4,div=Number(data?.div)||16,stepsPerBeat=div/4;
   if(!Number.isInteger(bars)||bars<1||bars>32)errors.push('barsは1〜32の整数である必要があります');
@@ -1498,7 +1507,7 @@ function importJSON(input){
         if(!row)return;
         const step=Math.round(Number(n.startBeat)*stepsPerBeat);
         if(!Number.isFinite(step)||step<0||step>=APP.bars*APP.timeSig*stepsPerBeat)return;
-        const vel=Math.max(0.2,Math.min(1,(Number(n.vel)||80)/127));
+        const vel=decodeImportedDrumVelocity(n,data);
         APP.pattern[pk(row.id,step)]=vel;
       });
       if(data.name)document.getElementById('project-name').value=data.name;
@@ -1576,7 +1585,7 @@ function checkIncomingImport(){
         const row=ROWS.find(r=>r.pitch===n.pitch);
         if(!row)return;
         const step=Math.round(n.startBeat*stepsPerBeat);
-        APP.pattern[pk(row.id,step)]=Math.max(0.4,Math.min(1,(n.vel||80)/127));
+        APP.pattern[pk(row.id,step)]=decodeImportedDrumVelocity(n,data);
       });
     }
     if(data.arrangement)restoreSongArrangement(data.arrangement);
