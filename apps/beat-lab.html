@@ -1436,8 +1436,25 @@ function _buildExportData(){
   });
 }
 
+function validateCompositionTimeline(data){
+  const errors=[],warnings=[],bars=Number(data?.bars),timeSig=Number(data?.timeSig)||4,div=Number(data?.div)||16,stepsPerBeat=div/4;
+  if(!Number.isInteger(bars)||bars<1||bars>32)errors.push('barsは1〜32の整数である必要があります');
+  if(!Number.isFinite(stepsPerBeat)||stepsPerBeat<=0||!Number.isInteger(stepsPerBeat))errors.push('divが不正です');
+  const songBeats=Math.max(0,bars*timeSig);
+  const melody=Array.isArray(data?.melody?.notes)?data.melody.notes:[];
+  const drums=Array.isArray(data?.drums?.notes)?data.drums.notes:[];
+  function inspect(notes,label){notes.forEach((n,i)=>{const start=Number(n.startBeat),duration=Number(n.durationBeats),pitch=Number(n.pitch);if(!Number.isFinite(start)||start<0)errors.push(label+'['+i+'] 開始位置が不正');if(!Number.isFinite(duration)||duration<=0)errors.push(label+'['+i+'] 長さが不正');if(!Number.isInteger(pitch)||pitch<0||pitch>127)errors.push(label+'['+i+'] 音程がMIDI範囲外');if(Number.isFinite(start)&&Number.isFinite(duration)&&start+duration>songBeats+1e-6)warnings.push(label+'['+i+'] が曲の小節数を超えています');});}
+  inspect(melody,'melody');inspect(drums,'drums');
+  const sections=data?.arrangement?.sections;
+  if(Array.isArray(sections)&&sections.length){const sorted=[...sections].sort((a,b)=>Number(a.startBar)-Number(b.startBar));let cursor=1;sorted.forEach((x,i)=>{const start=Number(x.startBar),end=Number(x.endBar);if(!Number.isInteger(start)||!Number.isInteger(end)||start!==cursor||end<start||end>bars)errors.push('区間'+(x.id||i)+'の小節範囲が連続していません');cursor=end+1;});if(cursor!==bars+1)errors.push('区間が曲全体の小節を覆っていません');}
+  if(melody.length&&drums.length){const firstMelody=Math.min(...melody.map(n=>Number(n.startBeat)).filter(Number.isFinite)),firstDrum=Math.min(...drums.map(n=>Number(n.startBeat)).filter(Number.isFinite));if(Number.isFinite(firstMelody)&&Number.isFinite(firstDrum)&&Math.abs(firstMelody-firstDrum)>songBeats)warnings.push('メロディとドラムの開始位置に大きな差があります');}
+  return {ok:errors.length===0,errors,warnings,melodyCount:melody.length,drumCount:drums.length,bars,songBeats};
+}
 function exportJSON(){
   const data=buildExportData();
+  const report=validateCompositionTimeline(data);
+  if(!report.ok){setStatus('err','JSON出力を中止：'+report.errors.join(' / '));return;}
+  if(report.warnings.length)console.warn('Music Suite timeline warnings',report.warnings);
   const blob=new Blob([JSON.stringify(data,null,2)],{type:'application/json'});
   const url=URL.createObjectURL(blob);
   const a=document.createElement('a');
@@ -1455,6 +1472,8 @@ function importJSON(input){
   r.onload=ev=>{
     try{
       const data=JSON.parse(ev.target.result);
+      const report=validateCompositionTimeline(data);
+      if(!report.ok)throw new Error('データ検査に失敗：'+report.errors.join(' / '));
       saveUndo();
       if(data.bpm){document.getElementById('bpm-sl').value=data.bpm;setBpm(data.bpm);}
       if(data.timeSig)document.getElementById('step-timesig').value=data.timeSig;
@@ -1488,7 +1507,8 @@ function importJSON(input){
       renderArrangementEffects();
       switchView('step');
       renderStepGrid();
-      setStatus('ok','JSONをインポートしました — '+drumNotes.length+'ノート'+(data.arrangement?'・曲の展開も復元':''));
+      const restoredReport=validateCompositionTimeline(buildExportData());
+      setStatus('ok','JSONをインポートしました — '+drumNotes.length+'ノート'+(data.arrangement?'・曲の展開も復元':'')+(restoredReport.ok?'・時間軸検査OK':'・時間軸に要確認'));
 
     }catch(e){
       setStatus('err','JSONパース失敗: '+e.message);
