@@ -125,6 +125,11 @@ select.inp{cursor:pointer}
 .sc.hit{border-color:transparent}
 .sc.hit-low{opacity:.55}
 .sc.playing-step{box-shadow:inset 0 0 0 2px #fff3}
+.sc.effect-fill-step{outline:1px dashed #f5b942;outline-offset:-2px}
+.sc.effect-break-step{background:repeating-linear-gradient(135deg,#e45b5b22,#e45b5b22 3px,transparent 3px,transparent 6px)!important}
+.sc.effect-ending-step{box-shadow:inset 0 0 0 1px #78d6b0}
+.sc.effect-fill-step::after,.sc.effect-break-step::after,.sc.effect-ending-step::after{content:'';position:absolute;top:1px;right:1px;width:4px;height:4px;border-radius:50%;background:currentColor;pointer-events:none}
+.sc.effect-fill-step{color:#f5b942}.sc.effect-break-step{color:#e45b5b}.sc.effect-ending-step{color:#78d6b0}
 .sc-vel{position:absolute;bottom:0;left:0;right:0;border-radius:0 0 2px 2px}
 .beat-header{display:flex;border-bottom:1px solid var(--bd2);position:sticky;top:0;background:var(--bg);z-index:6}
 .beat-header-offset{
@@ -729,6 +734,16 @@ function renderStepGrid(){
       const isBeatStart=(s%stepsPerBeat===0);
       let cls='sc'+(isBeatStart?' beat-start':'');
       let style='';
+      const absoluteBar=(activeSection?.startBar||1)+Math.floor(s/(APP.timeSig*stepsPerBeat));
+      const absoluteStep=(absoluteBar-1)*APP.timeSig*stepsPerBeat+(s%(APP.timeSig*stepsPerBeat));
+      const fx=sectionEffects(activeSection);
+      const globalFx=ensureArrangementEffects();
+      const chorusSection=APP.sections?.find(x=>x.id==='chorus');
+      const finalSection=APP.sections?.find(x=>x.id==='final');
+      if(activeSection&&fx.breakBars.includes(absoluteBar))cls+=' effect-break-step';
+      if(activeSection&&globalFx.breakBars.includes(absoluteBar))cls+=' effect-break-step';
+      if(chorusSection&&fx.fillBeforeChorus&&absoluteBar>=chorusSection.startBar-fx.fillBars&&absoluteBar<chorusSection.startBar)cls+=' effect-fill-step';
+      if(finalSection&&finalSection.effects?.finalVariation&&absoluteBar===APP.bars)cls+=' effect-ending-step';
       if(vel){
         cls+= vel<0.7 ? ' hit hit-low' : ' hit';
         style=`background:${row.color}; opacity:${0.35+vel*0.65}`;
