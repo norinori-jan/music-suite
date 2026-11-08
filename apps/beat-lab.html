@@ -1352,45 +1352,58 @@ function exportMIDI(){
   function s2b(s){return[...s].map(c=>c.charCodeAt(0));}
   function meta(t,s){const b=s2b(s);return[0xFF,t,...vl(b.length),...b];}
   function chunk(tag,bytes){const l=bytes.length;return[...s2b(tag),(l>>>24)&255,(l>>>16)&255,(l>>>8)&255,l&255,...bytes];}
-  function makeTrack(name,events){
-    events.sort((a,b)=>a.t-b.t||(a.order||0)-(b.order||0));
+  function makeTrack(name,events,endTick){
+    events.sort((a,b)=>a.t-b.t||(a.order??0)-(b.order??0));
     const bytes=[...meta(0x03,name)];let last=0;
     for(const e of events){bytes.push(...vl(e.t-last),...e.d);last=e.t;}
-    bytes.push(0,0xFF,0x2F,0);return chunk('MTrk',bytes);
+    if(endTick>last)bytes.push(...vl(endTick-last));
+    bytes.push(0xFF,0x2F,0);return chunk('MTrk',bytes);
   }
-  const tempoUs=Math.round(60000000/bpm);
-  const tempoEvents=[
-    {t:0,d:[0xFF,0x51,3,(tempoUs>>>16)&255,(tempoUs>>>8)&255,tempoUs&255]},
-    {t:0,d:[0xFF,0x58,4,APP.timeSig,2,24,8]}
-  ];
-  const melodyEvents=[];
-  (Array.isArray(data.melody?.notes)?data.melody.notes:[]).forEach(n=>{
-    const pitch=Number(n.pitch),start=Number(n.startBeat),duration=Number(n.durationBeats),velocity=Math.max(1,Math.min(127,Number(n.vel)||90));
-    if(!Number.isFinite(pitch)||pitch<0||pitch>127||!Number.isFinite(start)||start<0||!Number.isFinite(duration)||duration<=0)return;
+  const tempoUs=Math.max(1,Math.min(0xFFFFFF,Math.round(60000000/bpm)));
+  const melodyEvents=[],melodyNotes=Array.isArray(data.melody?.notes)?data.melody.notes:[];
+  let melodyEndBeat=0,validMelodyCount=0;
+  melodyNotes.forEach(n=>{
+    const pitch=Number(n.pitch),start=Number(n.startBeat),duration=Number(n.durationBeats),rawVel=Number(n.vel);
+    if(!Number.isInteger(pitch)||pitch<0||pitch>127||!Number.isFinite(start)||start<0||!Number.isFinite(duration)||duration<=0)return;
+    const velocity=Math.max(1,Math.min(127,Number.isFinite(rawVel)?Math.round(rawVel):90));
     const on=Math.round(start*ppq),off=Math.max(on+1,Math.round((start+duration)*ppq));
-    melodyEvents.push({t:on,order:1,d:[0x90|melodyCh,Math.round(pitch),velocity]},{t:off,order:0,d:[0x80|melodyCh,Math.round(pitch),0]});
+    melodyEndBeat=Math.max(melodyEndBeat,off/ppq);validMelodyCount++;
+    melodyEvents.push({t:on,order:1,d:[0x90|melodyCh,pitch,velocity]},{t:off,order:0,d:[0x80|melodyCh,pitch,0]});
   });
   const drumEvents=[],sections=Array.isArray(APP.sections)?APP.sections:[];
+  let generatedDrumCount=0;
   for(let step=0;step<APP.bars*stepsPerBar;step++){
-    const section=sections.find(x=>{const bar=Math.floor(step/stepsPerBar)+1;return bar>=x.startBar&&bar<=x.endBar;})||null;
+    const bar=Math.floor(step/stepsPerBar)+1;
+    const section=sections.find(x=>bar>=x.startBar&&bar<=x.endBar)||null;
     const local=section?step-(section.startBar-1)*stepsPerBar:step;
     ROWS.forEach(row=>{
       let velocity=section?(section.pattern?.[pk(row.id,local)]||0):(APP.pattern[pk(row.id,step)]||0);
       const effect=drumEffectVelocity(row.id,step,section,local);
       if(effect!==null)velocity=effect;
-      if(!velocity)return;
+      if(!(velocity>0))return;
       const tick=Math.round(step*beatPerStep*ppq),v=Math.max(1,Math.min(127,Math.round(velocity*127)));
       drumEvents.push({t:tick,order:1,d:[0x90|drumCh,row.pitch,v]},{t:tick+12,order:0,d:[0x80|drumCh,row.pitch,0]});
+      generatedDrumCount++;
     });
   }
-  const tracks=[chunk('MTrk',(()=>{const bytes=[...meta(0x03,'Tempo')];let last=0;tempoEvents.sort((a,b)=>a.t-b.t);for(const e of tempoEvents){bytes.push(...vl(e.t-last),...e.d);last=e.t;}bytes.push(0,0xFF,0x2F,0);return bytes;})()),makeTrack('Melody',melodyEvents),makeTrack('Drums GM ch10',drumEvents)];
+  const songEndBeat=Math.max(APP.bars*APP.timeSig,melodyEndBeat);
+  const songEndTick=Math.ceil(songEndBeat*ppq);
+  const tempoEvents=[
+    {t:0,order:0,d:[0xFF,0x51,3,(tempoUs>>>16)&255,(tempoUs>>>8)&255,tempoUs&255]},
+    {t:0,order:1,d:[0xFF,0x58,4,APP.timeSig,2,24,8]}
+  ];
+  const tracks=[
+    makeTrack('Tempo',tempoEvents,songEndTick),
+    makeTrack('Melody',melodyEvents,songEndTick),
+    makeTrack('Drums GM ch10',drumEvents,songEndTick)
+  ];
   const hdr=[0x4D,0x54,0x68,0x64,0,0,0,6,0,1,0,tracks.length,(ppq>>8)&255,ppq&255];
   const blob=new Blob([new Uint8Array([...hdr,...tracks.flat()])],{type:'audio/midi'});
   const url=URL.createObjectURL(blob),a=document.createElement('a');
   const name=(document.getElementById('project-name').value||'music-suite').replace(/[^\\w-]+/g,'-');
   a.href=url;a.download=name+'-garageband.mid';document.body.appendChild(a);a.click();
   setTimeout(()=>{URL.revokeObjectURL(url);a.remove()},1000);
-  setStatus('ok','GarageBand用MIDIを書き出しました（メロディ＋区間別ドラム＋テンポ）');
+  setStatus('ok','GarageBand用MIDIを書き出しました（メロディ '+validMelodyCount+'音・ドラム '+generatedDrumCount+'打・'+songEndBeat.toFixed(2)+'拍）');
 }
 // ════════════════════════════════════════════════════════
 // EXPORT — JSON (for iCloud / score-editor-v2 import)
