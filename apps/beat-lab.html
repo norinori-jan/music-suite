@@ -739,11 +739,13 @@ function renderStepGrid(){
       const fx=sectionEffects(activeSection);
       const globalFx=ensureArrangementEffects();
       const chorusSection=APP.sections?.find(x=>x.id==='chorus');
+      const chorusFx=sectionEffects(chorusSection);
       const finalSection=APP.sections?.find(x=>x.id==='final');
+      const finalFx=sectionEffects(finalSection);
       if(activeSection&&fx.breakBars.includes(absoluteBar))cls+=' effect-break-step';
-      if(activeSection&&globalFx.breakBars.includes(absoluteBar))cls+=' effect-break-step';
-      if(chorusSection&&fx.fillBeforeChorus&&absoluteBar>=chorusSection.startBar-fx.fillBars&&absoluteBar<chorusSection.startBar)cls+=' effect-fill-step';
-      if(finalSection&&finalSection.effects?.finalVariation&&absoluteBar===APP.bars)cls+=' effect-ending-step';
+      if(globalFx.breakBars.includes(absoluteBar))cls+=' effect-break-step';
+      if(chorusSection&&chorusFx.fillBeforeChorus&&absoluteBar>=chorusSection.startBar-chorusFx.fillBars&&absoluteBar<chorusSection.startBar)cls+=' effect-fill-step';
+      if(finalSection&&finalFx.finalVariation&&absoluteBar===APP.bars)cls+=' effect-ending-step';
       if(vel){
         cls+= vel<0.7 ? ' hit hit-low' : ' hit';
         style=`background:${row.color}; opacity:${0.35+vel*0.65}`;
