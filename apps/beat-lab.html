@@ -1345,49 +1345,53 @@ async function aiCallOpenAI(key,sys,usr){
 // EXPORT — MIDI
 // ════════════════════════════════════════════════════════
 function exportMIDI(){
-  const bpm=PROJ_BPM(), ppq=480;
-  const stepsPerBeat=APP.div/4;
-  const beatPerStep=1/stepsPerBeat;
-  const ch=9; // GM drum channel (ch10, 0-indexed=9)
-
-  function vl(v){if(v<0x80)return[v];const b=[];b.unshift(v&0x7f);v>>=7;while(v){b.unshift((v&0x7f)|0x80);v>>=7;}return b;}
-  function s2b(s){return[...s].map(c=>c.charCodeAt(0))}
-  function meta(t,s){const b=s2b(s);return[0,0xFF,t,...vl(b.length),...b]}
-  function tempoTrk(){
-    const us=Math.round(60000000/bpm);
-    return[...meta(0x03,'Tempo'),0,0xFF,0x51,3,(us>>16)&0xFF,(us>>8)&0xFF,us&0xFF,0,0xFF,0x58,4,APP.timeSig,2,24,8,0,0xFF,0x2F,0];
+  const data=buildExportData(),bpm=Number(data.bpm)||120,ppq=480;
+  const stepsPerBeat=APP.div/4,beatPerStep=1/stepsPerBeat,stepsPerBar=APP.timeSig*stepsPerBeat;
+  const drumCh=9,melodyCh=0;
+  function vl(v){v=Math.max(0,Math.floor(v));if(v<0x80)return[v];const b=[v&0x7f];v>>=7;while(v){b.unshift((v&0x7f)|0x80);v>>=7;}return b;}
+  function s2b(s){return[...s].map(c=>c.charCodeAt(0));}
+  function meta(t,s){const b=s2b(s);return[0xFF,t,...vl(b.length),...b];}
+  function chunk(tag,bytes){const l=bytes.length;return[...s2b(tag),(l>>>24)&255,(l>>>16)&255,(l>>>8)&255,l&255,...bytes];}
+  function makeTrack(name,events){
+    events.sort((a,b)=>a.t-b.t||(a.order||0)-(b.order||0));
+    const bytes=[...meta(0x03,name)];let last=0;
+    for(const e of events){bytes.push(...vl(e.t-last),...e.d);last=e.t;}
+    bytes.push(0,0xFF,0x2F,0);return chunk('MTrk',bytes);
   }
-  const evs=[];
-  ROWS.forEach(row=>{
-    for(let s=0;s<totalSteps();s++){
-      const vel=APP.pattern[pk(row.id,s)];
-      if(!vel)continue;
-      const tick=Math.round(s*beatPerStep*ppq);
-      const v=Math.round(40+vel*87); // 40-127
-      evs.push({t:tick,d:[0x90|ch,row.pitch,v]});
-      evs.push({t:tick+10,d:[0x80|ch,row.pitch,0]});
-    }
+  const tempoUs=Math.round(60000000/bpm);
+  const tempoEvents=[
+    {t:0,d:[0xFF,0x51,3,(tempoUs>>>16)&255,(tempoUs>>>8)&255,tempoUs&255]},
+    {t:0,d:[0xFF,0x58,4,APP.timeSig,2,24,8]}
+  ];
+  const melodyEvents=[];
+  (Array.isArray(data.melody?.notes)?data.melody.notes:[]).forEach(n=>{
+    const pitch=Number(n.pitch),start=Number(n.startBeat),duration=Number(n.durationBeats),velocity=Math.max(1,Math.min(127,Number(n.vel)||90));
+    if(!Number.isFinite(pitch)||pitch<0||pitch>127||!Number.isFinite(start)||start<0||!Number.isFinite(duration)||duration<=0)return;
+    const on=Math.round(start*ppq),off=Math.max(on+1,Math.round((start+duration)*ppq));
+    melodyEvents.push({t:on,order:1,d:[0x90|melodyCh,Math.round(pitch),velocity]},{t:off,order:0,d:[0x80|melodyCh,Math.round(pitch),0]});
   });
-  evs.sort((a,b)=>a.t-b.t);
-  const trkData=[...meta(0x03,'Drums')];
-  let last=0;
-  evs.forEach(e=>{trkData.push(...vl(e.t-last),...e.d);last=e.t;});
-  trkData.push(0,0xFF,0x2F,0);
-
-  function chunk(tag,data){const l=data.length;return[...s2b(tag),(l>>24)&0xFF,(l>>16)&0xFF,(l>>8)&0xFF,l&0xFF,...data]}
-  const hdr=[0x4D,0x54,0x68,0x64,0,0,0,6,0,1,0,2,(ppq>>8)&0xFF,ppq&0xFF];
-  const all=[chunk('MTrk',tempoTrk()),chunk('MTrk',trkData)];
-  const midi=new Uint8Array([...hdr,...all.flat()]);
-  const blob=new Blob([midi],{type:'audio/midi'});
-  const url=URL.createObjectURL(blob);
-  const a=document.createElement('a');
-  const name=(document.getElementById('project-name').value||'beat').replace(/\s+/g,'-');
-  a.href=url; a.download=`${name}-${Date.now()}.mid`;
-  document.body.appendChild(a); a.click();
+  const drumEvents=[],sections=Array.isArray(APP.sections)?APP.sections:[];
+  for(let step=0;step<APP.bars*stepsPerBar;step++){
+    const section=sections.find(x=>{const bar=Math.floor(step/stepsPerBar)+1;return bar>=x.startBar&&bar<=x.endBar;})||null;
+    const local=section?step-(section.startBar-1)*stepsPerBar:step;
+    ROWS.forEach(row=>{
+      let velocity=section?(section.pattern?.[pk(row.id,local)]||0):(APP.pattern[pk(row.id,step)]||0);
+      const effect=drumEffectVelocity(row.id,step,section,local);
+      if(effect!==null)velocity=effect;
+      if(!velocity)return;
+      const tick=Math.round(step*beatPerStep*ppq),v=Math.max(1,Math.min(127,Math.round(velocity*127)));
+      drumEvents.push({t:tick,order:1,d:[0x90|drumCh,row.pitch,v]},{t:tick+12,order:0,d:[0x80|drumCh,row.pitch,0]});
+    });
+  }
+  const tracks=[chunk('MTrk',(()=>{const bytes=[...meta(0x03,'Tempo')];let last=0;tempoEvents.sort((a,b)=>a.t-b.t);for(const e of tempoEvents){bytes.push(...vl(e.t-last),...e.d);last=e.t;}bytes.push(0,0xFF,0x2F,0);return bytes;})()),makeTrack('Melody',melodyEvents),makeTrack('Drums GM ch10',drumEvents)];
+  const hdr=[0x4D,0x54,0x68,0x64,0,0,0,6,0,1,0,tracks.length,(ppq>>8)&255,ppq&255];
+  const blob=new Blob([new Uint8Array([...hdr,...tracks.flat()])],{type:'audio/midi'});
+  const url=URL.createObjectURL(blob),a=document.createElement('a');
+  const name=(document.getElementById('project-name').value||'music-suite').replace(/[^\\w-]+/g,'-');
+  a.href=url;a.download=name+'-garageband.mid';document.body.appendChild(a);a.click();
   setTimeout(()=>{URL.revokeObjectURL(url);a.remove()},1000);
-  setStatus('ok','MIDIをエクスポートしました（GMドラムチャンネル ch10）');
+  setStatus('ok','GarageBand用MIDIを書き出しました（メロディ＋区間別ドラム＋テンポ）');
 }
-
 // ════════════════════════════════════════════════════════
 // EXPORT — JSON (for iCloud / score-editor-v2 import)
 // ════════════════════════════════════════════════════════
