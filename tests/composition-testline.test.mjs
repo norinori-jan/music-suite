@@ -6,6 +6,8 @@ import path from "node:path";
 
 const here = path.dirname(fileURLToPath(import.meta.url));
 const fixturePath = path.join(here, "fixtures", "composition-testline-v1.json");
+const canvasPath = path.join(here, "..", "apps", "composition-canvas.html");
+const beatLabPath = path.join(here, "..", "apps", "beat-lab.html");
 function round(value) {
   return typeof value === "number" ? Number(value.toFixed(4)) : value;
 }
@@ -80,8 +82,6 @@ test("TL-13 final-bar events remain within the 32-bar boundary", async () => {
   assert.ok(lastMelody.startBeat + lastMelody.durationBeats <= 128);
   assert.ok(lastDrum.startBeat + lastDrum.durationBeats <= 128);
 });
-
-const beatLabPath = path.join(here, "..", "apps", "beat-lab.html");
 
 test("TL-17 Canvas to BEAT//LAB payload carries baseline and return comparison", async () => {
   const canvas = await readFile(canvasPath, "utf8");
