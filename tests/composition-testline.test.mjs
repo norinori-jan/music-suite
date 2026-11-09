@@ -6,7 +6,6 @@ import path from "node:path";
 
 const here = path.dirname(fileURLToPath(import.meta.url));
 const fixturePath = path.join(here, "fixtures", "composition-testline-v1.json");
-
 function round(value) {
   return typeof value === "number" ? Number(value.toFixed(4)) : value;
 }
