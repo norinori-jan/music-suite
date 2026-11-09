@@ -624,13 +624,15 @@ function applyLyricsToCanvas(){
     const count=index===lines.length-1?remainCards:Math.min(remainCards-(remainLines-1),Math.max(1,Math.round(cards.length*weights[index]/total)));
     const phrase=line.text.trim();
     for(let i=cursor;i<cursor+count;i++){
-      const card=cards[i];card.dataset.lyric=phrase;card.dataset.lyricRole=line.role;card.dataset.lyricSection=line.label;card.classList.add('lyric-linked');
+      const card=cards[i];
+      card.dataset.lyricId=card.dataset.lyricId||('lyric-assignment-'+(card.dataset.noteId||makeMelodyNoteId(i)));
+      card.dataset.lyric=phrase;card.dataset.lyricRole=line.role;card.dataset.lyricSection=line.label;card.classList.add('lyric-linked');
       let label=card.querySelector('.lyric-assignment');if(!label){label=document.createElement('span');label.className='lyric-assignment';card.appendChild(label)}
       label.textContent=(line.role==='A'?'A':line.role==='B'?'B':'二人')+' · '+phrase;
     }
     cursor+=count;
   });
-  window.__lyricCardAssignments=cards.map((card,index)=>({index,lyric:card.dataset.lyric||'',role:card.dataset.lyricRole||'',section:card.dataset.lyricSection||''}));
+  window.__lyricCardAssignments=cards.map((card,index)=>({noteId:card.dataset.noteId||makeMelodyNoteId(index),lyricId:card.dataset.lyricId||null,lyric:card.dataset.lyric||'',role:card.dataset.lyricRole||'',section:card.dataset.lyricSection||''}));
   showToast('歌詞をパート・フレーズ単位で音符カードに割り当てました');
 }
 function lyricEstimateSyllables(word){
@@ -775,12 +777,12 @@ let noteSequenceAudio = null;
 let noteSequenceNodes = [];
 function parseNoteSequenceText(raw) {
   const source=String(raw||'').replace(/[＊ｘＸ]/g,'×').replace(/[，、；]/g,',').trim();
-  if(!source)throw new Error('音符列が空です。例：C4×4, E4×4, G4×4');
+  if(!source)throw new Error('音符列が空です。例：C4-4, E4-4, G4-4');
   const tokens=source.split(/[\s,;]+/).map(x=>x.trim()).filter(Boolean);
   const notes=[];
   for(const token of tokens){
-    const m=token.match(/^([A-Ga-g]#?-?\d+)\s*[×xX*]\s*(\d+(?:\.\d+)?)$/);
-    if(!m)throw new Error('「'+token+'」を読み取れません。C4×4 の形式で入力してください。');
+    const m=token.match(/^([A-Ga-g]#?-?\d+)\s*(?:[-×xX*])\s*(\d+(?:\.\d+)?)$/);
+    if(!m)throw new Error('「'+token+'」を読み取れません。C4-4 または C4×4 の形式で入力してください。');
     const note=m[1].toUpperCase(),length=Number(m[2]),midi=noteToMidi(note);
     if(!Number.isFinite(length)||length<=0||length>64)throw new Error('「'+token+'」の拍数は0より大きく64以下にしてください。');
     if(!Number.isFinite(midi))throw new Error('「'+note+'」は読み取れない音名です。');
@@ -925,8 +927,9 @@ function loadCardPositions() {
   let data=[];
   try{data=JSON.parse(localStorage.getItem('savedCardLayout')||'[]');}catch(e){console.warn('saved card data ignored',e);}
   if(!Array.isArray(data)||!data.length)return false;
-  const clean=data.filter(item=>item&&typeof item.note==='string').map(item=>({
-    note:item.note,length:Number(item.length)||4,color:item.color||'',
+  const clean=data.filter(item=>item&&typeof item.note==='string').map((item,index)=>({
+    id:item.id||makeMelodyNoteId(index),startBeat:item.startBeat,
+    lyricId:item.lyricId||null,note:item.note,length:Number(item.length)||4,color:item.color||'',
     lyric:item.lyric||'',lyricRole:item.lyricRole||'',lyricSection:item.lyricSection||''
   }));
   renderNoteCards(clean,'Saved note cards');
@@ -950,7 +953,8 @@ function buildMelodyProject(sourceName) {
         return {
           ...n,id:stableId,
           pitch:Number.isFinite(editedPitch)?editedPitch:n.pitch,
-          durationBeats:Number.isFinite(editedDuration)&&editedDuration>0?editedDuration:n.durationBeats
+          durationBeats:Number.isFinite(editedDuration)&&editedDuration>0?editedDuration:n.durationBeats,
+          lyricId:card.lyricId||n.lyricId||null
         };
       })
     : [];
