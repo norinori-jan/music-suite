@@ -81,3 +81,37 @@ test("TL-13 final-bar events remain within the 32-bar boundary", async () => {
   assert.ok(lastMelody.startBeat + lastMelody.durationBeats <= 128);
   assert.ok(lastDrum.startBeat + lastDrum.durationBeats <= 128);
 });
+
+const beatLabPath = path.join(here, "..", "apps", "beat-lab.html");
+
+test("TL-17 Canvas to BEAT//LAB payload carries baseline and return comparison", async () => {
+  const canvas = await readFile(canvasPath, "utf8");
+  const beatLab = await readFile(beatLabPath, "utf8");
+  assert.match(canvas, /project\.roundTripBaseline=createCompositionSnapshot\(project\)/);
+  assert.match(canvas, /localStorage\.setItem\('compositionRoundTripBaseline'/);
+  assert.match(beatLab, /Object\.assign\(\{\},base/);
+  assert.match(beatLab, /data\.fromBeatLab=true/);
+  assert.match(canvas, /compareCompositionSnapshot\(project\.roundTripBaseline,project\)/);
+  assert.match(canvas, /往復比較OK/);
+});
+
+test("TL-18 snapshot comparator checks timeline, note IDs, lyric IDs and chords", async () => {
+  const html = await readFile(canvasPath, "utf8");
+  const match = html.match(/function normalizeCompositionValue\(value\) \{[\s\S]*?\n\}\nfunction createCompositionSnapshot[\s\S]*?\n\}\nfunction compareCompositionSnapshot[\s\S]*?\n\}/);
+  assert.ok(match, "snapshot normalization and comparison functions must exist");
+  const helpers = new Function(match[0] + "\\nreturn {createCompositionSnapshot,compareCompositionSnapshot};")();
+  const base = {
+    projectId:"p1", bpm:100, timeSig:4, bars:8, div:16,
+    melody:{notes:[{id:"n1",pitch:60,startBeat:0,durationBeats:1,lyricId:"l1"}]},
+    lyricProject:{projectId:"p1",notes:[{id:"n1",lyricId:"l1",lyric:"hello",role:"A",section:"Verse"}]},
+    chords:[{id:"c1",bar:1,chord:"C",beats:4}]
+  };
+  const snap = helpers.createCompositionSnapshot(base);
+  assert.equal(helpers.compareCompositionSnapshot(snap,base).ok,true);
+  const changed = structuredClone(base);
+  changed.melody.notes[0].startBeat = 1;
+  assert.ok(helpers.compareCompositionSnapshot(snap,changed).errors.includes("melody が保存前と一致しません"));
+  const changedChord = structuredClone(base);
+  changedChord.chords[0].chord = "Am";
+  assert.ok(helpers.compareCompositionSnapshot(snap,changedChord).errors.includes("chords が保存前と一致しません"));
+});
