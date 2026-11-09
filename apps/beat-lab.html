@@ -1459,8 +1459,38 @@ function validateCompositionTimeline(data){
   if(melody.length&&drums.length){const firstMelody=Math.min(...melody.map(n=>Number(n.startBeat)).filter(Number.isFinite)),firstDrum=Math.min(...drums.map(n=>Number(n.startBeat)).filter(Number.isFinite));if(Number.isFinite(firstMelody)&&Number.isFinite(firstDrum)&&Math.abs(firstMelody-firstDrum)>songBeats)warnings.push('メロディとドラムの開始位置に大きな差があります');}
   return {ok:errors.length===0,errors,warnings,melodyCount:melody.length,drumCount:drums.length,bars,songBeats};
 }
+function normalizeJSONRoundTripValue(value){
+  if(Array.isArray(value))return value.map(normalizeJSONRoundTripValue);
+  if(!value||typeof value!=='object')return typeof value==='number'?Number(value.toFixed(4)):value;
+  return Object.fromEntries(Object.keys(value).filter(key=>!['exported','updatedAt','createdAt','jsonRoundTripBaseline'].includes(key)).sort().map(key=>[key,normalizeJSONRoundTripValue(value[key])]));
+}
+function createJSONRoundTripSnapshot(project){
+  return normalizeJSONRoundTripValue({
+    timeline:{bpm:Number(project.bpm)||120,timeSig:Number(project.timeSig)||4,bars:Number(project.bars)||2,div:Number(project.div)||16},
+    lyrics:project.lyrics||'',
+    sections:project.sections||[],
+    melody:project.melody||{notes:[]},
+    drums:project.drums||{notes:[]},
+    arrangement:project.arrangement||null,
+    chords:project.chords||project.generatedMusic?.chords||null,
+    bass:project.bass||{notes:[]},
+    rhythmVariations:project.rhythmVariations||[]
+  });
+}
+function compareJSONRoundTripSnapshot(baseline,project){
+  if(!baseline)return {ok:false,errors:['JSON保存時の比較基準がありません']};
+  const current=createJSONRoundTripSnapshot(project),errors=[];
+  for(const key of Object.keys(baseline)){
+    if(JSON.stringify(baseline[key])!==JSON.stringify(current[key]))errors.push(key+' がJSON保存前と一致しません');
+  }
+  for(const key of Object.keys(current)){
+    if(!(key in baseline))errors.push(key+' がJSON保存前にありません');
+  }
+  return {ok:errors.length===0,errors};
+}
 function exportJSON(){
   const data=buildExportData();
+  data.jsonRoundTripBaseline=createJSONRoundTripSnapshot(data);
   const report=validateCompositionTimeline(data);
   if(!report.ok){setStatus('err','JSON出力を中止：'+report.errors.join(' / '));return;}
   if(report.warnings.length)console.warn('Music Suite timeline warnings',report.warnings);
@@ -1516,8 +1546,12 @@ function importJSON(input){
       renderArrangementEffects();
       switchView('step');
       renderStepGrid();
-      const restoredReport=validateCompositionTimeline(buildExportData());
-      setStatus('ok','JSONをインポートしました — '+drumNotes.length+'ノート'+(data.arrangement?'・曲の展開も復元':'')+(restoredReport.ok?'・時間軸検査OK':'・時間軸に要確認'));
+      const restoredProject=buildExportData();
+      const restoredReport=validateCompositionTimeline(restoredProject);
+      const jsonComparison=data.jsonRoundTripBaseline
+        ?compareJSONRoundTripSnapshot(data.jsonRoundTripBaseline,restoredProject)
+        :{ok:false,errors:['このJSONには保存前比較データがありません（旧形式）']};
+      setStatus(jsonComparison.ok?'ok':'err','JSONをインポートしました — '+drumNotes.length+'ノート'+(data.arrangement?'・曲の展開も復元':'')+(restoredReport.ok?'・時間軸検査OK':'・時間軸に要確認')+(jsonComparison.ok?'・保存/復元比較OK':'・保存/復元差分：'+jsonComparison.errors.join(' / ')));
 
     }catch(e){
       setStatus('err','JSONパース失敗: '+e.message);
