@@ -114,3 +114,30 @@ test("TL-18 snapshot comparator checks timeline, note IDs, lyric IDs and chords"
   changedChord.chords[0].chord = "Am";
   assert.ok(helpers.compareCompositionSnapshot(snap,changedChord).errors.includes("chords が保存前と一致しません"));
 });
+
+test("TL-19 JSON export stores a normalized baseline and import compares restored data", async () => {
+  const beatLab = await readFile(beatLabPath, "utf8");
+  assert.match(beatLab, /data\.jsonRoundTripBaseline=createJSONRoundTripSnapshot\(data\)/);
+  assert.match(beatLab, /compareJSONRoundTripSnapshot\(data\.jsonRoundTripBaseline,restoredProject\)/);
+  assert.match(beatLab, /JSON保存前と一致しません/);
+  const match = beatLab.match(/function normalizeJSONRoundTripValue\(value\) \{[\s\S]*?\n\}\nfunction createJSONRoundTripSnapshot[\s\S]*?\n\}\nfunction compareJSONRoundTripSnapshot[\s\S]*?\n\}/);
+  assert.ok(match, "JSON snapshot helpers must exist");
+  const helpers = new Function(match[0] + "\\nreturn {createJSONRoundTripSnapshot,compareJSONRoundTripSnapshot};")();
+  const project = {
+    bpm:100,timeSig:4,bars:8,div:16,
+    lyrics:"line one\\nline two",
+    sections:[{id:"verse",startBar:1,endBar:8}],
+    melody:{notes:[{id:"m1",pitch:60,startBeat:0,durationBeats:1,lyricId:"l1"}]},
+    drums:{notes:[{pitch:36,startBeat:0,durationBeats:0.2,vel:80}]},
+    arrangement:{sections:[{id:"verse",startBar:1,endBar:8,effects:{}}]},
+    chords:[{bar:1,chord:"C"}],bass:{notes:[]},rhythmVariations:[]
+  };
+  const baseline = helpers.createJSONRoundTripSnapshot(project);
+  assert.equal(helpers.compareJSONRoundTripSnapshot(baseline,structuredClone(project)).ok,true);
+  const changedDrum = structuredClone(project);
+  changedDrum.drums.notes[0].vel = 70;
+  assert.ok(helpers.compareJSONRoundTripSnapshot(baseline,changedDrum).errors.includes("drums がJSON保存前と一致しません"));
+  const changedChord = structuredClone(project);
+  changedChord.chords[0].chord = "Am";
+  assert.ok(helpers.compareJSONRoundTripSnapshot(baseline,changedChord).errors.includes("chords がJSON保存前と一致しません"));
+});
