@@ -1,0 +1,459 @@
+{
+  "schemaVersion": "composition-testline-v1",
+  "projectId": "composition-testline-v1",
+  "source": "composition-testline-fixture",
+  "name": "Composition Test Line v1",
+  "bpm": 100,
+  "timeSig": 4,
+  "div": 16,
+  "bars": 32,
+  "lyrics": {
+    "sections": [
+      {
+        "id": "lyric-intro",
+        "order": 1,
+        "role": "INTRO",
+        "label": "Intro",
+        "startBar": 1,
+        "endBar": 4,
+        "text": "夜明け前\nA quiet light"
+      },
+      {
+        "id": "lyric-verse",
+        "order": 2,
+        "role": "VERSE",
+        "label": "Verse (Aメロ)",
+        "startBar": 5,
+        "endBar": 12,
+        "text": "歩き出すこの道\nI keep moving on"
+      },
+      {
+        "id": "lyric-pre",
+        "order": 3,
+        "role": "PRE_CHORUS",
+        "label": "Pre-Chorus (Bメロ)",
+        "startBar": 13,
+        "endBar": 20,
+        "text": "胸の奥で\nA spark is growing"
+      },
+      {
+        "id": "lyric-chorus",
+        "order": 4,
+        "role": "CHORUS",
+        "label": "Chorus (サビ)",
+        "startBar": 21,
+        "endBar": 28,
+        "text": "明日を照らして\nWe can reach the sky"
+      },
+      {
+        "id": "lyric-final",
+        "order": 5,
+        "role": "FINAL",
+        "label": "Final",
+        "startBar": 29,
+        "endBar": 32,
+        "text": "光の向こうへ\nCarry this light"
+      }
+    ]
+  },
+  "melody": {
+    "notes": [
+      {
+        "id": "mel-001",
+        "pitch": 60,
+        "startBeat": 0,
+        "durationBeats": 1,
+        "vel": 88,
+        "lyricId": "lyric-intro"
+      },
+      {
+        "id": "mel-002",
+        "pitch": 64,
+        "startBeat": 1,
+        "durationBeats": 0.5,
+        "vel": 82,
+        "lyricId": "lyric-intro"
+      },
+      {
+        "id": "mel-003",
+        "pitch": 67,
+        "startBeat": 2,
+        "durationBeats": 2,
+        "vel": 90,
+        "lyricId": "lyric-intro"
+      },
+      {
+        "id": "mel-004",
+        "pitch": 67,
+        "startBeat": 5,
+        "durationBeats": 1,
+        "vel": 78,
+        "lyricId": "lyric-verse"
+      },
+      {
+        "id": "mel-005",
+        "pitch": 72,
+        "startBeat": 7,
+        "durationBeats": 0.5,
+        "vel": 92,
+        "lyricId": "lyric-verse"
+      },
+      {
+        "id": "mel-006",
+        "pitch": 69,
+        "startBeat": 10,
+        "durationBeats": 2,
+        "vel": 86,
+        "lyricId": "lyric-verse"
+      },
+      {
+        "id": "mel-007",
+        "pitch": 65,
+        "startBeat": 16,
+        "durationBeats": 1,
+        "vel": 84,
+        "lyricId": "lyric-pre"
+      },
+      {
+        "id": "mel-008",
+        "pitch": 71,
+        "startBeat": 18,
+        "durationBeats": 0.5,
+        "vel": 96,
+        "lyricId": "lyric-pre"
+      },
+      {
+        "id": "mel-009",
+        "pitch": 74,
+        "startBeat": 21,
+        "durationBeats": 2,
+        "vel": 98,
+        "lyricId": "lyric-pre"
+      },
+      {
+        "id": "mel-010",
+        "pitch": 72,
+        "startBeat": 32,
+        "durationBeats": 1,
+        "vel": 100,
+        "lyricId": "lyric-chorus"
+      },
+      {
+        "id": "mel-011",
+        "pitch": 76,
+        "startBeat": 33,
+        "durationBeats": 1,
+        "vel": 104,
+        "lyricId": "lyric-chorus"
+      },
+      {
+        "id": "mel-012",
+        "pitch": 79,
+        "startBeat": 35,
+        "durationBeats": 3,
+        "vel": 110,
+        "lyricId": "lyric-chorus"
+      },
+      {
+        "id": "mel-013",
+        "pitch": 79,
+        "startBeat": 48,
+        "durationBeats": 0.5,
+        "vel": 98,
+        "lyricId": "lyric-final"
+      },
+      {
+        "id": "mel-014",
+        "pitch": 76,
+        "startBeat": 50,
+        "durationBeats": 1.5,
+        "vel": 90,
+        "lyricId": "lyric-final"
+      },
+      {
+        "id": "mel-015",
+        "pitch": 72,
+        "startBeat": 54,
+        "durationBeats": 4,
+        "vel": 84,
+        "lyricId": "lyric-final"
+      }
+    ]
+  },
+  "drums": {
+    "notes": [
+      {
+        "id": "dr-001",
+        "pitch": 36,
+        "startBeat": 0,
+        "durationBeats": 0.9,
+        "vel": 105,
+        "sectionId": "intro"
+      },
+      {
+        "id": "dr-002",
+        "pitch": 42,
+        "startBeat": 1,
+        "durationBeats": 0.9,
+        "vel": 68,
+        "sectionId": "intro"
+      },
+      {
+        "id": "dr-003",
+        "pitch": 38,
+        "startBeat": 4,
+        "durationBeats": 0.9,
+        "vel": 100,
+        "sectionId": "verse"
+      },
+      {
+        "id": "dr-004",
+        "pitch": 42,
+        "startBeat": 5,
+        "durationBeats": 0.9,
+        "vel": 72,
+        "sectionId": "verse"
+      },
+      {
+        "id": "dr-005",
+        "pitch": 36,
+        "startBeat": 8,
+        "durationBeats": 0.9,
+        "vel": 104,
+        "sectionId": "verse"
+      },
+      {
+        "id": "dr-006",
+        "pitch": 38,
+        "startBeat": 10,
+        "durationBeats": 0.9,
+        "vel": 104,
+        "sectionId": "verse"
+      },
+      {
+        "id": "dr-007",
+        "pitch": 42,
+        "startBeat": 12,
+        "durationBeats": 0.9,
+        "vel": 75,
+        "sectionId": "verse"
+      },
+      {
+        "id": "dr-008",
+        "pitch": 36,
+        "startBeat": 16,
+        "durationBeats": 0.9,
+        "vel": 108,
+        "sectionId": "pre"
+      },
+      {
+        "id": "dr-009",
+        "pitch": 38,
+        "startBeat": 18,
+        "durationBeats": 0.9,
+        "vel": 106,
+        "sectionId": "pre"
+      },
+      {
+        "id": "dr-010",
+        "pitch": 50,
+        "startBeat": 30,
+        "durationBeats": 0.9,
+        "vel": 88,
+        "sectionId": "pre",
+        "effect": "fill"
+      },
+      {
+        "id": "dr-011",
+        "pitch": 36,
+        "startBeat": 32,
+        "durationBeats": 0.9,
+        "vel": 116,
+        "sectionId": "chorus"
+      },
+      {
+        "id": "dr-012",
+        "pitch": 38,
+        "startBeat": 34,
+        "durationBeats": 0.9,
+        "vel": 112,
+        "sectionId": "chorus"
+      },
+      {
+        "id": "dr-013",
+        "pitch": 49,
+        "startBeat": 35,
+        "durationBeats": 0.9,
+        "vel": 120,
+        "sectionId": "chorus"
+      },
+      {
+        "id": "dr-014",
+        "pitch": 36,
+        "startBeat": 48,
+        "durationBeats": 0.9,
+        "vel": 108,
+        "sectionId": "final"
+      },
+      {
+        "id": "dr-015",
+        "pitch": 38,
+        "startBeat": 54,
+        "durationBeats": 0.9,
+        "vel": 112,
+        "sectionId": "final"
+      },
+      {
+        "id": "dr-016",
+        "pitch": 49,
+        "startBeat": 63,
+        "durationBeats": 0.9,
+        "vel": 127,
+        "sectionId": "final",
+        "effect": "ending"
+      }
+    ]
+  },
+  "chords": [
+    {
+      "id": "ch-001",
+      "bar": 1,
+      "chord": "C",
+      "beats": 4
+    },
+    {
+      "id": "ch-002",
+      "bar": 2,
+      "chord": "G",
+      "beats": 4
+    },
+    {
+      "id": "ch-003",
+      "bar": 3,
+      "chord": "Am",
+      "beats": 4
+    },
+    {
+      "id": "ch-004",
+      "bar": 4,
+      "chord": "F",
+      "beats": 4
+    },
+    {
+      "id": "ch-005",
+      "bar": 5,
+      "chord": "C",
+      "beats": 4
+    },
+    {
+      "id": "ch-006",
+      "bar": 6,
+      "chord": "G",
+      "beats": 4
+    },
+    {
+      "id": "ch-007",
+      "bar": 7,
+      "chord": "Am",
+      "beats": 4
+    },
+    {
+      "id": "ch-008",
+      "bar": 8,
+      "chord": "F",
+      "beats": 4
+    }
+  ],
+  "arrangement": {
+    "version": 1,
+    "bars": 32,
+    "effects": {
+      "fillBeforeChorus": true,
+      "fillBars": 1,
+      "fillDensity": "normal",
+      "breakBars": [
+        16
+      ],
+      "finalVariation": true,
+      "finalStyle": "accent"
+    },
+    "sections": [
+      {
+        "id": "intro",
+        "label": "Intro",
+        "startBar": 1,
+        "endBar": 4,
+        "pattern": {
+          "kick:0": 0.7,
+          "hat:2": 0.4
+        },
+        "effects": {}
+      },
+      {
+        "id": "verse",
+        "label": "Verse",
+        "startBar": 5,
+        "endBar": 12,
+        "pattern": {
+          "kick:0": 0.8,
+          "snare:4": 0.75,
+          "hat:2": 0.5
+        },
+        "effects": {
+          "breakBars": [
+            8
+          ]
+        }
+      },
+      {
+        "id": "pre",
+        "label": "Pre-Chorus",
+        "startBar": 13,
+        "endBar": 20,
+        "pattern": {
+          "kick:0": 0.85,
+          "snare:4": 0.8,
+          "hat:1": 0.6
+        },
+        "effects": {
+          "fillBeforeChorus": true
+        }
+      },
+      {
+        "id": "chorus",
+        "label": "Chorus",
+        "startBar": 21,
+        "endBar": 28,
+        "pattern": {
+          "kick:0": 1,
+          "snare:4": 0.9,
+          "hat:1": 0.75
+        },
+        "effects": {}
+      },
+      {
+        "id": "final",
+        "label": "Final",
+        "startBar": 29,
+        "endBar": 32,
+        "pattern": {
+          "kick:0": 0.9,
+          "snare:4": 0.85,
+          "crash:0": 1
+        },
+        "effects": {
+          "finalVariation": true,
+          "finalStyle": "accent"
+        }
+      }
+    ]
+  },
+  "testNotes": {
+    "containsShortAndLongNotes": true,
+    "containsRestGaps": true,
+    "containsRepeatedPitch": true,
+    "containsMelodicLeaps": true,
+    "containsJapaneseAndEnglishLyrics": true,
+    "containsSectionBreak": true
+  }
+}
