@@ -96,9 +96,10 @@ test("TL-17 Canvas to BEAT//LAB payload carries baseline and return comparison",
 
 test("TL-18 snapshot comparator checks timeline, note IDs, lyric IDs and chords", async () => {
   const html = await readFile(canvasPath, "utf8");
-  const match = html.match(/function normalizeCompositionValue\(value\) \{[\s\S]*?\n\}\nfunction createCompositionSnapshot[\s\S]*?\n\}\nfunction compareCompositionSnapshot[\s\S]*?\n\}/);
-  assert.ok(match, "snapshot normalization and comparison functions must exist");
-  const helpers = new Function(match[0] + "\\nreturn {createCompositionSnapshot,compareCompositionSnapshot};")();
+  const start = html.indexOf("function normalizeCompositionValue");
+  const end = html.indexOf("function midiToNoteName", start);
+  assert.ok(start >= 0 && end > start, "snapshot normalization and comparison functions must exist");
+  const helpers = new Function(html.slice(start,end) + "\\nreturn {createCompositionSnapshot,compareCompositionSnapshot};")();
   const base = {
     projectId:"p1", bpm:100, timeSig:4, bars:8, div:16,
     melody:{notes:[{id:"n1",pitch:60,startBeat:0,durationBeats:1,lyricId:"l1"}]},
@@ -120,9 +121,10 @@ test("TL-19 JSON export stores a normalized baseline and import compares restore
   assert.match(beatLab, /data\.jsonRoundTripBaseline=createJSONRoundTripSnapshot\(data\)/);
   assert.match(beatLab, /compareJSONRoundTripSnapshot\(data\.jsonRoundTripBaseline,restoredProject\)/);
   assert.match(beatLab, /JSON保存前と一致しません/);
-  const match = beatLab.match(/function normalizeJSONRoundTripValue\(value\) \{[\s\S]*?\n\}\nfunction createJSONRoundTripSnapshot[\s\S]*?\n\}\nfunction compareJSONRoundTripSnapshot[\s\S]*?\n\}/);
-  assert.ok(match, "JSON snapshot helpers must exist");
-  const helpers = new Function(match[0] + "\\nreturn {createJSONRoundTripSnapshot,compareJSONRoundTripSnapshot};")();
+  const start = beatLab.indexOf("function normalizeJSONRoundTripValue");
+  const end = beatLab.indexOf("function exportJSON", start);
+  assert.ok(start >= 0 && end > start, "JSON snapshot helpers must exist");
+  const helpers = new Function(beatLab.slice(start,end) + "\\nreturn {createJSONRoundTripSnapshot,compareJSONRoundTripSnapshot};")();
   const project = {
     bpm:100,timeSig:4,bars:8,div:16,
     lyrics:"line one\\nline two",
