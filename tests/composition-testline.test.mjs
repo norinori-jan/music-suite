@@ -99,7 +99,7 @@ test("TL-18 snapshot comparator checks timeline, note IDs, lyric IDs and chords"
   const start = html.indexOf("function normalizeCompositionValue");
   const end = html.indexOf("function midiToNoteName", start);
   assert.ok(start >= 0 && end > start, "snapshot normalization and comparison functions must exist");
-  const helpers = new Function(html.slice(start,end) + "\\nreturn {createCompositionSnapshot,compareCompositionSnapshot};")();
+  const helpers = new Function(html.slice(start,end) + "\nreturn {createCompositionSnapshot,compareCompositionSnapshot};")();
   const base = {
     projectId:"p1", bpm:100, timeSig:4, bars:8, div:16,
     melody:{notes:[{id:"n1",pitch:60,startBeat:0,durationBeats:1,lyricId:"l1"}]},
@@ -124,7 +124,7 @@ test("TL-19 JSON export stores a normalized baseline and import compares restore
   const start = beatLab.indexOf("function normalizeJSONRoundTripValue");
   const end = beatLab.indexOf("function exportJSON", start);
   assert.ok(start >= 0 && end > start, "JSON snapshot helpers must exist");
-  const helpers = new Function(beatLab.slice(start,end) + "\\nreturn {createJSONRoundTripSnapshot,compareJSONRoundTripSnapshot};")();
+  const helpers = new Function(beatLab.slice(start,end) + "\nreturn {createJSONRoundTripSnapshot,compareJSONRoundTripSnapshot};")();
   const project = {
     bpm:100,timeSig:4,bars:8,div:16,
     lyrics:"line one\\nline two",
