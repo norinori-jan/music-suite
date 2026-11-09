@@ -114,6 +114,16 @@
       <button type="button" class="primary" onclick="generateLyricMusicSketch()">✨ 歌詞から音符・コード候補を生成</button>
       <button type="button" onclick="applyLyricsToCanvas()">既存音符に歌詞を割り当て</button>
     </div>
+    <div style="margin:12px 0;padding:10px;border:1px solid #47727a;border-radius:8px">
+      <label for="chord-progression-input"><strong>コード進行を貼り付け</strong></label>
+      <p style="font-size:12px;opacity:.8;margin:5px 0">例：C, G, Am, F（半角カンマ区切り・1行）</p>
+      <input id="chord-progression-input" type="text" inputmode="text" autocomplete="off" spellcheck="false" style="width:100%;box-sizing:border-box;padding:10px;border-radius:7px;border:1px solid #47727a;background:#172f36;color:#fff;font:inherit" placeholder="C, G, Am, F">
+      <div class="lyric-line" style="margin-top:8px">
+        <button type="button" onclick="applyChordProgression()">コード進行を反映</button>
+        <button type="button" onclick="copyChordPrompt()">📋 コード進行用プロンプト</button>
+      </div>
+      <div id="chord-progression-status" aria-live="polite" style="font-size:12px;margin-top:6px">AIの提案をここへ貼り付けて反映できます。</div>
+    </div>
     <div id="lyric-music-result" aria-live="polite" style="font-size:13px"></div>
   </div>
   <p style="font-size:12px;opacity:.75">歌詞だけでも保存できます。メロディ候補を生成すると、音符カードとコード進行を追加できます。生成結果は必ず聴いて調整してください。</p>
@@ -636,6 +646,39 @@ const LYRIC_NOTE_NAMES=['C','C#','D','D#','E','F','F#','G','G#','A','A#','B'];
 const LYRIC_SCALES={C:[0,2,4,5,7,9,11],G:[0,2,4,5,7,9,11],D:[0,2,4,6,7,9,11],A:[0,2,3,5,7,8,10],E:[0,2,3,5,7,8,10]};
 const LYRIC_ROOTS={C:0,G:7,D:2,A:9,E:4};
 const LYRIC_PROGRESSIONS={pop:[1,5,6,4],warm:[1,6,4,5],sad:[6,4,1,5],simple:[1,4,5,1]};
+function parseChordProgressionText(raw){
+  const source=String(raw||'').replace(/[，、；]/g,',').trim();
+  if(!source)throw new Error('コード進行が空です。例：C, G, Am, F');
+  const tokens=source.split(',').map(x=>x.trim()).filter(Boolean);
+  if(tokens.length<1||tokens.length>64)throw new Error('コード数は1〜64個にしてください。');
+  const pattern=/^([A-Ga-g])([#b]?)(maj7|maj9|mmaj7|m7b5|dim7|sus2|sus4|add9|maj|min|m|7|9|11|13|dim|aug|\+|°)?(\/[A-Ga-g][#b]?)?$/;
+  return tokens.map((token,index)=>{
+    const match=token.match(pattern);
+    if(!match)throw new Error('「'+token+'」を読み取れません。例：C, G, Am, F');
+    const root=match[1].toUpperCase()+match[2];
+    return {id:'chord-'+String(index+1).padStart(3,'0'),bar:index+1,chord:root+(match[3]||'')+(match[4]||''),beats:4};
+  });
+}
+function applyChordProgression(){
+  const input=document.getElementById('chord-progression-input');
+  const status=document.getElementById('chord-progression-status');
+  try{
+    const chords=parseChordProgressionText(input?.value);
+    const current=window.__lyricMusicSketch||{};
+    window.__lyricMusicSketch={...current,chords,method:current.method||'manual-chord-progression-v1'};
+    const result=document.getElementById('lyric-music-result');
+    if(result)result.innerHTML='<strong>コード進行</strong><p>'+chords.map(c=>escapeHtmlCanvas(c.chord)).join(' – ')+'</p><small>'+chords.length+'コードを1コード4拍として反映しました。メロディ音符は変更していません。</small>';
+    if(status)status.textContent='反映しました：'+chords.length+'コード。歌詞・メロディ・リズムは変更していません。';
+    return true;
+  }catch(error){if(status)status.textContent='反映できません：'+error.message;return false;}
+}
+function copyChordPrompt(){
+  const prompt='コード進行だけを1行で出力してください。形式は C, G, Am, F。半角カンマ＋半角スペースで区切り、改行・説明・見出し・箇条書き・表・Markdownコードブロックは一切付けないでください。';
+  const status=document.getElementById('chord-progression-status');
+  if(navigator.clipboard?.writeText){
+    navigator.clipboard.writeText(prompt).then(()=>{if(status)status.textContent='コード進行用プロンプトをコピーしました。'}).catch(()=>{if(status)status.textContent='コピーできませんでした。プロンプト：'+prompt;});
+  }else if(status){status.textContent='この環境では自動コピーできません。プロンプト：'+prompt;}
+}
 function generateLyricMusicSketch(){
   const text=lyricTextRead();
   if(!text){showToast('先に歌詞を入力してください');return}
@@ -651,6 +694,8 @@ function generateLyricMusicSketch(){
     const quality=thirdInterval===3?'m':thirdInterval===4?'':'dim';
     return LYRIC_NOTE_NAMES[r]+quality;
   });
+  const chordInput=document.getElementById('chord-progression-input');
+  if(chordInput)chordInput.value=chordNames.join(', ');
   const sections=lyricSectionsRead();
   const sourceLines=sections.length?sections.flatMap(s=>s.text.split(/\n+/).filter(Boolean).map(line=>({role:s.role,label:s.label,text:line}))):text.split(/\n+/).filter(Boolean).map(line=>({role:'LEAD',label:'Lyric',text:line.replace(/^\[[^\]]+\]\s*/,'')}));
   const syllables=[];
