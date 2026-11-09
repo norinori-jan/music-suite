@@ -1028,11 +1028,37 @@ function sendToBeatLab(){
   project.div=window.__lastDrumProject?.div||16;
   project.lyricProject=window.__savedLyricCanvasProject||null;
   project.lyrics=lyricTextRead();
+  project.roundTripBaseline=createCompositionSnapshot(project);
+  try{localStorage.setItem('compositionRoundTripBaseline',JSON.stringify(project.roundTripBaseline));}catch(e){console.warn('roundtrip baseline save failed',e);}
   project.sections=lyricSectionsRead();
   project.fromCompositionCanvas=true;
   window.location.href='beat-lab.html#import='+encodeForImport(project);
 }
 
+function normalizeCompositionValue(value){
+  if(Array.isArray(value))return value.map(normalizeCompositionValue);
+  if(!value||typeof value!=='object')return typeof value==='number'?Number(value.toFixed(4)):value;
+  return Object.fromEntries(Object.keys(value).filter(k=>!['exported','updatedAt','createdAt'].includes(k)).sort().map(k=>[k,normalizeCompositionValue(value[k])]));
+}
+function createCompositionSnapshot(project){
+  const melody=project.melody?.notes||[];
+  const lyricNotes=project.lyricProject?.notes||[];
+  return {
+    projectId:project.lyricProject?.projectId||window.__musicProjectId||null,
+    timeline:{bpm:Number(project.bpm)||120,timeSig:Number(project.timeSig)||4,bars:Number(project.bars)||2,div:Number(project.div)||16},
+    melody:melody.map(n=>({id:n.id||null,pitch:n.pitch,startBeat:n.startBeat,durationBeats:n.durationBeats,lyricId:n.lyricId||null})).sort((a,b)=>String(a.id).localeCompare(String(b.id))),
+    lyricAssignments:lyricNotes.map(n=>({id:n.id||null,lyricId:n.lyricId||null,lyric:n.lyric||'',role:n.role||'',section:n.section||''})).sort((a,b)=>String(a.id).localeCompare(String(b.id))),
+    chords:normalizeCompositionValue(project.chords||project.generatedMusic?.chords||[])
+  };
+}
+function compareCompositionSnapshot(baseline,project){
+  if(!baseline)return {ok:false,errors:['比較元スナップショットがありません']};
+  const current=createCompositionSnapshot(project),errors=[];
+  for(const key of ['timeline','melody','lyricAssignments','chords']){
+    if(JSON.stringify(normalizeCompositionValue(baseline[key]))!==JSON.stringify(normalizeCompositionValue(current[key])))errors.push(key+' が保存前と一致しません');
+  }
+  return {ok:errors.length===0,errors,checked:['timeline','melody','lyricAssignments','chords']};
+}
 function midiToNoteName(midi){
   const names=['C','C#','D','D#','E','F','F#','G','G#','A','A#','B'];
   const n=Math.round(Number(midi));
@@ -1041,6 +1067,9 @@ function midiToNoteName(midi){
 
 function restoreBeatLabProject(project){
   if(!project||project.source!=='composition-canvas'||!project.fromBeatLab)return false;
+  const comparison=compareCompositionSnapshot(project.roundTripBaseline,project);
+  const compareStatus=document.getElementById('lyric-meta');
+  if(compareStatus)compareStatus.textContent+=(comparison.ok?' · 往復比較OK':' · 往復差分あり：'+comparison.errors.join(' / '));
   window.__incomingLyricProject=project.lyricProject||window.__incomingLyricProject||{};
   window.__lyricMusicSketch=project.generatedMusic||window.__incomingLyricProject.generatedMusic||null;
   restoreChordProgressionInput(window.__lyricMusicSketch);
