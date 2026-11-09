@@ -1063,7 +1063,7 @@ function restoreBeatLabProject(project){
       card.dataset.startBeat=String(melodyNotes[i].startBeat||0);
       const saved=savedById.get(noteId)||savedCardNotes[i]||null;
       const generated=lyricById.get(noteId)||lyricNotes[i]||null;
-      const lyric=saved?{lyric:saved.lyric,role:saved.role,section:saved.section}:generated;
+      const lyric=saved?{lyricId:saved.lyricId,lyric:saved.lyric,role:saved.role,section:saved.section}:generated;
       if(!lyric)return;
       if(lyric.lyricId)card.dataset.lyricId=lyric.lyricId;
       card.dataset.lyric=lyric.lyric||lyric.word||'';
