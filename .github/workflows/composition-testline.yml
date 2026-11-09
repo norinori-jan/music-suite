@@ -1,0 +1,29 @@
+name: Composition Test Line
+
+on:
+  push:
+    paths:
+      - "apps/composition-canvas.html"
+      - "apps/beat-lab.html"
+      - "tests/**"
+      - ".github/workflows/composition-testline.yml"
+  pull_request:
+    paths:
+      - "apps/composition-canvas.html"
+      - "apps/beat-lab.html"
+      - "tests/**"
+      - ".github/workflows/composition-testline.yml"
+  workflow_dispatch:
+
+jobs:
+  composition-testline:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+      - name: Setup Node
+        uses: actions/setup-node@v4
+        with:
+          node-version: 22
+      - name: Run composition regression tests
+        run: node --test tests/composition-testline.test.mjs
