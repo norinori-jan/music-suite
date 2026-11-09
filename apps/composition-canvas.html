@@ -715,25 +715,26 @@ function generateLyricMusicSketch(){
     const midi=60+root+scale[scaleIndex]+(octave-4)*12;
     const pitch=((midi-60)%12+12)%12;
     const note=LYRIC_NOTE_NAMES[pitch]+(4+Math.floor((midi-60)/12));
-    return {note,length:4,word:item.word,lyric:item.phrase,role:item.role,section:item.label,startBeat:i};
+    return {id:makeMelodyNoteId(i),note,length:4,word:item.word,lyric:item.phrase,role:item.role,section:item.label,startBeat:i,lyricId:'lyric-'+String(i+1).padStart(4,'0')};
   });
-  state.lastNotes=notes.map(n=>({note:n.note,length:n.length}));
+  state.lastNotes=notes.map(n=>({id:n.id,note:n.note,length:n.length,startBeat:n.startBeat,lyricId:n.lyricId}));
   renderNoteCards(state.lastNotes,(window.__incomingLyricProject||{}).title||'Lyric sketch');
   const cards=[...document.querySelectorAll('#canvas .card')];
   cards.forEach((card,i)=>{
     const n=notes[i];if(!n)return;
+    card.dataset.noteId=n.id;card.dataset.startBeat=String(n.startBeat);card.dataset.lyricId=n.lyricId;
     card.dataset.lyric=n.lyric;card.dataset.lyricRole=n.role;card.dataset.lyricSection=n.section;
     card.dataset.word=n.word;card.dataset.startBeat=String(n.startBeat);
     card.classList.add('lyric-linked');
     const label=document.createElement('span');label.className='lyric-assignment';label.textContent=(n.role==='A'?'A':n.role==='B'?'B':'二人')+' · '+n.word;card.appendChild(label);
   });
-  window.__lyricMusicSketch={key,mood,progression,chords:chordNames.map((chord,i)=>({bar:i+1,chord,beats:4})),melody:notes.map((n,i)=>({pitch:n.note,startBeat:n.startBeat,durationBeats:n.length,word:n.word,lyric:n.lyric,role:n.role,section:n.section})),method:'rule-based-draft-v1',warning:'音節推定と音高選択による作曲スケッチ。発音・アクセント・和声進行は要調整'};
+  window.__lyricMusicSketch={key,mood,progression,chords:chordNames.map((chord,i)=>({bar:i+1,chord,beats:4})),melody:notes.map((n,i)=>({id:n.id,lyricId:n.lyricId,pitch:n.note,startBeat:n.startBeat,durationBeats:n.length,word:n.word,lyric:n.lyric,role:n.role,section:n.section})),method:'rule-based-draft-v1',warning:'音節推定と音高選択による作曲スケッチ。発音・アクセント・和声進行は要調整'};
   document.getElementById('lyric-music-result').innerHTML='<strong>生成した候補</strong><p>Key: '+escapeHtmlCanvas(key)+' / '+escapeHtmlCanvas(mood)+' / '+chordNames.map(escapeHtmlCanvas).join(' – ')+'</p><p>'+notes.length+'音のメロディ候補を配置しました。音符カードをクリックして音名・音価を調整できます。</p><small>これは歌詞の音節数を目安にした初期案です。自然な英語の強勢や実際の歌いやすさを自動保証するものではありません。</small>';
   showToast('歌詞からメロディ・コードの初期案を生成しました');
 }
 function saveLyricCanvasProject(){
   const incoming=window.__incomingLyricProject||{},cards=[...document.querySelectorAll('#canvas .card')];
-  const project={version:3,projectId:incoming.projectId||window.__musicProjectId||('song-'+Date.now()),source:'composition-canvas-lyrics',kind:incoming.kind||'single',name:incoming.title||'English lyric composition',title:incoming.title||'English lyric composition',story:incoming.story||'',emotion:incoming.emotion||'neutral',bpm:Number(incoming.bpm)||120,original:incoming.original||'',sourceDialogue:incoming.sourceDialogue||null,sections:lyricSectionsRead(),lyrics:lyricTextRead(),analysis:incoming.analysis||null,translation:incoming.translation||null,generatedMusic:window.__lyricMusicSketch||incoming.generatedMusic||null,rhythm:window.__lastDrumProject||null,melody:window.__lastDrumProject?.melody||null,notes:cards.map((card,index)=>({note:card.dataset.note||card.firstChild?.textContent||'',lyric:card.dataset.lyric||'',role:card.dataset.lyricRole||'',section:card.dataset.lyricSection||'',length:Number(card.dataset.length)||4,x:parseInt(card.style.left)||0,y:parseInt(card.style.top)||0,color:card.style.backgroundColor||'#ffffff',index})),updatedAt:new Date().toISOString()};
+  const project={version:3,projectId:incoming.projectId||window.__musicProjectId||('song-'+Date.now()),source:'composition-canvas-lyrics',kind:incoming.kind||'single',name:incoming.title||'English lyric composition',title:incoming.title||'English lyric composition',story:incoming.story||'',emotion:incoming.emotion||'neutral',bpm:Number(incoming.bpm)||120,original:incoming.original||'',sourceDialogue:incoming.sourceDialogue||null,sections:lyricSectionsRead(),lyrics:lyricTextRead(),analysis:incoming.analysis||null,translation:incoming.translation||null,generatedMusic:window.__lyricMusicSketch||incoming.generatedMusic||null,rhythm:window.__lastDrumProject||null,melody:window.__lastDrumProject?.melody||null,notes:cards.map((card,index)=>({id:card.dataset.noteId||makeMelodyNoteId(index),lyricId:card.dataset.lyricId||null,startBeat:card.dataset.startBeat!==undefined?Number(card.dataset.startBeat):null,note:card.dataset.note||card.firstChild?.textContent||'',lyric:card.dataset.lyric||'',role:card.dataset.lyricRole||'',section:card.dataset.lyricSection||'',length:Number(card.dataset.length)||4,x:parseInt(card.style.left)||0,y:parseInt(card.style.top)||0,color:card.style.backgroundColor||'#ffffff',index})),updatedAt:new Date().toISOString()};
   try{localStorage.setItem('compositionLyricProject',JSON.stringify(project));if(typeof msRegister==='function')msRegister(project);window.__savedLyricCanvasProject=project;showToast('A・B・サビ・ブリッジと音符カードの割当を保存しました')}
   catch(e){showToast('保存できませんでした: '+e.message)}
 }
@@ -748,13 +749,16 @@ function restoreLyricCanvasProject(project){
   window.__lastDrumProject=project.rhythm||window.__lastDrumProject||null;
   if(project.melody&&Array.isArray(project.melody.notes)){window.__lastDrumProject=Object.assign({},window.__lastDrumProject||{},{melody:project.melody});}
   if(Array.isArray(project.notes)&&project.notes.length){
-    renderNoteCards(project.notes.map(item=>({note:item.note||'C4',length:Number(item.length)||4})),project.title||project.name||'Saved lyric');
+    renderNoteCards(project.notes.map((item,index)=>({id:item.id||makeMelodyNoteId(index),startBeat:item.startBeat,note:item.note||'C4',length:Number(item.length)||4,lyric:item.lyric||'',lyricRole:item.role||'',lyricSection:item.section||'',lyricId:item.lyricId||null,color:item.color||''})),project.title||project.name||'Saved lyric');
     const cards=[...document.querySelectorAll('#canvas .card')];
     project.notes.forEach((item,i)=>{
       const card=cards[i];if(!card)return;
       // 保存済みの旧座標は復元せず、レスポンシブグリッドに配置する
       card.style.removeProperty('left');card.style.removeProperty('top');card.style.removeProperty('width');
       card.style.backgroundColor=item.color||'#ffffff';
+      card.dataset.noteId=item.id||makeMelodyNoteId(i);
+      if(item.startBeat!==null&&item.startBeat!==undefined)card.dataset.startBeat=String(item.startBeat);
+      if(item.lyricId)card.dataset.lyricId=item.lyricId;
       card.dataset.lyric=item.lyric||'';card.dataset.lyricRole=item.role||'';card.dataset.lyricSection=item.section||'';
       if(item.lyric){
         card.classList.add('lyric-linked');
@@ -852,18 +856,24 @@ function renderNoteCards(segments, songName) {
   if(!canvas)throw new Error('音符カード表示領域が見つかりません。');
   canvas.replaceChildren();
   canvas.classList.add('note-card-grid');
-  const normalized=(Array.isArray(segments)?segments:[]).map(seg=>({
+  const normalized=(Array.isArray(segments)?segments:[]).map((seg,i)=>({
+    id:seg.id||makeMelodyNoteId(i),
     note:String(seg.note||'C4'),length:Number(seg.length)||4,
-    lyric:seg.lyric||'',lyricRole:seg.lyricRole||'',lyricSection:seg.lyricSection||'',color:seg.color||''
+    startBeat:Number.isFinite(Number(seg.startBeat))?Number(seg.startBeat):null,
+    lyric:seg.lyric||'',lyricRole:seg.lyricRole||'',lyricSection:seg.lyricSection||'',
+    lyricId:seg.lyricId||null,color:seg.color||''
   }));
   normalized.forEach((seg,i)=>{
     const card=document.createElement('div');
     card.className='card';
+    card.dataset.noteId=seg.id;
     card.dataset.note=seg.note;
     card.dataset.length=String(seg.length);
+    if(seg.startBeat!==null)card.dataset.startBeat=String(seg.startBeat);
     card.dataset.lyric=seg.lyric;
     card.dataset.lyricRole=seg.lyricRole;
     card.dataset.lyricSection=seg.lyricSection;
+    if(seg.lyricId)card.dataset.lyricId=seg.lyricId;
     card.textContent=seg.note;
     card.style.position='static';
     card.style.width='100%';
@@ -877,9 +887,12 @@ function renderNoteCards(segments, songName) {
   return normalized.length;
 }
 function syncCardsToState(){
-  state.lastNotes=[...document.querySelectorAll('#canvas .card')].map(card=>({
+  state.lastNotes=[...document.querySelectorAll('#canvas .card')].map((card,index)=>({
+    id:card.dataset.noteId||makeMelodyNoteId(index),
     note:card.dataset.note||card.textContent.trim(),
-    length:Number(card.dataset.length)||4
+    length:Number(card.dataset.length)||4,
+    startBeat:card.dataset.startBeat!==undefined?Number(card.dataset.startBeat):null,
+    lyricId:card.dataset.lyricId||null
   }));
 }
 
@@ -888,7 +901,10 @@ function syncCardsToState(){
 ────────────────────────────── */
 function saveCardPositions(showMessage=true) {
   const cards=[...document.querySelectorAll('#canvas .card')];
-  const data=cards.map(card=>({
+  const data=cards.map((card,index)=>({
+    id:card.dataset.noteId||makeMelodyNoteId(index),
+    startBeat:card.dataset.startBeat!==undefined?Number(card.dataset.startBeat):null,
+    lyricId:card.dataset.lyricId||null,
     note:card.dataset.note||card.textContent.trim(),
     color:card.style.backgroundColor||'#ffffff',
     length:Number(card.dataset.length)||4,
@@ -923,14 +939,16 @@ function buildMelodyProject(sourceName) {
   const rhythmProject=window.__lastDrumProject||{};
   const preservedMelody=rhythmProject.melody;
   const cards=Array.isArray(state.lastNotes)?state.lastNotes:[];
+  const byId=new Map(cards.filter(card=>card.id).map(card=>[card.id,card]));
   const melody=preservedMelody&&Array.isArray(preservedMelody.notes)&&preservedMelody.notes.length
     ? preservedMelody.notes.map((n,i)=>{
-        const card=cards[i];
-        if(!card)return {...n};
+        const stableId=n.id||makeMelodyNoteId(i);
+        const card=byId.get(stableId)||cards.find(item=>item.id===stableId);
+        if(!card)return {...n,id:stableId};
         const editedPitch=noteToMidi(card.note);
         const editedDuration=Number(card.length)/4;
         return {
-          ...n,
+          ...n,id:stableId,
           pitch:Number.isFinite(editedPitch)?editedPitch:n.pitch,
           durationBeats:Number.isFinite(editedDuration)&&editedDuration>0?editedDuration:n.durationBeats
         };
@@ -938,10 +956,10 @@ function buildMelodyProject(sourceName) {
     : [];
   if(!melody.length){
     let beat=0;
-    cards.forEach(seg=>{
+    cards.forEach((seg,i)=>{
       const duration=Number(seg.length)/4;
-      melody.push({pitch:noteToMidi(seg.note),startBeat:beat,durationBeats:duration,vel:90});
-      beat+=duration;
+      melody.push({id:seg.id||makeMelodyNoteId(i),pitch:noteToMidi(seg.note),startBeat:Number.isFinite(Number(seg.startBeat))?Number(seg.startBeat):beat,durationBeats:duration,vel:90,lyricId:seg.lyricId||null});
+      beat=melody[melody.length-1].startBeat+duration;
     });
   }
 
@@ -958,6 +976,10 @@ function buildMelodyProject(sourceName) {
   };
 }
 
+function makeMelodyNoteId(index){
+  const projectId=window.__musicProjectId||window.__incomingLyricProject?.projectId||'music-suite';
+  return String(projectId)+'-melody-'+String(index+1).padStart(4,'0');
+}
 function encodeForImport(project) {
   return encodeURIComponent(
     btoa(unescape(encodeURIComponent(JSON.stringify(project))))
@@ -1016,16 +1038,22 @@ function restoreBeatLabProject(project){
   else if(typeof project.lyrics==='string')document.getElementById('canvas-lyrics').value=project.lyrics;
   const melodyNotes=project.melody&&Array.isArray(project.melody.notes)?project.melody.notes:[];
   if(melodyNotes.length){
-    state.lastNotes=melodyNotes.map(n=>({note:typeof n.pitch==='number'?midiToNoteName(n.pitch):String(n.pitch||'C4'),length:Math.max(0.25,Number(n.durationBeats)||1)*4}));
+    state.lastNotes=melodyNotes.map((n,i)=>({id:n.id||makeMelodyNoteId(i),note:typeof n.pitch==='number'?midiToNoteName(n.pitch):String(n.pitch||'C4'),length:Math.max(0.25,Number(n.durationBeats)||1)*4,startBeat:Number(n.startBeat)||0,lyricId:n.lyricId||null}));
     renderNoteCards(state.lastNotes,project.title||project.name||'Composition with rhythm');
     const cards=[...document.querySelectorAll('#canvas .card')];
     const savedCardNotes=Array.isArray(project.lyricProject?.notes)?project.lyricProject.notes:[];
     const lyricNotes=project.generatedMusic&&Array.isArray(project.generatedMusic.melody)?project.generatedMusic.melody:[];
+    const savedById=new Map(savedCardNotes.filter(n=>n.id).map(n=>[n.id,n]));
+    const lyricById=new Map(lyricNotes.filter(n=>n.id).map(n=>[n.id,n]));
     cards.forEach((card,i)=>{
-      const saved=savedCardNotes[i]||null;
-      const generated=lyricNotes[i]||null;
+      const noteId=melodyNotes[i].id||makeMelodyNoteId(i);
+      card.dataset.noteId=noteId;
+      card.dataset.startBeat=String(melodyNotes[i].startBeat||0);
+      const saved=savedById.get(noteId)||savedCardNotes[i]||null;
+      const generated=lyricById.get(noteId)||lyricNotes[i]||null;
       const lyric=saved?{lyric:saved.lyric,role:saved.role,section:saved.section}:generated;
       if(!lyric)return;
+      if(lyric.lyricId)card.dataset.lyricId=lyric.lyricId;
       card.dataset.lyric=lyric.lyric||lyric.word||'';
       card.dataset.lyricRole=lyric.role||'';
       card.dataset.lyricSection=lyric.section||'';
