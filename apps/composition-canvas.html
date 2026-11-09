@@ -1068,13 +1068,12 @@ function midiToNoteName(midi){
 function restoreBeatLabProject(project){
   if(!project||project.source!=='composition-canvas'||!project.fromBeatLab)return false;
   const comparison=compareCompositionSnapshot(project.roundTripBaseline,project);
-  const compareStatus=document.getElementById('lyric-meta');
-  if(compareStatus)compareStatus.textContent+=(comparison.ok?' · 往復比較OK':' · 往復差分あり：'+comparison.errors.join(' / '));
   window.__incomingLyricProject=project.lyricProject||window.__incomingLyricProject||{};
   window.__lyricMusicSketch=project.generatedMusic||window.__incomingLyricProject.generatedMusic||null;
   restoreChordProgressionInput(window.__lyricMusicSketch);
   document.getElementById('lyric-panel').classList.add('show');
-  document.getElementById('lyric-meta').textContent=(project.title||project.name||'Composition')+' · '+(project.bpm||120)+' BPM · リズム編集済み';
+  const compareStatus=document.getElementById('lyric-meta');
+  if(compareStatus)compareStatus.textContent=(project.title||project.name||'Composition')+' · '+(project.bpm||120)+' BPM · リズム編集済み'+(comparison.ok?' · 往復比較OK':' · 往復差分あり：'+comparison.errors.join(' / '));
   if(Array.isArray(project.sections)&&project.sections.length)lyricSectionsWrite(project.sections);
   else if(typeof project.lyrics==='string')document.getElementById('canvas-lyrics').value=project.lyrics;
   const melodyNotes=project.melody&&Array.isArray(project.melody.notes)?project.melody.notes:[];
