@@ -661,6 +661,11 @@ function parseChordProgressionText(raw){
     return {id:'chord-'+String(index+1).padStart(3,'0'),bar:index+1,chord:root+(match[3]||'')+(match[4]||''),beats:4};
   });
 }
+function restoreChordProgressionInput(sketch){
+  const input=document.getElementById('chord-progression-input');
+  const chords=Array.isArray(sketch?.chords)?sketch.chords:[];
+  if(input&&chords.length)input.value=chords.map(item=>typeof item==='string'?item:item.chord).filter(Boolean).join(', ');
+}
 function applyChordProgression(){
   const input=document.getElementById('chord-progression-input');
   const status=document.getElementById('chord-progression-status');
@@ -744,6 +749,7 @@ function restoreLyricCanvasProject(project){
   if(!project||project.source!=='composition-canvas-lyrics')return false;
   window.__incomingLyricProject=project;window.__musicProjectId=project.projectId||window.__musicProjectId||('song-'+Date.now());
   window.__lyricMusicSketch=project.generatedMusic||null;
+  restoreChordProgressionInput(window.__lyricMusicSketch);
   document.getElementById('lyric-panel').classList.add('show');
   document.getElementById('lyric-meta').textContent=(project.title||project.name||'English lyric')+' · '+(project.bpm||120)+' BPM · '+(project.emotion||'neutral');
   if(Array.isArray(project.sections)&&project.sections.length){lyricSectionsWrite(project.sections);document.getElementById('canvas-lyrics').value=''}
@@ -1013,6 +1019,7 @@ function sendToBeatLab(){
   project.bpm=Number(incoming.bpm)||Number(document.getElementById('note-sequence-bpm')?.value)||120;
   project.timeSig=4;
   project.generatedMusic=window.__lyricMusicSketch||incoming.generatedMusic||null;
+  project.chords=project.generatedMusic?.chords||incoming.generatedMusic?.chords||null;
   project.drums=window.__lastDrumProject?.drums||{notes:[]};
   project.arrangement=window.__lastDrumProject?.arrangement||null;
   project.rhythmVariations=window.__lastDrumProject?.rhythmVariations||[];
@@ -1036,6 +1043,7 @@ function restoreBeatLabProject(project){
   if(!project||project.source!=='composition-canvas'||!project.fromBeatLab)return false;
   window.__incomingLyricProject=project.lyricProject||window.__incomingLyricProject||{};
   window.__lyricMusicSketch=project.generatedMusic||window.__incomingLyricProject.generatedMusic||null;
+  restoreChordProgressionInput(window.__lyricMusicSketch);
   document.getElementById('lyric-panel').classList.add('show');
   document.getElementById('lyric-meta').textContent=(project.title||project.name||'Composition')+' · '+(project.bpm||120)+' BPM · リズム編集済み';
   if(Array.isArray(project.sections)&&project.sections.length)lyricSectionsWrite(project.sections);
