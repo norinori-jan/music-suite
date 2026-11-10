@@ -158,3 +158,4 @@ AIにコード進行・音符列を提案させる場合は、アプリ入力欄
 
 **完了判定：** TL-01〜TL-14がすべて合格し、少なくともJSON往復とComposition Canvas/BEAT//LAB往復の両方で正規化比較が一致するまで、作曲エンジン完成とは扱わない。GarageBand実機確認は別の最終ゲートとする。
 - コード進行欄の操作性修正：`input` を折り返し表示できる `textarea` に変更し、長文の欄外はみ出しを防止。入力済みコード進行をコピーするボタンとClipboard API非対応時の選択コピーfallbackを追加（`63acc39`）。TL-22でUI構造を検査。英会話アプリからのコード進行自動受け渡しは未実装で、現在のspeak-native連携は英語原文をvocal-labへ送る仕様のため、次段階でコード進行提案・転送経路を別途実装する。
+- speak-nativeドラマ・アルバム連携：アルバムの各曲が持つ `data.chords.sections[].progression` と歌詞を `composition-canvas.html#lyrics=` で直接送るリンクを追加（speak-native commit `1f25fe4`）。Canvas受信側はネストしたセクションコードを展開してコード入力欄へ表示（music-suite commits `6584cc7`, `d61a6d3`, `d21ce3d`）。Canvas側TL-23はGitHub Actions合格。speak-native側にも送信元データとリンクを検査する専用Actionsを追加し、実行結果待ち。実ブラウザでのクリック・受信は未確認。
