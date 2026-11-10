@@ -90,7 +90,7 @@ test("TL-17 Canvas to BEAT//LAB payload carries baseline and return comparison",
   assert.match(canvas, /localStorage\.setItem\('compositionRoundTripBaseline'/);
   assert.match(beatLab, /Object\.assign\(\{\},base/);
   assert.match(beatLab, /data\.fromBeatLab=true/);
-  assert.match(canvas, //compareCompositionSnapshot\\\(project\\.roundTripBaseline,project,\\{allowedChanges:\\['drums'\\]\\}\\\)//);
+  assert.match(canvas, /compareCompositionSnapshot\(project\.roundTripBaseline,project,\{allowedChanges:\['drums'\]\}\)/);
   assert.match(canvas, /往復比較OK/);
 });
 
