@@ -1052,13 +1052,16 @@ function createCompositionSnapshot(project){
     chords:normalizeCompositionValue(project.chords||project.generatedMusic?.chords||[])
   };
 }
-function compareCompositionSnapshot(baseline,project){
+function compareCompositionSnapshot(baseline,project,options={}){
   if(!baseline)return {ok:false,errors:['比較元スナップショットがありません']};
   const current=createCompositionSnapshot(project),errors=[];
-  for(const key of ['timeline','lyrics','melody','lyricAssignments','chords']){
+  const allowedChanges=new Set(options.allowedChanges||[]);
+  const checked=['timeline','lyrics','melody','lyricAssignments','chords'];
+  for(const key of checked){
+    if(allowedChanges.has(key))continue;
     if(JSON.stringify(normalizeCompositionValue(baseline[key]))!==JSON.stringify(normalizeCompositionValue(current[key])))errors.push(key+' が保存前と一致しません');
   }
-  return {ok:errors.length===0,errors,checked:['timeline','melody','lyricAssignments','chords']};
+  return {ok:errors.length===0,errors,checked:checked.filter(key=>!allowedChanges.has(key)),allowedChanges:[...allowedChanges]};
 }
 function midiToNoteName(midi){
   const names=['C','C#','D','D#','E','F','F#','G','G#','A','A#','B'];
@@ -1068,7 +1071,8 @@ function midiToNoteName(midi){
 
 function restoreBeatLabProject(project){
   if(!project||project.source!=='composition-canvas'||!project.fromBeatLab)return false;
-  const comparison=compareCompositionSnapshot(project.roundTripBaseline,project);
+  // BEAT//LAB is the drum editor: drum changes are allowed here, but all other composition data is immutable.
+  const comparison=compareCompositionSnapshot(project.roundTripBaseline,project,{allowedChanges:['drums']});
   window.__incomingLyricProject=project.lyricProject||window.__incomingLyricProject||{};
   window.__lyricMusicSketch=project.generatedMusic||window.__incomingLyricProject.generatedMusic||null;
   restoreChordProgressionInput(window.__lyricMusicSketch);
