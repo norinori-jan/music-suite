@@ -143,3 +143,33 @@ test("TL-19 JSON export stores a normalized baseline and import compares restore
   changedChord.chords[0].chord = "Am";
   assert.ok(helpers.compareJSONRoundTripSnapshot(baseline,changedChord).errors.includes("chords がJSON保存前と一致しません"));
 });
+
+test("TL-20 BEAT//LAB drum edits are allowed but composition data remains unchanged", async () => {
+  const html = await readFile(canvasPath, "utf8");
+  const start = html.indexOf("function normalizeCompositionValue");
+  const end = html.indexOf("function midiToNoteName", start);
+  assert.ok(start >= 0 && end > start);
+  const helpers = new Function(html.slice(start,end) + "\nreturn {createCompositionSnapshot,compareCompositionSnapshot};")();
+  const project = {
+    bpm:100,timeSig:4,bars:8,div:16,lyrics:"Verse line",
+    sections:[{id:"verse",startBar:1,endBar:8,text:"Verse line"}],
+    melody:{notes:[{id:"n1",pitch:60,startBeat:0,durationBeats:1,lyricId:"l1"}]},
+    lyricProject:{projectId:"p1",notes:[{id:"n1",lyricId:"l1",lyric:"hello",role:"A",section:"Verse"}]},
+    chords:[{id:"c1",bar:1,chord:"C"}],
+    drums:{notes:[{pitch:36,startBeat:0,durationBeats:.25,vel:80}]}
+  };
+  const baseline = helpers.createCompositionSnapshot(project);
+  const editedDrums = structuredClone(project);
+  editedDrums.drums.notes[0].vel = 55;
+  assert.equal(helpers.compareCompositionSnapshot(baseline,editedDrums,{allowedChanges:["drums"]}).ok,true);
+  const changedMelody = structuredClone(editedDrums);
+  changedMelody.melody.notes[0].pitch = 62;
+  assert.ok(helpers.compareCompositionSnapshot(baseline,changedMelody,{allowedChanges:["drums"]}).errors.includes("melody が保存前と一致しません"));
+  const changedLyrics = structuredClone(editedDrums);
+  changedLyrics.lyrics = "Changed lyric";
+  assert.ok(helpers.compareCompositionSnapshot(baseline,changedLyrics,{allowedChanges:["drums"]}).errors.includes("lyrics が保存前と一致しません"));
+  const changedChord = structuredClone(editedDrums);
+  changedChord.chords[0].chord = "Am";
+  assert.ok(helpers.compareCompositionSnapshot(baseline,changedChord,{allowedChanges:["drums"]}).errors.includes("chords が保存前と一致しません"));
+  assert.match(html,/allowedChanges:\['drums'\]/);
+});
