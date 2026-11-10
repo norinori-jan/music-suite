@@ -126,6 +126,15 @@
       <div id="chord-progression-status" aria-live="polite" style="font-size:12px;margin-top:6px">AIの提案をここへ貼り付けて反映できます。</div>
     </div>
     <div id="lyric-music-result" aria-live="polite" style="font-size:13px"></div>
+    <div id="lyric-generated-chord-panel" style="display:none;margin-top:12px;padding:12px;border:2px solid #38a3a5;border-radius:9px;background:#10252b;color:#e8fbff">
+      <strong>生成されたコード進行（全件）</strong>
+      <p style="font-size:12px;margin:5px 0 8px">ここに出たコードがコピー対象です。欄外に出さず、この枠内で全文を確認できます。</p>
+      <textarea id="lyric-generated-chord-output" rows="3" readonly wrap="soft" aria-label="生成されたコード進行すべて" style="display:block;width:100%;max-width:100%;min-width:0;box-sizing:border-box;white-space:pre-wrap;overflow-wrap:anywhere;word-break:break-word;overflow-x:hidden;resize:vertical;padding:10px;border:1px solid #47727a;border-radius:7px;background:#172f36;color:#fff;font:inherit;line-height:1.6"></textarea>
+      <div class="lyric-line" style="margin-top:8px">
+        <button type="button" class="primary" onclick="copyAllGeneratedChords()">📋 生成コードをすべてコピー</button>
+        <button type="button" onclick="selectAllGeneratedChords()">全文を選択</button>
+      </div>
+    </div>
   </div>
   <p style="font-size:12px;opacity:.75">歌詞だけでも保存できます。メロディ候補を生成すると、音符カードとコード進行を追加できます。生成結果は必ず聴いて調整してください。</p>
 </section>
@@ -711,6 +720,19 @@ function copyChordProgression(){
   if(!value){const status=document.getElementById('chord-progression-status');if(status)status.textContent='コピーするコード進行がありません。';return false;}
   return copyChordText(value,'コード進行をコピーしました。');
 }
+function selectAllGeneratedChords(){
+  const output=document.getElementById('lyric-generated-chord-output');
+  if(!output||!output.value){const status=document.getElementById('chord-progression-status');if(status)status.textContent='先に「歌詞から音符・コード候補を生成」を押してください。';return false;}
+  output.focus();output.select();output.setSelectionRange(0,output.value.length);
+  const status=document.getElementById('chord-progression-status');if(status)status.textContent='生成コード '+output.value.length+'文字をすべて選択しました。コピーできます。';
+  return true;
+}
+function copyAllGeneratedChords(){
+  const output=document.getElementById('lyric-generated-chord-output');
+  const value=String(output?.value||'').trim();
+  if(!value){const status=document.getElementById('chord-progression-status');if(status)status.textContent='先にコード進行を生成してください。';return false;}
+  return copyChordText(value,'生成されたコード進行を全件コピーしました。');
+}
 function copyChordPrompt(){
   const prompt='コード進行だけを1行で出力してください。形式は C, G, Am, F。半角カンマ＋半角スペースで区切り、改行・説明・見出し・箇条書き・表・Markdownコードブロックは一切付けないでください。';
   return copyChordText(prompt,'コード進行用プロンプトをコピーしました。');
@@ -730,8 +752,13 @@ function generateLyricMusicSketch(){
     const quality=thirdInterval===3?'m':thirdInterval===4?'':'dim';
     return LYRIC_NOTE_NAMES[r]+quality;
   });
+  const chordText=chordNames.join(', ');
   const chordInput=document.getElementById('chord-progression-input');
-  if(chordInput)chordInput.value=chordNames.join(', ');
+  if(chordInput)chordInput.value=chordText;
+  const generatedOutput=document.getElementById('lyric-generated-chord-output');
+  const generatedPanel=document.getElementById('lyric-generated-chord-panel');
+  if(generatedOutput)generatedOutput.value=chordText;
+  if(generatedPanel)generatedPanel.style.display='block';
   const sections=lyricSectionsRead();
   const sourceLines=sections.length?sections.flatMap(s=>s.text.split(/\n+/).filter(Boolean).map(line=>({role:s.role,label:s.label,text:line}))):text.split(/\n+/).filter(Boolean).map(line=>({role:'LEAD',label:'Lyric',text:line.replace(/^\[[^\]]+\]\s*/,'')}));
   const syllables=[];
