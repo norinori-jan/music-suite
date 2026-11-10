@@ -201,13 +201,22 @@ test("TL-22 chord progression input wraps long text and provides copy actions", 
   assert.match(html, /function parseChordProgressionText\(raw\)/);
 });
 
-test("TL-23 speak-native album sends lyrics and section chord progression to Canvas", async () => {
-  const album = await readFile(new URL("../../speak-native/album/index.html", import.meta.url), "utf8").catch(() => "");
+
+test("TL-23 Canvas receives section-based chord progressions into the paste field", async () => {
   const canvas = await readFile(canvasPath, "utf8");
-  // The album source is fetched through the checked-in fixture below to keep this test repository-local.
   assert.match(canvas,/payload\.generatedMusic\?\.chords\|\|payload\.chords/);
-  assert.match(canvas,/function restoreChordProgressionInput\(sketch\)/);
-  assert.match(canvas,/sectionChords=Array\.isArray\(sketch\?\.sections\)\?sketch\.sections\.flatMap/);
-  assert.match(canvas,/外部アプリからコード進行/);
-  assert.ok(album.length===0 || album.includes("composition-canvas.html#lyrics="));
+  assert.match(canvas,/if\(window\.__lyricMusicSketch\?\.chords\?\.length\)restoreChordProgressionInput/);
+  const start = canvas.indexOf("function restoreChordProgressionInput(sketch)");
+  const end = canvas.indexOf("function applyChordProgression", start);
+  assert.ok(start >= 0 && end > start);
+  const fakeInput = { value: "" };
+  const fakeStatus = { textContent: "" };
+  const document = { getElementById(id) { return id === "chord-progression-input" ? fakeInput : fakeStatus; } };
+  const restore = new Function("document",canvas.slice(start,end)+";return restoreChordProgressionInput;")(document);
+  restore({sections:[
+    {tag:"Verse",progression:[{chord:"C"},{chord:"G"},{chord:"Am"},{chord:"Em"}]},
+    {tag:"Chorus",progression:[{chord:"F"},{chord:"G"},{chord:"C"}]}
+  ]});
+  assert.equal(fakeInput.value,"C, G, Am, Em, F, G, C");
+  assert.match(fakeStatus.textContent,/受信しました/);
 });
