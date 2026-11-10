@@ -213,10 +213,10 @@ test("TL-23 Canvas receives section-based chord progressions into the paste fiel
   const fakeStatus = { textContent: "" };
   const document = { getElementById(id) { return id === "chord-progression-input" ? fakeInput : fakeStatus; } };
   const restore = new Function("document",canvas.slice(start,end)+";return restoreChordProgressionInput;")(document);
-  restore({sections:[
+  restore({chords:{sections:[
     {tag:"Verse",progression:[{chord:"C"},{chord:"G"},{chord:"Am"},{chord:"Em"}]},
     {tag:"Chorus",progression:[{chord:"F"},{chord:"G"},{chord:"C"}]}
-  ]});
+  ]}});
   assert.equal(fakeInput.value,"C, G, Am, Em, F, G, C");
   assert.match(fakeStatus.textContent,/受信しました/);
 });
