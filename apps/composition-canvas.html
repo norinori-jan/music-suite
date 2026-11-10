@@ -667,8 +667,14 @@ function parseChordProgressionText(raw){
 }
 function restoreChordProgressionInput(sketch){
   const input=document.getElementById('chord-progression-input');
-  const chords=Array.isArray(sketch?.chords)?sketch.chords:[];
-  if(input&&chords.length)input.value=chords.map(item=>typeof item==='string'?item:item.chord).filter(Boolean).join(', ');
+  const direct=Array.isArray(sketch?.chords)?sketch.chords:[];
+  const sectionChords=Array.isArray(sketch?.sections)?sketch.sections.flatMap(section=>Array.isArray(section.progression)?section.progression:[]):[];
+  const chords=direct.length?direct:sectionChords;
+  if(input&&chords.length){
+    input.value=chords.map(item=>typeof item==='string'?item:item.chord).filter(Boolean).join(', ');
+    const status=document.getElementById('chord-progression-status');
+    if(status)status.textContent='外部アプリからコード進行 '+chords.length+'件を受信しました。内容を確認して「コード進行を反映」を押してください。';
+  }
 }
 function applyChordProgression(){
   const input=document.getElementById('chord-progression-input');
