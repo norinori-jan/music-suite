@@ -668,7 +668,8 @@ function parseChordProgressionText(raw){
 function restoreChordProgressionInput(sketch){
   const input=document.getElementById('chord-progression-input');
   const direct=Array.isArray(sketch?.chords)?sketch.chords:[];
-  const sectionChords=Array.isArray(sketch?.sections)?sketch.sections.flatMap(section=>Array.isArray(section.progression)?section.progression:[]):[];
+  const sections=Array.isArray(sketch?.sections)?sketch.sections:(Array.isArray(sketch?.chords?.sections)?sketch.chords.sections:[]);
+  const sectionChords=sections.flatMap(section=>Array.isArray(section.progression)?section.progression:[]);
   const chords=direct.length?direct:sectionChords;
   if(input&&chords.length){
     input.value=chords.map(item=>typeof item==='string'?item:item.chord).filter(Boolean).join(', ');
