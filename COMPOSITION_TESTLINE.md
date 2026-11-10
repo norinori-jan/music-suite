@@ -152,6 +152,8 @@ AIにコード進行・音符列を提案させる場合は、アプリ入力欄
 - 音符カード・メロディ音符ID・歌詞割当ID：Canvas生成／カード保存／歌詞保存／BeatLab復元にIDを通す処理を追加（`249c6a7`、`cd4ed51`、`9ff0d41`）。BEAT//LABから戻る際も保存済み歌詞割当の `lyricId` を復元するよう修正。TL-16を追加。実画面での往復は未確認。
 - 自動テスト：TL-15 / TL-16を追加（`802f611`）。GitHub上のコードを静的確認した段階で、Node実行結果は未確認。
 - JSON保存・復元の正規化比較：BEAT//LABのJSON出力に `jsonRoundTripBaseline` を埋め込み、JSON読込後に時間軸・歌詞・区間・メロディ・ドラム・アレンジ・コード・ベース・リズム変化を比較する処理を追加（`1cee230`）。旧形式JSONは比較元がないため「比較基準なし」と明示する。TL-19を追加（`cad201b`）。GitHub Actionsでの実行結果は未確認。
-- Canvas/BEAT//LAB往復の比較は既存実装に残課題あり。ドラム変更を許容し、メロディ・歌詞・コードを不変検査する差分モードは未実装。
+- Canvas/BEAT//LAB往復比較：ドラム編集を許容する `allowedChanges:['drums']` モードを追加（`837ff27`）。比較対象に歌詞本文・区間も追加し、送信前スナップショット作成前に区間データを確定する順序へ修正（`761773d`）。TL-20でドラム変更許容とメロディ・歌詞・コード変更の検出を追加。
+- コード進行JSON往復：JSON読込時に `window.__compositionBaseProject` へ元データを保持し、`buildExportData()` が元の `chords` / `generatedMusic.chords` を引き継ぐ経路をTL-21で検査するテストを追加（`e0453d5`）。実画面でのJSON保存・再読込は未確認。
+- TL-20 / TL-21は追加済み。GitHub Actionsの実行結果は未確認。
 
 **完了判定：** TL-01〜TL-14がすべて合格し、少なくともJSON往復とComposition Canvas/BEAT//LAB往復の両方で正規化比較が一致するまで、作曲エンジン完成とは扱わない。GarageBand実機確認は別の最終ゲートとする。
