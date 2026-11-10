@@ -189,3 +189,14 @@ test("TL-21 JSON import retains chord progression from the saved project", async
   restored.chords[1].chord = "F";
   assert.ok(helpers.compareJSONRoundTripSnapshot(baseline,restored).errors.includes("chords がJSON保存前と一致しません"));
 });
+
+test("TL-22 chord progression input wraps long text and provides copy actions", async () => {
+  const html = await readFile(canvasPath, "utf8");
+  assert.match(html, /<textarea id="chord-progression-input"/);
+  assert.match(html, /overflow-wrap:anywhere/);
+  assert.match(html, /white-space:pre-wrap/);
+  assert.match(html, /onclick="copyChordProgression\(\)"/);
+  assert.match(html, /async function copyChordText\(text,successMessage\)/);
+  assert.match(html, /function copyChordProgression\(\)/);
+  assert.match(html, /function parseChordProgressionText\(raw\)/);
+});
