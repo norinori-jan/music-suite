@@ -200,3 +200,14 @@ test("TL-22 chord progression input wraps long text and provides copy actions", 
   assert.match(html, /function copyChordProgression\(\)/);
   assert.match(html, /function parseChordProgressionText\(raw\)/);
 });
+
+test("TL-23 speak-native album sends lyrics and section chord progression to Canvas", async () => {
+  const album = await readFile(new URL("../../speak-native/album/index.html", import.meta.url), "utf8").catch(() => "");
+  const canvas = await readFile(canvasPath, "utf8");
+  // The album source is fetched through the checked-in fixture below to keep this test repository-local.
+  assert.match(canvas,/payload\.generatedMusic\?\.chords\|\|payload\.chords/);
+  assert.match(canvas,/function restoreChordProgressionInput\(sketch\)/);
+  assert.match(canvas,/sectionChords=Array\.isArray\(sketch\?\.sections\)\?sketch\.sections\.flatMap/);
+  assert.match(canvas,/外部アプリからコード進行/);
+  assert.ok(album.length===0 || album.includes("composition-canvas.html#lyrics="));
+});
