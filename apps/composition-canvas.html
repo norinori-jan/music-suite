@@ -1028,9 +1028,9 @@ function sendToBeatLab(){
   project.div=window.__lastDrumProject?.div||16;
   project.lyricProject=window.__savedLyricCanvasProject||null;
   project.lyrics=lyricTextRead();
+  project.sections=lyricSectionsRead();
   project.roundTripBaseline=createCompositionSnapshot(project);
   try{localStorage.setItem('compositionRoundTripBaseline',JSON.stringify(project.roundTripBaseline));}catch(e){console.warn('roundtrip baseline save failed',e);}
-  project.sections=lyricSectionsRead();
   project.fromCompositionCanvas=true;
   window.location.href='beat-lab.html#import='+encodeForImport(project);
 }
@@ -1047,6 +1047,7 @@ function createCompositionSnapshot(project){
     projectId:project.lyricProject?.projectId||window.__musicProjectId||null,
     timeline:{bpm:Number(project.bpm)||120,timeSig:Number(project.timeSig)||4,bars:Number(project.bars)||2,div:Number(project.div)||16},
     melody:melody.map(n=>({id:n.id||null,pitch:n.pitch,startBeat:n.startBeat,durationBeats:n.durationBeats,lyricId:n.lyricId||null})).sort((a,b)=>String(a.id).localeCompare(String(b.id))),
+    lyrics:{text:project.lyrics||'',sections:normalizeCompositionValue(project.sections||project.lyricProject?.sections||[])},
     lyricAssignments:lyricNotes.map(n=>({id:n.id||null,lyricId:n.lyricId||null,lyric:n.lyric||'',role:n.role||'',section:n.section||''})).sort((a,b)=>String(a.id).localeCompare(String(b.id))),
     chords:normalizeCompositionValue(project.chords||project.generatedMusic?.chords||[])
   };
@@ -1054,7 +1055,7 @@ function createCompositionSnapshot(project){
 function compareCompositionSnapshot(baseline,project){
   if(!baseline)return {ok:false,errors:['比較元スナップショットがありません']};
   const current=createCompositionSnapshot(project),errors=[];
-  for(const key of ['timeline','melody','lyricAssignments','chords']){
+  for(const key of ['timeline','lyrics','melody','lyricAssignments','chords']){
     if(JSON.stringify(normalizeCompositionValue(baseline[key]))!==JSON.stringify(normalizeCompositionValue(current[key])))errors.push(key+' が保存前と一致しません');
   }
   return {ok:errors.length===0,errors,checked:['timeline','melody','lyricAssignments','chords']};
