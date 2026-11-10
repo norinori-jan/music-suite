@@ -220,3 +220,24 @@ test("TL-23 Canvas receives section-based chord progressions into the paste fiel
   assert.equal(fakeInput.value,"C, G, Am, Em, F, G, C");
   assert.match(fakeStatus.textContent,/受信しました/);
 });
+
+test("TL-24 generated chord progression is fully visible and selectable/copyable", async () => {
+  const html = await readFile(canvasPath, "utf8");
+  assert.match(html,/id="lyric-generated-chord-panel"/);
+  assert.match(html,/id="lyric-generated-chord-output"/);
+  assert.match(html,/onclick="copyAllGeneratedChords\(\)"/);
+  assert.match(html,/onclick="selectAllGeneratedChords\(\)"/);
+  assert.match(html,/function copyAllGeneratedChords\(\)/);
+  assert.match(html,/function selectAllGeneratedChords\(\)/);
+  assert.match(html,/generatedOutput\.value=chordText/);
+  assert.match(html,/generatedPanel\.style\.display='block'/);
+  const start=html.indexOf("function selectAllGeneratedChords()");
+  const end=html.indexOf("function copyChordPrompt()",start);
+  assert.ok(start>=0&&end>start);
+  const fake={value:"C, G, Am, F",focus(){this.focused=true},select(){this.selected=true},setSelectionRange(a,b){this.range=[a,b]}};
+  const status={textContent:""};
+  const document={getElementById(id){return id==="lyric-generated-chord-output"?fake:status}};
+  const select=new Function("document",html.slice(start,end)+";return selectAllGeneratedChords;")(document);
+  assert.equal(select(),true);
+  assert.deepEqual(fake.range,[0,11]);
+});
