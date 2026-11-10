@@ -117,10 +117,11 @@
     <div style="margin:12px 0;padding:10px;border:1px solid #47727a;border-radius:8px">
       <label for="chord-progression-input"><strong>コード進行を貼り付け</strong></label>
       <p style="font-size:12px;opacity:.8;margin:5px 0">例：C, G, Am, F（半角カンマ区切り・1行）</p>
-      <input id="chord-progression-input" type="text" inputmode="text" autocomplete="off" spellcheck="false" style="width:100%;box-sizing:border-box;padding:10px;border-radius:7px;border:1px solid #47727a;background:#172f36;color:#fff;font:inherit" placeholder="C, G, Am, F">
+      <textarea id="chord-progression-input" rows="2" wrap="soft" inputmode="text" autocomplete="off" autocapitalize="off" spellcheck="false" aria-label="コード進行入力" style="display:block;width:100%;max-width:100%;min-width:0;min-height:58px;box-sizing:border-box;white-space:pre-wrap;overflow-wrap:anywhere;word-break:break-word;resize:vertical;overflow-x:hidden;padding:10px;border-radius:7px;border:1px solid #47727a;background:#172f36;color:#fff;font:inherit;line-height:1.5" placeholder="C, G, Am, F">
       <div class="lyric-line" style="margin-top:8px">
         <button type="button" onclick="applyChordProgression()">コード進行を反映</button>
-        <button type="button" onclick="copyChordPrompt()">📋 コード進行用プロンプト</button>
+        <button type="button" onclick="copyChordProgression()">📋 入力したコード進行をコピー</button>
+        <button type="button" onclick="copyChordPrompt()">コード進行用プロンプト</button>
       </div>
       <div id="chord-progression-status" aria-live="polite" style="font-size:12px;margin-top:6px">AIの提案をここへ貼り付けて反映できます。</div>
     </div>
@@ -679,12 +680,30 @@ function applyChordProgression(){
     return true;
   }catch(error){if(status)status.textContent='反映できません：'+error.message;return false;}
 }
+async function copyChordText(text,successMessage){
+  const status=document.getElementById('chord-progression-status');
+  try{
+    if(navigator.clipboard?.writeText){await navigator.clipboard.writeText(text);}
+    else{
+      const helper=document.createElement('textarea');helper.value=text;helper.setAttribute('readonly','');
+      helper.style.cssText='position:fixed;left:-9999px;top:0;opacity:0';document.body.appendChild(helper);
+      helper.select();helper.setSelectionRange(0,helper.value.length);
+      const copied=document.execCommand('copy');document.body.removeChild(helper);
+      if(!copied)throw new Error('copy command unavailable');
+    }
+    if(status)status.textContent=successMessage;
+    return true;
+  }catch(error){if(status)status.textContent='自動コピーできません。欄内を長押しして全選択・コピーしてください。';return false;}
+}
+function copyChordProgression(){
+  const input=document.getElementById('chord-progression-input');
+  const value=String(input?.value||'').replace(/\s*[,，、]\s*/g,', ').trim();
+  if(!value){const status=document.getElementById('chord-progression-status');if(status)status.textContent='コピーするコード進行がありません。';return false;}
+  return copyChordText(value,'コード進行をコピーしました。');
+}
 function copyChordPrompt(){
   const prompt='コード進行だけを1行で出力してください。形式は C, G, Am, F。半角カンマ＋半角スペースで区切り、改行・説明・見出し・箇条書き・表・Markdownコードブロックは一切付けないでください。';
-  const status=document.getElementById('chord-progression-status');
-  if(navigator.clipboard?.writeText){
-    navigator.clipboard.writeText(prompt).then(()=>{if(status)status.textContent='コード進行用プロンプトをコピーしました。'}).catch(()=>{if(status)status.textContent='コピーできませんでした。プロンプト：'+prompt;});
-  }else if(status){status.textContent='この環境では自動コピーできません。プロンプト：'+prompt;}
+  return copyChordText(prompt,'コード進行用プロンプトをコピーしました。');
 }
 function generateLyricMusicSketch(){
   const text=lyricTextRead();
