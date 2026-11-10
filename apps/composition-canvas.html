@@ -108,7 +108,7 @@
     <div class="lyric-line">
       <label>Key <select id="lyric-key"><option value="C">C major</option><option value="G">G major</option><option value="D">D major</option><option value="A">A minor</option><option value="E">E minor</option></select></label>
       <label>雰囲気 <select id="lyric-mood"><option value="hope">希望・前向き</option><option value="bittersweet" selected>切なさ・温かさ</option><option value="calm">穏やか</option><option value="bright">明るい</option></select></label>
-      <label>コード進行 <select id="lyric-progression"><option value="pop">王道（I–V–vi–IV）</option><option value="warm">温かい（I–vi–IV–V）</option><option value="sad">切ない（vi–IV–I–V）</option><option value="simple">シンプル（I–IV–V–I）</option></select></label>
+      <label>コード進行 <select id="lyric-progression"><option value="pop">王道ポップ（I–V–vi–IV）</option><option value="warm">温かい（I–vi–IV–V）</option><option value="sad">切ない（vi–IV–I–V）</option><option value="simple">シンプル（I–IV–V–I）</option><option value="rock">ロック（I–IV–vi–V）</option><option value="jazz">ジャズ（ii–V–I–vi）</option><option value="rb">R&amp;B（I–iii–vi–ii）</option><option value="cinematic">映画音楽（vi–IV–I–V）</option><option value="loop">循環・ループ（I–V–vi–iii）</option><option value="surprise">少し意外な展開（I–iii–IV–iv）</option></select></label>
     </div>
     <div class="lyric-line">
       <button type="button" class="primary" onclick="generateLyricMusicSketch()">✨ 歌詞から音符・コード候補を生成</button>
@@ -660,7 +660,7 @@ function lyricEstimateSyllables(word){
 const LYRIC_NOTE_NAMES=['C','C#','D','D#','E','F','F#','G','G#','A','A#','B'];
 const LYRIC_SCALES={C:[0,2,4,5,7,9,11],G:[0,2,4,5,7,9,11],D:[0,2,4,6,7,9,11],A:[0,2,3,5,7,8,10],E:[0,2,3,5,7,8,10]};
 const LYRIC_ROOTS={C:0,G:7,D:2,A:9,E:4};
-const LYRIC_PROGRESSIONS={pop:[1,5,6,4],warm:[1,6,4,5],sad:[6,4,1,5],simple:[1,4,5,1]};
+const LYRIC_PROGRESSIONS={pop:[1,5,6,4],warm:[1,6,4,5],sad:[6,4,1,5],simple:[1,4,5,1],rock:[1,4,6,5],jazz:[2,5,1,6],rb:[1,3,6,2],cinematic:[6,4,1,5],loop:[1,5,6,3],surprise:[1,3,4,4]};
 function parseChordProgressionText(raw){
   const source=String(raw||'').replace(/[，、；]/g,',').trim();
   if(!source)throw new Error('コード進行が空です。例：C, G, Am, F');
