@@ -241,3 +241,20 @@ test("TL-24 generated chord progression is fully visible and selectable/copyable
   assert.equal(select(),true);
   assert.deepEqual(fake.range,[0,11]);
 });
+
+test("TL-25 lyric chord progression selector exposes ten distinct styles", async () => {
+  const html = await readFile(canvasPath, "utf8");
+  const selectStart = html.indexOf('<select id="lyric-progression">');
+  const selectEnd = html.indexOf("</select>", selectStart);
+  assert.ok(selectStart >= 0 && selectEnd > selectStart);
+  const options = [...html.slice(selectStart, selectEnd).matchAll(/<option value="([^"]+)">/g)].map(m => m[1]);
+  assert.deepEqual(options, ["pop","warm","sad","simple","rock","jazz","rb","cinematic","loop","surprise"]);
+  const mapStart = html.indexOf("const LYRIC_PROGRESSIONS=");
+  const mapEnd = html.indexOf(";", mapStart);
+  const map = new Function(html.slice(mapStart, mapEnd + 1) + ";return LYRIC_PROGRESSIONS;")();
+  assert.deepEqual(map.jazz,[2,5,1,6]);
+  assert.deepEqual(map.rb,[1,3,6,2]);
+  assert.deepEqual(map.rock,[1,4,6,5]);
+  assert.deepEqual(map.loop,[1,5,6,3]);
+  assert.deepEqual(map.surprise,[1,3,4,4]);
+});
