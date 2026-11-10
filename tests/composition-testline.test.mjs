@@ -173,3 +173,19 @@ test("TL-20 BEAT//LAB drum edits are allowed but composition data remains unchan
   assert.ok(helpers.compareCompositionSnapshot(baseline,changedChord,{allowedChanges:["drums"]}).errors.includes("chords が保存前と一致しません"));
   assert.match(html,/allowedChanges:\['drums'\]/);
 });
+
+test("TL-21 JSON import retains chord progression from the saved project", async () => {
+  const beatLab = await readFile(beatLabPath, "utf8");
+  assert.match(beatLab,/window\.__compositionBaseProject=data/);
+  assert.match(beatLab,/chords:\s*base\.chords\|\|base\.generatedMusic\?\.chords\|\|null/);
+  assert.match(beatLab,/compareJSONRoundTripSnapshot\(data\.jsonRoundTripBaseline,restoredProject\)/);
+  const start = beatLab.indexOf("function normalizeJSONRoundTripValue");
+  const end = beatLab.indexOf("function exportJSON", start);
+  const helpers = new Function(beatLab.slice(start,end) + "\nreturn {createJSONRoundTripSnapshot,compareJSONRoundTripSnapshot};")();
+  const saved = {bpm:100,timeSig:4,bars:8,div:16,chords:[{bar:1,chord:"C"},{bar:2,chord:"Am"}]};
+  const baseline = helpers.createJSONRoundTripSnapshot(saved);
+  const restored = structuredClone(saved);
+  assert.equal(helpers.compareJSONRoundTripSnapshot(baseline,restored).ok,true);
+  restored.chords[1].chord = "F";
+  assert.ok(helpers.compareJSONRoundTripSnapshot(baseline,restored).errors.includes("chords がJSON保存前と一致しません"));
+});
