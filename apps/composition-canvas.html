@@ -603,10 +603,13 @@ function parseIncomingLyrics(){
       return restored;
     }
     if(payload.source!=='vocal-lab-lyric-link')return false;
-    window.__incomingLyricProject=payload;window.__musicProjectId=payload.projectId||window.__musicProjectId||('song-'+Date.now());document.getElementById('lyric-panel').classList.add('show');
-    document.getElementById('lyric-meta').textContent=(payload.title||'English lyric')+' · '+(payload.bpm||120)+' BPM · '+(payload.emotion||'neutral');
+    window.__incomingLyricProject=payload;window.__musicProjectId=payload.projectId||window.__musicProjectId||('song-'+Date.now());
+    window.__lyricMusicSketch=payload.generatedMusic||payload.chords?{...(payload.generatedMusic||{}),chords:payload.generatedMusic?.chords||payload.chords}:null;
+    document.getElementById('lyric-panel').classList.add('show');
+    document.getElementById('lyric-meta').textContent=(payload.title||'English lyric')+' · '+(payload.bpm||120)+' BPM · '+(payload.emotion||'neutral')+(window.__lyricMusicSketch?.chords?.length?' · コード進行 '+window.__lyricMusicSketch.chords.length+'件受信':'');
     if(payload.kind==='duet'&&Array.isArray(payload.sections)){lyricSectionsWrite(payload.sections);document.getElementById('canvas-lyrics').value=''}
     else{lyricSectionsWrite([]);document.getElementById('canvas-lyrics').value=payload.lyrics||payload.original||''}
+    if(window.__lyricMusicSketch?.chords?.length)restoreChordProgressionInput(window.__lyricMusicSketch);
     if(Array.isArray(payload.notes)&&payload.notes.length){state.lastNotes=payload.notes.map(n=>({note:n.name||n.note||'C4',length:Number(n.length)||4}));renderNoteCards(state.lastNotes,payload.title||'Vocal Lab lyric')}
     lyricRenderPreview();history.replaceState(null,'',location.pathname+location.search);return true;
   }catch(e){console.warn('lyric import failed',e);showToast('歌詞データを読み込めませんでした');return false}
