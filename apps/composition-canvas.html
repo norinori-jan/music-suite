@@ -807,9 +807,15 @@ function generateLyricMusicSketch(){
     words.forEach(word=>{for(let i=0;i<lyricEstimateSyllables(word);i++)syllables.push({word,role:line.role,label:line.label,phrase:line.text})});
   });
   if(!syllables.length){showToast('英語の単語を読み取れませんでした');return}
-  const maxNotes=96,selected=syllables.slice(0,maxNotes);
+  const maxNotes=96,selected=syllables.slice(0,maxNotes),sectionNoteCounts={};
   const notes=selected.map((item,i)=>{
-    const chordIndex=Math.floor(i/4)%4,degree=degrees[chordIndex],scaleIndex=(degree-1+((i%4===0)?0:(i%4===1)?2:(i%4===2)?4:1))%7;
+    const sectionKey=item.label||'Full song';
+    const localIndex=sectionNoteCounts[sectionKey]||0;
+    sectionNoteCounts[sectionKey]=localIndex+1;
+    const sectionChordSet=(chordSections.find(section=>section.label===sectionKey)||chordSections[0]).progression;
+    const chordIndex=Math.floor(localIndex/4)%sectionChordSet.length;
+    const degree=sectionChordSet[chordIndex].degree;
+    const scaleIndex=(degree-1+((localIndex%4===0)?0:(localIndex%4===1)?2:(localIndex%4===2)?4:1))%7;
     let octave=4;
     if(mood==='bright')octave=5;
     if(mood==='calm')octave=4;
