@@ -324,3 +324,32 @@ test("TL-28 generated melody degree follows its own lyric section chord progress
   assert.deepEqual([0,4,8,12].map(i=>helpers.resolveMelodyChordDegree(chords,"Ken / B verse",i)),[6,4,1,5]);
   assert.deepEqual([0,4,8,12].map(i=>helpers.resolveMelodyChordDegree(chords,"Chorus",i)),[1,4,6,5]);
 });
+
+test("TL-29 pasted melody accepts note-only and explicit-duration formats", async () => {
+  const html=await readFile(canvasPath,"utf8");
+  const start=html.indexOf("function parseNoteSequenceText(raw)");
+  const end=html.indexOf("\nfunction stopNoteSequence",start);
+  assert.ok(start>=0&&end>start);
+  const parser=new Function("noteToMidi",html.slice(start,end)+";return parseNoteSequenceText;")(
+    note=>{const m=note.match(/^([A-G]#?)(-?\\d+)$/);return m?60:NaN;}
+  );
+  assert.deepEqual(parser("C4, E4, G4, D4"),[
+    {note:"C4",length:1},{note:"E4",length:1},{note:"G4",length:1},{note:"D4",length:1}
+  ]);
+  assert.deepEqual(parser("C4×4, E4-2, G4*0.5"),[
+    {note:"C4",length:4},{note:"E4",length:2},{note:"G4",length:0.5}
+  ]);
+  assert.deepEqual(parser("C4\\nE4\\nG4"),[
+    {note:"C4",length:1},{note:"E4",length:1},{note:"G4",length:1}
+  ]);
+  assert.throws(()=>parser("H4"));
+});
+test("TL-30 generated chord output stays inside the visible copy panel", async () => {
+  const html=await readFile(canvasPath,"utf8");
+  assert.match(html,/id="lyric-generated-chord-panel"[^>]*style="display:none/);
+  assert.match(html,/id="lyric-generated-chord-output"[^>]*wrap="soft"/);
+  assert.match(html,/onclick="copyAllGeneratedChords\(\)"/);
+  assert.match(html,/onclick="selectAllGeneratedChords\(\)"/);
+  assert.match(html,/overflow-wrap:anywhere/);
+  assert.match(html,/function generateLyricMusicSketch\(\)[\s\S]*?generatedOutput\)generatedOutput\.value=chordText/);
+});
