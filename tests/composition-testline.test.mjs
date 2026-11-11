@@ -286,7 +286,7 @@ test("TL-27 A, B, Chorus and Bridge can hold independent chord progressions", as
   for (const id of ["lyric-progression-a","lyric-progression-b","lyric-progression-chorus","lyric-progression-bridge"]) {
     assert.match(html,new RegExp('id="'+id+'"'));
   }
-  assert.match(html,/chordSections, chords:allSectionChords/);
+  assert.match(html,/chordSections,chords:allSectionChords/);
   const start=html.indexOf("const LYRIC_NOTE_NAMES=");
   const end=html.indexOf("function parseChordProgressionText",start);
   const helpers=new Function(html.slice(start,end)+";return {LYRIC_PROGRESSIONS,buildSectionChordProgressions};")();
