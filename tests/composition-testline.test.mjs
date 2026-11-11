@@ -385,3 +385,44 @@ test("TL-33 surprise progression uses a real borrowed minor iv chord", async () 
   assert.equal(g[3].chord,"Cm");
   assert.deepEqual(g[3].tones,[0,3,7]);
 });
+
+
+test("TL-34 composition sketch transfer keeps lyrics, section chords, and melody in one versioned JSON package", async () => {
+  const html=await readFile(canvasPath,"utf8");
+  for(const id of ["composition-sketch-transfer","composition-sketch-status"])assert.match(html,new RegExp('id="'+id+'"'));
+  for(const handler of ["copyCompositionSketch","selectCompositionSketch","importCompositionSketch"])assert.match(html,new RegExp('onclick="'+handler+'\\(\\)"'));
+  assert.match(html,/format:'music-suite-composition-sketch'/);
+  assert.match(html,/schemaVersion:1/);
+  assert.match(html,/lyrics:\{text:lyricTextRead\(\),sections:lyricSectionsRead\(\)\}/);
+  assert.match(html,/harmony:\{[\s\S]*?sections:Array\.isArray\(sketch\.chordSections\)/);
+  assert.match(html,/melody:\{notes:melody\}/);
+  assert.match(html,/id:card\.dataset\.noteId/);
+  assert.match(html,/startBeat:card\.dataset\.startBeat/);
+});
+
+test("TL-35 invalid composition sketch JSON is rejected before mutating the project", async () => {
+  const html=await readFile(canvasPath,"utf8");
+  const start=html.indexOf("function importCompositionSketch()");
+  const end=html.indexOf("\nfunction renderGeneratedChordSections",start);
+  assert.ok(start>=0&&end>start);
+  const body=html.slice(start,end);
+  assert.match(body,/JSON\.parse\(area\.value\)/);
+  assert.ok(body.indexOf("catch(error)")<body.indexOf("window\.__musicProjectId="));
+  assert.match(body,/schemaVersion!==1/);
+  assert.match(body,/音符数が上限512/);
+  assert.match(body,/Number\.isFinite\(noteToMidi\(n\.note\)\)/);
+  assert.match(body,/return false/);
+});
+
+test("TL-36 imported composition sketch restores section labels, chord section display, and lyric-linked note IDs", async () => {
+  const html=await readFile(canvasPath,"utf8");
+  const start=html.indexOf("function importCompositionSketch()");
+  const end=html.indexOf("\nfunction renderGeneratedChordSections",start);
+  const body=html.slice(start,end);
+  assert.match(body,/lyricSectionsWrite\(data\.lyrics\.sections\)/);
+  assert.match(body,/restoreChordProgressionInput\(window\.__lyricMusicSketch\)/);
+  assert.match(body,/renderNoteCards\(state\.lastNotes/);
+  assert.match(body,/card\.dataset\.noteId=n\.id/);
+  assert.match(body,/card\.dataset\.lyricId=n\.lyricId/);
+  assert.match(body,/card\.dataset\.startBeat=String\(n\.startBeat\)/);
+});
