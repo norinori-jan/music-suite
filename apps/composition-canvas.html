@@ -146,8 +146,8 @@
 </section>
 <section id="note-sequence-player" style="margin:14px 0;padding:14px;border:1px solid #397b83;border-radius:10px;background:#10252b;color:#e8fbff">
   <h3 style="margin:0 0 8px">🎹 音符列を貼り付けて聴く</h3>
-  <p style="font-size:12px;opacity:.85">例：C4×4, E4×4, G4×4, D4×4（×の後ろは拍数）</p>
-  <textarea id="note-sequence-input" rows="5" style="width:100%;box-sizing:border-box;padding:10px;border-radius:7px;background:#172f36;color:#fff;border:1px solid #47727a;font:inherit" placeholder="ここにメモ帳の音符列を貼り付け"></textarea>
+  <p style="font-size:12px;opacity:.85">音符だけでも貼り付けできます：C4, E4, G4, D4（音価の指定がない音符は1拍）。長さを指定する場合：C4×4, E4×2（×の後ろは拍数）</p>
+  <textarea id="note-sequence-input" rows="5" wrap="soft" inputmode="text" autocomplete="off" autocapitalize="off" spellcheck="false" aria-label="音符列入力" style="display:block;width:100%;max-width:100%;min-width:0;box-sizing:border-box;white-space:pre-wrap;overflow-wrap:anywhere;word-break:break-word;overflow-x:hidden;padding:10px;border-radius:7px;background:#172f36;color:#fff;border:1px solid #47727a;font:inherit" placeholder="C4, E4, G4, D4 または C4×4, E4×2"></textarea>
   <div style="display:flex;gap:8px;align-items:center;flex-wrap:wrap;margin-top:10px">
     <label>BPM <input id="note-sequence-bpm" type="number" min="40" max="220" value="120" style="width:76px;padding:7px"></label>
     <button type="button" class="primary" onclick="playNoteSequence()">▶ 再生</button>
@@ -888,19 +888,19 @@ function restoreLyricCanvasProject(project){
 let noteSequenceAudio = null;
 let noteSequenceNodes = [];
 function parseNoteSequenceText(raw) {
-  const source=String(raw||'').replace(/[＊ｘＸ]/g,'×').replace(/[，、；]/g,',').trim();
-  if(!source)throw new Error('音符列が空です。例：C4-4, E4-4, G4-4');
+  const source=String(raw||'').replace(/[＊ｘＸ]/g,'×').replace(/[，、；]/g,',').replace(/[\u2010-\u2015－]/g,'-').trim();
+  if(!source)throw new Error('音符列が空です。例：C4, E4, G4 または C4×4, E4×2');
   const tokens=source.split(/[\s,;]+/).map(x=>x.trim()).filter(Boolean);
   const notes=[];
   for(const token of tokens){
-    const m=token.match(/^([A-Ga-g]#?-?\d+)\s*(?:[-×xX*])\s*(\d+(?:\.\d+)?)$/);
-    if(!m)throw new Error('「'+token+'」を読み取れません。C4-4 または C4×4 の形式で入力してください。');
-    const note=m[1].toUpperCase(),length=Number(m[2]),midi=noteToMidi(note);
+    const m=token.match(/^([A-Ga-g]#?-?\d+)(?:\s*(?:[-×xX*])\s*(\d+(?:\.\d+)?))?$/);
+    if(!m)throw new Error('「'+token+'」を読み取れません。C4（1拍）または C4×4 の形式で入力してください。');
+    const note=m[1].toUpperCase(),length=m[2]===undefined?1:Number(m[2]),midi=noteToMidi(note);
     if(!Number.isFinite(length)||length<=0||length>64)throw new Error('「'+token+'」の拍数は0より大きく64以下にしてください。');
     if(!Number.isFinite(midi))throw new Error('「'+note+'」は読み取れない音名です。');
     notes.push({note,length});
   }
-  if(!notes.length)throw new Error('音符がありません。C4×4 の形式で貼り付けてください。');
+  if(!notes.length)throw new Error('音符がありません。C4, E4, G4 の形式で貼り付けてください。');
   return notes;
 }
 function stopNoteSequence() {
