@@ -258,3 +258,25 @@ test("TL-25 lyric chord progression selector exposes ten distinct styles", async
   assert.deepEqual(map.loop,[1,5,6,3]);
   assert.deepEqual(map.surprise,[1,3,4,4]);
 });
+
+test("TL-26 diatonic triads use both third and fifth intervals for chord quality", async () => {
+  const html = await readFile(canvasPath, "utf8");
+  const scaleStart = html.indexOf("const LYRIC_NOTE_NAMES=");
+  const scaleEnd = html.indexOf("function parseChordProgressionText", scaleStart);
+  assert.ok(scaleStart >= 0 && scaleEnd > scaleStart);
+  const source = html.slice(scaleStart, scaleEnd);
+  const helpers = new Function(source + ";return {LYRIC_SCALES,LYRIC_ROOTS,LYRIC_NOTE_NAMES,buildDiatonicTriad};")();
+  const cases = [
+    ["C",1,"C","",[0,4,7]],["C",2,"D","m",[2,5,9]],["C",7,"B","dim",[11,2,5]],
+    ["G",7,"F#","dim",[6,9,0]],["D",7,"C#","dim",[1,4,7]],
+    ["A",1,"A","m",[9,0,4]],["A",2,"B","dim",[11,2,5]],["A",5,"E","m",[4,7,11]],
+    ["E",2,"F#","dim",[6,9,0]]
+  ];
+  for (const [key,degree,root,quality,tones] of cases) {
+    const chord=helpers.buildDiatonicTriad(key,degree);
+    assert.equal(chord.root,root, key+" degree "+degree+" root");
+    assert.equal(chord.quality,quality, key+" degree "+degree+" quality");
+    assert.deepEqual(chord.tones,tones, key+" degree "+degree+" tones");
+  }
+  assert.throws(()=>helpers.buildDiatonicTriad("C",8));
+});
