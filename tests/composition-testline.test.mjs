@@ -331,7 +331,7 @@ test("TL-29 pasted melody accepts note-only and explicit-duration formats", asyn
   const end=html.indexOf("\nfunction stopNoteSequence",start);
   assert.ok(start>=0&&end>start);
   const parser=new Function("noteToMidi",html.slice(start,end)+";return parseNoteSequenceText;")(
-    note=>{const m=note.match(/^([A-G]#?)(-?\\d+)$/);return m?60:NaN;}
+    note=>{const m=note.match(/^([A-G]#?)(-?\d+)$/);return m?60:NaN;}
   );
   assert.deepEqual(parser("C4, E4, G4, D4"),[
     {note:"C4",length:1},{note:"E4",length:1},{note:"G4",length:1},{note:"D4",length:1}
