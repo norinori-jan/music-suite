@@ -857,7 +857,7 @@ function generateLyricMusicSketch(){
     const midi=60+root+scale[scaleIndex]+(octave-4)*12;
     const pitch=((midi-60)%12+12)%12;
     const note=LYRIC_NOTE_NAMES[pitch]+(4+Math.floor((midi-60)/12));
-    return {id:makeMelodyNoteId(i),note,length:4,word:item.word,lyric:item.phrase,role:item.role,section:item.label,startBeat:i,lyricId:'lyric-'+String(i+1).padStart(4,'0')};
+    return {id:makeMelodyNoteId(i),note,length:1,word:item.word,lyric:item.phrase,role:item.role,section:item.label,startBeat:i,lyricId:'lyric-'+String(i+1).padStart(4,'0')};
   });
   state.lastNotes=notes.map(n=>({id:n.id,note:n.note,length:n.length,startBeat:n.startBeat,lyricId:n.lyricId}));
   renderNoteCards(state.lastNotes,(window.__incomingLyricProject||{}).title||'Lyric sketch');
