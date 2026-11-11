@@ -280,3 +280,29 @@ test("TL-26 diatonic triads use both third and fifth intervals for chord quality
   }
   assert.throws(()=>helpers.buildDiatonicTriad("C",8));
 });
+
+test("TL-27 A, B, Chorus and Bridge can hold independent chord progressions", async () => {
+  const html = await readFile(canvasPath, "utf8");
+  for (const id of ["lyric-progression-a","lyric-progression-b","lyric-progression-chorus","lyric-progression-bridge"]) {
+    assert.match(html,new RegExp('id="'+id+'"'));
+  }
+  assert.match(html,/chordSections, chords:allSectionChords/);
+  const start=html.indexOf("const LYRIC_NOTE_NAMES=");
+  const end=html.indexOf("function parseChordProgressionText",start);
+  const helpers=new Function(html.slice(start,end)+";return {LYRIC_PROGRESSIONS,buildSectionChordProgressions};")();
+  const sections=[
+    {role:"A",label:"Mia / A verse",text:"A verse"},
+    {role:"B",label:"Ken / B verse",text:"B verse"},
+    {role:"DUET",label:"Chorus",text:"Chorus"},
+    {role:"DUET",label:"Bridge",text:"Bridge"}
+  ];
+  const result=helpers.buildSectionChordProgressions("C",sections,"pop",{
+    "Mia / A verse":"warm","Ken / B verse":"sad","Chorus":"rock","Bridge":"jazz"
+  });
+  assert.deepEqual(result.map(s=>s.progression.map(c=>c.degree)),[
+    [1,6,4,5],[6,4,1,5],[1,4,6,5],[2,5,1,6]
+  ]);
+  assert.equal(new Set(result.flatMap(s=>s.progression.map(c=>c.id))).size,16);
+  assert.equal(result[2].progression[0].chord,"C");
+  assert.equal(result[3].progression[0].chord,"Dm");
+});
