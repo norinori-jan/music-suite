@@ -142,6 +142,16 @@
         <button type="button" class="primary" onclick="copyAllGeneratedChords()">📋 生成コードをすべてコピー</button>
         <button type="button" onclick="selectAllGeneratedChords()">全文を選択</button>
       </div>
+      <hr style="border-color:#47727a;margin:14px 0">
+      <strong>🎼 作曲スケッチを一括コピー／貼り付け</strong>
+      <p style="font-size:12px;margin:5px 0 8px">歌詞・区間・キー・雰囲気・コード構成音・メロディ音符と歌詞の対応をまとめて受け渡します。JSON形式なので、通常のコード列とは別に扱います。</p>
+      <textarea id="composition-sketch-transfer" rows="7" wrap="soft" spellcheck="false" autocomplete="off" autocapitalize="off" aria-label="作曲スケッチ一括コピー・貼り付け欄" style="display:block;width:100%;max-width:100%;min-width:0;box-sizing:border-box;white-space:pre-wrap;overflow-wrap:anywhere;word-break:break-word;overflow-x:hidden;resize:vertical;padding:10px;border:1px solid #47727a;border-radius:7px;background:#172f36;color:#fff;font:12px/1.5 ui-monospace,monospace" placeholder="「作曲スケッチを作成」を押すとJSONが表示されます。別の端末・アプリから受け取ったJSONもここに貼り付けられます。"></textarea>
+      <div class="lyric-line" style="margin-top:8px">
+        <button type="button" class="primary" onclick="copyCompositionSketch()">📋 作曲スケッチをすべてコピー</button>
+        <button type="button" onclick="selectCompositionSketch()">全文を選択</button>
+        <button type="button" onclick="importCompositionSketch()">貼り付けたスケッチを読み込む</button>
+      </div>
+      <div id="composition-sketch-status" aria-live="polite" style="font-size:12px;margin-top:7px"></div>
     </div>
   </div>
   <p style="font-size:12px;opacity:.75">歌詞だけでも保存できます。メロディ候補を生成すると、音符カードとコード進行を追加できます。生成結果は必ず聴いて調整してください。</p>
@@ -785,6 +795,89 @@ function copyAllGeneratedChords(){
   if(!value){const status=document.getElementById('chord-progression-status');if(status)status.textContent='先にコード進行を生成してください。';return false;}
   return copyChordText(value,'生成されたコード進行を全件コピーしました。');
 }
+function buildCompositionSketchPackage(){
+  const incoming=window.__incomingLyricProject||{};
+  const sketch=window.__lyricMusicSketch||{};
+  const cards=[...document.querySelectorAll('#canvas .card')];
+  const melody=cards.map((card,index)=>({
+    id:card.dataset.noteId||makeMelodyNoteId(index),
+    lyricId:card.dataset.lyricId||null,
+    note:card.dataset.note||card.querySelector('.note-name')?.textContent?.trim()||card.firstChild?.textContent?.trim()||'',
+    length:Number(card.dataset.length)||4,
+    startBeat:card.dataset.startBeat!==undefined&&card.dataset.startBeat!==''?Number(card.dataset.startBeat):index,
+    lyric:card.dataset.lyric||'',
+    word:card.dataset.word||'',
+    role:card.dataset.lyricRole||'',
+    section:card.dataset.lyricSection||''
+  }));
+  return {
+    format:'music-suite-composition-sketch',
+    schemaVersion:1,
+    project:{id:incoming.projectId||window.__musicProjectId||'music-suite-sketch',title:incoming.title||incoming.name||'Untitled composition',bpm:Number(incoming.bpm)||Number(document.getElementById('note-sequence-bpm')?.value)||120},
+    lyrics:{text:lyricTextRead(),sections:lyricSectionsRead()},
+    harmony:{key:sketch.key||document.getElementById('lyric-key')?.value||'C',mode:sketch.mode||'major',mood:sketch.mood||document.getElementById('lyric-mood')?.value||'neutral',progression:sketch.progression||document.getElementById('lyric-progression')?.value||'pop',sections:Array.isArray(sketch.chordSections)?sketch.chordSections:[],chords:Array.isArray(sketch.chords)?sketch.chords:[]},
+    melody:{notes:melody},
+    metadata:{method:sketch.method||'manual-or-imported',warning:sketch.warning||'',exportedAt:new Date().toISOString()}
+  };
+}
+function createCompositionSketch(){
+  const area=document.getElementById('composition-sketch-transfer');
+  const status=document.getElementById('composition-sketch-status');
+  try{
+    const payload=buildCompositionSketchPackage();
+    if(!payload.lyrics.text&&!payload.lyrics.sections.length)throw new Error('歌詞がありません。');
+    if(!payload.melody.notes.length)throw new Error('メロディ音符がありません。先に音符カードを作成してください。');
+    area.value=JSON.stringify(payload,null,2);
+    if(status)status.textContent='作曲スケッチを作成しました。歌詞・コード区間 '+payload.harmony.sections.length+'件・音符 '+payload.melody.notes.length+'件を含みます。';
+    return payload;
+  }catch(error){if(status)status.textContent='作成できません：'+error.message;return null;}
+}
+async function copyCompositionSketch(){
+  const area=document.getElementById('composition-sketch-transfer');
+  if(!area.value&&!createCompositionSketch())return false;
+  return copyChordText(area.value,'作曲スケッチ全体をコピーしました。別の入力欄に貼り付けられます。');
+}
+function selectCompositionSketch(){
+  const area=document.getElementById('composition-sketch-transfer');
+  if(!area.value&&!createCompositionSketch())return false;
+  area.focus();area.select();area.setSelectionRange(0,area.value.length);
+  const status=document.getElementById('composition-sketch-status');
+  if(status)status.textContent='作曲スケッチ全体を選択しました。コピーできます。';
+  return true;
+}
+function importCompositionSketch(){
+  const area=document.getElementById('composition-sketch-transfer');
+  const status=document.getElementById('composition-sketch-status');
+  let data;
+  try{
+    data=JSON.parse(area.value);
+    if(data?.format!=='music-suite-composition-sketch'||data.schemaVersion!==1)throw new Error('対応していない形式またはバージョンです。');
+    if(!data.project||!data.lyrics||!data.harmony||!data.melody||!Array.isArray(data.melody.notes))throw new Error('必須データが不足しています。');
+    if(data.melody.notes.length>512)throw new Error('音符数が上限512を超えています。');
+    for(const [i,n] of data.melody.notes.entries()){
+      if(!n||typeof n.note!=='string'||!Number.isFinite(noteToMidi(n.note))||!Number.isFinite(Number(n.length))||Number(n.length)<=0||!Number.isFinite(Number(n.startBeat)))throw new Error((i+1)+'番目の音符データが不正です。');
+    }
+    if(!Array.isArray(data.lyrics.sections)||!Array.isArray(data.harmony.sections)||!Array.isArray(data.harmony.chords))throw new Error('歌詞区間またはコード配列が不正です。');
+  }catch(error){if(status)status.textContent='読み込めません：'+error.message;return false;}
+  const sectionNames=new Set(['Mia / A verse','Ken / B verse','Chorus','Bridge']);
+  if(data.lyrics.sections.some(x=>!x||!sectionNames.has(x.label)||typeof x.text!=='string')){if(status)status.textContent='読み込めません：歌詞区間の形式が不正です。';return false;}
+  window.__musicProjectId=data.project.id||'music-suite-sketch';
+  window.__incomingLyricProject={...(window.__incomingLyricProject||{}),projectId:window.__musicProjectId,title:data.project.title||'Imported composition',bpm:Number(data.project.bpm)||120};
+  lyricSectionsWrite(data.lyrics.sections);
+  if(!data.lyrics.sections.length)document.getElementById('canvas-lyrics').value=data.lyrics.text||'';
+  window.__lyricMusicSketch={key:data.harmony.key,mode:data.harmony.mode,mood:data.harmony.mood,progression:data.harmony.progression,chordSections:data.harmony.sections,chords:data.harmony.chords,method:data.metadata?.method||'imported-sketch-v1',warning:data.metadata?.warning||''};
+  restoreChordProgressionInput(window.__lyricMusicSketch);
+  document.getElementById('lyric-panel')?.classList.add('show');
+  const bpm=document.getElementById('note-sequence-bpm');if(bpm)bpm.value=String(data.project.bpm||120);
+  state.lastNotes=data.melody.notes.map(n=>({id:n.id,note:n.note,length:Number(n.length),startBeat:Number(n.startBeat),lyricId:n.lyricId||null,lyric:n.lyric||'',lyricRole:n.role||'',lyricSection:n.section||''}));
+  renderNoteCards(state.lastNotes,data.project.title||'Imported composition');
+  const cards=[...document.querySelectorAll('#canvas .card')];
+  cards.forEach((card,index)=>{const n=data.melody.notes[index];if(!n)return;card.dataset.noteId=n.id||makeMelodyNoteId(index);card.dataset.startBeat=String(n.startBeat);card.dataset.lyricId=n.lyricId||'';card.dataset.lyric=n.lyric||'';card.dataset.word=n.word||'';card.dataset.lyricRole=n.role||'';card.dataset.lyricSection=n.section||'';});
+  window.__lyricCardAssignments=data.melody.notes.map(n=>({noteId:n.id,lyricId:n.lyricId||null,lyric:n.lyric||'',role:n.role||'',section:n.section||''}));
+  lyricRenderPreview();
+  if(status)status.textContent='読み込み完了：歌詞 '+data.lyrics.sections.length+'区間・コード '+data.harmony.chords.length+'件・音符 '+data.melody.notes.length+'件を復元しました。';
+  return true;
+}
 function renderGeneratedChordSections(chordSections){
   const host=document.getElementById('lyric-generated-chord-breakdown');
   if(!host)return;
@@ -842,6 +935,7 @@ function generateLyricMusicSketch(){
   if(generatedOutput)generatedOutput.value=chordText;
   renderGeneratedChordSections(chordSections);
   if(generatedPanel)generatedPanel.style.display='block';
+  const transfer=document.getElementById('composition-sketch-transfer');if(transfer)transfer.value='';
   const sourceLines=sections.length?sections.flatMap(s=>s.text.split(/\n+/).filter(Boolean).map(line=>({role:s.role,label:s.label,text:line}))):text.split(/\n+/).filter(Boolean).map(line=>({role:'LEAD',label:'Lyric',text:line.replace(/^\[[^\]]+\]\s*/,'')}));
   const syllables=[];
   sourceLines.forEach(line=>{
