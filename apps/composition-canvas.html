@@ -108,7 +108,13 @@
     <div class="lyric-line">
       <label>Key <select id="lyric-key"><option value="C">C major</option><option value="G">G major</option><option value="D">D major</option><option value="A">A minor</option><option value="E">E minor</option></select></label>
       <label>雰囲気 <select id="lyric-mood"><option value="hope">希望・前向き</option><option value="bittersweet" selected>切なさ・温かさ</option><option value="calm">穏やか</option><option value="bright">明るい</option></select></label>
-      <label>コード進行 <select id="lyric-progression"><option value="pop">王道ポップ（I–V–vi–IV）</option><option value="warm">温かい（I–vi–IV–V）</option><option value="sad">切ない（vi–IV–I–V）</option><option value="simple">シンプル（I–IV–V–I）</option><option value="rock">ロック（I–IV–vi–V）</option><option value="jazz">ジャズ（ii–V–I–vi）</option><option value="rb">R&amp;B（I–iii–vi–ii）</option><option value="cinematic">映画音楽（vi–IV–I–V）</option><option value="loop">循環・ループ（I–V–vi–iii）</option><option value="surprise">少し意外な展開（I–iii–IV–iv）</option></select></label>
+      <label>基本コード進行 <select id="lyric-progression"><option value="pop">王道ポップ（I–V–vi–IV）</option><option value="warm">温かい（I–vi–IV–V）</option><option value="sad">切ない（vi–IV–I–V）</option><option value="simple">シンプル（I–IV–V–I）</option><option value="rock">ロック（I–IV–vi–V）</option><option value="jazz">ジャズ（ii–V–I–vi）</option><option value="rb">R&amp;B（I–iii–vi–ii）</option><option value="cinematic">映画音楽（vi–IV–I–V）</option><option value="loop">循環・ループ（I–V–vi–iii）</option><option value="surprise">少し意外な展開（I–iii–IV–iv）</option></select></label>
+    </div>
+    <div id="lyric-section-progressions" class="lyric-line" style="margin-top:8px">
+      <label>Aメロ <select id="lyric-progression-a"><option value="warm">温かい</option><option value="pop">王道ポップ</option><option value="sad">切ない</option><option value="simple">シンプル</option><option value="rock">ロック</option><option value="jazz">ジャズ</option><option value="rb">R&amp;B</option><option value="cinematic">映画音楽</option><option value="loop">循環</option><option value="surprise">意外な展開</option></select></label>
+      <label>Bメロ <select id="lyric-progression-b"><option value="sad">切ない</option><option value="pop">王道ポップ</option><option value="warm">温かい</option><option value="simple">シンプル</option><option value="rock">ロック</option><option value="jazz">ジャズ</option><option value="rb">R&amp;B</option><option value="cinematic">映画音楽</option><option value="loop">循環</option><option value="surprise">意外な展開</option></select></label>
+      <label>サビ <select id="lyric-progression-chorus"><option value="pop">王道ポップ</option><option value="warm">温かい</option><option value="sad">切ない</option><option value="simple">シンプル</option><option value="rock">ロック</option><option value="jazz">ジャズ</option><option value="rb">R&amp;B</option><option value="cinematic">映画音楽</option><option value="loop">循環</option><option value="surprise">意外な展開</option></select></label>
+      <label>ブリッジ <select id="lyric-progression-bridge"><option value="surprise">意外な展開</option><option value="pop">王道ポップ</option><option value="warm">温かい</option><option value="sad">切ない</option><option value="simple">シンプル</option><option value="rock">ロック</option><option value="jazz">ジャズ</option><option value="rb">R&amp;B</option><option value="cinematic">映画音楽</option><option value="loop">循環</option></select></label>
     </div>
     <div class="lyric-line">
       <button type="button" class="primary" onclick="generateLyricMusicSketch()">✨ 歌詞から音符・コード候補を生成</button>
@@ -767,14 +773,23 @@ function generateLyricMusicSketch(){
   try{chordDetails=degrees.map(degree=>buildDiatonicTriad(key,degree));}
   catch(error){showToast('コード構成を作れません: '+error.message);return}
   const chordNames=chordDetails.map(item=>item.chord);
-  const chordText=chordNames.join(', ');
+  const sections=lyricSectionsRead();
+  const sectionProgressionIds={ 'Mia / A verse':'lyric-progression-a','Ken / B verse':'lyric-progression-b','Chorus':'lyric-progression-chorus','Bridge':'lyric-progression-bridge' };
+  const chordSections=sections.length?sections.map((section,sectionIndex)=>{
+    const selectId=sectionProgressionIds[section.label];
+    const sectionStyle=selectId?(document.getElementById(selectId)?.value||progression):progression;
+    const sectionDegrees=LYRIC_PROGRESSIONS[sectionStyle]||degrees;
+    const progressionChords=sectionDegrees.map((degree,chordIndex)=>buildDiatonicTriad(key,degree));
+    return {role:section.role,label:section.label,progression:progressionChords.map((item,chordIndex)=>({id:'chord-'+String(sectionIndex+1).padStart(2,'0')+'-'+String(chordIndex+1).padStart(2,'0'),bar:chordIndex+1,chord:item.chord,degree:item.degree,quality:item.quality,tones:item.tones,intervals:item.intervals,beats:4}))};
+  }):[{role:'LEAD',label:'Full song',progression:chordDetails.map((item,chordIndex)=>({id:'chord-'+String(chordIndex+1).padStart(3,'0'),bar:chordIndex+1,chord:item.chord,degree:item.degree,quality:item.quality,tones:item.tones,intervals:item.intervals,beats:4}))}];
+  const allSectionChords=chordSections.flatMap(section=>section.progression);
+  const chordText=allSectionChords.map(item=>item.chord).join(', ');
   const chordInput=document.getElementById('chord-progression-input');
   if(chordInput)chordInput.value=chordText;
   const generatedOutput=document.getElementById('lyric-generated-chord-output');
   const generatedPanel=document.getElementById('lyric-generated-chord-panel');
   if(generatedOutput)generatedOutput.value=chordText;
   if(generatedPanel)generatedPanel.style.display='block';
-  const sections=lyricSectionsRead();
   const sourceLines=sections.length?sections.flatMap(s=>s.text.split(/\n+/).filter(Boolean).map(line=>({role:s.role,label:s.label,text:line}))):text.split(/\n+/).filter(Boolean).map(line=>({role:'LEAD',label:'Lyric',text:line.replace(/^\[[^\]]+\]\s*/,'')}));
   const syllables=[];
   sourceLines.forEach(line=>{
@@ -806,7 +821,7 @@ function generateLyricMusicSketch(){
     card.classList.add('lyric-linked');
     const label=document.createElement('span');label.className='lyric-assignment';label.textContent=(n.role==='A'?'A':n.role==='B'?'B':'二人')+' · '+n.word;card.appendChild(label);
   });
-  window.__lyricMusicSketch={key,mode:key==='A'||key==='E'?'minor':'major',mood,progression,chords:chordDetails.map((item,i)=>({id:'chord-'+String(i+1).padStart(3,'0'),bar:i+1,chord:item.chord,degree:item.degree,quality:item.quality,tones:item.tones,intervals:item.intervals,beats:4})),melody:notes.map((n,i)=>({id:n.id,lyricId:n.lyricId,pitch:n.note,startBeat:n.startBeat,durationBeats:n.length,word:n.word,lyric:n.lyric,role:n.role,section:n.section})),method:'rule-based-draft-v1',warning:'音節推定と音高選択による作曲スケッチ。発音・アクセント・和声進行は要調整'};
+  window.__lyricMusicSketch={key,mode:key==='A'||key==='E'?'minor':'major',mood,progression,chordSections,chords:allSectionChords,melody:notes.map((n,i)=>({id:n.id,lyricId:n.lyricId,pitch:n.note,startBeat:n.startBeat,durationBeats:n.length,word:n.word,lyric:n.lyric,role:n.role,section:n.section})),method:'rule-based-draft-v1',warning:'音節推定と音高選択による作曲スケッチ。発音・アクセント・和声進行は要調整'};
   document.getElementById('lyric-music-result').innerHTML='<strong>生成した候補</strong><p>Key: '+escapeHtmlCanvas(key)+' / '+escapeHtmlCanvas(mood)+' / '+chordNames.map(escapeHtmlCanvas).join(' – ')+'</p><p>'+notes.length+'音のメロディ候補を配置しました。音符カードをクリックして音名・音価を調整できます。</p><small>これは歌詞の音節数を目安にした初期案です。自然な英語の強勢や実際の歌いやすさを自動保証するものではありません。</small>';
   showToast('歌詞からメロディ・コードの初期案を生成しました');
 }
