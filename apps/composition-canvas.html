@@ -661,6 +661,23 @@ const LYRIC_NOTE_NAMES=['C','C#','D','D#','E','F','F#','G','G#','A','A#','B'];
 const LYRIC_SCALES={C:[0,2,4,5,7,9,11],G:[0,2,4,5,7,9,11],D:[0,2,4,6,7,9,11],A:[0,2,3,5,7,8,10],E:[0,2,3,5,7,8,10]};
 const LYRIC_ROOTS={C:0,G:7,D:2,A:9,E:4};
 const LYRIC_PROGRESSIONS={pop:[1,5,6,4],warm:[1,6,4,5],sad:[6,4,1,5],simple:[1,4,5,1],rock:[1,4,6,5],jazz:[2,5,1,6],rb:[1,3,6,2],cinematic:[6,4,1,5],loop:[1,5,6,3],surprise:[1,3,4,4]};
+function buildDiatonicTriad(key,degree){
+  const scale=LYRIC_SCALES[key],root=LYRIC_ROOTS[key];
+  if(!scale||!Number.isInteger(degree)||degree<1||degree>7)throw new Error('調または音階度数が不正です。');
+  const i=degree-1;
+  const rootPc=(root+scale[i])%12;
+  const thirdPc=(root+scale[(i+2)%7]+(i+2>=7?12:0))%12;
+  const fifthPc=(root+scale[(i+4)%7]+(i+4>=7?12:0))%12;
+  const thirdInterval=(thirdPc-rootPc+12)%12;
+  const fifthInterval=(fifthPc-rootPc+12)%12;
+  let quality='';
+  if(thirdInterval===4&&fifthInterval===7)quality='';
+  else if(thirdInterval===3&&fifthInterval===7)quality='m';
+  else if(thirdInterval===3&&fifthInterval===6)quality='dim';
+  else if(thirdInterval===4&&fifthInterval===8)quality='aug';
+  else throw new Error('未対応の三和音構成です: '+key+' degree '+degree+' ('+thirdInterval+'/'+fifthInterval+')');
+  return {degree,root:LYRIC_NOTE_NAMES[rootPc],quality,chord:LYRIC_NOTE_NAMES[rootPc]+quality,tones:[rootPc,thirdPc,fifthPc],intervals:[thirdInterval,fifthInterval]};
+}
 function parseChordProgressionText(raw){
   const source=String(raw||'').replace(/[，、；]/g,',').trim();
   if(!source)throw new Error('コード進行が空です。例：C, G, Am, F');
@@ -745,13 +762,11 @@ function generateLyricMusicSketch(){
   const progression=document.getElementById('lyric-progression').value;
   const scale=LYRIC_SCALES[key],root=LYRIC_ROOTS[key];
   const degrees=LYRIC_PROGRESSIONS[progression];
-  const chordNames=degrees.map(d=>{
-    const idx=(d-1)%7,third=scale[(idx+2)%7],fifth=scale[(idx+4)%7];
-    const r=(root+scale[idx])%12;
-    const thirdInterval=(scale[(idx+2)%7]-scale[idx]+12)%12;
-    const quality=thirdInterval===3?'m':thirdInterval===4?'':'dim';
-    return LYRIC_NOTE_NAMES[r]+quality;
-  });
+  if(!scale||!Number.isFinite(root)||!degrees){showToast('キーまたはコード進行の設定が不正です');return}
+  let chordDetails;
+  try{chordDetails=degrees.map(degree=>buildDiatonicTriad(key,degree));}
+  catch(error){showToast('コード構成を作れません: '+error.message);return}
+  const chordNames=chordDetails.map(item=>item.chord);
   const chordText=chordNames.join(', ');
   const chordInput=document.getElementById('chord-progression-input');
   if(chordInput)chordInput.value=chordText;
@@ -791,7 +806,7 @@ function generateLyricMusicSketch(){
     card.classList.add('lyric-linked');
     const label=document.createElement('span');label.className='lyric-assignment';label.textContent=(n.role==='A'?'A':n.role==='B'?'B':'二人')+' · '+n.word;card.appendChild(label);
   });
-  window.__lyricMusicSketch={key,mood,progression,chords:chordNames.map((chord,i)=>({bar:i+1,chord,beats:4})),melody:notes.map((n,i)=>({id:n.id,lyricId:n.lyricId,pitch:n.note,startBeat:n.startBeat,durationBeats:n.length,word:n.word,lyric:n.lyric,role:n.role,section:n.section})),method:'rule-based-draft-v1',warning:'音節推定と音高選択による作曲スケッチ。発音・アクセント・和声進行は要調整'};
+  window.__lyricMusicSketch={key,mode:key==='A'||key==='E'?'minor':'major',mood,progression,chords:chordDetails.map((item,i)=>({id:'chord-'+String(i+1).padStart(3,'0'),bar:i+1,chord:item.chord,degree:item.degree,quality:item.quality,tones:item.tones,intervals:item.intervals,beats:4})),melody:notes.map((n,i)=>({id:n.id,lyricId:n.lyricId,pitch:n.note,startBeat:n.startBeat,durationBeats:n.length,word:n.word,lyric:n.lyric,role:n.role,section:n.section})),method:'rule-based-draft-v1',warning:'音節推定と音高選択による作曲スケッチ。発音・アクセント・和声進行は要調整'};
   document.getElementById('lyric-music-result').innerHTML='<strong>生成した候補</strong><p>Key: '+escapeHtmlCanvas(key)+' / '+escapeHtmlCanvas(mood)+' / '+chordNames.map(escapeHtmlCanvas).join(' – ')+'</p><p>'+notes.length+'音のメロディ候補を配置しました。音符カードをクリックして音名・音価を調整できます。</p><small>これは歌詞の音節数を目安にした初期案です。自然な英語の強勢や実際の歌いやすさを自動保証するものではありません。</small>';
   showToast('歌詞からメロディ・コードの初期案を生成しました');
 }
