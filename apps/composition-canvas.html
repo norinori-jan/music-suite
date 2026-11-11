@@ -684,6 +684,18 @@ function buildDiatonicTriad(key,degree){
   else throw new Error('未対応の三和音構成です: '+key+' degree '+degree+' ('+thirdInterval+'/'+fifthInterval+')');
   return {degree,root:LYRIC_NOTE_NAMES[rootPc],quality,chord:LYRIC_NOTE_NAMES[rootPc]+quality,tones:[rootPc,thirdPc,fifthPc],intervals:[thirdInterval,fifthInterval]};
 }
+function buildSectionChordProgressions(key,sections,defaultStyle,sectionStyles={}){
+  const source=Array.isArray(sections)&&sections.length?sections:[{role:'LEAD',label:'Full song',text:''}];
+  return source.map((section,sectionIndex)=>{
+    const style=sectionStyles[section.label]||defaultStyle;
+    const degrees=LYRIC_PROGRESSIONS[style]||LYRIC_PROGRESSIONS[defaultStyle];
+    if(!degrees)throw new Error('コード進行スタイルが不正です: '+style);
+    return {role:section.role||'LEAD',label:section.label||'Full song',progression:degrees.map((degree,chordIndex)=>{
+      const item=buildDiatonicTriad(key,degree);
+      return {id:'chord-'+String(sectionIndex+1).padStart(2,'0')+'-'+String(chordIndex+1).padStart(2,'0'),bar:chordIndex+1,chord:item.chord,degree:item.degree,quality:item.quality,tones:item.tones,intervals:item.intervals,beats:4};
+    })};
+  });
+}
 function parseChordProgressionText(raw){
   const source=String(raw||'').replace(/[，、；]/g,',').trim();
   if(!source)throw new Error('コード進行が空です。例：C, G, Am, F');
@@ -775,13 +787,11 @@ function generateLyricMusicSketch(){
   const chordNames=chordDetails.map(item=>item.chord);
   const sections=lyricSectionsRead();
   const sectionProgressionIds={ 'Mia / A verse':'lyric-progression-a','Ken / B verse':'lyric-progression-b','Chorus':'lyric-progression-chorus','Bridge':'lyric-progression-bridge' };
-  const chordSections=sections.length?sections.map((section,sectionIndex)=>{
-    const selectId=sectionProgressionIds[section.label];
-    const sectionStyle=selectId?(document.getElementById(selectId)?.value||progression):progression;
-    const sectionDegrees=LYRIC_PROGRESSIONS[sectionStyle]||degrees;
-    const progressionChords=sectionDegrees.map((degree,chordIndex)=>buildDiatonicTriad(key,degree));
-    return {role:section.role,label:section.label,progression:progressionChords.map((item,chordIndex)=>({id:'chord-'+String(sectionIndex+1).padStart(2,'0')+'-'+String(chordIndex+1).padStart(2,'0'),bar:chordIndex+1,chord:item.chord,degree:item.degree,quality:item.quality,tones:item.tones,intervals:item.intervals,beats:4}))};
-  }):[{role:'LEAD',label:'Full song',progression:chordDetails.map((item,chordIndex)=>({id:'chord-'+String(chordIndex+1).padStart(3,'0'),bar:chordIndex+1,chord:item.chord,degree:item.degree,quality:item.quality,tones:item.tones,intervals:item.intervals,beats:4}))}];
+  const sectionStyles={};
+  Object.entries(sectionProgressionIds).forEach(([label,id])=>{const select=document.getElementById(id);if(select)sectionStyles[label]=select.value;});
+  let chordSections;
+  try{chordSections=buildSectionChordProgressions(key,sections,progression,sectionStyles);}
+  catch(error){showToast('区間別コード進行を作れません: '+error.message);return}
   const allSectionChords=chordSections.flatMap(section=>section.progression);
   const chordText=allSectionChords.map(item=>item.chord).join(', ');
   const chordInput=document.getElementById('chord-progression-input');
