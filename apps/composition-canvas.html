@@ -135,7 +135,9 @@
     <div id="lyric-generated-chord-panel" style="display:none;margin-top:12px;padding:12px;border:2px solid #38a3a5;border-radius:9px;background:#10252b;color:#e8fbff">
       <strong>生成されたコード進行（全件）</strong>
       <p style="font-size:12px;margin:5px 0 8px">ここに出たコードがコピー対象です。欄外に出さず、この枠内で全文を確認できます。</p>
-      <textarea id="lyric-generated-chord-output" rows="3" readonly wrap="soft" aria-label="生成されたコード進行すべて" style="display:block;width:100%;max-width:100%;min-width:0;box-sizing:border-box;white-space:pre-wrap;overflow-wrap:anywhere;word-break:break-word;overflow-x:hidden;resize:vertical;padding:10px;border:1px solid #47727a;border-radius:7px;background:#172f36;color:#fff;font:inherit;line-height:1.6"></textarea>
+      <div id="lyric-generated-chord-breakdown" style="display:grid;grid-template-columns:repeat(auto-fit,minmax(min(100%,220px),1fr));gap:8px;margin:10px 0" aria-live="polite"></div>
+      <label for="lyric-generated-chord-output" style="display:block;font-size:12px;margin:8px 0 4px">コピー用・全区間をつないだ1行</label>
+      <textarea id="lyric-generated-chord-output" rows="2" readonly wrap="soft" aria-label="生成されたコード進行すべて" style="display:block;width:100%;max-width:100%;min-width:0;box-sizing:border-box;white-space:pre-wrap;overflow-wrap:anywhere;word-break:break-word;overflow-x:hidden;resize:vertical;padding:10px;border:1px solid #47727a;border-radius:7px;background:#172f36;color:#fff;font:inherit;line-height:1.6"></textarea>
       <div class="lyric-line" style="margin-top:8px">
         <button type="button" class="primary" onclick="copyAllGeneratedChords()">📋 生成コードをすべてコピー</button>
         <button type="button" onclick="selectAllGeneratedChords()">全文を選択</button>
@@ -723,6 +725,8 @@ function restoreChordProgressionInput(sketch){
   const chords=direct.length?direct:sectionChords;
   if(input&&chords.length){
     input.value=chords.map(item=>typeof item==='string'?item:item.chord).filter(Boolean).join(', ');
+    const restoredSections=Array.isArray(sketch?.chordSections)?sketch.chordSections:sections;
+    if(restoredSections.length){renderGeneratedChordSections(restoredSections);const output=document.getElementById('lyric-generated-chord-output');if(output)output.value=restoredSections.flatMap(section=>section.progression||[]).map(item=>item.chord).join(', ');const panel=document.getElementById('lyric-generated-chord-panel');if(panel)panel.style.display='block';}
     const status=document.getElementById('chord-progression-status');
     if(status)status.textContent='外部アプリからコード進行 '+chords.length+'件を受信しました。内容を確認して「コード進行を反映」を押してください。';
   }
@@ -774,6 +778,30 @@ function copyAllGeneratedChords(){
   if(!value){const status=document.getElementById('chord-progression-status');if(status)status.textContent='先にコード進行を生成してください。';return false;}
   return copyChordText(value,'生成されたコード進行を全件コピーしました。');
 }
+function renderGeneratedChordSections(chordSections){
+  const host=document.getElementById('lyric-generated-chord-breakdown');
+  if(!host)return;
+  host.replaceChildren();
+  (chordSections||[]).forEach(section=>{
+    const card=document.createElement('section');
+    card.style.cssText='min-width:0;padding:10px;border:1px solid #47727a;border-radius:8px;background:#18343b;overflow-wrap:anywhere';
+    const heading=document.createElement('strong');
+    heading.textContent=section.label||'区間';
+    card.appendChild(heading);
+    const progression=document.createElement('div');
+    progression.style.cssText='font-size:18px;font-weight:700;line-height:1.5;margin:5px 0;overflow-wrap:anywhere';
+    progression.textContent=(section.progression||[]).map(item=>item.chord).join('  →  ');
+    card.appendChild(progression);
+    const details=document.createElement('div');
+    details.style.cssText='font-size:11px;line-height:1.6;color:#b9d8df';
+    details.textContent=(section.progression||[]).map((item,index)=>{
+      const tones=(item.tones||[]).map(pc=>LYRIC_NOTE_NAMES[((pc%12)+12)%12]).join('・');
+      return (index+1)+'小節目 '+item.chord+'（'+tones+'）';
+    }).join(' ／ ');
+    card.appendChild(details);
+    host.appendChild(card);
+  });
+}
 function copyChordPrompt(){
   const prompt='コード進行だけを1行で出力してください。形式は C, G, Am, F。半角カンマ＋半角スペースで区切り、改行・説明・見出し・箇条書き・表・Markdownコードブロックは一切付けないでください。';
   return copyChordText(prompt,'コード進行用プロンプトをコピーしました。');
@@ -805,6 +833,7 @@ function generateLyricMusicSketch(){
   const generatedOutput=document.getElementById('lyric-generated-chord-output');
   const generatedPanel=document.getElementById('lyric-generated-chord-panel');
   if(generatedOutput)generatedOutput.value=chordText;
+  renderGeneratedChordSections(chordSections);
   if(generatedPanel)generatedPanel.style.display='block';
   const sourceLines=sections.length?sections.flatMap(s=>s.text.split(/\n+/).filter(Boolean).map(line=>({role:s.role,label:s.label,text:line}))):text.split(/\n+/).filter(Boolean).map(line=>({role:'LEAD',label:'Lyric',text:line.replace(/^\[[^\]]+\]\s*/,'')}));
   const syllables=[];
