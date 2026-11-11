@@ -306,3 +306,21 @@ test("TL-27 A, B, Chorus and Bridge can hold independent chord progressions", as
   assert.equal(result[2].progression[0].chord,"C");
   assert.equal(result[3].progression[0].chord,"Dm");
 });
+
+test("TL-28 generated melody degree follows its own lyric section chord progression", async () => {
+  const html=await readFile(canvasPath,"utf8");
+  const start=html.indexOf("const LYRIC_NOTE_NAMES=");
+  const end=html.indexOf("function parseChordProgressionText",start);
+  const helpers=new Function(html.slice(start,end)+";return {LYRIC_PROGRESSIONS,buildDiatonicTriad,buildSectionChordProgressions,resolveMelodyChordDegree};")();
+  const sections=[
+    {role:"A",label:"Mia / A verse",text:"A"},
+    {role:"B",label:"Ken / B verse",text:"B"},
+    {role:"DUET",label:"Chorus",text:"Chorus"}
+  ];
+  const chords=helpers.buildSectionChordProgressions("C",sections,"pop",{
+    "Mia / A verse":"warm","Ken / B verse":"sad","Chorus":"rock"
+  });
+  assert.deepEqual([0,4,8,12].map(i=>helpers.resolveMelodyChordDegree(chords,"Mia / A verse",i)),[1,6,4,5]);
+  assert.deepEqual([0,4,8,12].map(i=>helpers.resolveMelodyChordDegree(chords,"Ken / B verse",i)),[6,4,1,5]);
+  assert.deepEqual([0,4,8,12].map(i=>helpers.resolveMelodyChordDegree(chords,"Chorus",i)),[1,4,6,5]);
+});
