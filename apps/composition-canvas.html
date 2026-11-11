@@ -696,6 +696,12 @@ function buildSectionChordProgressions(key,sections,defaultStyle,sectionStyles={
     })};
   });
 }
+function resolveMelodyChordDegree(chordSections,label,localIndex){
+  const section=(chordSections||[]).find(item=>item.label===label)||(chordSections||[])[0];
+  if(!section||!Array.isArray(section.progression)||!section.progression.length)throw new Error('メロディに対応するコード進行がありません。');
+  const chordIndex=Math.floor(Math.max(0,localIndex)/4)%section.progression.length;
+  return section.progression[chordIndex].degree;
+}
 function parseChordProgressionText(raw){
   const source=String(raw||'').replace(/[，、；]/g,',').trim();
   if(!source)throw new Error('コード進行が空です。例：C, G, Am, F');
@@ -812,9 +818,7 @@ function generateLyricMusicSketch(){
     const sectionKey=item.label||'Full song';
     const localIndex=sectionNoteCounts[sectionKey]||0;
     sectionNoteCounts[sectionKey]=localIndex+1;
-    const sectionChordSet=(chordSections.find(section=>section.label===sectionKey)||chordSections[0]).progression;
-    const chordIndex=Math.floor(localIndex/4)%sectionChordSet.length;
-    const degree=sectionChordSet[chordIndex].degree;
+    const degree=resolveMelodyChordDegree(chordSections,sectionKey,localIndex);
     const scaleIndex=(degree-1+((localIndex%4===0)?0:(localIndex%4===1)?2:(localIndex%4===2)?4:1))%7;
     let octave=4;
     if(mood==='bright')octave=5;
