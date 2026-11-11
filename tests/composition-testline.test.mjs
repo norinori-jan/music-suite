@@ -370,3 +370,18 @@ test("TL-32 generated lyric melody has non-overlapping one-beat note starts", as
   assert.match(html,/return \{id:makeMelodyNoteId\(i\),note,length:1,[\s\S]*?startBeat:i,/);
   assert.match(html,/const chordIndex=Math\.floor\(Math\.max\(0,localIndex\)\/4\)%section\.progression\.length/);
 });
+
+test("TL-33 surprise progression uses a real borrowed minor iv chord", async () => {
+  const html=await readFile(canvasPath,"utf8");
+  const start=html.indexOf("const LYRIC_NOTE_NAMES=");
+  const end=html.indexOf("function parseChordProgressionText",start);
+  const helpers=new Function(html.slice(start,end)+";return {buildSectionChordProgressions};")();
+  const sections=[{role:"A",label:"Verse",text:""}];
+  const c=helpers.buildSectionChordProgressions("C",sections,"surprise")[0].progression;
+  assert.deepEqual(c.map(x=>x.chord),["C","Em","F","Fm"]);
+  assert.deepEqual(c[3].tones,[5,8,0]);
+  assert.equal(c[3].borrowed,true);
+  const g=helpers.buildSectionChordProgressions("G",sections,"surprise")[0].progression;
+  assert.equal(g[3].chord,"Cm");
+  assert.deepEqual(g[3].tones,[0,3,7]);
+});
