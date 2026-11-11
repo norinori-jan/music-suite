@@ -686,6 +686,13 @@ function buildDiatonicTriad(key,degree){
   else throw new Error('未対応の三和音構成です: '+key+' degree '+degree+' ('+thirdInterval+'/'+fifthInterval+')');
   return {degree,root:LYRIC_NOTE_NAMES[rootPc],quality,chord:LYRIC_NOTE_NAMES[rootPc]+quality,tones:[rootPc,thirdPc,fifthPc],intervals:[thirdInterval,fifthInterval]};
 }
+function buildBorrowedMinorFour(key){
+  const scale=LYRIC_SCALES[key],root=LYRIC_ROOTS[key];
+  if(!scale||!Number.isFinite(root))throw new Error('調が不正です。');
+  const rootPc=(root+scale[3])%12;
+  const tones=[rootPc,(rootPc+3)%12,(rootPc+7)%12];
+  return {degree:4,root:LYRIC_NOTE_NAMES[rootPc],quality:'m',chord:LYRIC_NOTE_NAMES[rootPc]+'m',tones,intervals:[3,7],borrowed:true};
+}
 function buildSectionChordProgressions(key,sections,defaultStyle,sectionStyles={}){
   const source=Array.isArray(sections)&&sections.length?sections:[{role:'LEAD',label:'Full song',text:''}];
   return source.map((section,sectionIndex)=>{
@@ -693,8 +700,8 @@ function buildSectionChordProgressions(key,sections,defaultStyle,sectionStyles={
     const degrees=LYRIC_PROGRESSIONS[style]||LYRIC_PROGRESSIONS[defaultStyle];
     if(!degrees)throw new Error('コード進行スタイルが不正です: '+style);
     return {role:section.role||'LEAD',label:section.label||'Full song',progression:degrees.map((degree,chordIndex)=>{
-      const item=buildDiatonicTriad(key,degree);
-      return {id:'chord-'+String(sectionIndex+1).padStart(2,'0')+'-'+String(chordIndex+1).padStart(2,'0'),bar:chordIndex+1,chord:item.chord,degree:item.degree,quality:item.quality,tones:item.tones,intervals:item.intervals,beats:4};
+      const item=style==='surprise'&&chordIndex===3?buildBorrowedMinorFour(key):buildDiatonicTriad(key,degree);
+      return {id:'chord-'+String(sectionIndex+1).padStart(2,'0')+'-'+String(chordIndex+1).padStart(2,'0'),bar:chordIndex+1,chord:item.chord,degree:item.degree,quality:item.quality,tones:item.tones,intervals:item.intervals,borrowed:!!item.borrowed,beats:4};
     })};
   });
 }
