@@ -339,7 +339,7 @@ test("TL-29 pasted melody accepts note-only and explicit-duration formats", asyn
   assert.deepEqual(parser("C4×4, E4-2, G4*0.5"),[
     {note:"C4",length:4},{note:"E4",length:2},{note:"G4",length:0.5}
   ]);
-  assert.deepEqual(parser("C4\\nE4\\nG4"),[
+  assert.deepEqual(parser("C4\nE4\nG4"),[
     {note:"C4",length:1},{note:"E4",length:1},{note:"G4",length:1}
   ]);
   assert.throws(()=>parser("H4"));
