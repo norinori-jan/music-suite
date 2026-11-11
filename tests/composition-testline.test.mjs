@@ -211,8 +211,10 @@ test("TL-23 Canvas receives section-based chord progressions into the paste fiel
   assert.ok(start >= 0 && end > start);
   const fakeInput = { value: "" };
   const fakeStatus = { textContent: "" };
-  const document = { getElementById(id) { return id === "chord-progression-input" ? fakeInput : fakeStatus; } };
-  const restore = new Function("document",canvas.slice(start,end)+";return restoreChordProgressionInput;")(document);
+  const fakeOutput = { value: "" };
+  const fakePanel = { style: {} };
+  const document = { getElementById(id) { return ({ "chord-progression-input":fakeInput,"chord-progression-status":fakeStatus,"lyric-generated-chord-output":fakeOutput,"lyric-generated-chord-panel":fakePanel })[id]||null; } };
+  const restore = new Function("document","renderGeneratedChordSections",canvas.slice(start,end)+";return restoreChordProgressionInput;")(document,()=>{});
   restore({chords:{sections:[
     {tag:"Verse",progression:[{chord:"C"},{chord:"G"},{chord:"Am"},{chord:"Em"}]},
     {tag:"Chorus",progression:[{chord:"F"},{chord:"G"},{chord:"C"}]}
