@@ -353,3 +353,18 @@ test("TL-30 generated chord output stays inside the visible copy panel", async (
   assert.match(html,/overflow-wrap:anywhere/);
   assert.match(html,/function generateLyricMusicSketch\(\)[\s\S]*?generatedOutput\)generatedOutput\.value=chordText/);
 });
+
+test("TL-31 chord sketch is displayed separately for A, B, Chorus and Bridge", async () => {
+  const html=await readFile(canvasPath,"utf8");
+  assert.match(html,/id="lyric-generated-chord-breakdown"/);
+  assert.match(html,/function renderGeneratedChordSections\(chordSections\)/);
+  assert.match(html,/renderGeneratedChordSections\(chordSections\)/);
+  assert.match(html,/item\.tones/);
+  assert.match(html,/全区間をつないだ1行/);
+  assert.match(html,/renderGeneratedChordSections\(restoredSections\)/);
+});
+test("TL-32 generated lyric melody has non-overlapping one-beat note starts", async () => {
+  const html=await readFile(canvasPath,"utf8");
+  assert.match(html,/return \{id:makeMelodyNoteId\(i\),note,length:1,[\s\S]*?startBeat:i,/);
+  assert.match(html,/const chordIndex=Math\.floor\(Math\.max\(0,localIndex\)\/4\)%section\.progression\.length/);
+});
