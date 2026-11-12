@@ -498,3 +498,26 @@ test("TL-42 flat chord copy is rebuilt from current section source data, not a p
   assert.match(body,/await copyChordText\(value/);
   assert.match(body,/output\.select\(\)/);
 });
+
+
+test("TL-43 all melody cards copy note, role, lyric, and section in displayed order", async () => {
+  const html=await readFile(canvasPath,"utf8");
+  assert.match(html,/id="melody-card-copy-output"/);
+  assert.match(html,/onclick="copyAllMelodyCards\(\)"/);
+  assert.match(html,/onclick="copyAllMelodyNotesAsSequence\(\)"/);
+  const start=html.indexOf("function buildMelodyCardCopyText()");
+  const end=html.indexOf("\nfunction refreshMelodyCardCopyOutput()",start);
+  const body=html.slice(start,end);
+  assert.match(body,/document\.querySelectorAll\('#canvas \.card'\)/);
+  assert.match(body,/card\.dataset\.note/);
+  assert.match(body,/card\.dataset\.lyricRole/);
+  assert.match(body,/card\.dataset\.lyric/);
+  assert.match(body,/card\.dataset\.lyricSection/);
+  assert.match(body,/\.join\('\\n\\n'\)/);
+});
+
+test("TL-44 melody card copy output refreshes after card rendering and saving", async () => {
+  const html=await readFile(canvasPath,"utf8");
+  assert.match(html,/syncCardsToState\(\);\s*refreshMelodyCardCopyOutput\(\);\s*console\.log\('描画カード数:'/);
+  assert.match(html,/syncCardsToState\(\);\s*refreshMelodyCardCopyOutput\(\);\s*if\(showMessage\)/);
+});
