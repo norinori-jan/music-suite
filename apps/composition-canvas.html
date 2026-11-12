@@ -145,8 +145,16 @@
       <label for="lyric-generated-chord-sections-output" style="display:block;font-size:12px;margin:12px 0 4px">区間名付き・全コード進行（こちらが推奨）</label>
       <textarea id="lyric-generated-chord-sections-output" rows="8" readonly wrap="soft" aria-label="区間名付きコード進行すべて" style="display:block;width:100%;max-width:100%;min-width:0;box-sizing:border-box;white-space:pre-wrap;overflow-wrap:anywhere;word-break:break-word;overflow-x:hidden;resize:vertical;padding:10px;border:1px solid #47727a;border-radius:7px;background:#172f36;color:#fff;font:12px/1.7 ui-monospace,monospace"></textarea>
       <div class="lyric-line" style="margin-top:8px">
-        <button type="button" class="primary" onclick="copyAllGeneratedChordSections()">📋 区間名も含めて全部コピー</button>
+        <button type="button" class="primary" onclick="copyAllGeneratedChordSections()">📋 まず全コードをコピー</button>
+        <button type="button" onclick="refineGeneratedChordProgressions()">🔄 練り直し</button>
         <button type="button" onclick="selectAllGeneratedChordSections()">区間付き全文を選択</button>
+      </div>
+      <div id="chord-refine-progress" aria-live="polite" style="margin-top:10px;padding:10px;border-radius:7px;background:#18343b;font-size:12px;line-height:1.8">
+        <strong>作曲の途中経過</strong>
+        <ol style="margin:5px 0 0;padding-left:20px">
+          <li>歌詞の区間と役割を確認</li><li>区間ごとのコードの役割を比較</li><li>コードが変わる間隔に変化をつける</li><li>次の区間へつながる終止を確認</li>
+        </ol>
+        <div id="chord-refine-status" style="margin-top:6px">初期案を生成したあと「練り直し」で別案を検討できます。</div>
       </div>
       <hr style="border-color:#47727a;margin:14px 0">
       <strong>🎼 作曲スケッチを一括コピー／貼り付け</strong>
@@ -709,15 +717,17 @@ function buildBorrowedMinorFour(key){
   const tones=[rootPc,(rootPc+3)%12,(rootPc+7)%12];
   return {degree:4,root:LYRIC_NOTE_NAMES[rootPc],quality:'m',chord:LYRIC_NOTE_NAMES[rootPc]+'m',tones,intervals:[3,7],borrowed:true};
 }
-function buildSectionChordProgressions(key,sections,defaultStyle,sectionStyles={}){
+function buildSectionChordProgressions(key,sections,defaultStyle,sectionStyles={},rhythmVariant=0){
   const source=Array.isArray(sections)&&sections.length?sections:[{role:'LEAD',label:'Full song',text:''}];
+  const rhythmPatterns=[[4,4,4,4],[2,2,4,4],[4,2,2,4],[6,2,2,2],[3,3,2,4],[2,4,2,4]];
   return source.map((section,sectionIndex)=>{
     const style=sectionStyles[section.label]||defaultStyle;
     const degrees=LYRIC_PROGRESSIONS[style]||LYRIC_PROGRESSIONS[defaultStyle];
     if(!degrees)throw new Error('コード進行スタイルが不正です: '+style);
-    return {role:section.role||'LEAD',label:section.label||'Full song',progression:degrees.map((degree,chordIndex)=>{
+    const pattern=rhythmPatterns[(rhythmVariant+sectionIndex)%rhythmPatterns.length];
+    return {role:section.role||'LEAD',label:section.label||'Full song',style,rhythmPattern:pattern.slice(),progression:degrees.map((degree,chordIndex)=>{
       const item=style==='surprise'&&chordIndex===3?buildBorrowedMinorFour(key):buildDiatonicTriad(key,degree);
-      return {id:'chord-'+String(sectionIndex+1).padStart(2,'0')+'-'+String(chordIndex+1).padStart(2,'0'),bar:chordIndex+1,chord:item.chord,degree:item.degree,quality:item.quality,tones:item.tones,intervals:item.intervals,borrowed:!!item.borrowed,beats:4};
+      return {id:'chord-'+String(sectionIndex+1).padStart(2,'0')+'-'+String(chordIndex+1).padStart(2,'0'),bar:chordIndex+1,chord:item.chord,degree:item.degree,quality:item.quality,tones:item.tones,intervals:item.intervals,borrowed:!!item.borrowed,beats:pattern[chordIndex%pattern.length]};
     })};
   });
 }
@@ -908,22 +918,55 @@ function renderGeneratedChordSections(chordSections){
     card.appendChild(heading);
     const progression=document.createElement('div');
     progression.style.cssText='font-size:clamp(16px,3vw,21px);font-weight:700;line-height:1.7;margin:7px 0;overflow-wrap:anywhere;word-break:break-word';
-    progression.textContent=(section.progression||[]).map(item=>item.chord).join('  →  ');
+    progression.textContent=(section.progression||[]).map(item=>item.chord+' ['+item.beats+'拍]').join('  →  ');
     card.appendChild(progression);
     const details=document.createElement('div');
     details.style.cssText='font-size:12px;line-height:1.8;color:#b9d8df;overflow-wrap:anywhere';
     details.textContent=(section.progression||[]).map((item,index)=>{
       const tones=(item.tones||[]).map(pc=>LYRIC_NOTE_NAMES[((pc%12)+12)%12]).join('・');
-      return (index+1)+'小節目 '+item.chord+'（'+tones+'）';
+      return (index+1)+'番目・'+item.beats+'拍 '+item.chord+'（'+tones+'）';
     }).join(' ／ ');
     card.appendChild(details);
     host.appendChild(card);
   });
   const flat=(chordSections||[]).flatMap(section=>section.progression||[]);
   const simple=flat.map(item=>item.chord).join(', ');
-  const labeled=(chordSections||[]).map(section=>(section.label||'区間')+'\n'+(section.progression||[]).map(item=>item.chord).join(', ')).join('\n\n');
+  const labeled=(chordSections||[]).map(section=>(section.label||'区間')+' ['+(section.style||'style未設定')+']\n'+(section.progression||[]).map(item=>item.chord+' ('+item.beats+'拍)').join('  →  ')).join('\n\n');
   const output=document.getElementById('lyric-generated-chord-output');if(output)output.value=simple;
   const sectionOutput=document.getElementById('lyric-generated-chord-sections-output');if(sectionOutput)sectionOutput.value=labeled;
+}
+function refineGeneratedChordProgressions(){
+  const sketch=window.__lyricMusicSketch||{};
+  const sections=lyricSectionsRead();
+  const labels=sections.length?sections:[{role:'LEAD',label:'Full song',text:lyricTextRead()}];
+  const styles=['warm','pop','sad','rock','jazz','rb','cinematic','loop','surprise','simple'];
+  const current=Number(sketch.refineCount)||0;
+  const currentStyles={};
+  (sketch.chordSections||[]).forEach(section=>{currentStyles[section.label]=section.style||sketch.progression||'pop';});
+  const nextStyles={};
+  labels.forEach((section,index)=>{
+    const currentStyle=currentStyles[section.label]||document.getElementById(({ 'Mia / A verse':'lyric-progression-a','Ken / B verse':'lyric-progression-b','Chorus':'lyric-progression-chorus','Bridge':'lyric-progression-bridge' })[section.label])?.value||sketch.progression||'pop';
+    const offset=styles.indexOf(currentStyle);
+    nextStyles[section.label]=styles[(Math.max(0,offset)+1+current+index)%styles.length];
+  });
+  const status=document.getElementById('chord-refine-status');
+  const log=[];
+  log.push('① 歌詞区間を確認：'+labels.map(x=>x.label).join(' → '));
+  log.push('② 和声の役割を変更：'+labels.map(x=>x.label+'='+nextStyles[x.label]).join(' / '));
+  const rhythmVariant=(current+1)%6;
+  const next=buildSectionChordProgressions(sketch.key||document.getElementById('lyric-key')?.value||'C',labels,sketch.progression||'pop',nextStyles,rhythmVariant);
+  log.push('③ リズムを再設計：全区間4拍固定をやめ、2・3・4・6拍のコード滞在を組み合わせ');
+  log.push('④ 区間のつながりを確認：終わりのコードと次区間の始まりを比較するための候補を更新');
+  const chords=next.flatMap(section=>section.progression);
+  window.__lyricMusicSketch={...sketch,chordSections:next,chords,refineCount:current+1,rhythmVariant,method:'section-harmony-refinement-v1'};
+  renderGeneratedChordSections(next);
+  const panel=document.getElementById('lyric-generated-chord-panel');if(panel)panel.style.display='block';
+  const flat=document.getElementById('lyric-generated-chord-output');if(flat)flat.value=chords.map(x=>x.chord).join(', ');
+  if(status)status.innerHTML=log.map(x=>'<div>'+escapeHtmlCanvas(x)+'</div>').join('')+'<strong>練り直し '+(current+1)+'回目の候補です。コピー前に区間ごとの流れを確認してください。</strong>';
+  const result=document.getElementById('lyric-music-result');
+  if(result)result.innerHTML='<strong>コード進行を練り直しました</strong><p>歌詞・メロディ音符は保持し、区間別の和声スタイルとコードの滞在拍数を変更しました。</p><small>これは候補更新です。実際の歌唱・リズムに合わせて最終判断してください。</small>';
+  const input=document.getElementById('chord-progression-input');if(input)input.value=chords.map(x=>x.chord).join(', ');
+  return true;
 }
 function copyChordPrompt(){
   const prompt='コード進行だけを1行で出力してください。形式は C, G, Am, F。半角カンマ＋半角スペースで区切り、改行・説明・見出し・箇条書き・表・Markdownコードブロックは一切付けないでください。';
