@@ -805,11 +805,15 @@ function selectAllGeneratedChords(){
   const status=document.getElementById('chord-progression-status');if(status)status.textContent='生成コード '+output.value.length+'文字をすべて選択しました。コピーできます。';
   return true;
 }
-function copyAllGeneratedChords(){
+async function copyAllGeneratedChords(){
+  const sections=window.__lyricMusicSketch?.chordSections;
   const output=document.getElementById('lyric-generated-chord-output');
-  const value=String(output?.value||'').trim();
+  const value=Array.isArray(sections)?sections.flatMap(section=>section.progression||[]).map(item=>item.chord).join(', '):'';
   if(!value){const status=document.getElementById('chord-progression-status');if(status)status.textContent='先にコード進行を生成してください。';return false;}
-  return copyChordText(value,'全区間のコード記号を1行でコピーしました。');
+  if(output)output.value=value;
+  const copied=await copyChordText(value,'全区間のコード記号を1行でコピーしました。');
+  if(!copied&&output){output.focus();output.select();output.setSelectionRange(0,output.value.length);const status=document.getElementById('chord-progression-status');if(status)status.textContent='自動コピーできませんでした。全コードを選択済みです。コピー操作をしてください。';}
+  return copied;
 }
 function selectAllGeneratedChordSections(){
   const output=document.getElementById('lyric-generated-chord-sections-output');
@@ -817,11 +821,15 @@ function selectAllGeneratedChordSections(){
   output.focus();output.select();output.setSelectionRange(0,output.value.length);
   const status=document.getElementById('chord-progression-status');if(status)status.textContent='区間名付きコード進行をすべて選択しました。';return true;
 }
-function copyAllGeneratedChordSections(){
+async function copyAllGeneratedChordSections(){
+  const sections=window.__lyricMusicSketch?.chordSections;
   const output=document.getElementById('lyric-generated-chord-sections-output');
-  const value=String(output?.value||'').trim();
-  if(!value){const status=document.getElementById('chord-progression-status');if(status)status.textContent='先にコード進行を生成してください。';return false;}
-  return copyChordText(value,'区間名を含む全コード進行をコピーしました。');
+  if(!Array.isArray(sections)||!sections.length){const status=document.getElementById('chord-progression-status');if(status)status.textContent='先にコード進行を生成してください。';return false;}
+  const value=sections.map(section=>(section.label||'区間')+' ['+(section.style||'style未設定')+']\n'+(section.progression||[]).map(item=>item.chord+' ('+(Number(item.beats)||4)+'拍)').join('  →  ')).join('\n\n');
+  if(output)output.value=value;
+  const copied=await copyChordText(value,'区間名・コード・滞在拍数を含む全区間をコピーしました。');
+  if(!copied&&output){output.focus();output.select();output.setSelectionRange(0,output.value.length);const status=document.getElementById('chord-progression-status');if(status)status.textContent='自動コピーできませんでした。全区間を選択済みです。コピー操作をしてください。';}
+  return copied;
 }
 function buildCompositionSketchPackage(){
   const incoming=window.__incomingLyricProject||{};
