@@ -183,6 +183,17 @@
   <div id="note-sequence-status" aria-live="polite" style="font-size:12px;margin-top:8px">音符列を貼り付けて再生できます。</div>
 </section>
 <div id="canvas"></div>
+<section id="melody-card-transfer" style="margin:12px 0;padding:12px;border:1px solid #397b83;border-radius:10px;background:#10252b;color:#e8fbff">
+  <strong>🎼 メロディ音符カード一括コピー</strong>
+  <p style="font-size:12px;opacity:.85;margin:5px 0 8px">表示中の音符カードを、音名・担当・歌詞の順番を保ってすべてコピーします。カードの一部だけではなく全件を対象にします。</p>
+  <textarea id="melody-card-copy-output" rows="6" readonly wrap="soft" aria-label="全メロディ音符カードのコピー内容" style="display:block;width:100%;max-width:100%;min-width:0;box-sizing:border-box;white-space:pre-wrap;overflow-wrap:anywhere;word-break:break-word;overflow-x:hidden;resize:vertical;padding:10px;border:1px solid #47727a;border-radius:7px;background:#172f36;color:#fff;font:12px/1.6 ui-monospace,monospace" placeholder="音符カードを読み込むと、ここに全件が並びます。"></textarea>
+  <div style="display:flex;gap:8px;flex-wrap:wrap;margin-top:8px">
+    <button type="button" class="primary" onclick="copyAllMelodyCards()">📋 音符カードを全部コピー</button>
+    <button type="button" onclick="selectAllMelodyCards()">全文を選択</button>
+    <button type="button" onclick="copyAllMelodyNotesAsSequence()">音符列だけコピー</button>
+  </div>
+  <div id="melody-card-copy-status" aria-live="polite" style="font-size:12px;margin-top:7px">音符カードの全件コピー待機中です。</div>
+</section>
 
 <script>
 
@@ -1169,6 +1180,49 @@ function loadNoteSequenceToCanvas() {
   }
 }
 
+function buildMelodyCardCopyText(){
+  const cards=[...document.querySelectorAll('#canvas .card')];
+  return cards.map((card,index)=>{
+    const note=String(card.dataset.note||card.textContent.trim()).trim();
+    const role=String(card.dataset.lyricRole||'').trim();
+    const lyric=String(card.dataset.lyric||'').trim();
+    const section=String(card.dataset.lyricSection||'').trim();
+    const assignment=role?(role+(lyric?' · '+lyric:'')):(lyric||'');
+    return [note,assignment,section?'['+section+']':''].filter(Boolean).join('\n');
+  }).join('\n\n');
+}
+function refreshMelodyCardCopyOutput(){
+  const output=document.getElementById('melody-card-copy-output');
+  if(output)output.value=buildMelodyCardCopyText();
+  const status=document.getElementById('melody-card-copy-status');
+  if(status){const count=document.querySelectorAll('#canvas .card').length;status.textContent=count+'件の音符カードをコピー対象にしています。';}
+}
+async function copyAllMelodyCards(){
+  const output=document.getElementById('melody-card-copy-output');
+  const value=buildMelodyCardCopyText();
+  if(!value){const status=document.getElementById('melody-card-copy-status');if(status)status.textContent='コピーする音符カードがありません。先に音符カードを読み込んでください。';return false;}
+  if(output)output.value=value;
+  const copied=await copyChordText(value,'音符カード全件（音名・歌詞・担当）をコピーしました。');
+  if(!copied&&output){output.focus();output.select();output.setSelectionRange(0,output.value.length);const status=document.getElementById('melody-card-copy-status');if(status)status.textContent='自動コピーできません。全件を選択しました。コピー操作をしてください。';}
+  return copied;
+}
+function selectAllMelodyCards(){
+  refreshMelodyCardCopyOutput();
+  const output=document.getElementById('melody-card-copy-output');
+  if(!output?.value){const status=document.getElementById('melody-card-copy-status');if(status)status.textContent='音符カードがありません。';return false;}
+  output.focus();output.select();output.setSelectionRange(0,output.value.length);
+  const status=document.getElementById('melody-card-copy-status');if(status)status.textContent='音符カード全件を選択しました。';
+  return true;
+}
+async function copyAllMelodyNotesAsSequence(){
+  const cards=[...document.querySelectorAll('#canvas .card')];
+  const value=cards.map(card=>String(card.dataset.note||card.textContent.trim()).trim()).filter(Boolean).join(', ');
+  if(!value){const status=document.getElementById('melody-card-copy-status');if(status)status.textContent='音符カードがありません。';return false;}
+  const output=document.getElementById('melody-card-copy-output');if(output)output.value=value;
+  const copied=await copyChordText(value,'音符列を1行でコピーしました。');
+  if(!copied&&output){output.focus();output.select();output.setSelectionRange(0,output.value.length);const status=document.getElementById('melody-card-copy-status');if(status)status.textContent='自動コピーできません。音符列を選択しました。';}
+  return copied;
+}
 function renderNoteCards(segments, songName) {
   const canvas=document.getElementById('canvas');
   if(!canvas)throw new Error('音符カード表示領域が見つかりません。');
@@ -1201,6 +1255,7 @@ function renderNoteCards(segments, songName) {
     canvas.appendChild(card);
   });
   syncCardsToState();
+  refreshMelodyCardCopyOutput();
   console.log('描画カード数:',normalized.length);
   return normalized.length;
 }
@@ -1232,6 +1287,7 @@ function saveCardPositions(showMessage=true) {
   }));
   try{localStorage.setItem('savedCardLayout',JSON.stringify(data));}catch(e){console.warn('card save failed',e);}
   syncCardsToState();
+  refreshMelodyCardCopyOutput();
   if(showMessage)showToast('音符と歌詞の内容を保存しました');
   return data;
 }
