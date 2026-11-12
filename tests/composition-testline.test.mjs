@@ -362,7 +362,7 @@ test("TL-31 chord sketch is displayed separately for A, B, Chorus and Bridge", a
   assert.match(html,/function renderGeneratedChordSections\(chordSections\)/);
   assert.match(html,/renderGeneratedChordSections\(chordSections\)/);
   assert.match(html,/item\.tones/);
-  assert.match(html,/全区間をつないだ1行/);
+  assert.match(html,/コード記号だけ（全区間・1行）/);
   assert.match(html,/renderGeneratedChordSections\(restoredSections\)/);
 });
 test("TL-32 generated lyric melody has non-overlapping one-beat note starts", async () => {
