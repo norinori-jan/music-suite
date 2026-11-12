@@ -426,3 +426,28 @@ test("TL-36 imported composition sketch restores section labels, chord section d
   assert.match(body,/card\.dataset\.lyricId=n\.lyricId/);
   assert.match(body,/card\.dataset\.startBeat=String\(n\.startBeat\)/);
 });
+
+
+test("TL-37 all generated chord sections are visible inside the panel and have two complete copy formats", async () => {
+  const html=await readFile(canvasPath,"utf8");
+  assert.match(html,/id="lyric-generated-chord-sections-output"/);
+  assert.match(html,/onclick="copyAllGeneratedChordSections\(\)"/);
+  assert.match(html,/区間名付き・全コード進行/);
+  assert.match(html,/const labeled=\(chordSections\|\|\[\]\)\.map\(section=>/);
+  assert.match(html,/function copyAllGeneratedChordSections\(\)/);
+  assert.match(html,/function renderGeneratedChordSections\(chordSections\)/);
+  assert.match(html,/card\.style\.cssText='min-width:0;width:100%/);
+});
+
+test("TL-38 melody sketch export reads authoritative note card datasets", async () => {
+  const html=await readFile(canvasPath,"utf8");
+  const start=html.indexOf("function buildCompositionSketchPackage()");
+  const end=html.indexOf("\nfunction createCompositionSketch()",start);
+  const body=html.slice(start,end);
+  assert.match(body,/card\.dataset\.note\|\|/);
+  assert.match(body,/Number\(card\.dataset\.length\)/);
+  assert.match(body,/Number\(card\.dataset\.startBeat\)/);
+  assert.match(body,/card\.dataset\.noteId/);
+  assert.match(body,/card\.dataset\.lyricId/);
+  assert.match(body,/document\.querySelectorAll\('#canvas \.card'\)/);
+});
