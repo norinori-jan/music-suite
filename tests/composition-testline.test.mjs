@@ -451,3 +451,23 @@ test("TL-38 melody sketch export reads authoritative note card datasets", async 
   assert.match(body,/card\.dataset\.lyricId/);
   assert.match(body,/document\.querySelectorAll\('#canvas \.card'\)/);
 });
+
+
+test("TL-39 chord refinement button records visible steps and preserves section identities", async () => {
+  const html=await readFile(canvasPath,"utf8");
+  assert.match(html,/onclick="refineGeneratedChordProgressions\(\)"/);
+  assert.match(html,/id="chord-refine-progress"/);
+  assert.match(html,/id="chord-refine-status"/);
+  assert.match(html,/function refineGeneratedChordProgressions\(\)/);
+  assert.match(html,/window\.__lyricMusicSketch=\{\.\.\.sketch,chordSections:next,chords,refineCount:current\+1/);
+  assert.match(html,/renderGeneratedChordSections\(next\)/);
+  assert.match(html,/歌詞・メロディ音符は保持/);
+});
+
+test("TL-40 refined chord progressions use varied chord durations rather than four beats for every chord", async () => {
+  const html=await readFile(canvasPath,"utf8");
+  assert.match(html,/const rhythmPatterns=\[\[4,4,4,4\],\[2,2,4,4\],\[4,2,2,4\],\[6,2,2,2\],\[3,3,2,4\],\[2,4,2,4\]\]/);
+  assert.match(html,/beats:pattern\[chordIndex%pattern\.length\]/);
+  assert.match(html,/item\.chord\+' \['\+item\.beats\+'拍\]'/);
+  assert.match(html,/item\.chord\+' \('\+item\.beats\+'拍\)'/);
+});
