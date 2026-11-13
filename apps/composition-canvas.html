@@ -855,7 +855,8 @@ function buildCompositionSketchPackage(){
     lyric:card.dataset.lyric||'',
     word:card.dataset.word||'',
     role:card.dataset.lyricRole||'',
-    section:card.dataset.lyricSection||''
+    section:card.dataset.lyricSection||'',
+    color:card.style.backgroundColor||card.dataset.color||''
   }));
   return {
     format:'music-suite-composition-sketch',
@@ -1260,12 +1261,18 @@ function renderNoteCards(segments, songName) {
   return normalized.length;
 }
 function syncCardsToState(){
+  // DOMカードから内部状態へ戻す際も、カードが保持する全データを同じ形で維持する。
   state.lastNotes=[...document.querySelectorAll('#canvas .card')].map((card,index)=>({
     id:card.dataset.noteId||makeMelodyNoteId(index),
     note:card.dataset.note||card.textContent.trim(),
     length:Number(card.dataset.length)||4,
-    startBeat:card.dataset.startBeat!==undefined?Number(card.dataset.startBeat):null,
-    lyricId:card.dataset.lyricId||null
+    startBeat:card.dataset.startBeat!==undefined&&card.dataset.startBeat!==''?Number(card.dataset.startBeat):null,
+    lyricId:card.dataset.lyricId||null,
+    lyric:card.dataset.lyric||'',
+    word:card.dataset.word||'',
+    lyricRole:card.dataset.lyricRole||'',
+    lyricSection:card.dataset.lyricSection||'',
+    color:card.style.backgroundColor||card.dataset.color||''
   }));
 }
 
@@ -1315,6 +1322,13 @@ function buildMelodyProject(sourceName) {
   const preservedMelody=rhythmProject.melody;
   const cards=Array.isArray(state.lastNotes)?state.lastNotes:[];
   const byId=new Map(cards.filter(card=>card.id).map(card=>[card.id,card]));
+  const cardLyricFields=(card,original={})=>({
+    lyricId:card.lyricId||original.lyricId||null,
+    lyric:card.lyric!==undefined?card.lyric:(original.lyric||''),
+    word:card.word!==undefined?card.word:(original.word||''),
+    role:card.lyricRole!==undefined?card.lyricRole:(original.role||''),
+    section:card.lyricSection!==undefined?card.lyricSection:(original.section||'')
+  });
   const melody=preservedMelody&&Array.isArray(preservedMelody.notes)&&preservedMelody.notes.length
     ? preservedMelody.notes.map((n,i)=>{
         const stableId=n.id||makeMelodyNoteId(i);
@@ -1326,7 +1340,7 @@ function buildMelodyProject(sourceName) {
           ...n,id:stableId,
           pitch:Number.isFinite(editedPitch)?editedPitch:n.pitch,
           durationBeats:Number.isFinite(editedDuration)&&editedDuration>0?editedDuration:n.durationBeats,
-          lyricId:card.lyricId||n.lyricId||null
+          ...cardLyricFields(card,n)
         };
       })
     : [];
@@ -1334,7 +1348,13 @@ function buildMelodyProject(sourceName) {
     let beat=0;
     cards.forEach((seg,i)=>{
       const duration=Number(seg.length)/4;
-      melody.push({id:seg.id||makeMelodyNoteId(i),pitch:noteToMidi(seg.note),startBeat:Number.isFinite(Number(seg.startBeat))?Number(seg.startBeat):beat,durationBeats:duration,vel:90,lyricId:seg.lyricId||null});
+      melody.push({
+        id:seg.id||makeMelodyNoteId(i),
+        pitch:noteToMidi(seg.note),
+        startBeat:Number.isFinite(Number(seg.startBeat))?Number(seg.startBeat):beat,
+        durationBeats:duration,vel:90,
+        ...cardLyricFields(seg)
+      });
       beat=melody[melody.length-1].startBeat+duration;
     });
   }
