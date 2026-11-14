@@ -562,3 +562,18 @@ test("TL-47 BEAT//LAB keeps imported drum timeline unchanged until a sequencer e
   assert.match(exportBody,/else if\(sections\.length\)/);
   assert.match(exportBody,/if\(active\)active\.pattern=cloneRhythmData\(APP\.pattern\)/);
 });
+
+test("TL-48 BEAT//LAB preset, arrangement, clear, shift and duplicate actions mark drums edited", async () => {
+  const html=await readFile(beatLabPath,"utf8");
+  for (const [name,next] of [
+    ["function applyLibraryPattern(p){","\n// ═══"],
+    ["function createSongArrangement(){","\nfunction renderArrangementControls"],
+    ["function clearPattern(){","\nfunction shiftPattern"],
+    ["function shiftPattern(dir){","\nfunction duplicateBars"],
+    ["function duplicateBars(){","\nfunction toggleSwing"]
+  ]) {
+    const start=html.indexOf(name),end=html.indexOf(next,start);
+    assert.ok(start>=0&&end>start,name+" boundary");
+    assert.match(html.slice(start,end),/drumPatternEdited=true/,name+" must mark edit");
+  }
+});
