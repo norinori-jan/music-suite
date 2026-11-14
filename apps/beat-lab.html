@@ -1243,6 +1243,42 @@ async function aiEditBeat(){
   document.getElementById('ai-gen-btn').disabled=false;
 }
 
+function buildMelodyRhythmContext(project,bars,timeSig=4){
+  const source=Array.isArray(project?.melody?.notes)?project.melody.notes:[];
+  const valid=source.map((note,index)=>({
+    index:index+1,
+    startBeat:Number(note.startBeat),
+    durationBeats:Number(note.durationBeats),
+    pitch:Number(note.pitch)
+  })).filter(note=>Number.isFinite(note.startBeat)&&note.startBeat>=0&&Number.isFinite(note.durationBeats)&&note.durationBeats>0&&note.startBeat<bars*timeSig)
+    .sort((a,b)=>a.startBeat-b.startBeat);
+  if(!valid.length)return {available:false,noteCount:0,summary:"メロディデータなし"};
+  const totalBeats=bars*timeSig;
+  const perBar=Array.from({length:bars},(_,bar)=>{
+    const start=bar*timeSig,end=start+timeSig;
+    const notes=valid.filter(note=>note.startBeat>=start&&note.startBeat<end);
+    const density=notes.length/timeSig;
+    const gaps=[];
+    let cursor=start;
+    notes.forEach(note=>{
+      if(note.startBeat>cursor)gaps.push([cursor,note.startBeat]);
+      cursor=Math.max(cursor,Math.min(end,note.startBeat+note.durationBeats));
+    });
+    if(cursor<end)gaps.push([cursor,end]);
+    const gapText=gaps.filter(([a,b])=>b-a>=0.25).map(([a,b])=>`${(a-start).toFixed(2)}-${(b-start).toFixed(2)}拍`).join(",");
+    return `小節${bar+1}: ${notes.length}音、密度${density.toFixed(2)}音/拍、音の隙間[${gapText||"短い/なし"}]`;
+  });
+  const events=valid.slice(0,96).map(note=>({
+    beat:+note.startBeat.toFixed(3),
+    duration:+note.durationBeats.toFixed(3),
+    pitch:Number.isFinite(note.pitch)?note.pitch:null
+  }));
+  return {
+    available:true,noteCount:valid.length,
+    summary:`有効音符${valid.length}音 / ${bars}小節 / ${totalBeats}拍。小節別: ${perBar.join(" | ")}。音符位置一覧(beatは曲頭から): ${JSON.stringify(events)}${valid.length>96?"（先頭96音のみ）":""}`
+  };
+}
+
 async function aiGenerateBeat(){
 
   const key=localStorage.getItem('ml_'+APP.aiModel)||'';
@@ -1253,13 +1289,18 @@ async function aiGenerateBeat(){
   const div=parseInt(document.getElementById('ai-div').value)||16;
   const prompt=document.getElementById('ai-prompt').value.trim();
   const steps=bars*4*(div/4);
+  const melodyContext=buildMelodyRhythmContext(window.__compositionBaseProject,bars,4);
 
   document.getElementById('ai-gen-btn').disabled=true;
-  setStatus('gen','AI生成中 ('+APP.aiModel+')...');
+  setStatus('gen',melodyContext.available?'メロディを解析してAI生成中 ('+APP.aiModel+')...':'AI生成中 ('+APP.aiModel+')...');
 
   const rowIds=ROWS.map(r=>r.id).join(', ');
   const sys='あなたはプロのドラマー・ビートメーカーです。必ずJSONのみを返してください。前置き不要。';
-  const usr=`ジャンル:${genre}、フィール:${feel}、${bars}小節、${div}分音符グリッド(1小節=${4*(div/4)}ステップ、全体${steps}ステップ、0始まり)のドラムパターンを作成してください。
+  const melodyInstruction=melodyContext.available
+    ? `\n\n【伴奏対象メロディ】\n${melodyContext.summary}\nこのメロディの発音位置を避けるだけでなく、音符が伸びている区間と休符の隙間を考慮してください。キック/スネアでメロディの重要な拍を支え、ハイハット等で空白を埋め、歌や旋律のアタックとぶつかり過ぎない自然な伴奏にしてください。各小節の密度差に合わせてドラムの密度も調整してください。`
+    : '\\n\\n【メロディ連動】この曲には利用可能なメロディ音符データがありません。ジャンルとフィールを基準に通常どおり生成してください。';
+  const usr=`ジャンル:${genre}、フィール:${feel}、${bars}小節、${div}分音符グリッド(1小節=${4*(div/4)}ステップ、全体${steps}ステップ、0始まり)のドラムパターンを作成してください.
+${melodyInstruction}
 ${prompt?'追加指示: '+prompt:''}
 
 使用可能パート: ${rowIds}
@@ -1292,7 +1333,7 @@ ${prompt?'追加指示: '+prompt:''}
         <div style="margin-top:4px;color:var(--mu)">${totalHits}ヒット · ${bars}小節 · ${div}th</div>
       </div>
       <button class="ai-apply" onclick='applyAiPattern(${JSON.stringify({result,bars,div,steps}).replace(/'/g,"&#39;")})'>✓ パターンに適用</button>`;
-    setStatus('ok','生成完了 — '+totalHits+'ヒット');
+    setStatus('ok','生成完了 — '+totalHits+'ヒット'+(melodyContext.available?'（メロディ'+melodyContext.noteCount+'音を参照）':'（メロディ連動なし）'));
   }catch(e){
     setStatus('err',e.message);
     document.getElementById('ai-result-area').innerHTML=`<div class="ai-result-card err">❌ ${esc(e.message)}</div>`;
