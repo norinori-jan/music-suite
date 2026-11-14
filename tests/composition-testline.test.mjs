@@ -577,3 +577,16 @@ test("TL-48 BEAT//LAB preset, arrangement, clear, shift and duplicate actions ma
     assert.match(html.slice(start,end),/drumPatternEdited=true/,name+" must mark edit");
   }
 });
+
+test("TL-49 Canvas exposes a direct standard test-song route into BEAT//LAB", async () => {
+  const html=await readFile(canvasPath,"utf8");
+  assert.match(html,/onclick="openStandardTestSongInBeatLab\(\)"/);
+  const start=html.indexOf("async function openStandardTestSongInBeatLab()");
+  const end=html.indexOf("\nfunction sendToBeatLab()",start);
+  assert.ok(start>=0&&end>start);
+  const body=html.slice(start,end);
+  assert.match(body,/tests\/fixtures\/composition-testline-v1\.json/);
+  assert.match(body,/project\.fromCompositionCanvas=true/);
+  assert.match(body,/project\.roundTripBaseline=createCompositionSnapshot\(project\)/);
+  assert.match(body,/window\.location\.href='beat-lab\.html#import='/);
+});
