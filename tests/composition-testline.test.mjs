@@ -547,3 +547,18 @@ test("TL-46 Canvas melody transfer preserves lyric text, word, role, and section
   }
   assert.match(body,/cardLyricFields/);
 });
+
+test("TL-47 BEAT//LAB keeps imported drum timeline unchanged until a sequencer edit", async () => {
+  const html=await readFile(beatLabPath,"utf8");
+  assert.match(html,/let drumPatternEdited=false/);
+  assert.match(html,/window\.__compositionBaseProject=data;\s*drumPatternEdited=false/);
+  const click=html.slice(html.indexOf("function cellClick"),html.indexOf("\nfunction cellClear"));
+  const clear=html.slice(html.indexOf("function cellClear"),html.indexOf("\nfunction "));
+  assert.match(click,/drumPatternEdited=true/);
+  assert.match(clear,/drumPatternEdited=true/);
+  const exportBody=html.slice(html.indexOf("function _buildExportData"),html.indexOf("\nfunction decodeImportedDrumVelocity"));
+  assert.match(exportBody,/!drumPatternEdited&&Array\.isArray\(base\.drums\?\.notes\)/);
+  assert.match(exportBody,/notes\.push\(\.\.\.cloneRhythmData\(base\.drums\.notes\)\)/);
+  assert.match(exportBody,/else if\(sections\.length\)/);
+  assert.match(exportBody,/if\(active\)active\.pattern=cloneRhythmData\(APP\.pattern\)/);
+});
