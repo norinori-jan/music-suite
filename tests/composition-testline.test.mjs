@@ -596,7 +596,7 @@ test("TL-50 BEAT//LAB provides explicit in-app round-trip test controls and retu
   assert.match(html,/id="test-route-panel"/);
   assert.match(html,/onclick="checkTestSongUnedited\(\)"/);
   assert.match(html,/onclick="checkTestSongEdited\(\)"/);
-  assert.match(html,/onclick="returnToCompositionCanvas\(\)">③ Composition Canvasへ戻る/);
+  assert.match(html,/onclick="returnToCompositionCanvas\(\)">Composition Canvasへ戻る（曲を引き継ぐ）/);
   assert.match(html,/function checkTestSongUnedited\(\)/);
   assert.match(html,/original\.length===16&&current\.length===16&&same/);
   assert.match(html,/function checkTestSongEdited\(\)/);
@@ -610,4 +610,50 @@ test("TL-51 standard test-song route marks the BEAT//LAB session as guided round
   const end=html.indexOf("\nfunction sendToBeatLab()",start);
   assert.ok(start>=0&&end>start);
   assert.match(html.slice(start,end),/project\.testMode='composition-testline-roundtrip'/);
+});
+
+
+test("TL-52 BEAT//LAB handoff guidance stays visible even outside the standard fixture route", async () => {
+  const html=await readFile(beatLabPath,"utf8");
+  const start=html.indexOf('<div id="test-route-panel"');
+  const end=html.indexOf('</div>',start);
+  assert.ok(start>=0&&end>start);
+  const panel=html.slice(start,end);
+  assert.doesNotMatch(panel,/display:none/);
+  assert.match(panel,/Composition Canvasへ戻る（曲を引き継ぐ）/);
+  assert.match(panel,/test-check-1/);
+  assert.match(panel,/test-check-2/);
+});
+
+test("TL-53 returning from BEAT//LAB transfers the edited project and round-trip progress", async () => {
+  const html=await readFile(beatLabPath,"utf8");
+  const start=html.indexOf("function returnToCompositionCanvas()");
+  const end=html.indexOf("\\nfunction checkTestSongUnedited",start);
+  assert.ok(start>=0&&end>start);
+  const body=html.slice(start,end);
+  assert.match(body,/const data=buildExportData\(\)/);
+  assert.match(body,/data\.fromBeatLab=true/);
+  assert.match(body,/data\.roundTripChecks=/);
+  assert.match(body,/JSON\.stringify\(data\)/);
+  assert.match(body,/composition-canvas\.html#import=/);
+});
+
+test("TL-54 Composition Canvas restores returned rhythm and offers an explicit resume route with the same song data", async () => {
+  const html=await readFile(canvasPath,"utf8");
+  assert.match(html,/id="beatlab-return-banner"/);
+  const start=html.indexOf("function restoreBeatLabProject(project)");
+  const end=html.indexOf("\\nfunction sendToSheet",start);
+  assert.ok(start>=0&&end>start);
+  const restore=html.slice(start,end);
+  assert.match(restore,/window\.__lastDrumProject=/);
+  assert.match(restore,/roundTripBaseline:project\.roundTripBaseline/);
+  assert.match(restore,/returnBanner\.style\.display='block'/);
+  const resumeStart=html.indexOf("function resumeBeatLabWork()");
+  const resumeEnd=html.indexOf("\\nfunction sendToSheet",resumeStart);
+  assert.ok(resumeStart>=0&&resumeEnd>resumeStart);
+  const resume=html.slice(resumeStart,resumeEnd);
+  for(const field of ["drums","melody","arrangement","rhythmVariations","testMode","roundTripBaseline"]) {
+    assert.match(resume,new RegExp("project\\."+field+"="));
+  }
+  assert.match(resume,/beat-lab\.html#import=/);
 });
