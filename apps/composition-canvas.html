@@ -70,6 +70,12 @@
 <button class="btn primary" onclick="sendToBeatLab()">
 🥁 リズムを作る
 </button>
+<button class="btn" type="button" onclick="openStandardTestSongInBeatLab()">
+🧪 標準テスト曲で往復確認
+</button>
+<p class="hint" style="font-size:12px;opacity:.8;margin:6px 0 12px">
+通常の曲作り：メロディ候補を作成 →「リズムを作る」。動作確認：右のテスト曲ボタンからBEAT//LABへ進みます。
+</p>
 
 <button class="btn primary"
         onclick="sendToVocalLab()">
@@ -1390,6 +1396,28 @@ function sendToScoreEditor() {
   const project = buildMelodyProject("composition-canvas");
   try { msRegister(project); } catch(e) {}
   window.location.href = "score-editor-v2.html#import=" + encodeForImport(project);
+}
+
+async function openStandardTestSongInBeatLab(){
+  const button=document.querySelector('button[onclick="openStandardTestSongInBeatLab()"]');
+  if(button){button.disabled=true;button.textContent='🧪 テスト曲を読み込み中...';}
+  try{
+    const fixtureUrl=new URL('../tests/fixtures/composition-testline-v1.json',window.location.href);
+    const response=await fetch(fixtureUrl.href,{cache:'no-store'});
+    if(!response.ok)throw new Error('標準テスト曲JSONを取得できません（HTTP '+response.status+'）');
+    const project=await response.json();
+    if(!Array.isArray(project.melody?.notes)||!Array.isArray(project.drums?.notes)||!project.arrangement)throw new Error('標準テスト曲のデータ形式が不正です');
+    project.title=project.name||'Composition Test Line v1';
+    project.sections=Array.isArray(project.lyrics?.sections)?project.lyrics.sections:[];
+    project.lyrics=project.sections.map(section=>section.text||'').filter(Boolean).join('\\n');
+    project.fromCompositionCanvas=true;
+    project.roundTripBaseline=createCompositionSnapshot(project);
+    try{localStorage.setItem('compositionRoundTripBaseline',JSON.stringify(project.roundTripBaseline));}catch(e){}
+    window.location.href='beat-lab.html#import='+encodeForImport(project);
+  }catch(error){
+    showToast('テスト曲を開けません：'+error.message);
+    if(button){button.disabled=false;button.textContent='🧪 標準テスト曲で往復確認';}
+  }
 }
 
 function sendToBeatLab(){
