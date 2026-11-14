@@ -628,7 +628,7 @@ test("TL-52 BEAT//LAB handoff guidance stays visible even outside the standard f
 test("TL-53 returning from BEAT//LAB transfers the edited project and round-trip progress", async () => {
   const html=await readFile(beatLabPath,"utf8");
   const start=html.indexOf("function returnToCompositionCanvas()");
-  const end=html.indexOf("\\nfunction checkTestSongUnedited",start);
+  const end=html.indexOf("\nfunction checkTestSongUnedited",start);
   assert.ok(start>=0&&end>start);
   const body=html.slice(start,end);
   assert.match(body,/const data=buildExportData\(\)/);
@@ -642,14 +642,14 @@ test("TL-54 Composition Canvas restores returned rhythm and offers an explicit r
   const html=await readFile(canvasPath,"utf8");
   assert.match(html,/id="beatlab-return-banner"/);
   const start=html.indexOf("function restoreBeatLabProject(project)");
-  const end=html.indexOf("\\nfunction sendToSheet",start);
+  const end=html.indexOf("\nfunction sendToSheet",start);
   assert.ok(start>=0&&end>start);
   const restore=html.slice(start,end);
   assert.match(restore,/window\.__lastDrumProject=/);
   assert.match(restore,/roundTripBaseline:project\.roundTripBaseline/);
   assert.match(restore,/returnBanner\.style\.display='block'/);
   const resumeStart=html.indexOf("function resumeBeatLabWork()");
-  const resumeEnd=html.indexOf("\\nfunction sendToSheet",resumeStart);
+  const resumeEnd=html.indexOf("\nfunction sendToSheet",resumeStart);
   assert.ok(resumeStart>=0&&resumeEnd>resumeStart);
   const resume=html.slice(resumeStart,resumeEnd);
   for(const field of ["drums","melody","arrangement","rhythmVariations","testMode","roundTripBaseline"]) {
