@@ -512,6 +512,9 @@ const APP={
   arrangementEffects:{fillBeforeChorus:true,breakBars:[],finalVariation:true},
 };
 
+// Imported timeline drums remain authoritative until the user edits the sequencer.
+let drumPatternEdited=false;
+
 const VEL_LEVELS=[1,0.85,0.65,0.4]; // tap cycles: off->full->med->soft->off
 
 // ── User rhythm variations: saved per song in this browser ──
@@ -768,6 +771,7 @@ function renderStepGrid(){
 function cellClick(rowId,step){
   const k=pk(rowId,step);
   const cur=APP.pattern[k];
+  drumPatternEdited=true;
   saveUndo();
   // cycle: off -> 1.0 -> 0.7 -> 0.4 -> off
   if(!cur) APP.pattern[k]=1.0;
@@ -783,6 +787,7 @@ function cellClick(rowId,step){
 function cellClear(rowId,step){
   const k=pk(rowId,step);
   if(!APP.pattern[k])return;
+  drumPatternEdited=true;
   saveUndo();
   delete APP.pattern[k];
   refreshCell(rowId,step);
@@ -1410,17 +1415,23 @@ function exportMIDI(){
 // ════════════════════════════════════════════════════════
 function buildExportData(){ const d=_buildExportData(); try{msRegister(d)}catch(e){} return d; }
 function _buildExportData(){
+  const base=window.__compositionBaseProject||{};
   const stepsPerBeat=APP.div/4,beatPerStep=1/stepsPerBeat,notes=[];
   const sections=Array.isArray(APP.sections)?APP.sections:[];
-  if(sections.length){
+  // Keep the exact imported drum timeline on a no-edit round trip.
+  // Once the user edits the sequencer, the section grooves become the new source.
+  if(!drumPatternEdited&&Array.isArray(base.drums?.notes)){
+    notes.push(...cloneRhythmData(base.drums.notes));
+  }else if(sections.length){
+    const active=sections.find(x=>x.id===APP.activeSectionId);
+    if(active)active.pattern=cloneRhythmData(APP.pattern);
     sections.forEach(section=>{const start=(section.startBar-1)*APP.timeSig*stepsPerBeat,len=(section.endBar-section.startBar+1)*APP.timeSig*stepsPerBeat;
       for(let local=0;local<len;local++)ROWS.forEach(row=>{const vel=section.pattern?.[pk(row.id,local)];if(vel)notes.push({pitch:row.pitch,startBeat:+((start+local)*beatPerStep).toFixed(4),durationBeats:+(beatPerStep*.9).toFixed(4),vel:Math.round(40+vel*87),section:section.id});});
     });
   }else{ROWS.forEach(row=>{for(let s=0;s<totalSteps();s++){const vel=APP.pattern[pk(row.id,s)];if(vel)notes.push({pitch:row.pitch,startBeat:+(s*beatPerStep).toFixed(4),durationBeats:+(beatPerStep*.9).toFixed(4),vel:Math.round(40+vel*87)});}});}
-  const base=window.__compositionBaseProject||{};
   return Object.assign({},base,{
     version:'1.0',
-    drumVelocityEncoding:'beat-lab-40-127-v1',
+    drumVelocityEncoding:drumPatternEdited?'beat-lab-40-127-v1':(base.drumVelocityEncoding||undefined),
     source:base.fromCompositionCanvas?'composition-canvas':'beat-lab',
     name: document.getElementById('project-name').value || base.name || 'Untitled Beat',
     bpm: PROJ_BPM(),
@@ -1531,6 +1542,7 @@ function importJSON(input){
       document.getElementById('step-div').value=APP.div;
       document.getElementById('step-timesig').value=APP.timeSig;
       window.__compositionBaseProject=data;
+      drumPatternEdited=false;
       if(Array.isArray(data.rhythmVariations))restoreRhythmVariations(data.rhythmVariations);
       drumNotes.forEach(n=>{
         const row=ROWS.find(r=>r.pitch===Number(n.pitch));
