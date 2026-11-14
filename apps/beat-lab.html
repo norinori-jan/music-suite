@@ -676,6 +676,7 @@ function drumEffectVelocity(rowId,step,section,localStep){const global=ensureArr
 }
 function createSongArrangement(){
   if(APP.playing)stopPlay();
+  drumPatternEdited=true;
   const bars=Math.min(32,Math.max(5,APP.bars));APP.bars=bars;document.getElementById('step-bars').value=bars;
   const defs=[{id:'intro',label:'イントロ',weight:1},{id:'verse',label:'Aメロ',weight:2},{id:'chorus',label:'サビ',weight:2},{id:'bridge',label:'ブリッジ',weight:1},{id:'final',label:'ラスト',weight:2}];
   let cursor=0;
@@ -812,6 +813,7 @@ function refreshCell(rowId,step){
 }
 
 function clearPattern(){
+  drumPatternEdited=true;
   saveUndo();
   APP.pattern={};
   renderStepGrid();
@@ -819,6 +821,7 @@ function clearPattern(){
 }
 
 function shiftPattern(dir){
+  drumPatternEdited=true;
   saveUndo();
   const steps=totalSteps();
   const newPat={};
@@ -832,6 +835,7 @@ function shiftPattern(dir){
 }
 
 function duplicateBars(){
+  drumPatternEdited=true;
   const sel=document.getElementById('step-bars');
   const cur=APP.bars;
   const opts=[1,2,4,8,16,24,32];
@@ -1056,6 +1060,7 @@ function renderPatternCard(p, cardId){
 }
 
 function applyLibraryPattern(p){
+  drumPatternEdited=true;
   saveUndo();
   APP.bars=p.bars; APP.div=p.div; APP.timeSig=p.timeSig;
   document.getElementById('step-bars').value=p.bars;
