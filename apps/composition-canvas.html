@@ -1411,6 +1411,7 @@ async function openStandardTestSongInBeatLab(){
     project.sections=Array.isArray(project.lyrics?.sections)?project.lyrics.sections:[];
     project.lyrics=project.sections.map(section=>section.text||'').filter(Boolean).join('\\n');
     project.fromCompositionCanvas=true;
+    project.testMode='composition-testline-roundtrip';
     project.roundTripBaseline=createCompositionSnapshot(project);
     try{localStorage.setItem('compositionRoundTripBaseline',JSON.stringify(project.roundTripBaseline));}catch(e){}
     window.location.href='beat-lab.html#import='+encodeForImport(project);
