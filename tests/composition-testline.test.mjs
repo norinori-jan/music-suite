@@ -553,7 +553,8 @@ test("TL-47 BEAT//LAB keeps imported drum timeline unchanged until a sequencer e
   assert.match(html,/let drumPatternEdited=false/);
   assert.match(html,/window\.__compositionBaseProject=data;\s*drumPatternEdited=false/);
   const click=html.slice(html.indexOf("function cellClick"),html.indexOf("\nfunction cellClear"));
-  const clear=html.slice(html.indexOf("function cellClear"),html.indexOf("\nfunction "));
+  const clearStart=html.indexOf("function cellClear");
+  const clear=html.slice(clearStart,html.indexOf("\nfunction clearPattern",clearStart));
   assert.match(click,/drumPatternEdited=true/);
   assert.match(clear,/drumPatternEdited=true/);
   const exportBody=html.slice(html.indexOf("function _buildExportData"),html.indexOf("\nfunction decodeImportedDrumVelocity"));
