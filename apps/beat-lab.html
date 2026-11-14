@@ -301,15 +301,15 @@ body{padding-bottom:env(safe-area-inset-bottom)}
 </div>
 
 <!-- VIEWS -->
-<div id="test-route-panel" style="display:none;border:2px solid var(--acc);border-radius:12px;padding:14px;margin:12px 0;background:rgba(120,100,180,.12)">
-  <strong>🧪 Composition Canvas 往復テスト</strong>
-  <p style="font-size:12px;margin:8px 0">この画面はComposition Canvasから来ています。ブラウザの「戻る」は使わず、最後のボタンでComposition Canvasへ戻ってください。</p>
+<div id="test-route-panel" style="border:2px solid var(--acc);border-radius:12px;padding:14px;margin:12px 0;background:rgba(120,100,180,.12)">
+  <strong>🧪 曲を持って移動する — Composition Canvas 往復テスト</strong>
+  <p id="test-route-intro" style="font-size:12px;margin:8px 0">Composition Canvasから曲を開くと、ここに受け取った曲の状態が表示されます。通常の編集でも、作業中の曲は「Composition Canvasへ戻る」で引き継げます。</p>
   <div class="export-row" style="gap:8px;flex-wrap:wrap">
-    <button class="btn" onclick="checkTestSongUnedited()">① 未編集の16音を確認</button>
-    <button class="btn" onclick="checkTestSongEdited()">② セル編集後を確認</button>
-    <button class="btn pri" onclick="returnToCompositionCanvas()">③ Composition Canvasへ戻る</button>
+    <button class="btn" id="test-check-1" onclick="checkTestSongUnedited()" disabled>① 未編集の16音を確認</button>
+    <button class="btn" id="test-check-2" onclick="checkTestSongEdited()" disabled>② セル編集後を確認</button>
+    <button class="btn pri" onclick="returnToCompositionCanvas()">Composition Canvasへ戻る（曲を引き継ぐ）</button>
   </div>
-  <div id="test-route-result" role="status" aria-live="polite" style="font-size:13px;margin-top:8px">①から順番に確認してください。</div>
+  <div id="test-route-result" role="status" aria-live="polite" style="font-size:13px;margin-top:8px">テスト曲を受信すると確認ボタンが有効になります。</div>
 </div>
 <div id="views">
 
@@ -1615,8 +1615,14 @@ function returnToCompositionCanvas(){
   data.source='composition-canvas';
   data.fromBeatLab=true;
   data.fromCompositionCanvas=true;
+  if(data.testMode==='composition-testline-roundtrip'){
+    data.roundTripChecks={
+      unedited:document.getElementById('test-route-result')?.textContent.includes('未編集確認OK')||false,
+      edited:document.getElementById('test-route-result')?.textContent.includes('編集確認OK')||false
+    };
+  }
   const encoded=encodeURIComponent(btoa(unescape(encodeURIComponent(JSON.stringify(data)))));
-  setStatus('ok','リズムを曲に反映してComposition Canvasへ戻ります');
+  setStatus('ok','作業中の曲と編集内容をComposition Canvasへ引き継ぎます');
   window.location.href='composition-canvas.html#import='+encoded;
 }
 
@@ -1657,7 +1663,14 @@ function checkIncomingImport(){
     const targetBars=Math.min(32,Math.max(1,Number(data.bars)||1,requiredBars,Number(data.arrangement?.bars)||0));
     saveUndo();
     if(data&&data.fromCompositionCanvas)window.__compositionBaseProject=data;
-    if(data.testMode==='composition-testline-roundtrip'){const panel=document.getElementById('test-route-panel');if(panel)panel.style.display='block';}
+    if(data.testMode==='composition-testline-roundtrip'){
+      const intro=document.getElementById('test-route-intro');
+      const result=document.getElementById('test-route-result');
+      const one=document.getElementById('test-check-1'),two=document.getElementById('test-check-2');
+      if(intro)intro.textContent='標準テスト曲を受信しました。①で未編集データを確認し、STEP画面のセルを1つクリックしてから②を確認してください。最後は「Composition Canvasへ戻る」で編集済みの曲を引き継ぎます。';
+      if(result)result.textContent='テスト曲を受信しました。最初に①を押してください。';
+      if(one)one.disabled=false;if(two)two.disabled=false;
+    }
     if(Array.isArray(data.rhythmVariations))restoreRhythmVariations(data.rhythmVariations);
     if(data.bpm){document.getElementById('bpm-sl').value=data.bpm;setBpm(data.bpm);}
     APP.timeSig=Math.max(1,Math.min(16,Number(data.timeSig)||4));
