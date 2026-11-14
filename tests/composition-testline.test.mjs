@@ -658,3 +658,38 @@ test("TL-54 Composition Canvas restores returned rhythm and offers an explicit r
   }
   assert.match(resume,/beat-lab\.html#import=/);
 });
+
+
+test("TL-55 melody-aware rhythm context summarizes note positions, duration, density and rests", async () => {
+  const html=await readFile(beatLabPath,"utf8");
+  const start=html.indexOf("function buildMelodyRhythmContext(project,bars,timeSig=4)");
+  const end=html.indexOf("\nasync function aiGenerateBeat()",start);
+  assert.ok(start>=0&&end>start,"melody rhythm context helper must exist");
+  const helper=new Function(html.slice(start,end)+";return buildMelodyRhythmContext;")();
+  const context=helper({melody:{notes:[
+    {pitch:60,startBeat:0,durationBeats:1},
+    {pitch:64,startBeat:2,durationBeats:0.5},
+    {pitch:67,startBeat:5,durationBeats:1}
+  ]}},2,4);
+  assert.equal(context.available,true);
+  assert.equal(context.noteCount,3);
+  assert.match(context.summary,/密度/);
+  assert.match(context.summary,/音の隙間/);
+  assert.match(context.summary,/"beat":0/);
+  assert.match(context.summary,/"duration":0.5/);
+  const empty=helper({},2,4);
+  assert.equal(empty.available,false);
+  assert.equal(empty.noteCount,0);
+});
+
+test("TL-56 AI rhythm generation passes incoming melody context to the model and retains preview-before-apply", async () => {
+  const html=await readFile(beatLabPath,"utf8");
+  const start=html.indexOf("async function aiGenerateBeat()");
+  const end=html.indexOf("\nfunction renderAiPreview",start);
+  const body=html.slice(start,end);
+  assert.match(body,/buildMelodyRhythmContext\(window\.__compositionBaseProject,bars,4\)/);
+  assert.match(body,/メロディの発音位置/);
+  assert.match(body,/音符が伸びている区間と休符の隙間/);
+  assert.match(body,/renderAiPreview\(result,bars,div,steps\)/);
+  assert.match(body,/applyAiPattern/);
+});
