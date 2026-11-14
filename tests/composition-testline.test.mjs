@@ -526,20 +526,20 @@ test("TL-44 melody card copy output refreshes after card rendering and saving", 
 test("TL-45 DOM card sync preserves every lyric field and card metadata in state", async () => {
   const html=await readFile(canvasPath,"utf8");
   const start=html.indexOf("function syncCardsToState()");
-  const end=html.indexOf("\\n}",start)+2;
+  const end=html.indexOf("\n}",start)+2;
   assert.ok(start>=0&&end>start);
   const body=html.slice(start,end);
   for(const field of ["lyricId","lyric","word","lyricRole","lyricSection","color"]) {
     assert.match(body,new RegExp(field+"\\s*:"));
   }
-  assert.match(body,/card\\.dataset\\.lyric/);
-  assert.match(body,/state\\.lastNotes=/);
+  assert.match(body,/card\.dataset\.lyric/);
+  assert.match(body,/state\.lastNotes=/);
 });
 
 test("TL-46 Canvas melody transfer preserves lyric text, word, role, and section", async () => {
   const html=await readFile(canvasPath,"utf8");
   const start=html.indexOf("function buildMelodyProject(sourceName)");
-  const end=html.indexOf("\\nfunction makeMelodyNoteId",start);
+  const end=html.indexOf("\nfunction makeMelodyNoteId",start);
   assert.ok(start>=0&&end>start);
   const body=html.slice(start,end);
   for(const field of ["lyricId","lyric","word","role","section"]) {
