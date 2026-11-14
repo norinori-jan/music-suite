@@ -76,6 +76,11 @@
 <p class="hint" style="font-size:12px;opacity:.8;margin:6px 0 12px">
 通常の曲作り：メロディ候補を作成 →「リズムを作る」。動作確認：右のテスト曲ボタンからBEAT//LABへ進みます。
 </p>
+<div id="beatlab-return-banner" style="display:none;border:2px solid #6b9b78;border-radius:10px;padding:12px;margin:8px 0 14px">
+  <strong>曲を引き継いで戻りました</strong>
+  <p id="beatlab-return-status" style="font-size:12px;margin:6px 0">BEAT//LABで編集した曲データを復元しました。</p>
+  <button class="btn primary" type="button" onclick="resumeBeatLabWork()">🥁 BEAT//LABで続ける（現在の曲）</button>
+</div>
 
 <button class="btn primary"
         onclick="sendToVocalLab()">
@@ -1525,11 +1530,42 @@ function restoreBeatLabProject(project){
       }
     });
   }
-  window.__lastDrumProject={bpm:project.bpm||120,timeSig:project.timeSig||4,bars:project.bars||2,div:project.div||16,drums:project.drums||{notes:[]},melody:project.melody||{notes:[]},rhythmVariations:project.rhythmVariations||[],arrangement:project.arrangement||null};
+  window.__lastDrumProject={bpm:project.bpm||120,timeSig:project.timeSig||4,bars:project.bars||2,div:project.div||16,drums:project.drums||{notes:[]},melody:project.melody||{notes:[]},rhythmVariations:project.rhythmVariations||[],arrangement:project.arrangement||null,testMode:project.testMode||null,roundTripBaseline:project.roundTripBaseline||null,roundTripChecks:project.roundTripChecks||null};
+  const returnBanner=document.getElementById('beatlab-return-banner');
+  if(returnBanner)returnBanner.style.display='block';
+  const returnStatus=document.getElementById('beatlab-return-status');
+  if(returnStatus)returnStatus.textContent=(project.testMode==='composition-testline-roundtrip'?'標準テスト曲の編集内容を復元しました。':'BEAT//LABで編集した曲を復元しました。')+(comparison.ok?' メロディ・歌詞などの基準データは保持されています。':' 差分があります：'+comparison.errors.join(' / '));
   saveLyricCanvasProject();
   if(typeof msRegister==='function')msRegister(project);
   showToast('メロディを保持したままドラムリズムを取り込みました（'+(project.drums?.notes?.length||0)+'打）');
   return true;
+}
+
+function resumeBeatLabWork(){
+  const saved=window.__lastDrumProject;
+  if(!saved){showToast('引き継いだ曲データがありません');return}
+  const project=buildMelodyProject('composition-canvas');
+  const incoming=window.__incomingLyricProject||{};
+  project.name=incoming.title||incoming.name||'Composition';
+  project.title=project.name;
+  project.bpm=saved.bpm||Number(incoming.bpm)||120;
+  project.timeSig=saved.timeSig||4;
+  project.bars=saved.bars||2;
+  project.div=saved.div||16;
+  project.drums=saved.drums||{notes:[]};
+  project.melody=saved.melody||project.melody;
+  project.arrangement=saved.arrangement||null;
+  project.rhythmVariations=saved.rhythmVariations||[];
+  project.generatedMusic=window.__lyricMusicSketch||incoming.generatedMusic||null;
+  project.chords=project.generatedMusic?.chords||incoming.chords||null;
+  project.lyricProject=window.__savedLyricCanvasProject||null;
+  project.lyrics=lyricTextRead();
+  project.sections=lyricSectionsRead();
+  project.fromCompositionCanvas=true;
+  project.testMode=saved.testMode||null;
+  project.roundTripBaseline=saved.roundTripBaseline||null;
+  project.roundTripChecks=saved.roundTripChecks||null;
+  window.location.href='beat-lab.html#import='+encodeForImport(project);
 }
 
 function sendToSheet() {
