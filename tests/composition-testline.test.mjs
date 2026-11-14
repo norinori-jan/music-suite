@@ -590,3 +590,24 @@ test("TL-49 Canvas exposes a direct standard test-song route into BEAT//LAB", as
   assert.match(body,/project\.roundTripBaseline=createCompositionSnapshot\(project\)/);
   assert.match(body,/window\.location\.href='beat-lab\.html#import='/);
 });
+
+test("TL-50 BEAT//LAB provides explicit in-app round-trip test controls and return route", async () => {
+  const html=await readFile(beatLabPath,"utf8");
+  assert.match(html,/id="test-route-panel"/);
+  assert.match(html,/onclick="checkTestSongUnedited\(\)"/);
+  assert.match(html,/onclick="checkTestSongEdited\(\)"/);
+  assert.match(html,/onclick="returnToCompositionCanvas\(\)">③ Composition Canvasへ戻る/);
+  assert.match(html,/function checkTestSongUnedited\(\)/);
+  assert.match(html,/original\.length===16&&current\.length===16&&same/);
+  assert.match(html,/function checkTestSongEdited\(\)/);
+  assert.match(html,/drumPatternEdited&&changed/);
+  assert.match(html,/data\.testMode==='composition-testline-roundtrip'/);
+});
+
+test("TL-51 standard test-song route marks the BEAT//LAB session as guided round-trip test", async () => {
+  const html=await readFile(canvasPath,"utf8");
+  const start=html.indexOf("async function openStandardTestSongInBeatLab()");
+  const end=html.indexOf("\nfunction sendToBeatLab()",start);
+  assert.ok(start>=0&&end>start);
+  assert.match(html.slice(start,end),/project\.testMode='composition-testline-roundtrip'/);
+});
