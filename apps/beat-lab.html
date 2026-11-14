@@ -301,6 +301,16 @@ body{padding-bottom:env(safe-area-inset-bottom)}
 </div>
 
 <!-- VIEWS -->
+<div id="test-route-panel" style="display:none;border:2px solid var(--acc);border-radius:12px;padding:14px;margin:12px 0;background:rgba(120,100,180,.12)">
+  <strong>🧪 Composition Canvas 往復テスト</strong>
+  <p style="font-size:12px;margin:8px 0">この画面はComposition Canvasから来ています。ブラウザの「戻る」は使わず、最後のボタンでComposition Canvasへ戻ってください。</p>
+  <div class="export-row" style="gap:8px;flex-wrap:wrap">
+    <button class="btn" onclick="checkTestSongUnedited()">① 未編集の16音を確認</button>
+    <button class="btn" onclick="checkTestSongEdited()">② セル編集後を確認</button>
+    <button class="btn pri" onclick="returnToCompositionCanvas()">③ Composition Canvasへ戻る</button>
+  </div>
+  <div id="test-route-result" role="status" aria-live="polite" style="font-size:13px;margin-top:8px">①から順番に確認してください。</div>
+</div>
 <div id="views">
 
   <!-- ══ STEP SEQUENCER ══ -->
@@ -1610,6 +1620,27 @@ function returnToCompositionCanvas(){
   window.location.href='composition-canvas.html#import='+encoded;
 }
 
+function checkTestSongUnedited(){
+  const base=window.__compositionBaseProject||{};
+  const original=Array.isArray(base.drums?.notes)?base.drums.notes:[];
+  const current=buildExportData().drums?.notes||[];
+  const same=JSON.stringify(normalizeJSONRoundTripValue(original))===JSON.stringify(normalizeJSONRoundTripValue(current));
+  const ok=!drumPatternEdited&&original.length===16&&current.length===16&&same;
+  const el=document.getElementById('test-route-result');
+  if(el)el.textContent=ok?'✓ 未編集確認OK：元のドラム16音がそのまま保持されています。次にBEAT//LABのセルを1つクリックし、②を押してください。':'✕ 未編集確認NG：元 '+original.length+' 音 / 現在 '+current.length+' 音。差分または編集状態を確認してください。';
+  return ok;
+}
+function checkTestSongEdited(){
+  const base=window.__compositionBaseProject||{};
+  const original=Array.isArray(base.drums?.notes)?base.drums.notes:[];
+  const current=buildExportData().drums?.notes||[];
+  const changed=JSON.stringify(normalizeJSONRoundTripValue(original))!==JSON.stringify(normalizeJSONRoundTripValue(current));
+  const ok=drumPatternEdited&&changed;
+  const el=document.getElementById('test-route-result');
+  if(el)el.textContent=ok?'✓ 編集確認OK：セル編集がドラム音符データに反映されています。③でComposition Canvasへ戻ってください。':'✕ 編集確認NG：セルを1つクリックしてから、もう一度②を押してください。';
+  return ok;
+}
+
 function checkIncomingImport(){
   const hash=window.location.hash;
   const m=hash.match(/import=([^&]+)/);
@@ -1626,6 +1657,7 @@ function checkIncomingImport(){
     const targetBars=Math.min(32,Math.max(1,Number(data.bars)||1,requiredBars,Number(data.arrangement?.bars)||0));
     saveUndo();
     if(data&&data.fromCompositionCanvas)window.__compositionBaseProject=data;
+    if(data.testMode==='composition-testline-roundtrip'){const panel=document.getElementById('test-route-panel');if(panel)panel.style.display='block';}
     if(Array.isArray(data.rhythmVariations))restoreRhythmVariations(data.rhythmVariations);
     if(data.bpm){document.getElementById('bpm-sl').value=data.bpm;setBpm(data.bpm);}
     APP.timeSig=Math.max(1,Math.min(16,Number(data.timeSig)||4));
