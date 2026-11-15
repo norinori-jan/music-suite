@@ -1009,20 +1009,25 @@ async function aiGenerateProgression(){
   setStatus('gen','AI生成中 ('+APP.aiModel+')...');
 
   const sys='あなたはプロの作曲家・音楽理論家です。必ずJSONのみを返してください。前置き不要。';
-  const usr=`ジャンル:${genre}、ムード:${mood}、キー:${projKey}、コード数:${chordCount}個のコード進行を作成してください。
+  const lyricSections=Array.isArray(PROJ.lyricSections)?PROJ.lyricSections:[];
+  const lyricContext=lyricSections.map(section=>'['+(section.name||'Section')+']\\n'+(section.lyrics||'')).join('\\n\\n')||PROJ.lyrics||'';
+  const usr=`ジャンル:${genre}、ムード:${mood}、キー:${projKey}の曲のコード進行を提案してください。
+歌詞・会話の文脈:
+${lyricContext||'歌詞なし。一般的な曲として提案してください。'}
 ${prompt?'追加指示: '+prompt:''}
 
+歌詞に複数の区間がある場合は、区間名と歌詞の内容に合わせて各区間のコード進行を別々に提案してください。区間ごとのコードは原則${chordCount}個を目安にします。区間が1つならsectionsも1つにしてください。
 以下のJSON形式のみで返してください:
 {
   "name": "進行名",
-  "description": "1文で特徴を説明",
+  "description": "曲全体の特徴を1文で説明",
   "key": "${projKey}",
-  "chords": [
-    {"name":"Am","roman":"vi","beats":4},
-    {"name":"F","roman":"IV","beats":4}
+  "sections": [
+    {"name":"Verse","progression":[{"name":"Am","roman":"vi","beats":4},{"name":"F","roman":"IV","beats":4}]},
+    {"name":"Chorus","progression":[{"name":"C","roman":"I","beats":4},{"name":"G","roman":"V","beats":4}]}
   ]
 }
-chordsは${chordCount}個。nameはコードネーム(例: C, Am, F#dim7, Gmaj7)。romanはローマ数字表記。beatsは拍数(2/4/8等)。`;
+コード名はC, Am, F#dim7, Gmaj7等。romanはローマ数字表記。beatsは拍数(2/4/8等)。既存の歌詞の意味や区間の役割を尊重し、根拠なく歌詞を改変しないでください。`;
 
   try{
     let result;
@@ -1114,19 +1119,32 @@ function renderAiPreview(result){
 }
 
 function applyAiProgression(result){
-  const sec=PROJ.sections.find(s=>s.id===APP.qcSection);
-  if(!sec)return;
   saveUndo();
   if(result.key && result.key!==PROJ.key){
     PROJ.key=result.key;
     document.getElementById('qc-key').value=result.key;
     updateChordPalette();
   }
-  sec.progression=(result.chords||[]).map(c=>({
-    id:uid(), name:c.name, beats:c.beats||4, notes:chordNameToNotes(c.name)
-  }));
+  const incomingSections=Array.isArray(result.sections)?result.sections:[];
+  if(incomingSections.length){
+    PROJ.sections=incomingSections.map((section,index)=>({
+      id:'ai-'+(index+1),
+      name:section.name||('Section '+(index+1)),
+      progression:(Array.isArray(section.progression)?section.progression:[]).map(chord=>({
+        id:uid(),name:chord.name||chord.chord,beats:Number(chord.beats)||4,
+        notes:Array.isArray(chord.notes)&&chord.notes.length?chord.notes:chordNameToNotes(chord.name||chord.chord)
+      }))
+    }));
+    APP.qcSection=PROJ.sections[0]?.id||APP.qcSection;
+  }else{
+    const sec=PROJ.sections.find(section=>section.id===APP.qcSection);
+    if(!sec)return;
+    sec.progression=(result.chords||[]).map(chord=>({
+      id:uid(),name:chord.name,beats:Number(chord.beats)||4,notes:chordNameToNotes(chord.name)
+    }));
+  }
   switchView('prog');
-  setStatus('ok',`「${result.name||''}」を ${sec.name} に適用しました`);
+  setStatus('ok',`「${result.name||''}」のコード進行を${incomingSections.length?'全区間':'選択区間'}に適用しました`);
 }
 
 function _parseJ(t){return JSON.parse(t.replace(/```json\s*/g,'').replace(/```\s*/g,'').trim())}
@@ -1272,6 +1290,7 @@ function importJSON(input){
         APP.qcSection=PROJ.sections[0]?.id||APP.qcSection;
       }
       if(typeof data.lyrics==='string')PROJ.lyrics=data.lyrics;
+      if(Array.isArray(data.lyricSections))PROJ.lyricSections=data.lyricSections;
       if(data.name)document.getElementById('project-name').value=data.name;
       switchView('prog');
       setStatus('ok','JSONをインポートしました');
@@ -1347,6 +1366,7 @@ function checkIncomingImport(){
       APP.qcSection=PROJ.sections[0]?.id||APP.qcSection;
     }
     if(typeof data.lyrics==='string')PROJ.lyrics=data.lyrics;
+    if(Array.isArray(data.lyricSections))PROJ.lyricSections=data.lyricSections;
     const hasIncomingPrompt=typeof data.prompt==='string'&&data.prompt.trim();
     if(hasIncomingPrompt){
       const promptField=document.getElementById('ai-prompt');
