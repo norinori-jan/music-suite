@@ -693,3 +693,29 @@ test("TL-56 AI rhythm generation passes incoming melody context to the model and
   assert.match(body,/renderAiPreview\(result,bars,div,steps\)/);
   assert.match(body,/applyAiPattern/);
 });
+
+test("TL-57 Composition Canvas exposes four equal composition starting workflows", async () => {
+  const html=await readFile(canvasPath,"utf8");
+  for(const key of ["lyrics","melody","chords","rhythm"])assert.match(html,new RegExp('data-workflow="'+key+'"'));
+  assert.match(html,/function chooseCompositionWorkflow\(key\)/);
+  assert.match(html,/function startCompositionWorkflow\(\)/);
+});
+test("TL-58 melody, chord and lyric workflow choices focus their existing editors without replacing them", async () => {
+  const html=await readFile(canvasPath,"utf8");
+  assert.match(html,/lyrics:\{title:'歌詞から始める',[\s\S]*?target:'lyric-panel'/);
+  assert.match(html,/melody:\{title:'メロディから始める',[\s\S]*?target:'note-sequence-player'/);
+  assert.match(html,/chords:\{title:'コードから始める',[\s\S]*?target:'chord-progression-input'/);
+  assert.match(html,/function loadNoteSequenceToCanvas\(\)/);
+  assert.match(html,/function applyChordProgression\(\)/);
+});
+test("TL-59 rhythm-first workflow sends an empty-melody song shell to BEAT//LAB", async () => {
+  const html=await readFile(canvasPath,"utf8");
+  const start=html.indexOf("function sendRhythmFirstToBeatLab()");
+  const end=html.indexOf("\n}",start)+2;
+  assert.ok(start>=0&&end>start);
+  const body=html.slice(start,end);
+  assert.match(body,/project\.melody=\{notes:\[\]\}/);
+  assert.match(body,/project\.drums=\{notes:\[\]\}/);
+  assert.match(body,/project\.rhythmFirst=true/);
+  assert.match(body,/beat-lab\.html#import=/);
+});
