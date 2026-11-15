@@ -216,7 +216,7 @@ select.inp{cursor:pointer}
 .ai-workflow-step em{margin-left:auto;font-style:normal;font-size:8px;color:var(--mu);white-space:nowrap}
 .ai-workflow-step button{margin-left:auto;padding:7px 9px;border:0;border-radius:3px;background:linear-gradient(135deg,var(--cl),#ffe66d);color:#080811;font-weight:700;font-size:9px;white-space:nowrap;cursor:pointer}
 .ai-flow-arrow{align-self:center;color:var(--mu);font-size:18px}
-.ai-left,.ai-right{height:0;min-height:0;flex:1 1 0}
+.ai-left,.ai-right{min-height:0;flex:1 1 0}
 .ai-left{flex:0 0 260px}
 @media(max-width:820px){
  .ai-workflow{padding:8px}.ai-workflow-head{align-items:flex-start;flex-direction:column;gap:4px}
@@ -290,6 +290,7 @@ body{padding-bottom:env(safe-area-inset-bottom)}
   <label style="display:flex;align-items:center;gap:5px">メロディ音量 <input id="melody-volume" type="range" min="0" max="100" value="65" style="width:82px"></label>
   <label style="display:flex;align-items:center;gap:5px">ドラム音量 <input id="drum-volume" type="range" min="0" max="100" value="80" style="width:82px"></label>
   <span id="mix-status" style="color:var(--mu)">メロディとドラムを同時に試聴できます</span>
+  <button class="btn pri" id="ai-mix-preview-btn" onclick="playMelodyDrumPreview()" style="display:none">▶ AI伴奏をメロディと同時試聴</button>
 </div>
 <div id="variationbar" style="display:flex;align-items:center;gap:7px;flex-wrap:wrap;padding:7px 12px;background:var(--s2);border-bottom:1px solid var(--bd);font-size:10px">
   <strong style="color:var(--acc)">🎚 MY RHYTHMS</strong>
@@ -1228,7 +1229,7 @@ function playMelodyDrumPreview(){
   const melody=window.__compositionBaseProject?.melody?.notes||[];
   if(!melody.length){setStatus('err','再生できるメロディがありません。Composition Canvasからメロディを送ってください');return;}
   const checkbox=document.getElementById('melody-enabled');if(checkbox)checkbox.checked=true;
-  switchView('step');if(APP.playing)stopPlay();togglePlay();
+  if(APP.playing)stopPlay();togglePlay();
 }
 function aiRun(){
   if(APP.aiMode==='edit') return aiEditBeat();
@@ -1421,7 +1422,7 @@ function renderAiPreview(result,bars,div,steps){
 }
 
 function applyAiPattern({result,bars,div,steps}){
-  aiWorkflowStage=2;renderAiWorkflow();
+  aiWorkflowStage=2;renderAiWorkflow();\n  const mixPreviewButton=document.getElementById('ai-mix-preview-btn');if(mixPreviewButton)mixPreviewButton.style.display='inline-flex';
   saveUndo();
   APP.bars=bars; APP.div=div; APP.timeSig=4;
   document.getElementById('step-bars').value=bars in {1:1,2:1,4:1,8:1}?bars:bars;
