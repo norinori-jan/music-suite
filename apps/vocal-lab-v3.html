@@ -1633,6 +1633,7 @@ function sendLyricToChordLab(){
  const payload={
    version:'1.0',source:'vocal-lab-lyric-link',projectId:window.__musicProjectId||('song-'+Date.now()),name:title,title,bpm,key:'C',timeSig:4,
    lyrics:activeText||lyricText,sourceDialogue:window.__speakNativeDialogue||null,
+   prompt:'この歌詞の意味・感情・言葉のリズムを読み取り、区間ごとに自然なコード進行を提案してください。各区間の役割を尊重し、全区間のコード案を比較できるようにしてください。',
    lyricSections:lyricSections.map((section,index)=>({name:section.label||('Section '+(index+1)),lyrics:section.text})),
    chords:{key:'C',sections:[]},melody:{notes:[]},bass:{notes:[]},drums:{notes:[]}
  };
