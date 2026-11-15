@@ -761,6 +761,6 @@ test("TL-63 CHORD//LAB sends the actual chord progression to BEAT//LAB instead o
   assert.ok(start>=0);
   const body=html.slice(start,start+1000);
   assert.ok(body.includes("const data=buildExportData()"));
-  assert.ok(body.includes("chords"));
+  assert.ok(html.includes("chords:{key:PROJ.key"));
   assert.ok(body.includes("beat-lab.html"));
 });
