@@ -809,3 +809,36 @@ test("TL-67 speak-native album chord section objects are forwarded from Composit
   assert.ok(body.includes("Array.isArray(chordData.sections)?chordData.sections"));
   assert.ok(body.includes("Array.isArray(section.progression)?section.progression:[]"));
 });
+
+
+test("TL-68 Vocal Lab sends original lyrics and named lyric sections to CHORD//LAB", async () => {
+  const html=await readFile(path.join(here,"..","apps","vocal-lab-v3.html"),"utf8");
+  const start=html.indexOf("function sendLyricToChordLab()");
+  const end=html.indexOf("\nfunction duetOpenCanvas()",start);
+  assert.ok(start>=0&&end>start);
+  const body=html.slice(start,end);
+  assert.ok(body.includes("lyricSections:lyricSections.map"));
+  assert.ok(body.includes("lyrics:activeText||lyricText"));
+  assert.ok(body.includes("source:'vocal-lab-lyric-link'"));
+  assert.ok(body.includes("window.open('./chord-lab.html#import="));
+});
+
+test("TL-69 CHORD//LAB generates section-aware chord progressions from received lyrics", async () => {
+  const html=await readFile(path.join(here,"..","apps","chord-lab.html"),"utf8");
+  assert.ok(html.includes("const lyricSections=Array.isArray(PROJ.lyricSections)?PROJ.lyricSections:[]"));
+  assert.ok(html.includes('"sections": ['));
+  assert.ok(html.includes("PROJ.lyricSections=data.lyricSections"));
+  assert.ok(html.includes("function applyAiProgression(result)"));
+  assert.ok(html.includes("PROJ.sections=incomingSections.map"));
+});
+
+test("TL-70 CHORD//LAB previews every proposed section before applying", async () => {
+  const html=await readFile(path.join(here,"..","apps","chord-lab.html"),"utf8");
+  const start=html.indexOf("function renderAiPreview(result)");
+  const end=html.indexOf("function applyAiProgression(result)",start);
+  assert.ok(start>=0&&end>start);
+  const body=html.slice(start,end);
+  assert.ok(body.includes("Array.isArray(result.sections)"));
+  assert.ok(body.includes("sections.forEach(section=>"));
+  assert.ok(body.includes("section.progression"));
+});
