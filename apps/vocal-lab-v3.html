@@ -323,6 +323,10 @@ body{background:var(--bg);color:var(--text);font-family:'Inter','Hiragino Sans',
       <span id="mood-banner-text"></span>
       <button class="close-x" onclick="dismissMoodBanner()">✕</button>
     </div>
+    <div class="lyric-actions" style="margin:12px 0;justify-content:flex-start">
+      <button type="button" class="lyric-primary" onclick="sendLyricToChordLab()">🎼 この英文からコード進行を作る</button>
+      <span class="muted" style="font-size:12px">英文を入力・受信したら、ここからCHORD//LABへ進めます。</span>
+    </div>
     <section class="lyric-studio" id="lyric-studio" aria-label="英語フレーズ・歌詞カード">
       <div><strong>✍️ 英語フレーズ・歌詞カード</strong><div class="muted" style="font-size:12px;margin-top:4px">speak-nativeの英文を原文として保持し、歌詞用の表現は別欄で編集します。</div></div>
       <label for="lyric-title">フレーズ名・曲名</label>
