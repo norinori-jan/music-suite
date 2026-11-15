@@ -710,6 +710,8 @@ function parseIncomingLyrics(){
       if(payload.key){const key=document.getElementById('lyric-key');if(key&&[...key.options].some(option=>option.value===payload.key))key.value=payload.key;}
       if(payload.bpm){const bpm=document.getElementById('note-sequence-bpm');if(bpm)bpm.value=payload.bpm;}
       if(window.__lyricMusicSketch)restoreChordProgressionInput(window.__lyricMusicSketch);
+      const lyricPanel=document.getElementById('lyric-panel');
+      if(lyricPanel)lyricPanel.classList.add('show');
       const meta=document.getElementById('lyric-meta');
       if(meta)meta.textContent=(payload.name||'CHORD//LABから受信')+' · '+(payload.bpm||120)+' BPM · コード進行 '+chords.length+'件'+(payload.lyricSections?.length?' · 歌詞区間 '+payload.lyricSections.length+'件':'');
       history.replaceState(null,'',location.pathname+location.search);
