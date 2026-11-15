@@ -33,12 +33,42 @@
     .lyric-assignment{display:block;font-size:12px;color:#493b68;margin-top:5px;white-space:normal}
 
 
-  </style>
+  
+/* Composition Canvas: four equal starting workflows */
+#composition-workflow{margin:12px 0;padding:14px;border:1px solid #536078;border-radius:12px;background:#111827;color:#f3f6ff}
+#composition-workflow h2{font-size:18px;margin:0 0 5px}
+#composition-workflow .workflow-intro{font-size:12px;opacity:.8;margin:0 0 12px;line-height:1.6}
+.workflow-choices{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:9px}
+.workflow-choice{display:flex;flex-direction:column;align-items:flex-start;gap:5px;min-height:100px;padding:12px;border:1px solid #536078;border-radius:9px;background:#1c2638;color:#f3f6ff;text-align:left;cursor:pointer;font:inherit}
+.workflow-choice strong{font-size:14px}
+.workflow-choice span{font-size:11px;line-height:1.5;opacity:.82}
+.workflow-choice[aria-pressed="true"]{border:2px solid #7dd3fc;background:#183247}
+#workflow-guidance{margin-top:10px;padding:11px;border-radius:8px;background:#202c40;font-size:12px;line-height:1.7}
+#workflow-guidance strong{display:block;font-size:13px;margin-bottom:3px}
+#workflow-start{margin-top:9px;padding:9px 14px;border:0;border-radius:7px;background:#7dd3fc;color:#082033;font-weight:700;cursor:pointer}
+.workflow-anchor{scroll-margin-top:12px}
+@media(min-width:760px){.workflow-choices{grid-template-columns:repeat(4,minmax(0,1fr))}.workflow-choice{min-height:126px}}
+
+</style>
 <script src="../activity.js"></script></head>
 
 <body>
 
 <div id="topbar">🎵 Composition Canvas</div>
+
+<section id="composition-workflow" aria-labelledby="composition-workflow-title">
+  <h2 id="composition-workflow-title">1曲を、4つの入口から作る</h2>
+  <p class="workflow-intro">どれから始めてもかまいません。途中で別の方法に切り替えられます。最後は同じ曲としてまとめます。</p>
+  <div class="workflow-choices" role="group" aria-label="作曲の出発点">
+    <button type="button" class="workflow-choice" data-workflow="lyrics" aria-pressed="true" onclick="chooseCompositionWorkflow('lyrics')"><strong>✍️ 歌詞から</strong><span>言葉・行・区間を考え、メロディの土台を作る。</span></button>
+    <button type="button" class="workflow-choice" data-workflow="melody" aria-pressed="false" onclick="chooseCompositionWorkflow('melody')"><strong>🎹 メロディから</strong><span>音符を入力・再生し、音符カードにして曲にする。</span></button>
+    <button type="button" class="workflow-choice" data-workflow="chords" aria-pressed="false" onclick="chooseCompositionWorkflow('chords')"><strong>🎼 コードから</strong><span>コード進行を先に決め、あとからメロディを重ねる。</span></button>
+    <button type="button" class="workflow-choice" data-workflow="rhythm" aria-pressed="false" onclick="chooseCompositionWorkflow('rhythm')"><strong>🥁 リズムから</strong><span>BEAT//LABでビートを作り、あとから音楽要素を加える。</span></button>
+  </div>
+  <div id="workflow-guidance" aria-live="polite"><strong>歌詞から始める</strong>歌詞を入力して保存し、必要なら音符・コード候補を生成します。あとからコードやリズムへ進めます。</div>
+  <button id="workflow-start" type="button" onclick="startCompositionWorkflow()">この方法で始める ↓</button>
+</section>
+
 
 <button class="btn" onclick="autoLayout()">
 ⊞ 自動整列
@@ -1592,6 +1622,62 @@ function sendToVocalLab() {
 /* ───────────────────────────────
    ページ読み込み時
 ────────────────────────────── */
+
+const COMPOSITION_WORKFLOWS={
+  lyrics:{title:'歌詞から始める',description:'歌詞を入力して保存し、必要なら音符・コード候補を生成します。あとからコードやリズムへ進めます。',target:'lyric-panel'},
+  melody:{title:'メロディから始める',description:'音符列を入力して再生し、「音符カードに読み込む」で編集可能なカードにします。歌詞はあとから割り当てられます。',target:'note-sequence-player'},
+  chords:{title:'コードから始める',description:'コード進行を入力して反映します。コードの候補を比較しながら、あとからメロディや歌詞を追加できます。',target:'chord-progression-input'},
+  rhythm:{title:'リズムから始める',description:'メロディがまだなくてもBEAT//LABを開いてビートから作り始められます。あとからComposition Canvasへ戻り、他の要素を加えます。',target:null}
+};
+let activeCompositionWorkflow='lyrics';
+function chooseCompositionWorkflow(key){
+  const workflow=COMPOSITION_WORKFLOWS[key];
+  if(!workflow)return false;
+  activeCompositionWorkflow=key;
+  document.querySelectorAll('.workflow-choice').forEach(button=>{
+    const active=button.dataset.workflow===key;
+    button.setAttribute('aria-pressed',String(active));
+  });
+  const guidance=document.getElementById('workflow-guidance');
+  if(guidance)guidance.innerHTML='<strong>'+workflow.title+'</strong>'+workflow.description;
+  const start=document.getElementById('workflow-start');
+  if(start)start.textContent=key==='rhythm'?'BEAT//LABでリズム制作を始める →':'この方法で始める ↓';
+  return true;
+}
+function startCompositionWorkflow(){
+  const workflow=COMPOSITION_WORKFLOWS[activeCompositionWorkflow];
+  if(!workflow)return false;
+  if(activeCompositionWorkflow==='rhythm'){sendRhythmFirstToBeatLab();return true;}
+  const target=document.getElementById(workflow.target);
+  if(!target)return false;
+  target.scrollIntoView({behavior:'smooth',block:'start'});
+  const field=activeCompositionWorkflow==='lyrics'?document.getElementById('canvas-lyrics'):activeCompositionWorkflow==='chords'?document.getElementById('chord-progression-input'):document.getElementById('note-sequence-input');
+  if(field)setTimeout(()=>field.focus({preventScroll:true}),250);
+  return true;
+}
+function sendRhythmFirstToBeatLab(){
+  try{
+    const project=buildMelodyProject('composition-canvas-rhythm-first');
+    project.name=window.__incomingLyricProject?.title||window.__incomingLyricProject?.name||'新しいリズムからの曲';
+    project.title=project.name;
+    project.bpm=Number(document.getElementById('note-sequence-bpm')?.value)||120;
+    project.timeSig=4;project.bars=4;project.div=16;
+    project.melody={notes:[]};
+    project.drums={notes:[]};
+    project.arrangement=null;
+    project.rhythmVariations=[];
+    project.generatedMusic=window.__lyricMusicSketch||null;
+    project.chords=project.generatedMusic?.chords||null;
+    project.lyricProject=window.__savedLyricCanvasProject||null;
+    project.lyrics=lyricTextRead();
+    project.sections=lyricSectionsRead();
+    project.rhythmFirst=true;
+    project.fromCompositionCanvas=true;
+    project.roundTripBaseline=createCompositionSnapshot(project);
+    window.location.href='beat-lab.html#import='+encodeForImport(project);
+  }catch(error){showToast('リズム制作を開始できません：'+(error?.message||error));}
+}
+
 window.addEventListener('load',()=>{
   let restored=false;
   try{restored=parseIncomingLyrics()===true;}catch(e){console.warn('incoming project restore failed',e);}
