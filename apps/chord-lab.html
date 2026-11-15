@@ -284,6 +284,7 @@ body{padding-bottom:env(safe-area-inset-bottom)}
       <button class="btn" onclick="generateBassline()">🎸 ベース自動生成</button>
       <button class="btn" onclick="playProgression()">▶ 試聴</button>
       <button class="btn" onclick="stopProg()">■</button>
+      <button class="btn pri" type="button" onclick="sendToCompositionCanvas()">↩ Composition Canvasへ曲を渡す</button>
       <div class="sep"></div>
       <div class="lbl" style="margin:0">拍/コード</div>
       <select class="inp" id="default-beats" style="width:56px;font-size:9px">
@@ -1279,14 +1280,26 @@ function sendToScoreEditor(){
 
 function sendToBeatLab(){
   const url=resolveAppUrl('bl-url','beat-lab.html');
-  // share BPM + key context only
-  const data={version:'1.0',source:'chord-lab',bpm:PROJ_BPM(),key:PROJ.key,name:document.getElementById('project-name').value,
-    melody:{notes:[]},chords:null,bass:{notes:[]},drums:{notes:[]}};
+  const data=buildExportData();
+  data.melody=data.melody||{notes:[]};
+  data.drums=data.drums||{notes:[]};
   const json=JSON.stringify(data);
   const b64=btoa(unescape(encodeURIComponent(json)));
   const target=url+(url.includes('#')?'':'#')+'import='+encodeURIComponent(b64);
-  setStatus('ok','beat-labを開いています...');
+  setStatus('ok','コード進行・BPM・キーをBEAT//LABへ渡しています...');
   window.location.href=target;
+}
+
+function sendToCompositionCanvas(){
+  try{
+    const data=buildExportData();
+    const json=JSON.stringify(data);
+    const b64=btoa(unescape(encodeURIComponent(json)));
+    const segments=window.location.pathname.split('/').filter(Boolean);
+    const url=segments.includes('apps')?'composition-canvas.html':'apps/composition-canvas.html';
+    setStatus('ok','コード進行をComposition Canvasへ渡しています...');
+    window.location.href=url+'#import='+encodeURIComponent(b64);
+  }catch(error){setStatus('err','Composition Canvasへ送れません：'+(error?.message||error));}
 }
 
 // 受信側 (chord-labが他アプリから起動された場合)
