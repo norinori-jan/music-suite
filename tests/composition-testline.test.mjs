@@ -842,3 +842,12 @@ test("TL-70 CHORD//LAB previews every proposed section before applying", async (
   assert.ok(body.includes("sections.forEach(section=>"));
   assert.ok(body.includes("section.progression"));
 });
+
+
+test("TL-71 CHORD//LAB round trip preserves lyric sections through Composition Canvas", async () => {
+  const chord=await readFile(path.join(here,"..","apps","chord-lab.html"),"utf8");
+  const canvas=await readFile(canvasPath,"utf8");
+  assert.ok(chord.includes("lyricSections:Array.isArray(PROJ.lyricSections)?PROJ.lyricSections:[]"));
+  assert.ok(canvas.includes("if(Array.isArray(payload.lyricSections)&&payload.lyricSections.length)"));
+  assert.ok(canvas.includes("lyricSections:Array.isArray(window.__incomingLyricProject?.lyricSections)"));
+});
