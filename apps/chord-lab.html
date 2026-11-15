@@ -1347,9 +1347,15 @@ function checkIncomingImport(){
       APP.qcSection=PROJ.sections[0]?.id||APP.qcSection;
     }
     if(typeof data.lyrics==='string')PROJ.lyrics=data.lyrics;
+    const hasIncomingPrompt=typeof data.prompt==='string'&&data.prompt.trim();
+    if(hasIncomingPrompt){
+      const promptField=document.getElementById('ai-prompt');
+      if(promptField)promptField.value=data.prompt;
+    }
     history.replaceState(null,'',window.location.pathname+window.location.search);
-    setStatus('ok','データを受信しました: '+(data.name||data.source||''));
     renderProg();
+    if(hasIncomingPrompt){setAiMode('new');switchView('ai');}
+    setStatus('ok','データを受信しました: '+(data.name||data.source||''));
   }catch(e){ console.warn('import parse failed',e); }
 }
 
