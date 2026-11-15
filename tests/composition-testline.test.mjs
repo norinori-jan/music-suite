@@ -820,6 +820,7 @@ test("TL-68 Vocal Lab sends original lyrics and named lyric sections to CHORD//L
   assert.ok(body.includes("lyricSections:lyricSections.map"));
   assert.ok(body.includes("lyrics:activeText||lyricText"));
   assert.ok(body.includes("source:'vocal-lab-lyric-link'"));
+  assert.ok(body.includes("prompt:'この歌詞の意味・感情・言葉のリズムを読み取り"));
   assert.ok(body.includes("window.open('./chord-lab.html#import="));
 });
 
