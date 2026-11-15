@@ -1642,9 +1642,12 @@ function sendLyricToChordLab(){
    chords:{key:'C',sections:[]},melody:{notes:[]},bass:{notes:[]},drums:{notes:[]}
  };
  const encoded=btoa(unescape(encodeURIComponent(JSON.stringify(payload))));
- const opened=window.open('./chord-lab.html#import='+encodeURIComponent(encoded),'_blank','noopener,noreferrer');
+ const opened=window.open('./chord-lab.html#import='+encodeURIComponent(encoded),'_blank');
  if(!opened)showToast('ポップアップがブロックされました。CHORD//LABを許可してください');
- else showToast('歌詞と区間をCHORD//LABへ送りました。区間ごとのコード案を作れます');
+ else{
+   opened.opener=null;
+   showToast('歌詞と区間をCHORD//LABへ送りました。区間ごとのコード案を作れます');
+ }
 }
 
 function duetOpenCanvas(){
