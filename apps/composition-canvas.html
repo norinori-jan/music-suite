@@ -1504,7 +1504,10 @@ function sendToChordLab(){
       key:document.getElementById('lyric-key')?.value||'C',
       melody:{notes:Array.isArray(state.lastNotes)?state.lastNotes:[]},
       chords:{key:document.getElementById('lyric-key')?.value||'C',sections},
-      lyrics:lyricTextRead()
+      lyrics:lyricTextRead(),
+      lyricSections:Array.isArray(window.__incomingLyricProject?.lyricSections)
+        ?window.__incomingLyricProject.lyricSections
+        :lyricSectionsRead().map(section=>({name:section.label,lyrics:section.text}))
     };
     const json=JSON.stringify(data);
     const encoded=btoa(unescape(encodeURIComponent(json)));
