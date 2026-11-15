@@ -730,3 +730,43 @@ test("TL-60 chord-first projects can be handed to BEAT//LAB without melody", asy
   assert.match(body,/if\(!hasMelody&&!hasChords&&!hasRhythm\)/);
   assert.match(body,/project\.chords=project\.generatedMusic\?\.chords/);
 });
+
+
+test("TL-61 Composition Canvas can send the current song and section chord progressions to CHORD//LAB", async () => {
+  const html=await readFile(canvasPath,"utf8");
+  assert.match(html,/onclick="sendToChordLab\(\)"/);
+  const start=html.indexOf("function sendToChordLab()");
+  const end=html.indexOf("\\nfunction sendToBeatLab()",start);
+  assert.ok(start>=0&&end>start,"CHORD//LAB handoff function must exist");
+  const body=html.slice(start,end);
+  assert.match(body,/source:'composition-canvas'/);
+  assert.match(body,/chords:\{key:[\\s\\S]*sections/);
+  assert.match(body,/window\\.location\\.href=url\+'#import='/);
+});
+
+test("TL-62 CHORD//LAB returns chord progressions to Composition Canvas without losing section and beat data", async () => {
+  const html=await readFile(path.join(here,"..","apps","chord-lab.html"),"utf8");
+  assert.match(html,/onclick="sendToCompositionCanvas\(\)"/);
+  const start=html.indexOf("function sendToCompositionCanvas()");
+  const end=html.indexOf("\\n}",start)+2;
+  assert.ok(start>=0&&end>start);
+  const body=html.slice(start,end);
+  assert.match(body,/buildExportData\(\)/);
+  assert.match(body,/composition-canvas\.html/);
+  assert.match(body,/#import=/);
+  const incoming=await readFile(canvasPath,"utf8");
+  assert.match(incoming,/payload\.source==='chord-lab'/);
+  assert.match(incoming,/payload\.chords\?\.sections/);
+  assert.match(incoming,/restoreChordProgressionInput/);
+});
+
+test("TL-63 CHORD//LAB sends the actual chord progression to BEAT//LAB instead of BPM and key only", async () => {
+  const html=await readFile(path.join(here,"..","apps","chord-lab.html"),"utf8");
+  const start=html.indexOf("function sendToBeatLab()");
+  const end=html.indexOf("\\nfunction sendToCompositionCanvas()",start);
+  assert.ok(start>=0&&end>start);
+  const body=html.slice(start,end);
+  assert.match(body,/const data=buildExportData\(\)/);
+  assert.match(body,/chords/);
+  assert.match(body,/beat-lab\.html/);
+});
