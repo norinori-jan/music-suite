@@ -719,3 +719,14 @@ test("TL-59 rhythm-first workflow sends an empty-melody song shell to BEAT//LAB"
   assert.match(body,/project\.rhythmFirst=true/);
   assert.match(body,/beat-lab\.html#import=/);
 });
+
+test("TL-60 chord-first projects can be handed to BEAT//LAB without melody", async () => {
+  const html=await readFile(canvasPath,"utf8");
+  const start=html.indexOf("function sendToBeatLab()");
+  const end=html.indexOf("\nfunction normalizeCompositionValue",start);
+  assert.ok(start>=0&&end>start);
+  const body=html.slice(start,end);
+  assert.match(body,/const hasChords=Array\.isArray\(window\.__lyricMusicSketch\?\.chords\)/);
+  assert.match(body,/if\(!hasMelody&&!hasChords&&!hasRhythm\)/);
+  assert.match(body,/project\.chords=project\.generatedMusic\?\.chords/);
+});
