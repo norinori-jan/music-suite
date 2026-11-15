@@ -1040,7 +1040,7 @@ ${prompt?'追加指示: '+prompt:''}
       <div class="ai-result-card">
         <div style="color:var(--tx);margin-bottom:4px">${esc(result.name||genre)}</div>
         <div>${esc(result.description||'')}</div>
-        <div style="margin-top:4px;color:var(--mu)">${(result.chords||[]).length}コード</div>
+        <div style="margin-top:4px;color:var(--mu)">${Array.isArray(result.sections)?result.sections.reduce((sum,section)=>sum+(section.progression||[]).length,0):(result.chords||[]).length}コード ／ ${Array.isArray(result.sections)?result.sections.length:1}区間</div>
       </div>
       <button class="ai-apply" onclick='applyAiProgression(${JSON.stringify(result).replace(/'/g,"&#39;")})'>✓ 進行に適用</button>`;
     setStatus('ok','生成完了 — '+(result.chords||[]).length+'コード');
@@ -1105,16 +1105,21 @@ ${cur.summaryText}
 function renderAiPreview(result){
   let h=`<div style="margin-bottom:8px;font-size:11px;color:var(--tx)">${esc(result.name||'')}</div>`;
   h+=`<div style="margin-bottom:10px;font-size:10px;color:var(--mu)">${esc(result.description||'')}</div>`;
-  h+=`<div style="display:flex;gap:6px;flex-wrap:wrap">`;
-  (result.chords||[]).forEach(c=>{
-    const notes=chordNameToNotes(c.name);
-    h+=`<div class="prog-chord" style="cursor:default" onclick="playChordPreview(${JSON.stringify(notes)})">
-      ${c.roman?`<div class="prog-chord-roman">${esc(c.roman)}</div>`:''}
-      <div class="prog-chord-name">${esc(c.name)}</div>
-      <div class="prog-chord-beats">${c.beats||4}♩</div>
-    </div>`;
+  const sections=Array.isArray(result.sections)?result.sections:[{name:'進行',progression:result.chords||[]}];
+  sections.forEach(section=>{
+    h+=`<div style="margin:10px 0 5px;color:var(--chd);font-size:10px;font-weight:700">${esc(section.name||'Section')}</div>`;
+    h+=`<div style="display:flex;gap:6px;flex-wrap:wrap">`;
+    (section.progression||[]).forEach(c=>{
+      const chordName=c.name||c.chord||'';
+      const notes=chordNameToNotes(chordName);
+      h+=`<div class="prog-chord" style="cursor:default" onclick="playChordPreview(${JSON.stringify(notes)})">
+        ${c.roman?`<div class="prog-chord-roman">${esc(c.roman)}</div>`:''}
+        <div class="prog-chord-name">${esc(chordName)}</div>
+        <div class="prog-chord-beats">${c.beats||4}♩</div>
+      </div>`;
+    });
+    h+=`</div>`;
   });
-  h+=`</div>`;
   return h;
 }
 
