@@ -736,7 +736,7 @@ test("TL-61 Composition Canvas can send the current song and section chord progr
   const html=await readFile(canvasPath,"utf8");
   assert.match(html,/onclick="sendToChordLab\(\)"/);
   const start=html.indexOf("function sendToChordLab()");
-  const end=html.indexOf("\\nfunction sendToBeatLab()",start);
+  const end=html.indexOf("\nfunction sendToBeatLab()",start);
   assert.ok(start>=0&&end>start,"CHORD//LAB handoff function must exist");
   const body=html.slice(start,end);
   assert.match(body,/source:'composition-canvas'/);
@@ -763,7 +763,7 @@ test("TL-62 CHORD//LAB returns chord progressions to Composition Canvas without 
 test("TL-63 CHORD//LAB sends the actual chord progression to BEAT//LAB instead of BPM and key only", async () => {
   const html=await readFile(path.join(here,"..","apps","chord-lab.html"),"utf8");
   const start=html.indexOf("function sendToBeatLab()");
-  const end=html.indexOf("\\nfunction sendToCompositionCanvas()",start);
+  const end=html.indexOf("\nfunction sendToCompositionCanvas()",start);
   assert.ok(start>=0&&end>start);
   const body=html.slice(start,end);
   assert.match(body,/const data=buildExportData\(\)/);
