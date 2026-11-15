@@ -797,3 +797,15 @@ test("TL-66 CHORD//LAB exposes a working copy action for the selected section pr
   assert.ok(body.includes("document.execCommand('copy')"));
   assert.ok(body.includes("progression.map(chord=>chord.name).join(' - ')"));
 });
+
+
+test("TL-67 speak-native album chord section objects are forwarded from Composition Canvas to CHORD//LAB", async () => {
+  const html=await readFile(canvasPath,"utf8");
+  const start=html.indexOf("function sendToChordLab()");
+  const end=html.indexOf("\nfunction sendToBeatLab()",start);
+  assert.ok(start>=0&&end>start);
+  const body=html.slice(start,end);
+  assert.ok(body.includes("const chordData=sketch.chords||window.__incomingLyricProject?.chords||{}"));
+  assert.ok(body.includes("Array.isArray(chordData.sections)?chordData.sections"));
+  assert.ok(body.includes("Array.isArray(section.progression)?section.progression:[]"));
+});
