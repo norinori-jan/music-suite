@@ -853,3 +853,14 @@ test("TL-71 CHORD//LAB round trip preserves lyric sections through Composition C
   assert.ok(canvas.includes("lyricSections:Array.isArray(window.__incomingLyricProject?.lyricSections)"));
   assert.ok(canvas.includes("if(lyricPanel)lyricPanel.classList.add('show')"));
 });
+
+
+test("TL-72 Vocal Lab has a clearly visible top-level route from lyrics to CHORD//LAB", async () => {
+  const html=await readFile(path.join(here,"..","apps","vocal-lab-v3.html"),"utf8");
+  const start=html.indexOf('id="mood-banner"');
+  const end=html.indexOf('id="lyric-studio"',start);
+  assert.ok(start>=0&&end>start);
+  const topArea=html.slice(start,end);
+  assert.ok(topArea.includes('onclick="sendLyricToChordLab()"'));
+  assert.ok(topArea.includes('この英文からコード進行を作る'));
+});
