@@ -1256,7 +1256,7 @@ function _buildExportData(){
     version:'1.0',source:'chord-lab',
     name:document.getElementById('project-name').value||'Untitled Progression',
     bpm:PROJ_BPM(),key:PROJ.key,timeSig:4,sectionName:sec?.name||'',
-    lyrics:PROJ.lyrics||'',melody:{notes:[]},
+    lyrics:PROJ.lyrics||'',lyricSections:Array.isArray(PROJ.lyricSections)?PROJ.lyricSections:[],melody:{notes:[]},
     chords:{key:PROJ.key,sections:chordSections},
     bass:{notes:bassNotes},drums:{notes:[]},exported:new Date().toISOString()
   };
