@@ -784,3 +784,16 @@ test("TL-65 CHORD//LAB import restores all sections instead of flattening into t
   assert.ok(html.includes("APP.qcSection=PROJ.sections[0]?.id"));
   assert.ok(html.includes("typeof data.lyrics==='string'"));
 });
+
+
+test("TL-66 CHORD//LAB exposes a working copy action for the selected section progression", async () => {
+  const html=await readFile(path.join(here,"..","apps","chord-lab.html"),"utf8");
+  assert.ok(html.includes('onclick="copyChordProgression()"'));
+  const start=html.indexOf("async function copyChordProgression()");
+  const end=html.indexOf("function renderProgTimeline()",start);
+  assert.ok(start>=0&&end>start);
+  const body=html.slice(start,end);
+  assert.ok(body.includes("navigator.clipboard.writeText(text)"));
+  assert.ok(body.includes("document.execCommand('copy')"));
+  assert.ok(body.includes("progression.map(chord=>chord.name).join(' - ')"));
+});
