@@ -100,6 +100,9 @@
 <button class="btn primary" onclick="sendToBeatLab()">
 🥁 リズムを作る
 </button>
+<button class="btn primary" type="button" onclick="sendToChordLab()">
+🎼 CHORD//LABでコード進行を楽しむ
+</button>
 <button class="btn" type="button" onclick="openStandardTestSongInBeatLab()">
 🧪 標準テスト曲で往復確認
 </button>
@@ -694,6 +697,20 @@ function parseIncomingLyrics(){
       const restored=restoreBeatLabProject(payload);
       if(restored)history.replaceState(null,'',location.pathname+location.search);
       return restored;
+    }
+    if(isImport&&payload.source==='chord-lab'){
+      window.__incomingLyricProject=payload;
+      window.__musicProjectId=payload.projectId||window.__musicProjectId||('song-'+Date.now());
+      const chordSections=Array.isArray(payload.chords?.sections)?payload.chords.sections:[];
+      const chords=chordSections.flatMap(section=>Array.isArray(section.progression)?section.progression:[]);
+      window.__lyricMusicSketch=chords.length?{chords:chords.map(item=>({chord:item.chord||item.name,beats:Number(item.beats)||4,notes:item.notes||[]})),chordSections,method:'chord-lab-import'}:null;
+      if(payload.key){const key=document.getElementById('lyric-key');if(key&&[...key.options].some(option=>option.value===payload.key))key.value=payload.key;}
+      if(payload.bpm){const bpm=document.getElementById('note-sequence-bpm');if(bpm)bpm.value=payload.bpm;}
+      if(window.__lyricMusicSketch)restoreChordProgressionInput(window.__lyricMusicSketch);
+      const meta=document.getElementById('lyric-meta');
+      if(meta)meta.textContent=(payload.name||'CHORD//LABから受信')+' · '+(payload.bpm||120)+' BPM · コード進行 '+chords.length+'件';
+      history.replaceState(null,'',location.pathname+location.search);
+      return true;
     }
     if(payload.source!=='vocal-lab-lyric-link')return false;
     window.__incomingLyricProject=payload;window.__musicProjectId=payload.projectId||window.__musicProjectId||('song-'+Date.now());
@@ -1454,6 +1471,41 @@ async function openStandardTestSongInBeatLab(){
     showToast('テスト曲を開けません：'+error.message);
     if(button){button.disabled=false;button.textContent='🧪 標準テスト曲で往復確認';}
   }
+}
+
+function sendToChordLab(){
+  try{
+    const sketch=window.__lyricMusicSketch||{};
+    const sourceSections=Array.isArray(sketch.chordSections)?sketch.chordSections:[];
+    let sections=sourceSections.map((section,index)=>({
+      tag:section.label||section.name||section.tag||('Section '+(index+1)),
+      progression:(Array.isArray(section.progression)?section.progression:[]).map(item=>({
+        chord:typeof item==='string'?item:(item.chord||item.name||''),
+        beats:Number(item.beats)||4,
+        notes:Array.isArray(item.notes)?item.notes:[]
+      })).filter(item=>item.chord)
+    })).filter(section=>section.progression.length);
+    if(!sections.length&&Array.isArray(sketch.chords)&&sketch.chords.length){
+      sections=[{tag:'Composition',progression:sketch.chords.map(item=>({
+        chord:typeof item==='string'?item:(item.chord||item.name||''),
+        beats:Number(item.beats)||4,
+        notes:Array.isArray(item.notes)?item.notes:[]
+      })).filter(item=>item.chord)}];
+    }
+    const data={
+      version:'1.0',source:'composition-canvas',name:window.__incomingLyricProject?.title||window.__incomingLyricProject?.name||'Composition Canvas',
+      bpm:Number(document.getElementById('note-sequence-bpm')?.value)||120,
+      key:document.getElementById('lyric-key')?.value||'C',
+      melody:{notes:Array.isArray(state.lastNotes)?state.lastNotes:[]},
+      chords:{key:document.getElementById('lyric-key')?.value||'C',sections},
+      lyrics:lyricTextRead()
+    };
+    const json=JSON.stringify(data);
+    const encoded=btoa(unescape(encodeURIComponent(json)));
+    const segments=window.location.pathname.split('/').filter(Boolean);
+    const url=segments.includes('apps')?'chord-lab.html':'apps/chord-lab.html';
+    window.location.href=url+'#import='+encodeURIComponent(encoded);
+  }catch(error){showToast('CHORD//LABへ送れません：'+(error?.message||error));}
 }
 
 function sendToBeatLab(){
