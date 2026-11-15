@@ -310,7 +310,10 @@ body{padding-bottom:env(safe-area-inset-bottom)}
         </div>
       </div>
 
-      <div class="lbl">進行 <span id="prog-section-name" style="color:var(--chd)"></span></div>
+      <div class="lbl" style="display:flex;align-items:center;gap:8px">
+        <span>進行 <span id="prog-section-name" style="color:var(--chd)"></span></span>
+        <button class="btn" type="button" onclick="copyChordProgression()">⧉ この区間をコピー</button>
+      </div>
       <div class="prog-timeline" id="prog-timeline"></div>
 
       <div class="lbl" style="margin-top:6px">ベースライン（自動生成プレビュー）</div>
@@ -648,6 +651,26 @@ function addChordToProg(name){
   renderProgTimeline();
   renderBassRow();
   playChordPreview(chordNameToNotes(name));
+}
+
+async function copyChordProgression(){
+  const sec=PROJ.sections.find(section=>section.id===APP.qcSection);
+  const progression=sec?.progression||[];
+  if(!progression.length){setStatus('err','コピーするコード進行がありません');return;}
+  const text=progression.map(chord=>chord.name).join(' - ');
+  try{
+    if(navigator.clipboard&&window.isSecureContext){
+      await navigator.clipboard.writeText(text);
+    }else{
+      const field=document.createElement('textarea');
+      field.value=text;field.setAttribute('readonly','');
+      field.style.position='fixed';field.style.opacity='0';
+      document.body.appendChild(field);field.select();
+      const copied=document.execCommand('copy');field.remove();
+      if(!copied)throw new Error('コピーできませんでした');
+    }
+    setStatus('ok','コード進行をコピーしました: '+text);
+  }catch(error){setStatus('err','コピーに失敗しました。ブラウザのコピー権限を確認してください');}
 }
 
 function renderProgTimeline(){
