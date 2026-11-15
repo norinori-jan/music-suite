@@ -851,4 +851,5 @@ test("TL-71 CHORD//LAB round trip preserves lyric sections through Composition C
   assert.ok(chord.includes("lyricSections:Array.isArray(PROJ.lyricSections)?PROJ.lyricSections:[]"));
   assert.ok(canvas.includes("if(Array.isArray(payload.lyricSections)&&payload.lyricSections.length)"));
   assert.ok(canvas.includes("lyricSections:Array.isArray(window.__incomingLyricProject?.lyricSections)"));
+  assert.ok(canvas.includes("if(lyricPanel)lyricPanel.classList.add('show')"));
 });
