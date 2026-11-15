@@ -764,3 +764,23 @@ test("TL-63 CHORD//LAB sends the actual chord progression to BEAT//LAB instead o
   assert.ok(html.includes("chords:{key:PROJ.key"));
   assert.ok(body.includes("beat-lab.html"));
 });
+
+
+test("TL-64 CHORD//LAB exports all section progressions and their beat lengths", async () => {
+  const html=await readFile(path.join(here,"..","apps","chord-lab.html"),"utf8");
+  const start=html.indexOf("function _buildExportData()");
+  const end=html.indexOf("function exportJSON()",start);
+  assert.ok(start>=0&&end>start);
+  const body=html.slice(start,end);
+  assert.ok(body.includes("PROJ.sections"));
+  assert.ok(body.includes("section.progression"));
+  assert.ok(body.includes("durationBeats:duration"));
+  assert.ok(body.includes("chords:{key:PROJ.key,sections:chordSections}"));
+});
+
+test("TL-65 CHORD//LAB import restores all sections instead of flattening into the selected section", async () => {
+  const html=await readFile(path.join(here,"..","apps","chord-lab.html"),"utf8");
+  assert.ok(html.includes("PROJ.sections=data.chords.sections.map"));
+  assert.ok(html.includes("APP.qcSection=PROJ.sections[0]?.id"));
+  assert.ok(html.includes("typeof data.lyrics==='string'"));
+});
