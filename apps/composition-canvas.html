@@ -1457,8 +1457,11 @@ async function openStandardTestSongInBeatLab(){
 }
 
 function sendToBeatLab(){
-  if(!state.lastNotes||!state.lastNotes.length){
-    showToast('先にメロディ候補を生成するか、音符カードを読み込んでください');
+  const hasMelody=Array.isArray(state.lastNotes)&&state.lastNotes.length>0;
+  const hasChords=Array.isArray(window.__lyricMusicSketch?.chords)&&window.__lyricMusicSketch.chords.length>0;
+  const hasRhythm=!!window.__lastDrumProject;
+  if(!hasMelody&&!hasChords&&!hasRhythm){
+    showToast('先にメロディ・コード進行・リズムのいずれかを作成してください');
     return;
   }
   try{saveLyricCanvasProject()}catch(e){console.warn('lyric snapshot failed',e)}
