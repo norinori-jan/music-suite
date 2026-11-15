@@ -335,13 +335,13 @@ body{background:var(--bg);color:var(--text);font-family:'Inter','Hiragino Sans',
         <label for="duet-b">B役（Ken）</label><textarea id="duet-b" maxlength="3000"></textarea>
         <label for="duet-chorus">二人で歌うサビ</label><textarea id="duet-chorus" maxlength="3000"></textarea>
         <label for="duet-bridge">ブリッジ</label><textarea id="duet-bridge" maxlength="3000"></textarea>
-        <div class="lyric-actions"><button type="button" id="duet-analyze">音節・強調候補を分析</button><button type="button" class="lyric-primary" id="duet-open-canvas">Composition Canvasで編集</button></div>
+        <div class="lyric-actions"><button type="button" id="duet-analyze">音節・強調候補を分析</button><button type="button" class="lyric-primary" id="duet-open-canvas">Composition Canvasで編集</button><button type="button" onclick="sendLyricToChordLab()">🎼 コード進行を提案</button></div>
         <div id="duet-analysis" class="lyric-saved-list" aria-live="polite"></div>
       </section>
       <label for="lyric-adapted">歌詞用に整えた表現（任意）</label>
       <textarea id="lyric-adapted" maxlength="5000" placeholder="リズム・韻・歌いやすさを考えて書き換えた英文"></textarea>
       <div class="lyric-actions"><button id="lyric-ai-generate">✦ AIで歌詞候補を3案作る</button></div>
-      <div class="lyric-actions"><button id="lyric-analyze">音節・強勢・メロディ長を分析</button><button id="lyric-link-notes">選択中の音符カードと結びつける</button><button id="lyric-open-canvas">Composition Canvasで編集</button></div>
+      <div class="lyric-actions"><button id="lyric-analyze">音節・強勢・メロディ長を分析</button><button id="lyric-link-notes">選択中の音符カードと結びつける</button><button id="lyric-open-canvas">Composition Canvasで編集</button><button type="button" onclick="sendLyricToChordLab()">🎼 コード進行を提案</button></div>
       <div id="lyric-analysis" class="lyric-saved-list" aria-live="polite"></div>
       <div id="lyric-ai-candidates" class="lyric-saved-list"></div>
       <div class="lyric-actions">
@@ -1617,6 +1617,20 @@ function duetAnalyze(){
  $('duet-analysis').innerHTML=rows.join('')+'<small class="muted">音節数は母音字による概算。強調候補は意味上の目安で、発音辞書による判定ではありません。</small>';
  window.__duetAnalysis=sections.map(s=>({role:s.role,label:s.label,text:s.text,syllables:(s.text.match(/[A-Za-z]+(?:'[A-Za-z]+)?/g)||[]).reduce((n,w)=>n+Math.max(1,lyricSyllables(w).length),0)}));
 }
+function sendLyricToChordLab(){
+ const sections=typeof duetSections==='function'?duetSections():[];
+ const duetText=sections.map(section=>section.label+'\n'+section.text).join('\n\n');
+ const lyricText=duetText||$('lyric-adapted')?.value.trim()||$('lyric-original')?.value.trim()||phraseInput?.value.trim()||'';
+ if(!lyricText){showToast('先に会話または歌詞を取り込んでください');return}
+ const title=$('lyric-title')?.value.trim()||'English conversation song';
+ const bpm=Number($('bpm-input')?.value)||104;
+ const prompt='次の英語の会話・歌詞の意味、感情、言葉のリズムを読み取り、歌として自然なコード進行を提案してください。VerseとChorus（あればBridge）を分け、各区間のコード名と1コードあたりの拍数をJSON形式で返してください。歌詞の意味を変えず、複数の雰囲気の案を比較できるようにしてください。\n\n'+lyricText;
+ const payload={version:'1.0',source:'vocal-lab-lyric-link',name:title,title,bpm,key:'C',timeSig:4,lyrics:lyricText,prompt,chords:{key:'C',sections:[]},melody:{notes:[]},bass:{notes:[]},drums:{notes:[]}};
+ const encoded=btoa(unescape(encodeURIComponent(JSON.stringify(payload))));
+ window.open('./chord-lab.html#import='+encodeURIComponent(encoded),'_blank','noopener,noreferrer');
+ showToast('歌詞をCHORD//LABへ送りました。AI提案画面で進行を作れます');
+}
+
 function duetOpenCanvas(){
  const sections=duetSections();if(!sections.length){showToast('歌詞を入力してください');return}
  const d=window.__speakNativeDialogue||{},original=duetSourceLines().map(x=>(Number(x.sp)===0?'A':'B')+': '+x.en).join('\n');
