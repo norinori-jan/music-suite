@@ -1631,8 +1631,8 @@ function sendLyricToChordLab(){
  const title=$('lyric-title')?.value.trim()||'English conversation song';
  const bpm=Number($('bpm-input')?.value)||104;
  const payload={
-   version:'1.0',source:'vocal-lab-lyric-link',name:title,title,bpm,key:'C',timeSig:4,
-   lyrics:activeText||lyricText,
+   version:'1.0',source:'vocal-lab-lyric-link',projectId:window.__musicProjectId||('song-'+Date.now()),name:title,title,bpm,key:'C',timeSig:4,
+   lyrics:activeText||lyricText,sourceDialogue:window.__speakNativeDialogue||null,
    lyricSections:lyricSections.map((section,index)=>({name:section.label||('Section '+(index+1)),lyrics:section.text})),
    chords:{key:'C',sections:[]},melody:{notes:[]},bass:{notes:[]},drums:{notes:[]}
  };
