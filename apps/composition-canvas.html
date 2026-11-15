@@ -1476,7 +1476,9 @@ async function openStandardTestSongInBeatLab(){
 function sendToChordLab(){
   try{
     const sketch=window.__lyricMusicSketch||{};
-    const sourceSections=Array.isArray(sketch.chordSections)?sketch.chordSections:[];
+    const chordData=sketch.chords||window.__incomingLyricProject?.chords||{};
+    const sourceSections=Array.isArray(sketch.chordSections)?sketch.chordSections:
+      Array.isArray(chordData.sections)?chordData.sections:[];
     let sections=sourceSections.map((section,index)=>({
       tag:section.label||section.name||section.tag||('Section '+(index+1)),
       progression:(Array.isArray(section.progression)?section.progression:[]).map(item=>({
@@ -1485,8 +1487,9 @@ function sendToChordLab(){
         notes:Array.isArray(item.notes)?item.notes:[]
       })).filter(item=>item.chord)
     })).filter(section=>section.progression.length);
-    if(!sections.length&&Array.isArray(sketch.chords)&&sketch.chords.length){
-      sections=[{tag:'Composition',progression:sketch.chords.map(item=>({
+    const flatChords=Array.isArray(sketch.chords)?sketch.chords:[];
+    if(!sections.length&&flatChords.length){
+      sections=[{tag:'Composition',progression:flatChords.map(item=>({
         chord:typeof item==='string'?item:(item.chord||item.name||''),
         beats:Number(item.beats)||4,
         notes:Array.isArray(item.notes)?item.notes:[]
