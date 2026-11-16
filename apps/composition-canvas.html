@@ -1570,14 +1570,18 @@ function sendToBeatLab(){
   const hasMelody=Array.isArray(state.lastNotes)&&state.lastNotes.length>0;
   const hasChords=Array.isArray(window.__lyricMusicSketch?.chords)&&window.__lyricMusicSketch.chords.length>0;
   const hasRhythm=!!window.__lastDrumProject;
-  if(!hasMelody&&!hasChords&&!hasRhythm){
-    showToast('先にメロディ・コード進行・リズムのいずれかを作成してください');
+  const hasLyrics=!!lyricTextRead()||!!window.__incomingLyricProject?.dialogue;
+  if(!hasMelody&&!hasChords&&!hasRhythm&&!hasLyrics){
+    showToast('リズム制作に渡す歌詞・メロディ・コード・リズムがありません');
     return;
   }
   try{saveLyricCanvasProject()}catch(e){console.warn('lyric snapshot failed',e)}
   const project=buildMelodyProject('composition-canvas');
   const incoming=window.__incomingLyricProject||{};
-  project.name=incoming.title||incoming.name||'Say It Before Monday';
+  project.projectId=window.__musicProjectId||incoming.projectId||project.projectId||('song-'+Date.now());
+  project.dialogue=incoming.dialogue||incoming.sourceDialogue||null;
+  project.original=incoming.original||'';
+  project.name=incoming.title||incoming.name||'Composition Canvas project';
   project.title=project.name;
   project.bpm=Number(incoming.bpm)||Number(document.getElementById('note-sequence-bpm')?.value)||120;
   project.timeSig=4;
