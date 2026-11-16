@@ -701,8 +701,8 @@ function lyricSectionsRead(){
 }
 function lyricSectionsWrite(sections){
   const map={};(Array.isArray(sections)?sections:[]).forEach(s=>map[s.label]=s.text||'');
-  document.getElementById('duet-canvas-a').value=map['Mia / A verse']||'';
-  document.getElementById('duet-canvas-b').value=map['Ken / B verse']||'';
+  document.getElementById('duet-canvas-a').value=map['A verse']||map['Mia / A verse']||'';
+  document.getElementById('duet-canvas-b').value=map['B verse']||map['Ken / B verse']||'';
   document.getElementById('duet-canvas-chorus').value=map.Chorus||'';
   document.getElementById('duet-canvas-bridge').value=map.Bridge||'';
   const duet=Object.values(map).some(Boolean);
@@ -1174,7 +1174,7 @@ function generateLyricMusicSketch(){
 }
 function saveLyricCanvasProject(){
   const incoming=window.__incomingLyricProject||{},cards=[...document.querySelectorAll('#canvas .card')];
-  const project={version:3,projectId:incoming.projectId||window.__musicProjectId||('song-'+Date.now()),source:'composition-canvas-lyrics',kind:incoming.kind||'single',name:incoming.title||'English lyric composition',title:incoming.title||'English lyric composition',story:incoming.story||'',emotion:incoming.emotion||'neutral',bpm:Number(incoming.bpm)||120,original:incoming.original||'',sourceDialogue:incoming.sourceDialogue||null,sections:lyricSectionsRead(),lyrics:lyricTextRead(),analysis:incoming.analysis||null,translation:incoming.translation||null,generatedMusic:window.__lyricMusicSketch||incoming.generatedMusic||null,rhythm:window.__lastDrumProject||null,melody:window.__lastDrumProject?.melody||null,notes:cards.map((card,index)=>({id:card.dataset.noteId||makeMelodyNoteId(index),lyricId:card.dataset.lyricId||null,startBeat:card.dataset.startBeat!==undefined?Number(card.dataset.startBeat):null,note:card.dataset.note||card.firstChild?.textContent||'',lyric:card.dataset.lyric||'',role:card.dataset.lyricRole||'',section:card.dataset.lyricSection||'',length:Number(card.dataset.length)||4,x:parseInt(card.style.left)||0,y:parseInt(card.style.top)||0,color:card.style.backgroundColor||'#ffffff',index})),updatedAt:new Date().toISOString()};
+  const project={version:4,schemaVersion:'music-suite-project-v1',projectId:incoming.projectId||window.__musicProjectId||('song-'+Date.now()),source:'composition-canvas-lyrics',kind:incoming.kind||'duet',name:incoming.title||'会話から作る曲',title:incoming.title||'会話から作る曲',story:incoming.story||'',emotion:incoming.emotion||'neutral',bpm:Number(incoming.bpm)||120,original:incoming.original||'',sourceDialogue:incoming.dialogue||incoming.sourceDialogue||null,dialogue:incoming.dialogue||incoming.sourceDialogue||null,sections:lyricSectionsRead(),lyrics:lyricTextRead(),analysis:incoming.analysis||null,translation:incoming.translation||null,generatedMusic:window.__lyricMusicSketch||incoming.generatedMusic||null,rhythm:window.__lastDrumProject||null,melody:window.__lastDrumProject?.melody||null,notes:cards.map((card,index)=>({id:card.dataset.noteId||makeMelodyNoteId(index),lyricId:card.dataset.lyricId||null,startBeat:card.dataset.startBeat!==undefined?Number(card.dataset.startBeat):null,note:card.dataset.note||card.firstChild?.textContent||'',lyric:card.dataset.lyric||'',role:card.dataset.lyricRole||'',section:card.dataset.lyricSection||'',length:Number(card.dataset.length)||4,x:parseInt(card.style.left)||0,y:parseInt(card.style.top)||0,color:card.style.backgroundColor||'#ffffff',index})),updatedAt:new Date().toISOString()};
   try{localStorage.setItem('compositionLyricProject',JSON.stringify(project));if(typeof msRegister==='function')msRegister(project);window.__savedLyricCanvasProject=project;showToast('A・B・サビ・ブリッジと音符カードの割当を保存しました')}
   catch(e){showToast('保存できませんでした: '+e.message)}
 }
@@ -1185,6 +1185,7 @@ function restoreLyricCanvasProject(project){
   restoreChordProgressionInput(window.__lyricMusicSketch);
   document.getElementById('lyric-panel').classList.add('show');
   document.getElementById('lyric-meta').textContent=(project.title||project.name||'English lyric')+' · '+(project.bpm||120)+' BPM · '+(project.emotion||'neutral');
+  if(Array.isArray(project.dialogue?.turns)||Array.isArray(project.dialogue)||Array.isArray(project.sourceDialogue?.turns)){renderSourceDialogue({dialogue:project.dialogue||project.sourceDialogue});}
   if(Array.isArray(project.sections)&&project.sections.length){lyricSectionsWrite(project.sections);document.getElementById('canvas-lyrics').value=''}
   else{lyricSectionsWrite([]);document.getElementById('canvas-lyrics').value=project.lyrics||''}
   window.__lastDrumProject=project.rhythm||window.__lastDrumProject||null;
