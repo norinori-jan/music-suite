@@ -133,13 +133,19 @@
   style="display:none">
 
 <section id="lyric-panel">
-  <h3>✍️ 英語歌詞 × メロディ</h3>
+  <h3>🎼 Composition Canvas — 曲の素材と歌詞</h3>
   <div id="lyric-meta" class="lyric-line"></div>
+  <section id="source-dialogue-panel" style="display:none;margin:12px 0;padding:12px;border:1px solid #4d7890;border-radius:10px">
+    <strong>🗣 speak-nativeから受け取った会話（原文・編集不可）</strong>
+    <p style="font-size:12px;opacity:.8">A/Bの発言順を保持しています。ここは原文保管欄です。歌詞への編集は下の欄で行います。</p>
+    <div id="source-dialogue-view" style="display:grid;gap:8px"></div>
+    <button type="button" onclick="convertDialogueToLyricDraft()">会話をA/Bの歌詞編集欄へ展開</button>
+  </section>
   <div id="duet-editors" style="display:none">
-    <div><label for="duet-canvas-a">A：Mia のパート</label><textarea id="duet-canvas-a"></textarea></div>
-    <div><label for="duet-canvas-b">B：Ken のパート</label><textarea id="duet-canvas-b"></textarea></div>
-    <div><label for="duet-canvas-chorus">二人：サビ</label><textarea id="duet-canvas-chorus"></textarea></div>
-    <div><label for="duet-canvas-bridge">二人：ブリッジ</label><textarea id="duet-canvas-bridge"></textarea></div>
+    <div><label for="duet-canvas-a">A：話者Aの歌詞</label><textarea id="duet-canvas-a"></textarea></div>
+    <div><label for="duet-canvas-b">B：話者Bの歌詞</label><textarea id="duet-canvas-b"></textarea></div>
+    <div><label for="duet-canvas-chorus">二人：サビ（自由編集）</label><textarea id="duet-canvas-chorus"></textarea></div>
+    <div><label for="duet-canvas-bridge">二人：ブリッジ（自由編集）</label><textarea id="duet-canvas-bridge"></textarea></div>
   </div>
   <div id="single-lyric-editor"><label for="canvas-lyrics">歌詞（行ごとに編集）</label><textarea id="canvas-lyrics"></textarea></div>
   <div id="lyric-syllable-view"></div>
@@ -660,7 +666,7 @@ function openEditDialog(card) {
 ────────────────────────────── */
 
 function lyricSectionsRead(){
-  return [['A','Mia / A verse','duet-canvas-a'],['B','Ken / B verse','duet-canvas-b'],['DUET','Chorus','duet-canvas-chorus'],['DUET','Bridge','duet-canvas-bridge']]
+  return [['A','A verse','duet-canvas-a'],['B','B verse','duet-canvas-b'],['DUET','Chorus','duet-canvas-chorus'],['DUET','Bridge','duet-canvas-bridge']]
     .map(([role,label,id])=>({role,label,text:document.getElementById(id).value.trim()})).filter(s=>s.text);
 }
 function lyricSectionsWrite(sections){
