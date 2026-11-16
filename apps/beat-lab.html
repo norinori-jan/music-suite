@@ -1214,7 +1214,7 @@ function updateCurrentPatternSummary(){
 // ════════════════════════════════════════════════════════
 // AI RUN — dispatcher (新規 or 編集)
 // ════════════════════════════════════════════════════════
-async let aiWorkflowStage=0;
+let aiWorkflowStage=0;
 function renderAiWorkflow(){
   [1,2,3].forEach(n=>{
     const el=document.getElementById('ai-flow-'+n);if(!el)return;
