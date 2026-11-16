@@ -727,7 +727,8 @@ test("TL-60 chord-first projects can be handed to BEAT//LAB without melody", asy
   assert.ok(start>=0&&end>start);
   const body=html.slice(start,end);
   assert.match(body,/const hasChords=Array\.isArray\(window\.__lyricMusicSketch\?\.chords\)/);
-  assert.match(body,/if\(!hasMelody&&!hasChords&&!hasRhythm\)/);
+  assert.match(body,/const hasLyrics=!!lyricTextRead\(\)\|\|!!window\.__incomingLyricProject\?\.dialogue/);
+  assert.match(body,/if\(!hasMelody&&!hasChords&&!hasRhythm&&!hasLyrics\)/);
   assert.match(body,/project\.chords=project\.generatedMusic\?\.chords/);
 });
 
@@ -850,7 +851,7 @@ test("TL-71 CHORD//LAB round trip preserves lyric sections through Composition C
   const canvas=await readFile(canvasPath,"utf8");
   assert.ok(chord.includes("lyricSections:Array.isArray(PROJ.lyricSections)?PROJ.lyricSections:[]"));
   assert.ok(canvas.includes("if(Array.isArray(payload.lyricSections)&&payload.lyricSections.length)"));
-  assert.ok(canvas.includes("lyricSections:Array.isArray(window.__incomingLyricProject?.lyricSections)"));
+  assert.ok(canvas.includes("lyricSections:lyricSectionsRead().map(section=>({name:section.label,role:section.role,lyrics:section.text}))"));
   assert.ok(canvas.includes("if(lyricPanel)lyricPanel.classList.add('show')"));
 });
 
