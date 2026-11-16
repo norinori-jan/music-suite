@@ -754,7 +754,13 @@ function parseIncomingLyrics(){
       const chords=chordSections.flatMap(section=>Array.isArray(section.progression)?section.progression:[]);
       window.__lyricMusicSketch=chords.length?{chords:chords.map(item=>({chord:item.chord||item.name,beats:Number(item.beats)||4,notes:item.notes||[]})),chordSections,method:'chord-lab-import'}:null;
       if(Array.isArray(payload.lyricSections)&&payload.lyricSections.length){
-        document.getElementById('canvas-lyrics').value=payload.lyricSections.map(section=>'['+(section.name||'Section')+']\\n'+(section.lyrics||'')).join('\\n\\n');
+        const returnedSections=payload.lyricSections.map(section=>({role:section.role||(String(section.name||'').startsWith('A')?'A':String(section.name||'').startsWith('B')?'B':'DUET'),label:section.name||'Section',text:section.lyrics||''}));
+        if(returnedSections.some(section=>section.role==='A'||section.role==='B')){
+          lyricSectionsWrite(returnedSections);
+          document.getElementById('canvas-lyrics').value='';
+        }else{
+          document.getElementById('canvas-lyrics').value=returnedSections.map(section=>'['+section.label+']\\n'+section.text).join('\\n\\n');
+        }
       }else if(typeof payload.lyrics==='string')document.getElementById('canvas-lyrics').value=payload.lyrics;
       if(payload.key){const key=document.getElementById('lyric-key');if(key&&[...key.options].some(option=>option.value===payload.key))key.value=payload.key;}
       if(payload.bpm){const bpm=document.getElementById('note-sequence-bpm');if(bpm)bpm.value=payload.bpm;}
