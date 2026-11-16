@@ -768,6 +768,7 @@ function parseIncomingLyrics(){
     }
     if(payload.source!=='vocal-lab-lyric-link')return false;
     window.__incomingLyricProject=payload;window.__musicProjectId=payload.projectId||window.__musicProjectId||('song-'+Date.now());
+    if(payload.dialogue||payload.sourceDialogue)renderSourceDialogue({dialogue:payload.dialogue||payload.sourceDialogue});
     window.__lyricMusicSketch=payload.generatedMusic||payload.chords?{...(payload.generatedMusic||{}),chords:payload.generatedMusic?.chords||payload.chords}:null;
     document.getElementById('lyric-panel').classList.add('show');
     document.getElementById('lyric-meta').textContent=(payload.title||'English lyric')+' · '+(payload.bpm||120)+' BPM · '+(payload.emotion||'neutral')+(window.__lyricMusicSketch?.chords?.length?' · コード進行 '+window.__lyricMusicSketch.chords.length+'件受信':'');
