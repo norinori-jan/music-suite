@@ -65,12 +65,13 @@ test("Vocal Lab no longer substitutes fictional duet lyrics", async () => {
 });
 
 
-test("inline JavaScript in the four connected apps parses without syntax errors", async () => {
+test("inline JavaScript in the connected music apps parses without syntax errors", async () => {
   const appPaths = [
     path.join(here, "..", "apps", "composition-canvas.html"),
     path.join(here, "..", "apps", "vocal-lab-v3.html"),
     path.join(here, "..", "apps", "chord-lab.html"),
-    path.join(here, "..", "apps", "beat-lab.html")
+    path.join(here, "..", "apps", "beat-lab.html"),
+    path.join(here, "..", "apps", "score-editor-v2.html")
   ];
   for (const file of appPaths) {
     const html = await readFile(file, "utf8");
@@ -82,4 +83,15 @@ test("inline JavaScript in the four connected apps parses without syntax errors"
       assert.doesNotThrow(() => new vm.Script(code, { filename: path.basename(file) + "#" + index }));
     });
   }
+});
+
+
+test("Score Editor preserves the same project and returns it to Composition Canvas", async () => {
+  const scorePath = path.join(here, "..", "apps", "score-editor-v2.html");
+  const score = await readFile(scorePath, "utf8");
+  const canvas = await readFile(canvasPath, "utf8");
+  assert.match(score, /function sendToCompositionCanvas\(\)/);
+  assert.match(score, /window\.__compositionProjectContext=data/);
+  assert.match(score, /projectId:context\.projectId/);
+  assert.match(canvas, /payload\.source==='score-editor'/);
 });
