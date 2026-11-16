@@ -665,6 +665,36 @@ function openEditDialog(card) {
    C+E+G+H：音名カード生成
 ────────────────────────────── */
 
+function renderSourceDialogue(payload){
+  const turns=Array.isArray(payload?.dialogue)?payload.dialogue:Array.isArray(payload?.dialogue?.turns)?payload.dialogue.turns:[];
+  const panel=document.getElementById('source-dialogue-panel'),view=document.getElementById('source-dialogue-view');
+  if(!panel||!view)return;
+  view.replaceChildren();
+  turns.forEach((turn,index)=>{
+    const item=document.createElement('div');
+    const speaker=turn.speaker||(turn.role==='user'?'A':'B');
+    item.style.cssText='padding:8px;border-radius:8px;background:'+(speaker==='A'?'#183747':'#3b3150');
+    const label=document.createElement('strong');label.textContent=speaker+' · '+(turn.role==='user'?'User':turn.role==='assistant'?'AI':'Speaker')+' · '+(index+1);
+    const body=document.createElement('div');body.textContent=String(turn.text||'');
+    item.append(label,body);view.appendChild(item);
+  });
+  panel.style.display=turns.length?'block':'none';
+}
+function convertDialogueToLyricDraft(){
+  const payload=window.__incomingLyricProject||{};
+  const turns=Array.isArray(payload.dialogue)?payload.dialogue:Array.isArray(payload.dialogue?.turns)?payload.dialogue.turns:[];
+  if(!turns.length){showToast('会話データがありません');return false;}
+  const a=turns.filter(t=>(t.speaker||(t.role==='user'?'A':'B'))==='A').map(t=>String(t.text||'').trim()).filter(Boolean);
+  const b=turns.filter(t=>(t.speaker||(t.role==='user'?'A':'B'))==='B').map(t=>String(t.text||'').trim()).filter(Boolean);
+  document.getElementById('duet-canvas-a').value=a.join('\n');
+  document.getElementById('duet-canvas-b').value=b.join('\n');
+  document.getElementById('duet-canvas-chorus').value='';
+  document.getElementById('duet-canvas-bridge').value='';
+  lyricSectionsWrite([{role:'A',label:'A verse',text:a.join('\n')},{role:'B',label:'B verse',text:b.join('\n')}]);
+  lyricRenderPreview();
+  showToast('会話をA/B別の歌詞編集欄へ展開しました。原文は保持されています');
+  return true;
+}
 function lyricSectionsRead(){
   return [['A','A verse','duet-canvas-a'],['B','B verse','duet-canvas-b'],['DUET','Chorus','duet-canvas-chorus'],['DUET','Bridge','duet-canvas-bridge']]
     .map(([role,label,id])=>({role,label,text:document.getElementById(id).value.trim()})).filter(s=>s.text);
@@ -694,6 +724,18 @@ function parseIncomingLyrics(){
   if(!isLyrics&&!isImport)return false;
   try{
     const raw=decodeURIComponent(hash.slice(isLyrics?7:7)),payload=JSON.parse(decodeURIComponent(escape(atob(raw))));
+    if(isImport&&payload.source==='speak-native-dialogue'){
+      window.__incomingLyricProject=payload;
+      window.__musicProjectId=payload.projectId||('song-'+Date.now());
+      document.getElementById('lyric-panel').classList.add('show');
+      document.getElementById('lyric-meta').textContent='speak-native · '+(Array.isArray(payload.dialogue)?payload.dialogue.length:payload.dialogue?.turns?.length||0)+'発言 · '+(payload.topic||'会話素材');
+      renderSourceDialogue(payload);
+      lyricSectionsWrite([]);
+      document.getElementById('canvas-lyrics').value='';
+      history.replaceState(null,'',location.pathname+location.search);
+      return true;
+    }
+
     if(isImport&&payload.source==='composition-canvas-lyrics'){
       const restored=restoreLyricCanvasProject(payload);
       if(restored)history.replaceState(null,'',location.pathname+location.search);
