@@ -1550,15 +1550,13 @@ function sendToChordLab(){
       })).filter(item=>item.chord)}];
     }
     const data={
-      version:'1.0',source:'composition-canvas',name:window.__incomingLyricProject?.title||window.__incomingLyricProject?.name||'Composition Canvas',
+      version:'1.1',source:'composition-canvas',projectId:window.__musicProjectId||window.__incomingLyricProject?.projectId||('song-'+Date.now()),name:window.__incomingLyricProject?.title||window.__incomingLyricProject?.name||'Composition Canvas',
       bpm:Number(document.getElementById('note-sequence-bpm')?.value)||120,
       key:document.getElementById('lyric-key')?.value||'C',
       melody:{notes:Array.isArray(state.lastNotes)?state.lastNotes:[]},
       chords:{key:document.getElementById('lyric-key')?.value||'C',sections},
-      lyrics:lyricTextRead(),
-      lyricSections:Array.isArray(window.__incomingLyricProject?.lyricSections)
-        ?window.__incomingLyricProject.lyricSections
-        :lyricSectionsRead().map(section=>({name:section.label,lyrics:section.text}))
+      lyrics:lyricTextRead(),original:window.__incomingLyricProject?.original||'',dialogue:window.__incomingLyricProject?.dialogue||window.__incomingLyricProject?.sourceDialogue||null,
+      lyricSections:lyricSectionsRead().map(section=>({name:section.label,role:section.role,lyrics:section.text}))
     };
     const json=JSON.stringify(data);
     const encoded=btoa(unescape(encodeURIComponent(json)));
@@ -1722,17 +1720,12 @@ function sendToSheet() {
 }
 
 function sendToVocalLab() {
-  if (!state.lastNotes || state.lastNotes.length === 0) {
-    showToast("送信するメロディがありません");
-    return;
-  }
-  // vocal-lab側のnormalizeImportedCards()には
-  // {source, melody:{notes:[{pitch,startBeat,durationBeats,vel}]}}形式を
-  // フレーズカードへ自動変換する専用ロジックが既にあるため、
-  // score-editor向けと全く同じペイロードをそのまま送れる。
-  const project = buildMelodyProject("composition-canvas");
-  try { msRegister(project); } catch(e) {}
-  window.location.href = "vocal-lab-v3.html#import=" + encodeForImport(project);
+  try {
+    saveLyricCanvasProject();
+    const incoming=window.__incomingLyricProject||{};
+    const project={version:1,source:'composition-canvas-lyrics',projectId:window.__musicProjectId||incoming.projectId||('song-'+Date.now()),title:incoming.title||'Composition Canvas project',lyrics:lyricTextRead(),sections:lyricSectionsRead(),original:incoming.original||'',dialogue:incoming.dialogue||incoming.sourceDialogue||null,bpm:Number(document.getElementById('note-sequence-bpm')?.value)||120,key:document.getElementById('lyric-key')?.value||'C',melody:{notes:Array.isArray(state.lastNotes)?state.lastNotes:[]},generatedMusic:window.__lyricMusicSketch||null};
+    window.location.href='vocal-lab-v3.html#import='+encodeForImport(project);
+  } catch(error) { showToast('Vocal Labへ送れません：'+(error?.message||error)); }
 }
 /* ───────────────────────────────
    ページ読み込み時
