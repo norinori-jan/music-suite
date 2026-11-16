@@ -1504,10 +1504,12 @@ function encodeForImport(project) {
 
 function sendToScoreEditor() {
   if (!state.lastNotes || state.lastNotes.length === 0) {
-    showToast("送信するメロディがありません");
+    showToast("楽譜化するメロディがありません。先に音符を作成してください");
     return;
   }
-  const project = buildMelodyProject("composition-canvas");
+  saveLyricCanvasProject();
+  const project=buildMelodyProject("composition-canvas");
+  Object.assign(project,{projectId:window.__musicProjectId||window.__incomingLyricProject?.projectId,original:window.__incomingLyricProject?.original||'',dialogue:window.__incomingLyricProject?.dialogue||window.__incomingLyricProject?.sourceDialogue||null,lyrics:lyricTextRead(),sections:lyricSectionsRead(),lyricProject:window.__savedLyricCanvasProject||null});
   try { msRegister(project); } catch(e) {}
   window.location.href = "score-editor-v2.html#import=" + encodeForImport(project);
 }
@@ -1725,10 +1727,13 @@ function resumeBeatLabWork(){
 
 function sendToSheet() {
   if (!state.lastNotes || state.lastNotes.length === 0) {
-    showToast("送信するメロディがありません");
+    showToast("楽譜化するメロディがありません。先に音符を作成してください");
     return;
   }
-  msSheet(buildMelodyProject("composition-canvas"));
+  saveLyricCanvasProject();
+  const project=buildMelodyProject("composition-canvas");
+  Object.assign(project,{projectId:window.__musicProjectId||window.__incomingLyricProject?.projectId,original:window.__incomingLyricProject?.original||'',dialogue:window.__incomingLyricProject?.dialogue||window.__incomingLyricProject?.sourceDialogue||null,lyrics:lyricTextRead(),sections:lyricSectionsRead(),lyricProject:window.__savedLyricCanvasProject||null});
+  msSheet(project);
 }
 
 function sendToVocalLab() {
