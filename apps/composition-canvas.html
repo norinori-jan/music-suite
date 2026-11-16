@@ -749,6 +749,7 @@ function parseIncomingLyrics(){
     if(isImport&&payload.source==='chord-lab'){
       window.__incomingLyricProject=payload;
       window.__musicProjectId=payload.projectId||window.__musicProjectId||('song-'+Date.now());
+      if(payload.dialogue||payload.sourceDialogue)renderSourceDialogue({dialogue:payload.dialogue||payload.sourceDialogue});
       const chordSections=Array.isArray(payload.chords?.sections)?payload.chords.sections:[];
       const chords=chordSections.flatMap(section=>Array.isArray(section.progression)?section.progression:[]);
       window.__lyricMusicSketch=chords.length?{chords:chords.map(item=>({chord:item.chord||item.name,beats:Number(item.beats)||4,notes:item.notes||[]})),chordSections,method:'chord-lab-import'}:null;
