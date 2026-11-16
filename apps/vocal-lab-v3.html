@@ -1551,6 +1551,23 @@ function checkIncomingImport() {
   try {
     const json = decodeURIComponent(escape(atob(decodeURIComponent(m[1]))));
     const parsed = JSON.parse(json);
+    if(parsed.source==='composition-canvas-lyrics'){
+      window.__incomingCanvasProject=parsed;
+      window.__musicProjectId=parsed.projectId||window.__musicProjectId||('song-'+Date.now());
+      $('lyric-title').value=parsed.title||'Composition Canvas project';
+      $('lyric-original').value=parsed.original||'';
+      $('lyric-adapted').value=parsed.lyrics||'';
+      const sections=Array.isArray(parsed.sections)?parsed.sections:[];
+      const a=sections.find(x=>x.role==='A'||x.label==='A verse');
+      const b=sections.find(x=>x.role==='B'||x.label==='B verse');
+      if(a||b){$('duet-a').value=a?.text||'';$('duet-b').value=b?.text||'';$('duet-studio').style.display='flex';}
+      const turns=Array.isArray(parsed.dialogue)?parsed.dialogue:Array.isArray(parsed.dialogue?.turns)?parsed.dialogue.turns:[];
+      window.__speakNativeDialogue={lines:turns.map(t=>({sp:(t.speaker||(t.role==='user'?'A':'B'))==='A'?0:1,en:t.text||''}))};
+      if(parsed.bpm&&parsed.bpm>=40&&parsed.bpm<=240)$('bpm-input').value=parsed.bpm;
+      history.replaceState(null,'',window.location.pathname+window.location.search);
+      showToast('Composition Canvasの歌詞・素材を受け取りました');
+      return true;
+    }
     const cards = normalizeImportedCards(parsed);
     if (!cards.length) throw new Error('カードが含まれていません');
     state.cards = cards;
