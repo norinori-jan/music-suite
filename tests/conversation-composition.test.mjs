@@ -62,3 +62,23 @@ test("Vocal Lab no longer substitutes fictional duet lyrics", async () => {
   assert.match(html, /\$\('duet-a'\)\.value=a\.join/);
   assert.match(html, /\$\('duet-b'\)\.value=b\.join/);
 });
+
+
+test("inline JavaScript in the four connected apps parses without syntax errors", async () => {
+  const appPaths = [
+    path.join(here, "..", "apps", "composition-canvas.html"),
+    path.join(here, "..", "apps", "vocal-lab-v3.html"),
+    path.join(here, "..", "apps", "chord-lab.html"),
+    path.join(here, "..", "apps", "beat-lab.html")
+  ];
+  for (const file of appPaths) {
+    const html = await readFile(file, "utf8");
+    const scripts = [...html.matchAll(/<script\b[^>]*>([\s\S]*?)<\/script>/gi)]
+      .map(match => match[1])
+      .filter(code => code.trim());
+    assert.ok(scripts.length > 0, path.basename(file) + " has inline scripts");
+    scripts.forEach((code, index) => {
+      assert.doesNotThrow(() => new vm.Script(code, { filename: path.basename(file) + "#" + index }));
+    });
+  }
+});
