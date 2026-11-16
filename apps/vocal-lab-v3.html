@@ -1727,7 +1727,7 @@ function lyricOpenComposition(){
   const sections=typeof duetSections==='function'?duetSections().map(x=>({role:x.role,label:x.role==='A'?'A verse':x.role==='B'?'B verse':x.label,text:x.text})).filter(x=>x.text):[];
   if(!lyrics&&!sections.length){showToast('先に歌詞を入力してください');return}
   const card=state.cards.find(x=>x.id===state.activeCardId);
-  const payload={version:2,source:'vocal-lab-lyric-link',projectId:incoming.projectId||window.__musicProjectId||('song-'+Date.now()),title:$('lyric-title').value.trim()||incoming.title||'Composition Canvas project',original,lyrics,bpm:card?.bpm||Number($('bpm-input').value)||incoming.bpm||120,emotion:card?.emotion||state.selectedEmotion||'neutral',notes:card?.notes||[],sections,dialogue:incoming.dialogue||null,sourceDialogue:incoming.dialogue||null,analysis:window.__lyricAnalysis||null};
+  const payload={version:2,source:'vocal-lab-lyric-link',kind:sections.length?'duet':'single',projectId:incoming.projectId||window.__musicProjectId||('song-'+Date.now()),title:$('lyric-title').value.trim()||incoming.title||'Composition Canvas project',original,lyrics,bpm:card?.bpm||Number($('bpm-input').value)||incoming.bpm||120,emotion:card?.emotion||state.selectedEmotion||'neutral',notes:card?.notes||[],sections,dialogue:incoming.dialogue||null,sourceDialogue:incoming.dialogue||null,analysis:window.__lyricAnalysis||null};
   const encoded=btoa(unescape(encodeURIComponent(JSON.stringify(payload))));
   const url='../apps/composition-canvas.html#lyrics='+encodeURIComponent(encoded);
   window.open(url,'_blank','noopener,noreferrer');
