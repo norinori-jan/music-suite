@@ -50,6 +50,7 @@ test("Canvas project return carries stable identity and source dialogue to speci
   const html = await readFile(canvasPath, "utf8");
   assert.match(html, /projectId:window\.__musicProjectId\|\|incoming\.projectId/);
   assert.match(html, /dialogue:incoming\.dialogue\|\|incoming\.sourceDialogue/);
+  assert.ok(html.includes("kind:incoming.kind||"));
   assert.match(html, /const hasLyrics=!!lyricTextRead\(\)\|\|!!window\.__incomingLyricProject\?\.dialogue/);
   const vocalStart = html.indexOf("function sendToVocalLab()");
   assert.doesNotMatch(html.slice(vocalStart, vocalStart + 900), /送信するメロディがありません/);
