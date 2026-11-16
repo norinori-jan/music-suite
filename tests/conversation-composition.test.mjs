@@ -59,6 +59,7 @@ test("Vocal Lab no longer substitutes fictional duet lyrics", async () => {
   const vocalPath = path.join(here, "..", "apps", "vocal-lab-v3.html");
   const html = await readFile(vocalPath, "utf8");
   assert.doesNotMatch(html, /It's almost midnight, I should close my eyes/);
+  assert.doesNotMatch(html, /onclick="sendLyricToChordLab/);
   assert.match(html, /\$\('duet-a'\)\.value=a\.join/);
   assert.match(html, /\$\('duet-b'\)\.value=b\.join/);
 });
