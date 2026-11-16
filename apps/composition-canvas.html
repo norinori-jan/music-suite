@@ -772,6 +772,20 @@ function parseIncomingLyrics(){
       history.replaceState(null,'',location.pathname+location.search);
       return true;
     }
+    if(payload.source==='score-editor'){
+      window.__incomingLyricProject=payload;window.__musicProjectId=payload.projectId||window.__musicProjectId||('song-'+Date.now());
+      if(payload.dialogue)renderSourceDialogue({dialogue:payload.dialogue});
+      window.__lyricMusicSketch=payload.chords?{chords:payload.chords.sections?.flatMap(section=>section.progression||[]),chordSections:payload.chords.sections||[]}:null;
+      document.getElementById('lyric-panel').classList.add('show');
+      document.getElementById('lyric-meta').textContent=(payload.name||'Score Editorから受信')+' · '+(payload.bpm||120)+' BPM';
+      if(Array.isArray(payload.sections)&&payload.sections.length){lyricSectionsWrite(payload.sections);document.getElementById('canvas-lyrics').value='';}
+      else{lyricSectionsWrite([]);document.getElementById('canvas-lyrics').value=payload.lyrics||'';}
+      const scoreNotes=Array.isArray(payload.melody?.notes)?payload.melody.notes:[];
+      if(scoreNotes.length){state.lastNotes=scoreNotes.map((note,index)=>({id:note.id||makeMelodyNoteId(index),note:typeof note.pitch==='number'?midiToNoteName(note.pitch):String(note.pitch||'C4'),length:(Number(note.durationBeats)||1)*4,startBeat:Number(note.startBeat)||0}));renderNoteCards(state.lastNotes,payload.name||'Score Editor melody');}
+      if(payload.chords?.sections?.length)restoreChordProgressionInput({chordSections:payload.chords.sections});
+      history.replaceState(null,'',location.pathname+location.search);
+      return true;
+    }
     if(payload.source!=='vocal-lab-lyric-link')return false;
     window.__incomingLyricProject=payload;window.__musicProjectId=payload.projectId||window.__musicProjectId||('song-'+Date.now());
     if(payload.dialogue||payload.sourceDialogue)renderSourceDialogue({dialogue:payload.dialogue||payload.sourceDialogue});
