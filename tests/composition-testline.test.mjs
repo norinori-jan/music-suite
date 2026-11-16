@@ -862,6 +862,7 @@ test("TL-72 Vocal Lab has a clearly visible top-level route from lyrics to CHORD
   const end=html.indexOf('id="lyric-studio"',start);
   assert.ok(start>=0&&end>start);
   const topArea=html.slice(start,end);
-  assert.ok(topArea.includes('onclick="sendLyricToChordLab()"'));
-  assert.ok(topArea.includes('この英文からコード進行を作る'));
+  assert.doesNotMatch(topArea,/sendLyricToChordLab/);
+  assert.ok(html.includes('id="lyric-open-canvas"'));
+  assert.ok(html.includes('Composition Canvasで編集'));
 });
