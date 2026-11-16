@@ -323,10 +323,7 @@ body{background:var(--bg);color:var(--text);font-family:'Inter','Hiragino Sans',
       <span id="mood-banner-text"></span>
       <button class="close-x" onclick="dismissMoodBanner()">✕</button>
     </div>
-    <div class="lyric-actions" style="margin:12px 0;justify-content:flex-start">
-      <button type="button" class="lyric-primary" onclick="sendLyricToChordLab()">🎼 この英文からコード進行を作る</button>
-      <span class="muted" style="font-size:12px">英文を入力・受信したら、ここからCHORD//LABへ進めます。</span>
-    </div>
+    <div class="muted" style="margin:12px 0;font-size:12px">コード進行の作成・比較はComposition CanvasからCHORD//LABを開いて行います。</div>
     <section class="lyric-studio" id="lyric-studio" aria-label="英語フレーズ・歌詞カード">
       <div><strong>✍️ 英語フレーズ・歌詞カード</strong><div class="muted" style="font-size:12px;margin-top:4px">speak-nativeの英文を原文として保持し、歌詞用の表現は別欄で編集します。</div></div>
       <label for="lyric-title">フレーズ名・曲名</label>
@@ -339,13 +336,13 @@ body{background:var(--bg);color:var(--text);font-family:'Inter','Hiragino Sans',
         <label for="duet-b">B役（Ken）</label><textarea id="duet-b" maxlength="3000"></textarea>
         <label for="duet-chorus">二人で歌うサビ</label><textarea id="duet-chorus" maxlength="3000"></textarea>
         <label for="duet-bridge">ブリッジ</label><textarea id="duet-bridge" maxlength="3000"></textarea>
-        <div class="lyric-actions"><button type="button" id="duet-analyze">音節・強調候補を分析</button><button type="button" class="lyric-primary" id="duet-open-canvas">Composition Canvasで編集</button><button type="button" onclick="sendLyricToChordLab()">🎼 コード進行を提案</button></div>
+        <div class="lyric-actions"><button type="button" id="duet-analyze">音節・強調候補を分析</button><button type="button" class="lyric-primary" id="duet-open-canvas">Composition Canvasで編集</button></div>
         <div id="duet-analysis" class="lyric-saved-list" aria-live="polite"></div>
       </section>
       <label for="lyric-adapted">歌詞用に整えた表現（任意）</label>
       <textarea id="lyric-adapted" maxlength="5000" placeholder="リズム・韻・歌いやすさを考えて書き換えた英文"></textarea>
       <div class="lyric-actions"><button id="lyric-ai-generate">✦ AIで歌詞候補を3案作る</button></div>
-      <div class="lyric-actions"><button id="lyric-analyze">音節・強勢・メロディ長を分析</button><button id="lyric-link-notes">選択中の音符カードと結びつける</button><button id="lyric-open-canvas">Composition Canvasで編集</button><button type="button" onclick="sendLyricToChordLab()">🎼 コード進行を提案</button></div>
+      <div class="lyric-actions"><button id="lyric-analyze">音節・強勢・メロディ長を分析</button><button id="lyric-link-notes">選択中の音符カードと結びつける</button><button id="lyric-open-canvas">Composition Canvasで編集</button></div>
       <div id="lyric-analysis" class="lyric-saved-list" aria-live="polite"></div>
       <div id="lyric-ai-candidates" class="lyric-saved-list"></div>
       <div class="lyric-actions">
