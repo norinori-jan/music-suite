@@ -1723,7 +1723,16 @@ function sendToScoreEditor() {
   }
   saveLyricCanvasProject();
   const project=buildMelodyProject("composition-canvas");
-  Object.assign(project,{projectId:window.__musicProjectId||window.__incomingLyricProject?.projectId,original:window.__incomingLyricProject?.original||'',dialogue:window.__incomingLyricProject?.dialogue||window.__incomingLyricProject?.sourceDialogue||null,lyrics:lyricTextRead(),sections:lyricSectionsRead(),lyricProject:window.__savedLyricCanvasProject||null});
+  if(!window.__compositionArrangement?.tracks)buildCompositionTracks(buildSelectedCompositionNotes());
+  const trackPackage=(window.__compositionArrangement?.tracks||[]).filter(track=>track.kind!=='lyrics').map(track=>({
+    id:track.id,name:track.name,type:track.id==='drums'?'drum':track.id==='chords'?'chord':track.id,
+    muted:!!track.muted,
+    notes:track.id==='melody'?track.notes.map(n=>({id:n.id,pitch:noteToMidi(n.note),startBeat:n.startBeat,durationBeats:n.durationBeats,vel:90,lyricId:n.lyricId,lyric:n.lyric,role:n.role,section:n.section})):
+      track.id==='chords'?track.notes.flatMap(chord=>chord.pitches.map(pitch=>({id:chord.id+'-'+pitch,pitch,startBeat:chord.startBeat,durationBeats:chord.durationBeats,vel:58,chord:chord.chord}))):
+      track.id==='bass'?track.notes.map(n=>({id:n.id,pitch:n.midi,startBeat:n.startBeat,durationBeats:n.durationBeats,vel:88})):
+      track.id==='drums'?track.notes.map(n=>({id:n.id,pitch:n.kind==='kick'?36:n.kind==='snare'?38:n.kind==='hat'?42:46,startBeat:n.startBeat,durationBeats:n.durationBeats,vel:90,drumKind:n.kind})):track.notes
+  }));
+  Object.assign(project,{projectId:window.__musicProjectId||window.__incomingLyricProject?.projectId,original:window.__incomingLyricProject?.original||'',dialogue:window.__incomingLyricProject?.dialogue||window.__incomingLyricProject?.sourceDialogue||null,lyrics:lyricTextRead(),sections:lyricSectionsRead(),lyricProject:window.__savedLyricCanvasProject||null,tracks:trackPackage});
   try { msRegister(project); } catch(e) {}
   window.location.href = "score-editor-v2.html#import=" + encodeForImport(project);
 }
