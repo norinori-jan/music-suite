@@ -1314,7 +1314,7 @@ async function playSelectedComposition(){
   if(!AudioCtx){document.getElementById('composition-preview-status').textContent='このブラウザはWeb Audioに対応していません';return}
   if(!noteSequenceAudio||noteSequenceAudio.state==='closed')noteSequenceAudio=new AudioCtx();
   await noteSequenceAudio.resume();
-  const ctx=noteSequenceAudio,tracks=arrangement.tracks||[],soloTracks=tracks.filter(t=>t.solo&&!t.muted);
+  const ctx=noteSequenceAudio,tracks=arrangement.tracks||[],soloTracks=tracks.filter(t=>t.kind!=='lyrics'&&t.solo&&!t.muted);
   const audible=soloTracks.length?soloTracks:tracks.filter(t=>!t.muted),bpm=arrangement.bpm,beatSeconds=60/bpm,start=ctx.currentTime+0.08;
   const playTone=(midi,at,duration,volume,type)=>{
     const osc=ctx.createOscillator(),gain=ctx.createGain();osc.type=type||'triangle';osc.frequency.setValueAtTime(440*Math.pow(2,(midi-69)/12),at);
@@ -1372,7 +1372,9 @@ function buildCompositionTracks(melodyNotes){
     else if(beat%2===0)drumNotes.push({id:'hat-'+beat,startBeat:beat,durationBeats:0.125,kind:'hat'});
   }
   const lyricLines=[];
-  (lyricSectionsRead()||[]).forEach(section=>String(section.text||'').split(/\n+/).filter(Boolean).forEach((text,index)=>{
+  const lyricSource=lyricSectionsRead();
+  const lyricSections=lyricSource.length?lyricSource:[{label:'Full song',role:'LEAD',text:lyricTextRead()}];
+  lyricSections.forEach(section=>String(section.text||'').split(/\n+/).filter(Boolean).forEach((text,index)=>{
     const assigned=notes.filter(note=>note.section===section.label&&note.lyric===text);
     const startBeat=assigned.length?Math.min(...assigned.map(note=>note.startBeat)):0;
     const endBeat=assigned.length?Math.max(...assigned.map(note=>note.startBeat+note.durationBeats)):totalBeats;
@@ -1389,7 +1391,7 @@ function buildCompositionTracks(melodyNotes){
   return arrangement.tracks;
 }
 function setCompositionTrackMode(id,mode){
-  const track=window.__compositionArrangement?.tracks?.find(t=>t.id===id);if(!track)return;
+  const track=window.__compositionArrangement?.tracks?.find(t=>t.id===id);if(!track||track.kind==='lyrics')return;
   if(mode==='solo'){track.solo=!track.solo;if(track.solo)window.__compositionArrangement.tracks.forEach(t=>{if(t.id!==id)t.solo=false;});}
   else if(mode==='mute')track.muted=!track.muted;
   renderCompositionTracks();
@@ -1444,8 +1446,8 @@ function renderCompositionTracks(){
     const row=document.createElement('section');row.style.cssText='border:1px solid #45636a;border-radius:8px;padding:8px;background:#132d34;overflow:hidden';
     const header=document.createElement('div');header.style.cssText='display:flex;align-items:center;gap:8px;flex-wrap:wrap;margin-bottom:6px';
     const name=document.createElement('strong');name.textContent=track.name;name.style.flex='1';
-    const mute=document.createElement('button');mute.type='button';mute.textContent=track.muted?'🔇 MUTE':'🔊 MUTE';mute.setAttribute('aria-pressed',String(track.muted));mute.addEventListener('click',()=>setCompositionTrackMode(track.id,'mute'));
-    const solo=document.createElement('button');solo.type='button';solo.textContent=track.solo?'● SOLO':'SOLO';solo.setAttribute('aria-pressed',String(track.solo));solo.addEventListener('click',()=>setCompositionTrackMode(track.id,'solo'));
+    const mute=document.createElement('button');mute.type='button';mute.textContent=track.muted?'🔇 MUTE':'🔊 MUTE';mute.setAttribute('aria-pressed',String(track.muted));mute.disabled=track.kind==='lyrics';mute.addEventListener('click',()=>setCompositionTrackMode(track.id,'mute'));
+    const solo=document.createElement('button');solo.type='button';solo.textContent=track.solo?'● SOLO':'SOLO';solo.setAttribute('aria-pressed',String(track.solo));solo.disabled=track.kind==='lyrics';solo.addEventListener('click',()=>setCompositionTrackMode(track.id,'solo'));
     header.append(name,mute,solo);row.append(header);
     const scroll=document.createElement('div');scroll.style.cssText='overflow-x:auto;overflow-y:hidden;background:#0b1c21;border-radius:5px';
     const timeline=document.createElement('div');timeline.innerHTML=renderTrackTimeline(track,arrangement.totalBeats||4);timeline.firstElementChild.style.maxWidth='none';scroll.append(timeline);
