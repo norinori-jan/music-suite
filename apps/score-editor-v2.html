@@ -963,7 +963,7 @@ function importExternalData(data, sourceLabel) {
     data.tracks.forEach(track=>{
       const type=['melody','chord','bass','drum','counter'].includes(track.type)?track.type:'melody';
       const notes=(Array.isArray(track.notes)?track.notes:[]).map(note=>({...note,id:uid(),pitch:Number(note.pitch)||60,startBeat:Number(note.startBeat)||0,durationBeats:Number(note.durationBeats)||1,vel:Number(note.vel)||80}));
-      if(notes.length){addTrack(type,track.name||type.toUpperCase(),notes);added+=notes.length;}
+      if(notes.length){const trackId=addTrack(type,track.name||type.toUpperCase(),notes);const created=PROJ.tracks.find(item=>item.id===trackId);if(created)created.muted=!!track.muted;added+=notes.length;}
     });
     refreshAll();
     setStatus('ok',`${sourceLabel||'外部データ'}を受信 — ${data.tracks.length}トラック / ${added}ノート追加`);
