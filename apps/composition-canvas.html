@@ -194,6 +194,12 @@
       </div>
       <div id="composition-preview-status" aria-live="polite" style="font-size:12px;margin-top:10px">メロディーとリズムを選んで試聴してください。</div>
       <div id="composition-selected-summary" style="font-size:12px;margin-top:8px;line-height:1.7"></div>
+      <section id="composition-multitrack" style="margin-top:16px;padding-top:12px;border-top:1px solid #47666d">
+        <h3 style="margin:0 0 6px">🎚️ マルチトラック・アレンジ</h3>
+        <p style="font-size:12px;margin:0 0 10px">映像編集のように各パートを別トラックで表示します。ミュート／ソロを切り替え、五線譜と同じ時間軸で確認できます。</p>
+        <div id="composition-track-lanes" style="display:grid;gap:9px"></div>
+        <div style="font-size:11px;opacity:.8;margin-top:8px">横軸＝小節・拍、縦方向＝音高。譜面はトラックごとに独立しています。</div>
+      </section>
     </section>
     <div id="lyric-generated-chord-panel" style="display:none;margin-top:12px;padding:12px;border:2px solid #38a3a5;border-radius:9px;background:#10252b;color:#e8fbff">
       <strong>生成されたコード進行（全件）</strong>
@@ -1250,6 +1256,8 @@ function applySelectedComposition(){
   const cards=[...document.querySelectorAll('#canvas .card')];
   cards.forEach((card,index)=>{const n=notes[index];if(!n)return;card.dataset.noteId=n.id;card.dataset.startBeat=String(n.startBeat);card.dataset.lyricId=n.lyricId;card.dataset.lyric=n.lyric;card.dataset.lyricRole=n.role;card.dataset.lyricSection=n.section;card.dataset.word=n.word;card.classList.add('lyric-linked');const label=document.createElement('span');label.className='lyric-assignment';label.textContent=(n.role==='A'?'A':n.role==='B'?'B':'Lead')+' · '+n.word;card.appendChild(label);});
   arrangement.selectedNotes=notes;
+  buildCompositionTracks(notes);
+  renderCompositionTracks();
   window.__lyricMusicSketch={...arrangement,melody:notes.map(n=>({id:n.id,lyricId:n.lyricId,pitch:n.note,startBeat:n.startBeat,durationBeats:n.durationBeats,word:n.word,lyric:n.lyric,role:n.role,section:n.section}))};
   document.getElementById('composition-preview-status').textContent='Canvasに反映済み：'+notes.length+'音。再生して確認できます。';
   return true;
@@ -1260,55 +1268,131 @@ function stopCompositionPreview(){
 }
 async function playSelectedComposition(){
   const arrangement=window.__compositionArrangement;if(!arrangement){showToast('先に歌詞から候補を生成してください');return}
+  if(!arrangement.tracks)buildCompositionTracks(buildSelectedCompositionNotes());
   stopCompositionPreview();
   const AudioCtx=window.AudioContext||window.webkitAudioContext;
   if(!AudioCtx){document.getElementById('composition-preview-status').textContent='このブラウザはWeb Audioに対応していません';return}
   if(!noteSequenceAudio||noteSequenceAudio.state==='closed')noteSequenceAudio=new AudioCtx();
   await noteSequenceAudio.resume();
-  const ctx=noteSequenceAudio,notes=buildSelectedCompositionNotes(),bpm=arrangement.bpm,beatSeconds=60/bpm;
-  const start=ctx.currentTime+0.08;
-  const playTone=(midi,at,duration,volume,type='triangle')=>{
-    const osc=ctx.createOscillator(),gain=ctx.createGain();osc.type=type;osc.frequency.setValueAtTime(440*Math.pow(2,(midi-69)/12),at);
+  const ctx=noteSequenceAudio,tracks=arrangement.tracks||[],active=tracks.filter(t=>!t.muted),solo=active.some(t=>t.solo);
+  const audible=active.filter(t=>!solo||t.solo),bpm=arrangement.bpm,beatSeconds=60/bpm,start=ctx.currentTime+0.08;
+  const playTone=(midi,at,duration,volume,type)=>{
+    const osc=ctx.createOscillator(),gain=ctx.createGain();osc.type=type||'triangle';osc.frequency.setValueAtTime(440*Math.pow(2,(midi-69)/12),at);
     gain.gain.setValueAtTime(0.0001,at);gain.gain.linearRampToValueAtTime(volume,at+0.012);gain.gain.setValueAtTime(volume,Math.max(at+0.02,at+duration-0.035));gain.gain.linearRampToValueAtTime(0.0001,at+duration);
     osc.connect(gain);gain.connect(ctx.destination);osc.start(at);osc.stop(at+duration+0.02);noteSequenceNodes.push(osc);
   };
-  notes.forEach(n=>playTone(noteToMidi(n.note),start+n.startBeat*beatSeconds,n.durationBeats*beatSeconds*0.88,0.13));
-  // Chord bed: each section's progression is voiced underneath its lyric phrase.
+  const melody=audible.find(t=>t.id==='melody');
+  if(melody)melody.notes.forEach(n=>playTone(noteToMidi(n.note),start+n.startBeat*beatSeconds,n.durationBeats*beatSeconds*0.88,0.13,'triangle'));
+  const chords=audible.find(t=>t.id==='chords');
+  if(chords)chords.notes.forEach(chord=>chord.pitches.forEach((midi,index)=>playTone(midi,start+chord.startBeat*beatSeconds,chord.durationBeats*beatSeconds*0.94,index===0?0.035:0.025,index===0?'sine':'triangle')));
+  const bass=audible.find(t=>t.id==='bass');
+  if(bass)bass.notes.forEach(n=>playTone(n.midi,start+n.startBeat*beatSeconds,n.durationBeats*beatSeconds*0.9,0.11,'sawtooth'));
+  const drums=audible.find(t=>t.id==='drums');
+  if(drums){
+    const noiseBuffer=ctx.createBuffer(1,Math.floor(ctx.sampleRate*0.12),ctx.sampleRate),data=noiseBuffer.getChannelData(0);
+    for(let i=0;i<data.length;i++)data[i]=(Math.random()*2-1);
+    drums.notes.forEach(hit=>{
+      const at=start+hit.startBeat*beatSeconds,source=ctx.createBufferSource(),gain=ctx.createGain(),filter=ctx.createBiquadFilter();source.buffer=noiseBuffer;
+      filter.type='highpass';filter.frequency.value=hit.kind==='hat'?7000:hit.kind==='snare'?1200:80;
+      gain.gain.setValueAtTime(hit.kind==='hat'?0.025:hit.kind==='snare'?0.07:0.12,at);gain.gain.exponentialRampToValueAtTime(0.001,at+(hit.kind==='hat'?0.035:hit.kind==='snare'?0.11:0.18));
+      source.connect(filter);filter.connect(gain);gain.connect(ctx.destination);source.start(at);noteSequenceNodes.push(source);
+      if(hit.kind==='kick'){const osc=ctx.createOscillator(),amp=ctx.createGain();osc.frequency.setValueAtTime(115,at);osc.frequency.exponentialRampToValueAtTime(48,at+0.14);amp.gain.setValueAtTime(0.16,at);amp.gain.exponentialRampToValueAtTime(0.001,at+0.16);osc.connect(amp);amp.connect(ctx.destination);osc.start(at);osc.stop(at+0.17);noteSequenceNodes.push(osc);}
+    });
+  }
+  const totalBeats=Math.max(1,...tracks.flatMap(t=>t.notes.map(n=>n.startBeat+(n.durationBeats||0))));
+  const totalMs=Math.ceil((totalBeats*beatSeconds+0.4)*1000);
+  document.getElementById('composition-preview-status').textContent='全トラック再生中：'+audible.map(t=>t.name).join(' / ')+' · '+bpm+' BPM';
+  window.setTimeout(()=>{noteSequenceNodes=[];const el=document.getElementById('composition-preview-status');if(el&&el.textContent.startsWith('全トラック再生中'))el.textContent='全トラックの再生が完了しました。';},totalMs);
+}
+function buildCompositionTracks(melodyNotes){
+  const arrangement=window.__compositionArrangement;if(!arrangement)return [];
+  const notes=Array.isArray(melodyNotes)?melodyNotes:[];
+  const totalBeats=Math.max(4,...notes.map(n=>n.startBeat+n.durationBeats));
+  const melodyTrack={id:'melody',name:'MELODY · 主旋律',kind:'pitched',muted:false,solo:false,notes:notes.map(n=>({id:n.id,note:n.note,startBeat:n.startBeat,durationBeats:n.durationBeats,word:n.word,lyric:n.lyric,role:n.role,section:n.section}))};
+  const chordNotes=[],bassNotes=[];
   (arrangement.chordSections||[]).forEach(section=>{
-    const phraseNotes=notes.filter(n=>n.section===section.label);
-    if(!phraseNotes.length)return;
-    const phraseStart=Math.min(...phraseNotes.map(n=>n.startBeat));
-    const phraseEnd=Math.max(...phraseNotes.map(n=>n.startBeat+n.durationBeats));
-    const phraseLength=Math.max(1,phraseEnd-phraseStart);
-    const progression=section.progression||[];
-    progression.forEach((chord,index)=>{
-      const chordStart=phraseStart+phraseLength*index/Math.max(1,progression.length);
-      const chordLength=phraseLength/Math.max(1,progression.length);
-      (chord.tones||[]).forEach((pitch,indexTone)=>playTone(48+Number(pitch),start+chordStart*beatSeconds,chordLength*beatSeconds*0.94,0.028,indexTone===0?'sine':'triangle'));
+    const sectionNotes=notes.filter(n=>n.section===section.label);
+    if(!sectionNotes.length)return;
+    const from=Math.min(...sectionNotes.map(n=>n.startBeat)),to=Math.max(...sectionNotes.map(n=>n.startBeat+n.durationBeats)),span=Math.max(1,to-from);
+    const progression=section.progression||[];let offset=0;
+    progression.forEach(chord=>{
+      const duration=span*(Number(chord.beats)||4)/(progression.reduce((sum,c)=>sum+(Number(c.beats)||4),0)||1);
+      const start=from+offset;offset+=duration;
+      const pitches=(chord.tones||[]).map(pc=>{let midi=48+Number(pc);while(midi<48)midi+=12;while(midi>64)midi-=12;return midi;});
+      chordNotes.push({id:chord.id,chord:chord.chord,startBeat:start,durationBeats:duration,pitches,section:section.label});
+      if(pitches.length)bassNotes.push({id:'bass-'+chord.id,midi:pitches[0]-12,startBeat:start,durationBeats:duration,chord:chord.chord,section:section.label});
     });
   });
-  const totalBeats=notes.reduce((max,n)=>Math.max(max,n.startBeat+n.durationBeats),0);
-  const noiseBuffer=ctx.createBuffer(1,Math.floor(ctx.sampleRate*0.12),ctx.sampleRate);
-  const data=noiseBuffer.getChannelData(0);for(let i=0;i<data.length;i++)data[i]=(Math.random()*2-1);
-  const drumHit=(at,kind)=>{
-    const source=ctx.createBufferSource(),gain=ctx.createGain(),filter=ctx.createBiquadFilter();source.buffer=noiseBuffer;
-    filter.type='highpass';filter.frequency.value=kind==='hat'?7000:kind==='snare'?1200:80;
-    gain.gain.setValueAtTime(kind==='hat'?0.025:kind==='snare'?0.07:0.12,at);gain.gain.exponentialRampToValueAtTime(0.001,at+(kind==='hat'?0.035:kind==='snare'?0.11:0.18));
-    source.connect(filter);filter.connect(gain);gain.connect(ctx.destination);source.start(at);noteSequenceNodes.push(source);
-    if(kind==='kick'){const osc=ctx.createOscillator(),amp=ctx.createGain();osc.frequency.setValueAtTime(115,at);osc.frequency.exponentialRampToValueAtTime(48,at+0.14);amp.gain.setValueAtTime(0.16,at);amp.gain.exponentialRampToValueAtTime(0.001,at+0.16);osc.connect(amp);amp.connect(ctx.destination);osc.start(at);osc.stop(at+0.17);noteSequenceNodes.push(osc);}
-  };
-  const rhythm=arrangement.selectedRhythm;
+  const rhythm=arrangement.selectedRhythm,drumNotes=[];
   for(let beat=0;beat<Math.ceil(totalBeats);beat++){
-    const at=start+beat*beatSeconds;
-    if(beat%4===0||beat%4===2)drumHit(at,'kick');
-    if(beat%4===1||beat%4===3)drumHit(at,'snare');
-    if(rhythm==='straight'){drumHit(at,'hat');drumHit(at+beatSeconds/2,'hat');}
-    else if(rhythm==='syncopated'){if(beat%2===0)drumHit(at+beatSeconds*0.75,'hat');else drumHit(at+beatSeconds*0.25,'hat');}
-    else if(beat%2===0)drumHit(at,'hat');
+    if(beat%4===0||beat%4===2)drumNotes.push({id:'kick-'+beat,startBeat:beat,durationBeats:0.25,kind:'kick'});
+    if(beat%4===1||beat%4===3)drumNotes.push({id:'snare-'+beat,startBeat:beat,durationBeats:0.25,kind:'snare'});
+    if(rhythm==='straight'){drumNotes.push({id:'hat-'+beat,startBeat:beat,durationBeats:0.125,kind:'hat'},{id:'hat-e-'+beat,startBeat:beat+0.5,durationBeats:0.125,kind:'hat'});}
+    else if(rhythm==='syncopated')drumNotes.push({id:'hat-'+beat,startBeat:beat+(beat%2===0?0.75:0.25),durationBeats:0.125,kind:'hat'});
+    else if(beat%2===0)drumNotes.push({id:'hat-'+beat,startBeat:beat,durationBeats:0.125,kind:'hat'});
   }
-  const totalMs=Math.ceil((totalBeats*beatSeconds+0.4)*1000);
-  document.getElementById('composition-preview-status').textContent='再生中：'+arrangement.melodyVariants.find(v=>v.id===arrangement.selectedMelody).name+' × '+arrangement.rhythmStyles.find(r=>r.id===rhythm).name+' · '+bpm+' BPM';
-  window.setTimeout(()=>{noteSequenceNodes=[];const el=document.getElementById('composition-preview-status');if(el&&el.textContent.includes('再生中'))el.textContent='再生完了。別の旋律・リズムも比較できます。';},totalMs);
+  const lyricLines=[];
+  (lyricSectionsRead()||[]).forEach(section=>String(section.text||'').split(/\n+/).filter(Boolean).forEach((text,index)=>lyricLines.push({id:'lyric-'+section.label+'-'+index,text,role:section.role,section:section.label,startBeat:0,durationBeats:totalBeats})));
+  arrangement.tracks=[
+    melodyTrack,
+    {id:'chords',name:'CHORDS · 和音',kind:'pitched',muted:false,solo:false,notes:chordNotes},
+    {id:'bass',name:'BASS · 低音',kind:'pitched',muted:false,solo:false,notes:bassNotes},
+    {id:'drums',name:'DRUMS · リズム',kind:'percussion',muted:false,solo:false,notes:drumNotes},
+    {id:'lyrics',name:'LYRICS · 歌詞',kind:'lyrics',muted:false,solo:false,notes:lyricLines}
+  ];
+  arrangement.totalBeats=totalBeats;
+  return arrangement.tracks;
+}
+function setCompositionTrackMode(id,mode){
+  const track=window.__compositionArrangement?.tracks?.find(t=>t.id===id);if(!track)return;
+  if(mode==='solo'){track.solo=!track.solo;if(track.solo)window.__compositionArrangement.tracks.forEach(t=>{if(t.id!==id)t.solo=false;});}
+  else if(mode==='mute')track.muted=!track.muted;
+  renderCompositionTracks();
+}
+function midiStaffPosition(midi){
+  const names=['C','D','E','F','G','A','B'],pitchNames=['C','C#','D','D#','E','F','F#','G','G#','A','A#','B'];
+  const name=pitchNames[((midi%12)+12)%12],octave=Math.floor(midi/12)-1;
+  const letter=name[0],diatonic=octave*7+names.indexOf(letter),base=4*7+names.indexOf('E');
+  return {step:diatonic-base,sharp:name.includes('#'),name};
+}
+function renderStaffSvg(track,totalBeats){
+  const width=Math.max(640,Math.ceil(totalBeats*42)+100),height=104,left=54,right=width-18,top=18,lineGap=10;
+  const lines=[0,1,2,3,4].map(i=>'<line x1="'+left+'" y1="'+(top+i*lineGap)+'" x2="'+right+'" y2="'+(top+i*lineGap)+'" stroke="#9bb3b8" stroke-width="1"/>').join('');
+  const notes=track.notes.map(n=>{
+    if(track.kind==='percussion'){
+      const x=left+(n.startBeat||0)*42,y=top+20;
+      return n.kind==='hat'?'<rect x="'+(x-3)+'" y="'+(y-3)+'" width="6" height="6" fill="#f4d35e"/>':'<ellipse cx="'+x+'" cy="'+y+'" rx="4" ry="3" fill="'+(n.kind==='kick'?'#65d6a6':'#f08a75')+'"/>';
+    }
+    if(track.kind==='lyrics')return '';
+    const midi=n.midi!==undefined?n.midi:noteToMidi(n.note),p=midiStaffPosition(midi),x=left+(n.startBeat||0)*42;
+    const y=top+40-p.step*5,duration=Math.max(0.18,n.durationBeats||1),fill=track.id==='melody'?'#ffe08a':track.id==='bass'?'#7dd3fc':'#b9a7ff';
+    const accidental=p.sharp?'<text x="'+(x-13)+'" y="'+(y+3)+'" font-size="10" fill="#fff">♯</text>':'';
+    return '<ellipse cx="'+x+'" cy="'+y+'" rx="5.5" ry="3.8" transform="rotate(-18 '+x+' '+y+')" fill="'+fill+'"/><line x1="'+(x+5)+'" y1="'+y+'" x2="'+(x+5)+'" y2="'+(y-27)+'" stroke="'+fill+'" stroke-width="1.4"/>'+accidental+'<title>'+p.name+' beat '+Number(n.startBeat).toFixed(2)+'</title>';
+  }).join('');
+  const labels=Array.from({length:Math.ceil(totalBeats/4)+1},(_,i)=>'<text x="'+(left+i*168)+'" y="88" font-size="9" fill="#a9c1c5">'+(i+1)+'</text>').join('');
+  return '<svg viewBox="0 0 '+width+' '+height+'" role="img" aria-label="'+track.name+' staff notation" style="display:block;width:'+width+'px;max-width:none;height:104px">'+lines+notes+labels+'</svg>';
+}
+function renderCompositionTracks(){
+  const arrangement=window.__compositionArrangement,container=document.getElementById('composition-track-lanes');if(!arrangement||!container)return;
+  if(!arrangement.tracks)buildCompositionTracks(buildSelectedCompositionNotes());
+  container.replaceChildren();
+  arrangement.tracks.forEach(track=>{
+    const row=document.createElement('section');row.style.cssText='border:1px solid #45636a;border-radius:8px;padding:8px;background:#132d34;overflow:hidden';
+    const header=document.createElement('div');header.style.cssText='display:flex;align-items:center;gap:8px;flex-wrap:wrap;margin-bottom:6px';
+    const name=document.createElement('strong');name.textContent=track.name;name.style.flex='1';
+    const mute=document.createElement('button');mute.type='button';mute.textContent=track.muted?'🔇 MUTE':'🔊 MUTE';mute.setAttribute('aria-pressed',String(track.muted));mute.addEventListener('click',()=>setCompositionTrackMode(track.id,'mute'));
+    const solo=document.createElement('button');solo.type='button';solo.textContent=track.solo?'● SOLO':'SOLO';solo.setAttribute('aria-pressed',String(track.solo));solo.addEventListener('click',()=>setCompositionTrackMode(track.id,'solo'));
+    header.append(name,mute,solo);row.append(header);
+    const scroll=document.createElement('div');scroll.style.cssText='overflow-x:auto;overflow-y:hidden;background:#0b1c21;border-radius:5px';
+    if(track.kind==='lyrics'){
+      const lyric=document.createElement('div');lyric.style.cssText='min-width:640px;padding:10px;font-size:12px;line-height:1.7;white-space:normal';
+      lyric.textContent=track.notes.map(n=>(n.role==='A'?'A: ':n.role==='B'?'B: ':'')+n.text).join('　 /　 ');scroll.append(lyric);
+    }else{
+      scroll.innerHTML=renderStaffSvg(track,arrangement.totalBeats||4);
+      scroll.firstElementChild.style.maxWidth='none';
+    }
+    row.append(scroll);container.append(row);
+  });
 }
 function saveLyricCanvasProject(){
   const incoming=window.__incomingLyricProject||{},cards=[...document.querySelectorAll('#canvas .card')];
