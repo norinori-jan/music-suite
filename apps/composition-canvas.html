@@ -1252,9 +1252,9 @@ function applySelectedComposition(){
   const notes=buildSelectedCompositionNotes();
   state.lastNotes=notes.map(n=>({id:n.id,note:n.note,length:n.length,startBeat:n.startBeat,lyricId:n.lyricId}));
   renderNoteCards(state.lastNotes,'Composition Canvas · '+arrangement.selectedMelody+' / '+arrangement.selectedRhythm);
-  saveCardPositions(false);
   const cards=[...document.querySelectorAll('#canvas .card')];
   cards.forEach((card,index)=>{const n=notes[index];if(!n)return;card.dataset.noteId=n.id;card.dataset.startBeat=String(n.startBeat);card.dataset.lyricId=n.lyricId;card.dataset.lyric=n.lyric;card.dataset.lyricRole=n.role;card.dataset.lyricSection=n.section;card.dataset.word=n.word;card.classList.add('lyric-linked');const label=document.createElement('span');label.className='lyric-assignment';label.textContent=(n.role==='A'?'A':n.role==='B'?'B':'Lead')+' · '+n.word;card.appendChild(label);});
+  saveCardPositions(false);
   arrangement.selectedNotes=notes;
   buildCompositionTracks(notes);
   renderCompositionTracks();
@@ -1274,8 +1274,8 @@ async function playSelectedComposition(){
   if(!AudioCtx){document.getElementById('composition-preview-status').textContent='このブラウザはWeb Audioに対応していません';return}
   if(!noteSequenceAudio||noteSequenceAudio.state==='closed')noteSequenceAudio=new AudioCtx();
   await noteSequenceAudio.resume();
-  const ctx=noteSequenceAudio,tracks=arrangement.tracks||[],active=tracks.filter(t=>!t.muted),solo=active.some(t=>t.solo);
-  const audible=active.filter(t=>!solo||t.solo),bpm=arrangement.bpm,beatSeconds=60/bpm,start=ctx.currentTime+0.08;
+  const ctx=noteSequenceAudio,tracks=arrangement.tracks||[],soloTracks=tracks.filter(t=>t.solo&&!t.muted);
+  const audible=soloTracks.length?soloTracks:tracks.filter(t=>!t.muted),bpm=arrangement.bpm,beatSeconds=60/bpm,start=ctx.currentTime+0.08;
   const playTone=(midi,at,duration,volume,type)=>{
     const osc=ctx.createOscillator(),gain=ctx.createGain();osc.type=type||'triangle';osc.frequency.setValueAtTime(440*Math.pow(2,(midi-69)/12),at);
     gain.gain.setValueAtTime(0.0001,at);gain.gain.linearRampToValueAtTime(volume,at+0.012);gain.gain.setValueAtTime(volume,Math.max(at+0.02,at+duration-0.035));gain.gain.linearRampToValueAtTime(0.0001,at+duration);
@@ -1643,6 +1643,7 @@ function saveCardPositions(showMessage=true) {
     color:card.style.backgroundColor||'#ffffff',
     length:Number(card.dataset.length)||4,
     lyric:card.dataset.lyric||'',
+    word:card.dataset.word||'',
     lyricRole:card.dataset.lyricRole||'',
     lyricSection:card.dataset.lyricSection||''
   }));
@@ -1663,7 +1664,7 @@ function loadCardPositions() {
   const clean=data.filter(item=>item&&typeof item.note==='string').map((item,index)=>({
     id:item.id||makeMelodyNoteId(index),startBeat:item.startBeat,
     lyricId:item.lyricId||null,note:item.note,length:Number(item.length)||4,color:item.color||'',
-    lyric:item.lyric||'',lyricRole:item.lyricRole||'',lyricSection:item.lyricSection||''
+    lyric:item.lyric||'',word:item.word||'',lyricRole:item.lyricRole||'',lyricSection:item.lyricSection||''
   }));
   renderNoteCards(clean,'Saved note cards');
   return true;
