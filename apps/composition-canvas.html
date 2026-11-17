@@ -1332,7 +1332,12 @@ function buildCompositionTracks(melodyNotes){
     else if(beat%2===0)drumNotes.push({id:'hat-'+beat,startBeat:beat,durationBeats:0.125,kind:'hat'});
   }
   const lyricLines=[];
-  (lyricSectionsRead()||[]).forEach(section=>String(section.text||'').split(/\n+/).filter(Boolean).forEach((text,index)=>lyricLines.push({id:'lyric-'+section.label+'-'+index,text,role:section.role,section:section.label,startBeat:0,durationBeats:totalBeats})));
+  (lyricSectionsRead()||[]).forEach(section=>String(section.text||'').split(/\n+/).filter(Boolean).forEach((text,index)=>{
+    const assigned=notes.filter(note=>note.section===section.label&&note.lyric===text);
+    const startBeat=assigned.length?Math.min(...assigned.map(note=>note.startBeat)):0;
+    const endBeat=assigned.length?Math.max(...assigned.map(note=>note.startBeat+note.durationBeats)):totalBeats;
+    lyricLines.push({id:'lyric-'+section.label+'-'+index,text,role:section.role,section:section.label,startBeat,durationBeats:Math.max(0.5,endBeat-startBeat)});
+  }));
   arrangement.tracks=[
     melodyTrack,
     {id:'chords',name:'CHORDS · 和音',kind:'pitched',muted:false,solo:false,notes:chordNotes},
@@ -1349,28 +1354,46 @@ function setCompositionTrackMode(id,mode){
   else if(mode==='mute')track.muted=!track.muted;
   renderCompositionTracks();
 }
-function midiStaffPosition(midi){
+function midiStaffPosition(midi,clef){
   const names=['C','D','E','F','G','A','B'],pitchNames=['C','C#','D','D#','E','F','F#','G','G#','A','A#','B'];
-  const name=pitchNames[((midi%12)+12)%12],octave=Math.floor(midi/12)-1;
-  const letter=name[0],diatonic=octave*7+names.indexOf(letter),base=4*7+names.indexOf('E');
+  const name=pitchNames[((midi%12)+12)%12],octave=Math.floor(midi/12)-1,letter=name[0];
+  const diatonic=octave*7+names.indexOf(letter),base=clef==='bass'?2*7+names.indexOf('G'):4*7+names.indexOf('E');
   return {step:diatonic-base,sharp:name.includes('#'),name};
 }
+function renderTrackTimeline(track,totalBeats){
+  const width=Math.max(640,Math.ceil(totalBeats*42)+100),height=68,left=54;
+  const bars=Array.from({length:Math.ceil(totalBeats/4)+1},(_,i)=>'<line x1="'+(left+i*168)+'" y1="0" x2="'+(left+i*168)+'" y2="'+height+'" stroke="#40565c" stroke-width="1"/><text x="'+(left+i*168+3)+'" y="10" fill="#9bb3b8" font-size="9">'+(i+1)+'</text>').join('');
+  const clips=track.notes.map((n,index)=>{
+    const x=left+(Number(n.startBeat)||0)*42,w=Math.max(5,(Number(n.durationBeats)||0.25)*42-2),y=track.kind==='lyrics'?24:track.kind==='percussion'?25:20,h=track.kind==='lyrics'?26:track.kind==='percussion'?22:26;
+    const fill=track.kind==='lyrics'?'#a78bfa':track.id==='melody'?'#d6a94b':track.id==='chords'?'#8b7bd8':track.id==='bass'?'#4ea6cb':n.kind==='kick'?'#54b68a':n.kind==='snare'?'#d87968':'#b5a44a';
+    const label=track.kind==='lyrics'?String(n.text).slice(0,24):track.kind==='percussion'?n.kind:n.note||n.chord||'';
+    return '<rect x="'+x+'" y="'+y+'" width="'+w+'" height="'+h+'" rx="3" fill="'+fill+'" opacity=".82"/><text x="'+(x+3)+'" y="'+(y+16)+'" fill="#071318" font-size="9">'+escapeHtmlCanvas(label)+'</text>';
+  }).join('');
+  return '<svg viewBox="0 0 '+width+' '+height+'" role="img" aria-label="'+track.name+' timeline" style="display:block;width:'+width+'px;height:'+height+'px">'+bars+clips+'</svg>';
+}
 function renderStaffSvg(track,totalBeats){
-  const width=Math.max(640,Math.ceil(totalBeats*42)+100),height=104,left=54,right=width-18,top=18,lineGap=10;
-  const lines=[0,1,2,3,4].map(i=>'<line x1="'+left+'" y1="'+(top+i*lineGap)+'" x2="'+right+'" y2="'+(top+i*lineGap)+'" stroke="#9bb3b8" stroke-width="1"/>').join('');
+  const width=Math.max(640,Math.ceil(totalBeats*42)+100),height=118,left=54,right=width-18,top=25,lineGap=10;
+  const clef=track.id==='bass'?'bass':'treble';
+  const lines=Array.from({length:5},(_,i)=>'<line x1="'+left+'" y1="'+(top+i*lineGap)+'" x2="'+right+'" y2="'+(top+i*lineGap)+'" stroke="#9bb3b8" stroke-width="1"/>').join('');
+  const barLines=Array.from({length:Math.ceil(totalBeats/4)+1},(_,i)=>'<line x1="'+(left+i*168)+'" y1="'+top+'" x2="'+(left+i*168)+'" y2="'+(top+40)+'" stroke="#52676d" stroke-width=".7"/>').join('');
   const notes=track.notes.map(n=>{
     if(track.kind==='percussion'){
       const x=left+(n.startBeat||0)*42,y=top+20;
       return n.kind==='hat'?'<rect x="'+(x-3)+'" y="'+(y-3)+'" width="6" height="6" fill="#f4d35e"/>':'<ellipse cx="'+x+'" cy="'+y+'" rx="4" ry="3" fill="'+(n.kind==='kick'?'#65d6a6':'#f08a75')+'"/>';
     }
     if(track.kind==='lyrics')return '';
-    const midi=n.midi!==undefined?n.midi:noteToMidi(n.note),p=midiStaffPosition(midi),x=left+(n.startBeat||0)*42;
-    const y=top+40-p.step*5,duration=Math.max(0.18,n.durationBeats||1),fill=track.id==='melody'?'#ffe08a':track.id==='bass'?'#7dd3fc':'#b9a7ff';
+    const midi=n.midi!==undefined?n.midi:noteToMidi(n.note),p=midiStaffPosition(midi,clef),x=left+(n.startBeat||0)*42;
+    const y=top+40-p.step*5,fill=track.id==='melody'?'#ffe08a':track.id==='bass'?'#7dd3fc':'#b9a7ff';
+    const ledger=[];
+    if(y>top+40){for(let ly=top+50;ly<=y+1;ly+=10)ledger.push('<line x1="'+(x-8)+'" y1="'+ly+'" x2="'+(x+8)+'" y2="'+ly+'" stroke="#9bb3b8"/>');}
+    if(y<top){for(let ly=top-10;ly>=y-1;ly-=10)ledger.push('<line x1="'+(x-8)+'" y1="'+ly+'" x2="'+(x+8)+'" y2="'+ly+'" stroke="#9bb3b8"/>');}
+    const head=(n.durationBeats||1)>=2?'none':fill,stem=x+5,flag=(n.durationBeats||1)<0.5?'<path d="M '+stem+' '+(y-27)+' q 12 7 2 15" fill="none" stroke="'+fill+'" stroke-width="1.5"/>':'';
     const accidental=p.sharp?'<text x="'+(x-13)+'" y="'+(y+3)+'" font-size="10" fill="#fff">♯</text>':'';
-    return '<ellipse cx="'+x+'" cy="'+y+'" rx="5.5" ry="3.8" transform="rotate(-18 '+x+' '+y+')" fill="'+fill+'"/><line x1="'+(x+5)+'" y1="'+y+'" x2="'+(x+5)+'" y2="'+(y-27)+'" stroke="'+fill+'" stroke-width="1.4"/>'+accidental+'<title>'+p.name+' beat '+Number(n.startBeat).toFixed(2)+'</title>';
+    return ledger.join('')+'<ellipse cx="'+x+'" cy="'+y+'" rx="5.5" ry="3.8" transform="rotate(-18 '+x+' '+y+')" fill="'+head+'" stroke="'+fill+'" stroke-width="1.4"/><line x1="'+stem+'" y1="'+y+'" x2="'+stem+'" y2="'+(y-27)+'" stroke="'+fill+'" stroke-width="1.4"/>'+flag+accidental+'<title>'+p.name+' beat '+Number(n.startBeat).toFixed(2)+'</title>';
   }).join('');
-  const labels=Array.from({length:Math.ceil(totalBeats/4)+1},(_,i)=>'<text x="'+(left+i*168)+'" y="88" font-size="9" fill="#a9c1c5">'+(i+1)+'</text>').join('');
-  return '<svg viewBox="0 0 '+width+' '+height+'" role="img" aria-label="'+track.name+' staff notation" style="display:block;width:'+width+'px;max-width:none;height:104px">'+lines+notes+labels+'</svg>';
+  const clefSymbol=clef==='bass'?'𝄢':'𝄞';
+  const labels=Array.from({length:Math.ceil(totalBeats/4)+1},(_,i)=>'<text x="'+(left+i*168)+'" y="94" font-size="9" fill="#a9c1c5">'+(i+1)+'</text>').join('');
+  return '<svg viewBox="0 0 '+width+' '+height+'" role="img" aria-label="'+track.name+' '+clef+' staff" style="display:block;width:'+width+'px;max-width:none;height:'+height+'px"><text x="12" y="57" font-size="34" fill="#c8d8db">'+clefSymbol+'</text><text x="34" y="19" font-size="9" fill="#a9c1c5">4/4</text>'+lines+barLines+notes+labels+'</svg>';
 }
 function renderCompositionTracks(){
   const arrangement=window.__compositionArrangement,container=document.getElementById('composition-track-lanes');if(!arrangement||!container)return;
@@ -1384,12 +1407,9 @@ function renderCompositionTracks(){
     const solo=document.createElement('button');solo.type='button';solo.textContent=track.solo?'● SOLO':'SOLO';solo.setAttribute('aria-pressed',String(track.solo));solo.addEventListener('click',()=>setCompositionTrackMode(track.id,'solo'));
     header.append(name,mute,solo);row.append(header);
     const scroll=document.createElement('div');scroll.style.cssText='overflow-x:auto;overflow-y:hidden;background:#0b1c21;border-radius:5px';
-    if(track.kind==='lyrics'){
-      const lyric=document.createElement('div');lyric.style.cssText='min-width:640px;padding:10px;font-size:12px;line-height:1.7;white-space:normal';
-      lyric.textContent=track.notes.map(n=>(n.role==='A'?'A: ':n.role==='B'?'B: ':'')+n.text).join('　 /　 ');scroll.append(lyric);
-    }else{
-      scroll.innerHTML=renderStaffSvg(track,arrangement.totalBeats||4);
-      scroll.firstElementChild.style.maxWidth='none';
+    const timeline=document.createElement('div');timeline.innerHTML=renderTrackTimeline(track,arrangement.totalBeats||4);timeline.firstElementChild.style.maxWidth='none';scroll.append(timeline);
+    if(track.kind!=='lyrics'){
+      const staff=document.createElement('div');staff.innerHTML=renderStaffSvg(track,arrangement.totalBeats||4);staff.firstElementChild.style.maxWidth='none';scroll.append(staff);
     }
     row.append(scroll);container.append(row);
   });
