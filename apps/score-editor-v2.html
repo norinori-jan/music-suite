@@ -1046,7 +1046,7 @@ function scoreExportData() {
   const secs = (PROJ.sections||[]).filter(s => s.progression && s.progression.length).map(s => ({tag:s.name, progression:s.progression.map(c => ({chord:c.name, beats:c.beats||4}))}));
   const context=window.__compositionProjectContext||{};
   return { version:'1.1', source:'score-editor', projectId:context.projectId, original:context.original||'', dialogue:context.dialogue||null, lyrics:context.lyrics||'', sections:context.sections||[], lyricProject:context.lyricProject||null, name: PROJ.name || document.getElementById('project-name')?.value || context.name || 'score-editor', bpm:PROJ.bpm, key:PROJ.key||'C', timeSig:PROJ.timeSig||4,
-    melody:{notes:tr('melody')}, chords: secs.length ? {key:PROJ.key||'C', sections:secs} : null, bass:{notes:tr('bass')}, drums:{notes:tr('drum')}, exported:new Date().toISOString() };
+    melody:{notes:tr('melody')}, chords: secs.length ? {key:PROJ.key||'C', sections:secs} : null, bass:{notes:tr('bass')}, drums:{notes:tr('drum')}, tracks:PROJ.tracks.map(track=>({id:track.id,name:track.name,type:track.type,muted:!!track.muted,notes:track.notes.map(note=>({...note}))})), exported:new Date().toISOString() };
 }
 function sendToCompositionCanvas(){
   const data=scoreExportData();
