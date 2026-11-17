@@ -737,6 +737,45 @@ function lyricRenderPreview(){
   if(sections.length)box.innerHTML='<strong>パート別歌詞</strong><div>'+sections.map(s=>'<div><span class="lyric-section-label">'+escapeHtmlCanvas(s.label)+'</span>'+s.text.split(/\n+/).map(line=>'<span class="lyric-chip">'+escapeHtmlCanvas(line)+'</span>').join('')+'</div>').join('')+'</div>';
   else box.innerHTML='<strong>歌詞の語句</strong><div>'+document.getElementById('canvas-lyrics').value.split(/\s+/).filter(Boolean).map(w=>'<span class="lyric-chip">'+escapeHtmlCanvas(w)+'</span>').join('')+'</div>';
 }
+function restoreCompositionTracksFromScore(payload){
+  const source=Array.isArray(payload?.tracks)?payload.tracks:[];
+  if(!source.length)return false;
+  const byType=type=>source.find(track=>track.type===type);
+  const melodySource=byType('melody');
+  const melodyNotes=(melodySource?.notes||payload.melody?.notes||[]).map((n,index)=>({
+    id:n.id||makeMelodyNoteId(index),note:typeof n.pitch==='number'?midiToNoteName(n.pitch):String(n.pitch||'C4'),
+    startBeat:Number(n.startBeat)||0,durationBeats:Number(n.durationBeats)||1,
+    word:n.word||'',lyric:n.lyric||'',role:n.role||'',section:n.section||''
+  }));
+  if(melodyNotes.length){
+    state.lastNotes=melodyNotes.map(n=>({id:n.id,note:n.note,length:n.durationBeats*4,startBeat:n.startBeat,lyric:n.lyric,lyricRole:n.role,lyricSection:n.section,word:n.word}));
+    renderNoteCards(state.lastNotes,payload.name||'Score Editor melody');
+  }
+  const chordSource=byType('chord');
+  const chordGroups=new Map();
+  (chordSource?.notes||[]).forEach(note=>{
+    const key=String(note.chord||'chord')+'@'+String(note.startBeat||0);
+    if(!chordGroups.has(key))chordGroups.set(key,{id:key,chord:note.chord||'Chord',startBeat:Number(note.startBeat)||0,durationBeats:Number(note.durationBeats)||1,pitches:[]});
+    chordGroups.get(key).pitches.push(Number(note.pitch)||60);
+  });
+  const bassSource=byType('bass'),drumSource=byType('drum');
+  const lyrics=(payload.sections||[]).flatMap(section=>String(section.text||section.lyrics||'').split(/\n+/).filter(Boolean).map((text,index)=>({id:'lyric-'+section.label+'-'+index,text,role:section.role||'',section:section.label||section.name||'',startBeat:0,durationBeats:4})));
+  const tracks=[
+    {id:'melody',name:melodySource?.name||'MELODY · 主旋律',kind:'pitched',muted:!!melodySource?.muted,solo:false,notes:melodyNotes},
+    {id:'chords',name:chordSource?.name||'CHORDS · 和音',kind:'pitched',muted:!!chordSource?.muted,solo:false,notes:[...chordGroups.values()].map(n=>({ ...n,pitches:n.pitches }))},
+    {id:'bass',name:bassSource?.name||'BASS · 低音',kind:'pitched',muted:!!bassSource?.muted,solo:false,notes:(bassSource?.notes||[]).map(n=>({id:n.id,midi:Number(n.pitch)||36,startBeat:Number(n.startBeat)||0,durationBeats:Number(n.durationBeats)||1}))},
+    {id:'drums',name:drumSource?.name||'DRUMS · リズム',kind:'percussion',muted:!!drumSource?.muted,solo:false,notes:(drumSource?.notes||[]).map(n=>({id:n.id,startBeat:Number(n.startBeat)||0,durationBeats:Number(n.durationBeats)||0.25,kind:n.drumKind||({36:'kick',38:'snare',42:'hat',46:'hat'}[Number(n.pitch)]||'snare')}))},
+    {id:'lyrics',name:'LYRICS · 歌詞',kind:'lyrics',muted:false,solo:false,notes:lyrics}
+  ];
+  const totalBeats=Math.max(4,...tracks.flatMap(track=>track.notes.map(note=>Number(note.startBeat||0)+Number(note.durationBeats||0))));
+  window.__compositionArrangement={
+    bpm:Number(payload.bpm)||120,selectedMelody:'imported',selectedRhythm:'straight',
+    melodyVariants:[],rhythmStyles:[],chordSections:payload.chords?.sections||[],tracks,totalBeats,
+    importedFrom:'score-editor'
+  };
+  renderCompositionTracks();
+  return true;
+}
 function parseIncomingLyrics(){
   const hash=location.hash.replace(/^#/,'');
   const isLyrics=hash.startsWith('lyrics='),isImport=hash.startsWith('import=');
@@ -800,7 +839,8 @@ function parseIncomingLyrics(){
       if(Array.isArray(payload.sections)&&payload.sections.length){lyricSectionsWrite(payload.sections);document.getElementById('canvas-lyrics').value='';}
       else{lyricSectionsWrite([]);document.getElementById('canvas-lyrics').value=payload.lyrics||'';}
       const scoreNotes=Array.isArray(payload.melody?.notes)?payload.melody.notes:[];
-      if(scoreNotes.length){state.lastNotes=scoreNotes.map((note,index)=>({id:note.id||makeMelodyNoteId(index),note:typeof note.pitch==='number'?midiToNoteName(note.pitch):String(note.pitch||'C4'),length:(Number(note.durationBeats)||1)*4,startBeat:Number(note.startBeat)||0}));renderNoteCards(state.lastNotes,payload.name||'Score Editor melody');}
+      if(Array.isArray(payload.tracks)&&payload.tracks.length)restoreCompositionTracksFromScore(payload);
+      else if(scoreNotes.length){state.lastNotes=scoreNotes.map((note,index)=>({id:note.id||makeMelodyNoteId(index),note:typeof note.pitch==='number'?midiToNoteName(note.pitch):String(note.pitch||'C4'),length:(Number(note.durationBeats)||1)*4,startBeat:Number(note.startBeat)||0}));renderNoteCards(state.lastNotes,payload.name||'Score Editor melody');}
       if(payload.chords?.sections?.length)restoreChordProgressionInput({chordSections:payload.chords.sections});
       history.replaceState(null,'',location.pathname+location.search);
       return true;
