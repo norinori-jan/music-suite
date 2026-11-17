@@ -1246,6 +1246,7 @@ function applySelectedComposition(){
   const notes=buildSelectedCompositionNotes();
   state.lastNotes=notes.map(n=>({id:n.id,note:n.note,length:n.length,startBeat:n.startBeat,lyricId:n.lyricId}));
   renderNoteCards(state.lastNotes,'Composition Canvas · '+arrangement.selectedMelody+' / '+arrangement.selectedRhythm);
+  saveCardPositions(false);
   const cards=[...document.querySelectorAll('#canvas .card')];
   cards.forEach((card,index)=>{const n=notes[index];if(!n)return;card.dataset.noteId=n.id;card.dataset.startBeat=String(n.startBeat);card.dataset.lyricId=n.lyricId;card.dataset.lyric=n.lyric;card.dataset.lyricRole=n.role;card.dataset.lyricSection=n.section;card.dataset.word=n.word;card.classList.add('lyric-linked');const label=document.createElement('span');label.className='lyric-assignment';label.textContent=(n.role==='A'?'A':n.role==='B'?'B':'Lead')+' · '+n.word;card.appendChild(label);});
   arrangement.selectedNotes=notes;
