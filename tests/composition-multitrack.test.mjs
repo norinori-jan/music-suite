@@ -22,6 +22,11 @@ async function loadCanvas() {
   return readFile(canvasPath, "utf8");
 }
 
+const sampleNotes = [
+  { id: "n1", note: "C4", startBeat: 0, durationBeats: 0.5, word: "We", lyric: "We will rise", role: "LEAD", section: "Verse" },
+  { id: "n2", note: "G4", startBeat: 1.5, durationBeats: 1, word: "rise", lyric: "We will rise", role: "LEAD", section: "Verse" }
+];
+
 test("MT-01 one English lyric source produces exactly three named melody contours", async () => {
   const html = await loadCanvas();
   assert.match(html, /const contours\s*=\s*\[/);
@@ -49,44 +54,31 @@ test("MT-02 arrangement builds independent melody, chord, bass, drum and lyric t
     },
     lyricSectionsRead: () => [{ label: "Verse", role: "LEAD", text: "We will rise" }],
     lyricTextRead: () => "We will rise",
-    Math,
-    Number,
-    String,
-    Array,
-    Map
+    Math, Number, String, Array, Map
   };
-  vm.runInNewContext(code, context);
+  vm.runInNewContext(code + "\nbuildCompositionTracks(" + JSON.stringify(sampleNotes) + ");", context);
   const tracks = context.window.__compositionArrangement.tracks;
-  assert.deepEqual(
-    tracks.map(track => track.id),
-    ["melody", "chords", "bass", "drums", "lyrics"]
-  );
+  assert.deepEqual(Array.from(tracks, track => track.id), ["melody", "chords", "bass", "drums", "lyrics"]);
   assert.equal(tracks[0].notes.length, 2);
   assert.equal(tracks[1].notes[0].chord, "C");
   assert.equal(tracks[2].notes[0].midi, tracks[1].notes[0].pitches[0] - 12);
-  assert.ok(tracks[3].notes.some(note => note.kind === "kick"));
+  assert.ok(Array.from(tracks[3].notes).some(note => note.kind === "kick"));
   assert.equal(tracks[4].notes[0].text, "We will rise");
 });
 
 test("MT-03 track builder preserves note start positions and durations", async () => {
   const html = await loadCanvas();
   const code = extractFunction(html, "buildCompositionTracks", "setCompositionTrackMode");
-  const notes = [
-    { id: "n1", note: "C4", startBeat: 0, durationBeats: 0.5, word: "We", lyric: "We rise", role: "LEAD", section: "Verse" },
-    { id: "n2", note: "G4", startBeat: 1.5, durationBeats: 1, word: "rise", lyric: "We rise", role: "LEAD", section: "Verse" }
-  ];
   const context = {
     window: { __compositionArrangement: { chordSections: [], selectedRhythm: "ballad" } },
-    lyricSectionsRead: () => [{ label: "Verse", role: "LEAD", text: "We rise" }],
-    lyricTextRead: () => "We rise",
+    lyricSectionsRead: () => [{ label: "Verse", role: "LEAD", text: "We will rise" }],
+    lyricTextRead: () => "We will rise",
     Math, Number, String, Array, Map
   };
-  vm.runInNewContext(code, context);
+  vm.runInNewContext(code + "\nbuildCompositionTracks(" + JSON.stringify(sampleNotes) + ");", context);
   const melody = context.window.__compositionArrangement.tracks[0].notes;
-  assert.deepEqual(
-    melody.map(note => [note.id, note.startBeat, note.durationBeats]),
-    [["n1", 0, 0.5], ["n2", 1.5, 1]]
-  );
+  const actual = Array.from(melody, note => [note.id, note.startBeat, note.durationBeats]);
+  assert.deepEqual(actual, [["n1", 0, 0.5], ["n2", 1.5, 1]]);
 });
 
 test("MT-04 staff renderer emits five-line treble and bass notation with noteheads", async () => {
@@ -95,7 +87,6 @@ test("MT-04 staff renderer emits five-line treble and bass notation with notehea
   const staffCode = extractFunction(html, "renderStaffSvg", "renderCompositionTracks");
   const context = {
     noteToMidi: note => ({ C4: 60, "F#4": 66, C2: 36 }[note] ?? 60),
-    midiStaffPosition: null,
     Math, Number, String, Array
   };
   vm.runInNewContext(positionCode + "\n" + staffCode, context);
@@ -109,7 +100,7 @@ test("MT-04 staff renderer emits five-line treble and bass notation with notehea
   );
   assert.match(melodySvg, /𝄞/);
   assert.match(bassSvg, /𝄢/);
-  assert.equal((melodySvg.match(/<line/g) || []).length >= 5, true);
+  assert.ok((melodySvg.match(/<line/g) || []).length >= 5);
   assert.match(melodySvg, /<ellipse/);
   assert.match(bassSvg, /<ellipse/);
 });
