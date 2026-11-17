@@ -774,6 +774,7 @@ function restoreCompositionTracksFromScore(payload){
     importedFrom:'score-editor'
   };
   renderCompositionTracks();
+  persistCompositionArrangement();
   return true;
 }
 function parseIncomingLyrics(){
@@ -1287,8 +1288,34 @@ function buildSelectedCompositionNotes(){
     return result;
   });
 }
+function compositionArrangementStorageKey(){
+  const incoming=window.__incomingLyricProject||{};
+  const id=window.__musicProjectId||incoming.projectId;
+  return id?'compositionArrangement:'+id:null;
+}
+function persistCompositionArrangement(){
+  const key=compositionArrangementStorageKey(),arrangement=window.__compositionArrangement;
+  if(!key||!arrangement)return false;
+  try{localStorage.setItem(key,JSON.stringify(arrangement));return true;}catch(error){console.warn('composition arrangement save failed',error);return false;}
+}
+function restoreSavedCompositionArrangement(){
+  const key=compositionArrangementStorageKey();if(!key)return false;
+  try{
+    const saved=JSON.parse(localStorage.getItem(key)||'null');
+    if(!saved||!Array.isArray(saved.tracks)||!saved.tracks.length)return false;
+    window.__compositionArrangement=saved;
+    const melody=saved.tracks.find(track=>track.id==='melody');
+    if(melody?.notes?.length){
+      state.lastNotes=melody.notes.map(note=>({id:note.id,note:note.note,length:(Number(note.durationBeats)||1)*4,startBeat:Number(note.startBeat)||0,lyric:note.lyric||'',word:note.word||'',lyricRole:note.role||'',lyricSection:note.section||''}));
+      renderNoteCards(state.lastNotes,'Restored composition arrangement');
+    }
+    window.__lyricMusicSketch={...saved,melody:melody?.notes||[]};
+    renderCompositionTracks();return true;
+  }catch(error){console.warn('composition arrangement restore failed',error);return false;}
+}
 function applySelectedComposition(){
   const arrangement=window.__compositionArrangement;if(!arrangement)return false;
+  if(!window.__musicProjectId&&!window.__incomingLyricProject?.projectId)window.__musicProjectId='song-'+Date.now();
   const notes=buildSelectedCompositionNotes();
   state.lastNotes=notes.map(n=>({id:n.id,note:n.note,length:n.length,startBeat:n.startBeat,lyricId:n.lyricId}));
   renderNoteCards(state.lastNotes,'Composition Canvas · '+arrangement.selectedMelody+' / '+arrangement.selectedRhythm);
@@ -1299,6 +1326,7 @@ function applySelectedComposition(){
   buildCompositionTracks(notes);
   renderCompositionTracks();
   window.__lyricMusicSketch={...arrangement,melody:notes.map(n=>({id:n.id,lyricId:n.lyricId,pitch:n.note,startBeat:n.startBeat,durationBeats:n.durationBeats,word:n.word,lyric:n.lyric,role:n.role,section:n.section}))};
+  persistCompositionArrangement();
   document.getElementById('composition-preview-status').textContent='Canvasに反映済み：'+notes.length+'音。再生して確認できます。';
   return true;
 }
@@ -2097,15 +2125,16 @@ function sendRhythmFirstToBeatLab(){
 }
 
 window.addEventListener('load',()=>{
-  let restored=false;
-  try{restored=parseIncomingLyrics()===true;}catch(e){console.warn('incoming project restore failed',e);}
-  if(!restored){
+  let imported=false,restored=false;
+  try{imported=parseIncomingLyrics()===true;restored=imported;}catch(e){console.warn('incoming project restore failed',e);}
+  if(!imported){
     try{
       const savedLyric=JSON.parse(localStorage.getItem('compositionLyricProject')||'null');
       if(savedLyric&&restoreLyricCanvasProject(savedLyric))restored=true;
     }catch(e){console.warn('saved lyric project restore failed',e);}
+    if(!restored)loadCardPositions();
+    restoreSavedCompositionArrangement();
   }
-  if(!restored)loadCardPositions();
   const input=document.getElementById('note-sequence-input');
   if(input){input.addEventListener('input',()=>{const status=document.getElementById('note-sequence-status');if(status)status.textContent='入力中です。「音符カードに読み込む」を押すとカードになります。';});}
 });
