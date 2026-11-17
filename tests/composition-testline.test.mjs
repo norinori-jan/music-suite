@@ -365,9 +365,11 @@ test("TL-31 chord sketch is displayed separately for A, B, Chorus and Bridge", a
   assert.match(html,/コード記号だけ（全区間・1行）/);
   assert.match(html,/renderGeneratedChordSections\(restoredSections\)/);
 });
-test("TL-32 generated lyric melody has non-overlapping one-beat note starts", async () => {
+test("TL-32 selected lyric melody applies the chosen rhythm without overlapping note starts", async () => {
   const html=await readFile(canvasPath,"utf8");
-  assert.match(html,/return \{id:makeMelodyNoteId\(i\),note,length:1,[\s\S]*?startBeat:i,/);
+  assert.match(html,/function buildSelectedCompositionNotes\(\)/);
+  assert.match(html,/startBeat:beat,length:duration\*4,durationBeats:duration/);
+  assert.match(html,/beat\+=duration/);
   assert.match(html,/const chordIndex=Math\.floor\(Math\.max\(0,localIndex\)\/4\)%section\.progression\.length/);
 });
 
