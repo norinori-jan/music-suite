@@ -323,6 +323,7 @@ body{background:var(--bg);color:var(--text);font-family:'Inter','Hiragino Sans',
       <span id="mood-banner-text"></span>
       <button class="close-x" onclick="dismissMoodBanner()">✕</button>
     </div>
+    <div class="muted" style="margin:12px 0;font-size:12px">コード進行の作成・比較はComposition CanvasからCHORD//LABを開いて行います。</div>
     <section class="lyric-studio" id="lyric-studio" aria-label="英語フレーズ・歌詞カード">
       <div><strong>✍️ 英語フレーズ・歌詞カード</strong><div class="muted" style="font-size:12px;margin-top:4px">speak-nativeの英文を原文として保持し、歌詞用の表現は別欄で編集します。</div></div>
       <label for="lyric-title">フレーズ名・曲名</label>
@@ -1547,6 +1548,23 @@ function checkIncomingImport() {
   try {
     const json = decodeURIComponent(escape(atob(decodeURIComponent(m[1]))));
     const parsed = JSON.parse(json);
+    if(parsed.source==='composition-canvas-lyrics'){
+      window.__incomingCanvasProject=parsed;
+      window.__musicProjectId=parsed.projectId||window.__musicProjectId||('song-'+Date.now());
+      $('lyric-title').value=parsed.title||'Composition Canvas project';
+      $('lyric-original').value=parsed.original||'';
+      $('lyric-adapted').value=parsed.lyrics||'';
+      const sections=Array.isArray(parsed.sections)?parsed.sections:[];
+      const a=sections.find(x=>x.role==='A'||x.label==='A verse');
+      const b=sections.find(x=>x.role==='B'||x.label==='B verse');
+      if(a||b){$('duet-a').value=a?.text||'';$('duet-b').value=b?.text||'';$('duet-studio').style.display='flex';}
+      const turns=Array.isArray(parsed.dialogue)?parsed.dialogue:Array.isArray(parsed.dialogue?.turns)?parsed.dialogue.turns:[];
+      window.__speakNativeDialogue={lines:turns.map(t=>({sp:(t.speaker||(t.role==='user'?'A':'B'))==='A'?0:1,en:t.text||''}))};
+      if(parsed.bpm&&parsed.bpm>=40&&parsed.bpm<=240)$('bpm-input').value=parsed.bpm;
+      history.replaceState(null,'',window.location.pathname+window.location.search);
+      showToast('Composition Canvasの歌詞・素材を受け取りました');
+      return true;
+    }
     const cards = normalizeImportedCards(parsed);
     if (!cards.length) throw new Error('カードが含まれていません');
     state.cards = cards;
@@ -1601,13 +1619,13 @@ function lyricExportCards(){
 }
 function duetSourceLines(){const d=window.__speakNativeDialogue;return d&&Array.isArray(d.lines)?d.lines:[]}
 function duetBuildFromDialogue(){
- const lines=duetSourceLines();if(!lines.length)return false;
- const a=lines.filter(x=>Number(x.sp)===0),b=lines.filter(x=>Number(x.sp)===1);
- $('duet-a').value=["It's almost midnight, I should close my eyes","But every time I try, I picture your side","I wanna cross the ocean, appear at your door","Then I hear you say, let's wait a little more"].join('\n');
- $('duet-b').value=["Your morning finds me counting every mile","I check the flights, then answer with a smile","The waiting's harder than I thought it'd be","Your little stories keep you close to me"].join('\n');
- $('duet-chorus').value=["Two time zones, one heartbeat","Your night is holding my day","Keep talking till the sunrise","Love will find another way"].join('\n');
- $('duet-bridge').value=["Tell me about your coffee, even when it's cold","I'll tell you all the small things I couldn't hold","We said we'd wait until the summer skies","So I'll meet you in the morning through your eyes"].join('\n');
- $('duet-story').textContent='原文 '+lines.length+'行をA役 '+a.length+'行／B役 '+b.length+'行に分離。物語の核：時差・会えない距離・夏まで待つ約束・何気ない会話。歌詞は原文を素材にした初稿です。';
+ const lines=duetSourceLines();if(!lines.length){showToast('speak-nativeの会話データがありません');return false;}
+ const a=lines.filter(x=>Number(x.sp)===0).map(x=>String(x.en||'').trim()).filter(Boolean);
+ const b=lines.filter(x=>Number(x.sp)===1).map(x=>String(x.en||'').trim()).filter(Boolean);
+ $('duet-a').value=a.join('\n');
+ $('duet-b').value=b.join('\n');
+ $('duet-chorus').value='';$('duet-bridge').value='';
+ $('duet-story').textContent='受け取った会話 '+lines.length+'発言をA '+a.length+'行／B '+b.length+'行に分けました。サビとブリッジは空欄です。原文をもとに自由に編集してください。';
  $('duet-studio').style.display='flex';return true;
 }
 function duetSections(){return [{role:'A',label:'Mia / A verse',text:$('duet-a').value.trim()},{role:'B',label:'Ken / B verse',text:$('duet-b').value.trim()},{role:'DUET',label:'Chorus',text:$('duet-chorus').value.trim()},{role:'DUET',label:'Bridge',text:$('duet-bridge').value.trim()}].filter(x=>x.text)}
@@ -1617,6 +1635,35 @@ function duetAnalyze(){
  $('duet-analysis').innerHTML=rows.join('')+'<small class="muted">音節数は母音字による概算。強調候補は意味上の目安で、発音辞書による判定ではありません。</small>';
  window.__duetAnalysis=sections.map(s=>({role:s.role,label:s.label,text:s.text,syllables:(s.text.match(/[A-Za-z]+(?:'[A-Za-z]+)?/g)||[]).reduce((n,w)=>n+Math.max(1,lyricSyllables(w).length),0)}));
 }
+function sendLyricToChordLab(){
+ const adapted=$('lyric-adapted')?.value.trim()||'';
+ const original=$('lyric-original')?.value.trim()||phraseInput?.value.trim()||'';
+ const duet=typeof duetSections==='function'?duetSections():[];
+ const activeText=adapted||original;
+ const lyricSections=adapted
+   ?[{label:'Lyrics',text:adapted}]
+   :duet.length?duet
+   :[{label:'Lyrics',text:original}].filter(section=>section.text);
+ const lyricText=lyricSections.map(section=>section.label+'\n'+section.text).join('\n\n');
+ if(!lyricText.trim()){showToast('先に会話または歌詞を取り込んでください');return}
+ const title=$('lyric-title')?.value.trim()||'English conversation song';
+ const bpm=Number($('bpm-input')?.value)||104;
+ const payload={
+   version:'1.0',source:'vocal-lab-lyric-link',projectId:window.__musicProjectId||('song-'+Date.now()),name:title,title,bpm,key:'C',timeSig:4,
+   lyrics:activeText||lyricText,sourceDialogue:window.__speakNativeDialogue||null,
+   prompt:'この歌詞の意味・感情・言葉のリズムを読み取り、区間ごとに自然なコード進行を提案してください。各区間の役割を尊重し、全区間のコード案を比較できるようにしてください。',
+   lyricSections:lyricSections.map((section,index)=>({name:section.label||('Section '+(index+1)),lyrics:section.text})),
+   chords:{key:'C',sections:[]},melody:{notes:[]},bass:{notes:[]},drums:{notes:[]}
+ };
+ const encoded=btoa(unescape(encodeURIComponent(JSON.stringify(payload))));
+ const opened=window.open('./chord-lab.html#import='+encodeURIComponent(encoded),'_blank');
+ if(!opened)showToast('ポップアップがブロックされました。CHORD//LABを許可してください');
+ else{
+   opened.opener=null;
+   showToast('歌詞と区間をCHORD//LABへ送りました。区間ごとのコード案を作れます');
+ }
+}
+
 function duetOpenCanvas(){
  const sections=duetSections();if(!sections.length){showToast('歌詞を入力してください');return}
  const d=window.__speakNativeDialogue||{},original=duetSourceLines().map(x=>(Number(x.sp)===0?'A':'B')+': '+x.en).join('\n');
@@ -1673,9 +1720,11 @@ function lyricLinkSelectedNotes(){
 }
 function lyricOpenComposition(){
   const original=$('lyric-original').value.trim(),lyrics=$('lyric-adapted').value.trim()||original;
-  if(!lyrics){showToast('先に歌詞を入力してください');return}
+  const incoming=window.__incomingCanvasProject||{};
+  const sections=typeof duetSections==='function'?duetSections().map(x=>({role:x.role,label:x.role==='A'?'A verse':x.role==='B'?'B verse':x.label,text:x.text})).filter(x=>x.text):[];
+  if(!lyrics&&!sections.length){showToast('先に歌詞を入力してください');return}
   const card=state.cards.find(x=>x.id===state.activeCardId);
-  const payload={version:1,source:'vocal-lab-lyric-link',title:$('lyric-title').value.trim()||'English lyric',original,lyrics,bpm:card?.bpm||120,emotion:card?.emotion||state.selectedEmotion||'neutral',notes:card?.notes||[],analysis:window.__lyricAnalysis||null};
+  const payload={version:2,source:'vocal-lab-lyric-link',kind:sections.length?'duet':'single',projectId:incoming.projectId||window.__musicProjectId||('song-'+Date.now()),title:$('lyric-title').value.trim()||incoming.title||'Composition Canvas project',original,lyrics,bpm:card?.bpm||Number($('bpm-input').value)||incoming.bpm||120,emotion:card?.emotion||state.selectedEmotion||'neutral',notes:card?.notes||[],sections,dialogue:incoming.dialogue||null,sourceDialogue:incoming.dialogue||null,analysis:window.__lyricAnalysis||null};
   const encoded=btoa(unescape(encodeURIComponent(JSON.stringify(payload))));
   const url='../apps/composition-canvas.html#lyrics='+encodeURIComponent(encoded);
   window.open(url,'_blank','noopener,noreferrer');

@@ -189,6 +189,7 @@ body{padding-bottom:env(safe-area-inset-bottom)}
   <div style="flex:1"></div>
   <!-- FIX: vocal-lab へ戻るボタン -->
   <button class="btn" id="btn-send-vocal" onclick="sendToVocalLab()" style="border-color:rgba(127,119,221,0.4);color:#afa9ec">🎤 vocal-lab へ</button>
+  <button class="btn" onclick="sendToCompositionCanvas()">↩ Composition Canvasへ戻す</button>
   <label class="btn" style="display:inline-flex;align-items:center;cursor:pointer">📥 JSON<input type="file" accept=".json" onchange="importFromJSON(this)" style="display:none"></label>
   <button class="btn" onclick="msSheet(scoreExportData())">🎼 楽譜</button>
   <button class="btn" onclick="exportMIDI()">⬇ MIDI</button>
@@ -935,6 +936,7 @@ function noteName2midi(name){
 }
 
 function importExternalData(data, sourceLabel) {
+  if(data&&typeof data==='object'&&!Array.isArray(data))window.__compositionProjectContext=data;
   // vocal-lab v3: カード配列 or {cards:[...]} 形式
   if(Array.isArray(data) || Array.isArray(data?.cards)) {
     const cards = Array.isArray(data) ? data : data.cards;
@@ -957,6 +959,17 @@ function importExternalData(data, sourceLabel) {
   saveUndo();
   let added = 0;
   if(data.bpm) setBpm(data.bpm);
+  if(Array.isArray(data.tracks)&&data.tracks.length){
+    data.tracks.forEach(track=>{
+      const type=['melody','chord','bass','drum','counter'].includes(track.type)?track.type:'melody';
+      const notes=(Array.isArray(track.notes)?track.notes:[]).map(note=>({...note,id:uid(),pitch:Number(note.pitch)||60,startBeat:Number(note.startBeat)||0,durationBeats:Number(note.durationBeats)||1,vel:Number(note.vel)||80}));
+      if(notes.length){const trackId=addTrack(type,track.name||type.toUpperCase(),notes);const created=PROJ.tracks.find(item=>item.id===trackId);if(created)created.muted=!!track.muted;added+=notes.length;}
+    });
+    refreshAll();
+    setStatus('ok',`${sourceLabel||'外部データ'}を受信 — ${data.tracks.length}トラック / ${added}ノート追加`);
+    switchView('roll');
+    return;
+  }
   if(data.timeSig) { PROJ.timeSig = data.timeSig; }
   if(data.melody?.notes?.length) {
     const notes = data.melody.notes.map(n => ({...n, id:uid()}));
@@ -1031,8 +1044,15 @@ function checkIncomingImport() {
 function scoreExportData() {
   const tr = t => PROJ.tracks.filter(x => x.type === t).flatMap(x => x.notes.map(n => ({pitch:n.pitch,startBeat:n.startBeat,durationBeats:n.durationBeats,vel:n.vel||80})));
   const secs = (PROJ.sections||[]).filter(s => s.progression && s.progression.length).map(s => ({tag:s.name, progression:s.progression.map(c => ({chord:c.name, beats:c.beats||4}))}));
-  return { version:'1.0', source:'score-editor', name: PROJ.name || document.getElementById('project-name')?.value || 'score-editor', bpm:PROJ.bpm, key:PROJ.key||'C', timeSig:PROJ.timeSig||4,
-    melody:{notes:tr('melody')}, chords: secs.length ? {key:PROJ.key||'C', sections:secs} : null, bass:{notes:tr('bass')}, drums:{notes:tr('drum')}, exported:new Date().toISOString() };
+  const context=window.__compositionProjectContext||{};
+  return { version:'1.1', source:'score-editor', projectId:context.projectId, original:context.original||'', dialogue:context.dialogue||null, lyrics:context.lyrics||'', sections:context.sections||[], lyricProject:context.lyricProject||null, name: PROJ.name || document.getElementById('project-name')?.value || context.name || 'score-editor', bpm:PROJ.bpm, key:PROJ.key||'C', timeSig:PROJ.timeSig||4,
+    melody:{notes:tr('melody')}, chords: secs.length ? {key:PROJ.key||'C', sections:secs} : null, bass:{notes:tr('bass')}, drums:{notes:tr('drum')}, tracks:PROJ.tracks.map(track=>({id:track.id,name:track.name,type:track.type,muted:!!track.muted,notes:track.notes.map(note=>({...note}))})), exported:new Date().toISOString() };
+}
+function sendToCompositionCanvas(){
+  const data=scoreExportData();
+  data.source='score-editor';
+  const encoded=encodeURIComponent(btoa(unescape(encodeURIComponent(JSON.stringify(data)))));
+  window.location.href='composition-canvas.html#import='+encoded;
 }
 function sendToVocalLab() {
   try{msRegister(scoreExportData())}catch(e){}

@@ -365,9 +365,11 @@ test("TL-31 chord sketch is displayed separately for A, B, Chorus and Bridge", a
   assert.match(html,/コード記号だけ（全区間・1行）/);
   assert.match(html,/renderGeneratedChordSections\(restoredSections\)/);
 });
-test("TL-32 generated lyric melody has non-overlapping one-beat note starts", async () => {
+test("TL-32 selected lyric melody applies the chosen rhythm without overlapping note starts", async () => {
   const html=await readFile(canvasPath,"utf8");
-  assert.match(html,/return \{id:makeMelodyNoteId\(i\),note,length:1,[\s\S]*?startBeat:i,/);
+  assert.match(html,/function buildSelectedCompositionNotes\(\)/);
+  assert.match(html,/startBeat:beat,length:duration\*4,durationBeats:duration/);
+  assert.match(html,/beat\+=duration/);
   assert.match(html,/const chordIndex=Math\.floor\(Math\.max\(0,localIndex\)\/4\)%section\.progression\.length/);
 });
 
@@ -692,4 +694,177 @@ test("TL-56 AI rhythm generation passes incoming melody context to the model and
   assert.match(body,/音符が伸びている区間と休符の隙間/);
   assert.match(body,/renderAiPreview\(result,bars,div,steps\)/);
   assert.match(body,/applyAiPattern/);
+});
+
+test("TL-57 Composition Canvas exposes four equal composition starting workflows", async () => {
+  const html=await readFile(canvasPath,"utf8");
+  for(const key of ["lyrics","melody","chords","rhythm"])assert.match(html,new RegExp('data-workflow="'+key+'"'));
+  assert.match(html,/function chooseCompositionWorkflow\(key\)/);
+  assert.match(html,/function startCompositionWorkflow\(\)/);
+});
+test("TL-58 melody, chord and lyric workflow choices focus their existing editors without replacing them", async () => {
+  const html=await readFile(canvasPath,"utf8");
+  assert.match(html,/lyrics:\{title:'歌詞から始める',[\s\S]*?target:'lyric-panel'/);
+  assert.match(html,/melody:\{title:'メロディから始める',[\s\S]*?target:'note-sequence-player'/);
+  assert.match(html,/chords:\{title:'コードから始める',[\s\S]*?target:'chord-progression-input'/);
+  assert.match(html,/function loadNoteSequenceToCanvas\(\)/);
+  assert.match(html,/function applyChordProgression\(\)/);
+});
+test("TL-59 rhythm-first workflow sends an empty-melody song shell to BEAT//LAB", async () => {
+  const html=await readFile(canvasPath,"utf8");
+  const start=html.indexOf("function sendRhythmFirstToBeatLab()");
+  const end=html.indexOf("\n}",start)+2;
+  assert.ok(start>=0&&end>start);
+  const body=html.slice(start,end);
+  assert.match(body,/project\.melody=\{notes:\[\]\}/);
+  assert.match(body,/project\.drums=\{notes:\[\]\}/);
+  assert.match(body,/project\.rhythmFirst=true/);
+  assert.match(body,/beat-lab\.html#import=/);
+});
+
+test("TL-60 chord-first projects can be handed to BEAT//LAB without melody", async () => {
+  const html=await readFile(canvasPath,"utf8");
+  const start=html.indexOf("function sendToBeatLab()");
+  const end=html.indexOf("\nfunction normalizeCompositionValue",start);
+  assert.ok(start>=0&&end>start);
+  const body=html.slice(start,end);
+  assert.match(body,/const hasChords=Array\.isArray\(window\.__lyricMusicSketch\?\.chords\)/);
+  assert.match(body,/const hasLyrics=!!lyricTextRead\(\)\|\|!!window\.__incomingLyricProject\?\.dialogue/);
+  assert.match(body,/if\(!hasMelody&&!hasChords&&!hasRhythm&&!hasLyrics\)/);
+  assert.match(body,/project\.chords=project\.generatedMusic\?\.chords/);
+});
+
+
+
+
+test("TL-61 Composition Canvas can send the current song and section chord progressions to CHORD//LAB", async () => {
+  const html=await readFile(canvasPath,"utf8");
+  assert.ok(html.includes('onclick="sendToChordLab()"'));
+  assert.ok(html.includes("function sendToChordLab()"));
+  assert.ok(html.includes("source:'composition-canvas'"));
+  assert.ok(html.includes("chords:{key:"));
+  assert.ok(html.includes("#import="));
+});
+
+test("TL-62 CHORD//LAB returns chord progressions to Composition Canvas without losing section and beat data", async () => {
+  const html=await readFile(path.join(here,"..","apps","chord-lab.html"),"utf8");
+  assert.ok(html.includes('onclick="sendToCompositionCanvas()"'));
+  assert.ok(html.includes("function sendToCompositionCanvas()"));
+  assert.ok(html.includes("buildExportData()"));
+  assert.ok(html.includes("composition-canvas.html"));
+  const incoming=await readFile(canvasPath,"utf8");
+  assert.ok(incoming.includes("payload.source==='chord-lab'"));
+  assert.ok(incoming.includes("payload.chords?.sections"));
+  assert.ok(incoming.includes("restoreChordProgressionInput"));
+});
+
+test("TL-63 CHORD//LAB sends the actual chord progression to BEAT//LAB instead of BPM and key only", async () => {
+  const html=await readFile(path.join(here,"..","apps","chord-lab.html"),"utf8");
+  const start=html.indexOf("function sendToBeatLab()");
+  assert.ok(start>=0);
+  const body=html.slice(start,start+1000);
+  assert.ok(body.includes("const data=buildExportData()"));
+  assert.ok(html.includes("chords:{key:PROJ.key"));
+  assert.ok(body.includes("beat-lab.html"));
+});
+
+
+test("TL-64 CHORD//LAB exports all section progressions and their beat lengths", async () => {
+  const html=await readFile(path.join(here,"..","apps","chord-lab.html"),"utf8");
+  const start=html.indexOf("function _buildExportData()");
+  const end=html.indexOf("function exportJSON()",start);
+  assert.ok(start>=0&&end>start);
+  const body=html.slice(start,end);
+  assert.ok(body.includes("PROJ.sections"));
+  assert.ok(body.includes("section.progression"));
+  assert.ok(body.includes("durationBeats:duration"));
+  assert.ok(body.includes("chords:{key:PROJ.key,sections:chordSections}"));
+});
+
+test("TL-65 CHORD//LAB import restores all sections instead of flattening into the selected section", async () => {
+  const html=await readFile(path.join(here,"..","apps","chord-lab.html"),"utf8");
+  assert.ok(html.includes("PROJ.sections=data.chords.sections.map"));
+  assert.ok(html.includes("APP.qcSection=PROJ.sections[0]?.id"));
+  assert.ok(html.includes("typeof data.lyrics==='string'"));
+});
+
+
+test("TL-66 CHORD//LAB exposes a working copy action for the selected section progression", async () => {
+  const html=await readFile(path.join(here,"..","apps","chord-lab.html"),"utf8");
+  assert.ok(html.includes('onclick="copyChordProgression()"'));
+  const start=html.indexOf("async function copyChordProgression()");
+  const end=html.indexOf("function renderProgTimeline()",start);
+  assert.ok(start>=0&&end>start);
+  const body=html.slice(start,end);
+  assert.ok(body.includes("navigator.clipboard.writeText(text)"));
+  assert.ok(body.includes("document.execCommand('copy')"));
+  assert.ok(body.includes("progression.map(chord=>chord.name).join(' - ')"));
+});
+
+
+test("TL-67 speak-native album chord section objects are forwarded from Composition Canvas to CHORD//LAB", async () => {
+  const html=await readFile(canvasPath,"utf8");
+  const start=html.indexOf("function sendToChordLab()");
+  const end=html.indexOf("\nfunction sendToBeatLab()",start);
+  assert.ok(start>=0&&end>start);
+  const body=html.slice(start,end);
+  assert.ok(body.includes("const chordData=sketch.chords||window.__incomingLyricProject?.chords||{}"));
+  assert.ok(body.includes("Array.isArray(chordData.sections)?chordData.sections"));
+  assert.ok(body.includes("Array.isArray(section.progression)?section.progression:[]"));
+});
+
+
+test("TL-68 Vocal Lab sends original lyrics and named lyric sections to CHORD//LAB", async () => {
+  const html=await readFile(path.join(here,"..","apps","vocal-lab-v3.html"),"utf8");
+  const start=html.indexOf("function sendLyricToChordLab()");
+  const end=html.indexOf("\nfunction duetOpenCanvas()",start);
+  assert.ok(start>=0&&end>start);
+  const body=html.slice(start,end);
+  assert.ok(body.includes("lyricSections:lyricSections.map"));
+  assert.ok(body.includes("lyrics:activeText||lyricText"));
+  assert.ok(body.includes("source:'vocal-lab-lyric-link'"));
+  assert.ok(body.includes("prompt:'この歌詞の意味・感情・言葉のリズムを読み取り"));
+  assert.ok(body.includes("window.open('./chord-lab.html#import="));
+});
+
+test("TL-69 CHORD//LAB generates section-aware chord progressions from received lyrics", async () => {
+  const html=await readFile(path.join(here,"..","apps","chord-lab.html"),"utf8");
+  assert.ok(html.includes("const lyricSections=Array.isArray(PROJ.lyricSections)?PROJ.lyricSections:[]"));
+  assert.ok(html.includes('"sections": ['));
+  assert.ok(html.includes("PROJ.lyricSections=data.lyricSections"));
+  assert.ok(html.includes("function applyAiProgression(result)"));
+  assert.ok(html.includes("PROJ.sections=incomingSections.map"));
+});
+
+test("TL-70 CHORD//LAB previews every proposed section before applying", async () => {
+  const html=await readFile(path.join(here,"..","apps","chord-lab.html"),"utf8");
+  const start=html.indexOf("function renderAiPreview(result)");
+  const end=html.indexOf("function applyAiProgression(result)",start);
+  assert.ok(start>=0&&end>start);
+  const body=html.slice(start,end);
+  assert.ok(body.includes("Array.isArray(result.sections)"));
+  assert.ok(body.includes("sections.forEach(section=>"));
+  assert.ok(body.includes("section.progression"));
+});
+
+
+test("TL-71 CHORD//LAB round trip preserves lyric sections through Composition Canvas", async () => {
+  const chord=await readFile(path.join(here,"..","apps","chord-lab.html"),"utf8");
+  const canvas=await readFile(canvasPath,"utf8");
+  assert.ok(chord.includes("lyricSections:Array.isArray(PROJ.lyricSections)?PROJ.lyricSections:[]"));
+  assert.ok(canvas.includes("if(Array.isArray(payload.lyricSections)&&payload.lyricSections.length)"));
+  assert.ok(canvas.includes("lyricSections:lyricSectionsRead().map(section=>({name:section.label,role:section.role,lyrics:section.text}))"));
+  assert.ok(canvas.includes("if(lyricPanel)lyricPanel.classList.add('show')"));
+});
+
+
+test("TL-72 Vocal Lab has a clearly visible top-level route from lyrics to CHORD//LAB", async () => {
+  const html=await readFile(path.join(here,"..","apps","vocal-lab-v3.html"),"utf8");
+  const start=html.indexOf('id="mood-banner"');
+  const end=html.indexOf('id="lyric-studio"',start);
+  assert.ok(start>=0&&end>start);
+  const topArea=html.slice(start,end);
+  assert.doesNotMatch(topArea,/sendLyricToChordLab/);
+  assert.ok(html.includes('id="lyric-open-canvas"'));
+  assert.ok(html.includes('Composition Canvasで編集'));
 });

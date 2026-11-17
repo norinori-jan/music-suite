@@ -1214,7 +1214,7 @@ function updateCurrentPatternSummary(){
 // ════════════════════════════════════════════════════════
 // AI RUN — dispatcher (新規 or 編集)
 // ════════════════════════════════════════════════════════
-async let aiWorkflowStage=0;
+let aiWorkflowStage=0;
 function renderAiWorkflow(){
   [1,2,3].forEach(n=>{
     const el=document.getElementById('ai-flow-'+n);if(!el)return;
@@ -1422,7 +1422,8 @@ function renderAiPreview(result,bars,div,steps){
 }
 
 function applyAiPattern({result,bars,div,steps}){
-  aiWorkflowStage=2;renderAiWorkflow();\n  const mixPreviewButton=document.getElementById('ai-mix-preview-btn');if(mixPreviewButton)mixPreviewButton.style.display='inline-flex';
+  aiWorkflowStage=2;renderAiWorkflow();
+  const mixPreviewButton=document.getElementById('ai-mix-preview-btn');if(mixPreviewButton)mixPreviewButton.style.display='inline-flex';
   saveUndo();
   APP.bars=bars; APP.div=div; APP.timeSig=4;
   document.getElementById('step-bars').value=bars in {1:1,2:1,4:1,8:1}?bars:bars;
