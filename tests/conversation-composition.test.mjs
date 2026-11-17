@@ -96,3 +96,36 @@ test("Score Editor preserves the same project and returns it to Composition Canv
   assert.match(score, /projectId:context\.projectId/);
   assert.match(canvas, /payload\.source==='score-editor'/);
 });
+
+
+test("Canvas creates three melody variants and three rhythm choices with playable durations", async () => {
+  const html = await readFile(canvasPath, "utf8");
+  assert.match(html, /id="composition-arrangement"/);
+  assert.match(html, /id="composition-melody-choices"/);
+  assert.match(html, /id="composition-rhythm-choices"/);
+  assert.match(html, /id: 'hook',name:'A：覚えやすいフック型'/);
+  assert.match(html, /id: 'rise',name:'B：高揚する上昇型'/);
+  assert.match(html, /id: 'arch',name:'C：大きな弧を描く型'/);
+  assert.match(html, /id:'straight',name:'ストレート'/);
+  assert.match(html, /id:'syncopated',name:'シンコペーション'/);
+  assert.match(html, /id:'ballad',name:'バラード'/);
+  assert.match(html, /async function playSelectedComposition\(\)/);
+  assert.match(html, /function applySelectedComposition\(\)/);
+  const build = extractFunction(html, "buildSelectedCompositionNotes", "applySelectedComposition");
+  const arrangement = {
+    selectedMelody: "rise",
+    selectedRhythm: "syncopated",
+    melodyVariants: [{ id: "rise", notes: [
+      { id: "n1", note: "C4", word: "I" },
+      { id: "n2", note: "D4", word: "wish" },
+      { id: "n3", note: "E4", word: "tonight" }
+    ] }],
+    rhythmStyles: [{ id: "syncopated", beats: [0.75, 0.25, 0.5] }]
+  };
+  const context = { window: { __compositionArrangement: arrangement } };
+  vm.runInNewContext(build + "; result=buildSelectedCompositionNotes();", context);
+  const notes = context.result;
+  assert.deepEqual(JSON.parse(JSON.stringify(notes.map(n => n.startBeat))), [0, 0.75, 1]);
+  assert.deepEqual(JSON.parse(JSON.stringify(notes.map(n => n.durationBeats))), [0.75, 0.25, 0.5]);
+  assert.equal(notes.length, 3);
+});
