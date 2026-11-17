@@ -172,3 +172,16 @@ test("Canvas sends all arranged tracks to Score Editor and Score Editor imports 
   assert.match(score, /if\(Array\.isArray\(data\.tracks\)&&data\.tracks\.length\)/);
   assert.match(score, /tracks:PROJ\.tracks\.map\(track=>/);
 });
+
+
+test("Canvas renders treble and bass staves with measure rulers and duration-positioned track clips", async () => {
+  const html = await readFile(canvasPath, "utf8");
+  const helpers = html.slice(html.indexOf("function midiStaffPosition("), html.indexOf("function renderCompositionTracks("));
+  const context = { noteToMidi: note => ({C4:60,D4:62,E4:64,G2:43,C3:48}[note] ?? 60), escapeHtmlCanvas: value => String(value) };
+  vm.runInNewContext(helpers + "; result={treble:renderStaffSvg({id:'melody',name:'Lead',kind:'pitched',notes:[{note:'C4',startBeat:0,durationBeats:1}]},8),bass:renderStaffSvg({id:'bass',name:'Bass',kind:'pitched',notes:[{midi:43,startBeat:0,durationBeats:2}]},8),timeline:renderTrackTimeline({id:'melody',name:'Lead',kind:'pitched',notes:[{note:'C4',startBeat:1,durationBeats:2}]},8)};", context);
+  assert.match(context.result.treble, /𝄞/);
+  assert.match(context.result.bass, /𝄢/);
+  assert.equal((context.result.treble.match(/stroke="#9bb3b8" stroke-width="1"/g) || []).length, 5);
+  assert.match(context.result.timeline, /width="82"/);
+  assert.match(context.result.timeline, /C4/);
+});
