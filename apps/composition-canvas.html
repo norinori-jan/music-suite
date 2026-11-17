@@ -1416,7 +1416,8 @@ function renderStaffSvg(track,totalBeats){
   const clef=track.id==='bass'?'bass':'treble';
   const lines=Array.from({length:5},(_,i)=>'<line x1="'+left+'" y1="'+(top+i*lineGap)+'" x2="'+right+'" y2="'+(top+i*lineGap)+'" stroke="#9bb3b8" stroke-width="1"/>').join('');
   const barLines=Array.from({length:Math.ceil(totalBeats/4)+1},(_,i)=>'<line x1="'+(left+i*168)+'" y1="'+top+'" x2="'+(left+i*168)+'" y2="'+(top+40)+'" stroke="#52676d" stroke-width=".7"/>').join('');
-  const notes=track.notes.map(n=>{
+  const staffNotes=track.notes.flatMap(note=>Array.isArray(note.pitches)?note.pitches.map(midi=>({...note,midi})): [note]);
+  const notes=staffNotes.map(n=>{
     if(track.kind==='percussion'){
       const x=left+(n.startBeat||0)*42,y=top+20;
       return n.kind==='hat'?'<rect x="'+(x-3)+'" y="'+(y-3)+'" width="6" height="6" fill="#f4d35e"/>':'<ellipse cx="'+x+'" cy="'+y+'" rx="4" ry="3" fill="'+(n.kind==='kick'?'#65d6a6':'#f08a75')+'"/>';
