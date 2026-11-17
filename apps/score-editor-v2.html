@@ -959,6 +959,17 @@ function importExternalData(data, sourceLabel) {
   saveUndo();
   let added = 0;
   if(data.bpm) setBpm(data.bpm);
+  if(Array.isArray(data.tracks)&&data.tracks.length){
+    data.tracks.forEach(track=>{
+      const type=['melody','chord','bass','drum','counter'].includes(track.type)?track.type:'melody';
+      const notes=(Array.isArray(track.notes)?track.notes:[]).map(note=>({...note,id:uid(),pitch:Number(note.pitch)||60,startBeat:Number(note.startBeat)||0,durationBeats:Number(note.durationBeats)||1,vel:Number(note.vel)||80}));
+      if(notes.length){addTrack(type,track.name||type.toUpperCase(),notes);added+=notes.length;}
+    });
+    refreshAll();
+    setStatus('ok',`${sourceLabel||'外部データ'}を受信 — ${data.tracks.length}トラック / ${added}ノート追加`);
+    switchView('roll');
+    return;
+  }
   if(data.timeSig) { PROJ.timeSig = data.timeSig; }
   if(data.melody?.notes?.length) {
     const notes = data.melody.notes.map(n => ({...n, id:uid()}));
