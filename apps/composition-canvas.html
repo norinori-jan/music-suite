@@ -1272,6 +1272,20 @@ async function playSelectedComposition(){
     osc.connect(gain);gain.connect(ctx.destination);osc.start(at);osc.stop(at+duration+0.02);noteSequenceNodes.push(osc);
   };
   notes.forEach(n=>playTone(noteToMidi(n.note),start+n.startBeat*beatSeconds,n.durationBeats*beatSeconds*0.88,0.13));
+  // Chord bed: each section's progression is voiced underneath its lyric phrase.
+  (arrangement.chordSections||[]).forEach(section=>{
+    const phraseNotes=notes.filter(n=>n.section===section.label);
+    if(!phraseNotes.length)return;
+    const phraseStart=Math.min(...phraseNotes.map(n=>n.startBeat));
+    const phraseEnd=Math.max(...phraseNotes.map(n=>n.startBeat+n.durationBeats));
+    const phraseLength=Math.max(1,phraseEnd-phraseStart);
+    const progression=section.progression||[];
+    progression.forEach((chord,index)=>{
+      const chordStart=phraseStart+phraseLength*index/Math.max(1,progression.length);
+      const chordLength=phraseLength/Math.max(1,progression.length);
+      (chord.tones||[]).forEach((pitch,indexTone)=>playTone(48+Number(pitch),start+chordStart*beatSeconds,chordLength*beatSeconds*0.94,0.028,indexTone===0?'sine':'triangle'));
+    });
+  });
   const totalBeats=notes.reduce((max,n)=>Math.max(max,n.startBeat+n.durationBeats),0);
   const noiseBuffer=ctx.createBuffer(1,Math.floor(ctx.sampleRate*0.12),ctx.sampleRate);
   const data=noiseBuffer.getChannelData(0);for(let i=0;i<data.length;i++)data[i]=(Math.random()*2-1);
