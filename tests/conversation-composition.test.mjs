@@ -185,3 +185,17 @@ test("Canvas renders treble and bass staves with measure rulers and duration-pos
   assert.match(context.result.timeline, /width="82"/);
   assert.match(context.result.timeline, /C4/);
 });
+
+
+test("Composition arrangement is persisted by project identity and restores all tracks", async () => {
+  const html = await readFile(canvasPath, "utf8");
+  assert.match(html, /function compositionArrangementStorageKey\(\)/);
+  assert.match(html, /localStorage\.setItem\(key,JSON\.stringify\(arrangement\)\)/);
+  assert.match(html, /function restoreSavedCompositionArrangement\(\)/);
+  assert.match(html, /restoreSavedCompositionArrangement\(\)/);
+  assert.match(html, /project\.drums=drumTrack\?/);
+  assert.match(html, /project\.tracks=arrangedTracks\.filter/);
+  const scorePath = path.join(here, "..", "apps", "score-editor-v2.html");
+  const score = await readFile(scorePath, "utf8");
+  assert.match(score, /tracks:PROJ\.tracks\.map\(track=>/);
+});
