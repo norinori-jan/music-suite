@@ -129,3 +129,46 @@ test("Canvas creates three melody variants and three rhythm choices with playabl
   assert.deepEqual(JSON.parse(JSON.stringify(notes.map(n => n.durationBeats))), [0.75, 0.25, 0.5]);
   assert.equal(notes.length, 3);
 });
+
+
+test("Canvas builds independent melody, chord, bass, drum and lyric tracks on one beat timeline", async () => {
+  const html = await readFile(canvasPath, "utf8");
+  assert.match(html, /id="composition-multitrack"/);
+  assert.match(html, /function buildCompositionTracks\(melodyNotes\)/);
+  assert.match(html, /function renderTrackTimeline\(track,totalBeats\)/);
+  assert.match(html, /function renderStaffSvg\(track,totalBeats\)/);
+  assert.match(html, /function setCompositionTrackMode\(id,mode\)/);
+  assert.match(html, /soloTracks\.length\?soloTracks:tracks\.filter\(t=>!t\.muted\)/);
+  const builder = extractFunction(html, "buildCompositionTracks", "setCompositionTrackMode");
+  const arrangement = {
+    bpm: 96, selectedRhythm: "syncopated",
+    chordSections: [{ label: "Verse", progression: [
+      { id: "c1", chord: "C", tones: [0,4,7], beats: 4 },
+      { id: "c2", chord: "G", tones: [7,11,2], beats: 4 }
+    ] }]
+  };
+  const context = {
+    window: { __compositionArrangement: arrangement },
+    lyricSectionsRead: () => [{ label: "Verse", role: "A", text: "Hello world" }]
+  };
+  vm.runInNewContext(builder + "; result=buildCompositionTracks([{id:'m1',note:'C4',startBeat:0,durationBeats:0.5,lyric:'Hello world',role:'A',section:'Verse'},{id:'m2',note:'E4',startBeat:0.5,durationBeats:0.5,lyric:'Hello world',role:'A',section:'Verse'}]);", context);
+  const tracks = context.result;
+  assert.deepEqual(JSON.parse(JSON.stringify(tracks.map(t => t.id))), ["melody","chords","bass","drums","lyrics"]);
+  assert.equal(tracks[0].notes.length, 2);
+  assert.equal(tracks[1].notes.length, 2);
+  assert.equal(tracks[2].notes.length, 2);
+  assert.ok(tracks[3].notes.some(n => n.kind === "kick"));
+  assert.equal(tracks[4].notes[0].startBeat, 0);
+  assert.equal(tracks[4].notes[0].durationBeats, 1);
+});
+
+test("Canvas sends all arranged tracks to Score Editor and Score Editor imports and returns track collections", async () => {
+  const canvas = await readFile(canvasPath, "utf8");
+  const scorePath = path.join(here, "..", "apps", "score-editor-v2.html");
+  const score = await readFile(scorePath, "utf8");
+  assert.match(canvas, /tracks:trackPackage/);
+  assert.match(canvas, /function restoreCompositionTracksFromScore\(payload\)/);
+  assert.match(canvas, /restoreCompositionTracksFromScore\(payload\)/);
+  assert.match(score, /if\(Array\.isArray\(data\.tracks\)&&data\.tracks\.length\)/);
+  assert.match(score, /tracks:PROJ\.tracks\.map\(track=>/);
+});
