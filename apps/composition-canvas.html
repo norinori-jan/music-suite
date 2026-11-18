@@ -1265,7 +1265,8 @@ function renderCompositionArrangement(){
     const desc=document.createElement('p');desc.style.cssText='font-size:12px;min-height:34px';desc.textContent=variant.description;
     const notes=document.createElement('div');notes.style.cssText='font-size:12px;line-height:1.6;overflow-wrap:anywhere';notes.textContent=variant.notes.slice(0,12).map(n=>n.note).join(' · ')+(variant.notes.length>12?' …':'');
     const button=document.createElement('button');button.type='button';button.textContent=variant.id===arrangement.selectedMelody?'✓ 選択中':'この旋律を選ぶ';button.addEventListener('click',()=>{arrangement.selectedMelody=variant.id;renderCompositionArrangement();applySelectedComposition();});
-    card.append(title,desc,notes,button);melodies.appendChild(card);
+    const audition=document.createElement('button');audition.type='button';audition.textContent='▶ この案を試聴';audition.setAttribute('aria-label',variant.name+'を単独試聴');audition.addEventListener('click',()=>previewCompositionVariant(variant.id));
+    card.append(title,desc,notes,button,audition);melodies.appendChild(card);
   });
   rhythms.replaceChildren();
   arrangement.rhythmStyles.forEach(style=>{
@@ -1275,6 +1276,15 @@ function renderCompositionArrangement(){
   const selected=arrangement.melodyVariants.find(v=>v.id===arrangement.selectedMelody);
   const rhythm=arrangement.rhythmStyles.find(r=>r.id===arrangement.selectedRhythm);
   document.getElementById('composition-selected-summary').textContent='選択中：'+selected.name+' × '+rhythm.name+' ／ '+arrangement.bpm+' BPM ／ '+selected.notes.length+'音';
+}
+async function previewCompositionVariant(variantId){
+  const arrangement=window.__compositionArrangement;
+  if(!arrangement||!arrangement.melodyVariants?.some(variant=>variant.id===variantId)){showToast('試聴するメロディー案が見つかりません');return false}
+  arrangement.selectedMelody=variantId;
+  renderCompositionArrangement();
+  if(!applySelectedComposition())return false;
+  await playSelectedComposition();
+  return true;
 }
 function buildSelectedCompositionNotes(){
   const arrangement=window.__compositionArrangement;
