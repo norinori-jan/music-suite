@@ -27,18 +27,56 @@ const sampleNotes = [
   { id: "n2", note: "G4", startBeat: 1.5, durationBeats: 1, word: "rise", lyric: "We will rise", role: "LEAD", section: "Verse" }
 ];
 
-test("MT-01 one English lyric source produces exactly three named melody contours", async () => {
+test("MT-01 executes the lyric generator and creates three independent melody variants from one English source", async () => {
   const html = await loadCanvas();
-  assert.match(html, /const contours\s*=\s*\[/);
-  for (const id of ["hook", "rise", "arch"]) {
-    assert.match(html, new RegExp(`id:\\s*'${id}'`));
+  const code = extractFunction(html, "generateLyricMusicSketch", "renderCompositionArrangement");
+  const values = {
+    "lyric-key": "C",
+    "lyric-mood": "bright",
+    "lyric-progression": "pop",
+    "note-sequence-bpm": "96"
+  };
+  const elements = new Map();
+  const document = {
+    getElementById(id) {
+      if (!elements.has(id)) elements.set(id, { value: values[id] || "", style: {}, innerHTML: "" });
+      return elements.get(id);
+    }
+  };
+  const source = "We will rise tonight";
+  const context = {
+    document,
+    window: {},
+    lyricTextRead: () => source,
+    lyricSectionsRead: () => [{ label: "Verse", role: "LEAD", text: source }],
+    LYRIC_SCALES: { C: [0, 2, 4, 5, 7, 9, 11] },
+    LYRIC_ROOTS: { C: 0 },
+    LYRIC_PROGRESSIONS: { pop: [1, 5, 6, 4] },
+    LYRIC_NOTE_NAMES: ["C", "C#", "D", "D#", "E", "F", "F#", "G", "G#", "A", "A#", "B"],
+    buildSectionChordProgressions: () => [{
+      label: "Verse",
+      progression: [{ id: "ch-1", chord: "C", beats: 4, tones: [0, 4, 7] }]
+    }],
+    lyricEstimateSyllables: () => 1,
+    resolveMelodyChordDegree: () => 1,
+    makeMelodyNoteId: index => "note-" + index,
+    renderGeneratedChordSections: () => {},
+    renderCompositionArrangement: () => {},
+    applySelectedComposition: () => true,
+    escapeHtmlCanvas: value => value,
+    showToast: () => {},
+    Math, Number, String, Array, Object, Map
+  };
+  vm.runInNewContext(code + "\ngenerateLyricMusicSketch();", context);
+  const variants = context.window.__compositionArrangement.melodyVariants;
+  assert.deepEqual(Array.from(variants, variant => variant.id), ["hook", "rise", "arch"]);
+  assert.equal(new Set(Array.from(variants, variant => variant.notes.map(note => note.note).join(","))).size, 3);
+  for (const variant of variants) {
+    assert.equal(variant.notes.length, 4);
+    assert.deepEqual(Array.from(variant.notes, note => note.word), ["We", "will", "rise", "tonight"]);
+    assert.equal(new Set(Array.from(variant.notes, note => note.id)).size, 4);
   }
-  assert.match(html, /const variants\s*=\s*contours\.map/);
-  assert.match(html, /melodyVariants:\s*variants/);
-  assert.match(html, /sourceText=lyricTextRead\(\)/);
-  assert.match(html, /英語 /);
-  assert.match(html, /syllables\.length/);
-  assert.match(html, /notes=syllables\.slice\(0,128\)\.map/);
+  assert.equal(context.window.__compositionArrangement.selectedMelody, "hook");
 });
 
 test("MT-02 arrangement builds independent melody, chord, bass, drum and lyric tracks", async () => {
@@ -138,4 +176,25 @@ test("MT-07 mute and solo state are applied to the same simultaneous playback mi
   assert.match(play, /soloTracks\.length\?soloTracks:tracks\.filter\(t=>!t\.muted\)/);
   assert.match(html, /track\.muted=!track\.muted/);
   assert.match(html, /track\.solo=!track\.solo/);
+});
+
+
+test("MT-08 each melody card can select, apply and audition its own variant", async () => {
+  const html = await loadCanvas();
+  assert.match(html, /▶ この案を試聴/);
+  assert.match(html, /previewCompositionVariant\(variant\.id\)/);
+  const code = extractFunction(html, "previewCompositionVariant", "buildSelectedCompositionNotes");
+  const calls = [];
+  const context = {
+    window: { __compositionArrangement: { selectedMelody: "hook", melodyVariants: [{ id: "hook" }, { id: "rise" }, { id: "arch" }] } },
+    renderCompositionArrangement: () => calls.push("render"),
+    applySelectedComposition: () => { calls.push("apply"); return true; },
+    playSelectedComposition: async () => { calls.push("play"); },
+    showToast: () => {},
+    Array
+  };
+  const result = await vm.runInNewContext(code + "\npreviewCompositionVariant('rise');", context);
+  assert.equal(result, true);
+  assert.equal(context.window.__compositionArrangement.selectedMelody, "rise");
+  assert.deepEqual(calls, ["render", "apply", "play"]);
 });
