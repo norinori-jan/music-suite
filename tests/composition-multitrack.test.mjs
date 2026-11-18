@@ -9,7 +9,9 @@ const here = path.dirname(fileURLToPath(import.meta.url));
 const canvasPath = path.join(here, "..", "apps", "composition-canvas.html");
 
 function extractFunction(source, name, nextName) {
-  const start = source.indexOf(`function ${name}(`);
+  const syncStart = source.indexOf(`function ${name}(`);
+  const asyncStart = source.indexOf(`async function ${name}(`);
+  const start = asyncStart >= 0 && (syncStart < 0 || asyncStart < syncStart) ? asyncStart : syncStart;
   assert.notEqual(start, -1, `missing function ${name}`);
   const end = nextName
     ? source.indexOf(`function ${nextName}(`, start + 1)
