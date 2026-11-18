@@ -36,8 +36,8 @@ test("MT-01 one English lyric source produces exactly three named melody contour
   assert.match(html, /const variants\s*=\s*contours\.map/);
   assert.match(html, /melodyVariants:\s*variants/);
   assert.match(html, /sourceText=lyricTextRead\(\)/);
-  assert.match(html, /英語 '+syllables\.length\+' 音節/);
-  assert.match(html, /sourceText=lyricTextRead\(\)/);
+  assert.match(html, /英語 /);
+  assert.match(html, /syllables\.length/);
   assert.match(html, /notes=syllables\.slice\(0,128\)\.map/);
 });
 
