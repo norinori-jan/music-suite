@@ -199,3 +199,14 @@ test("Composition arrangement is persisted by project identity and restores all 
   const score = await readFile(scorePath, "utf8");
   assert.match(score, /tracks:PROJ\.tracks\.map\(track=>/);
 });
+
+
+test("Canvas receives speak-native lyrics imports and restores the lyrics into the editor", async () => {
+  const html = await readFile(canvasPath, "utf8");
+  assert.match(html, /hash\.startsWith\('import='\)/);
+  assert.match(html, /payload\.source==='composition-canvas-lyrics'/);
+  assert.match(html, /restoreLyricCanvasProject\(payload\)/);
+  assert.match(html, /document\.getElementById\('canvas-lyrics'\)\.value=project\.lyrics\|\|''/);
+  assert.match(html, /document\.getElementById\('lyric-panel'\)\.classList\.add\('show'\)/);
+  assert.match(html, /history\.replaceState\(null,'' ,location\.pathname\+location\.search\)/);
+});
