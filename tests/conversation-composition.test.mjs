@@ -208,5 +208,5 @@ test("Canvas receives speak-native lyrics imports and restores the lyrics into t
   assert.match(html, /restoreLyricCanvasProject\(payload\)/);
   assert.match(html, /document\.getElementById\('canvas-lyrics'\)\.value=project\.lyrics\|\|''/);
   assert.match(html, /document\.getElementById\('lyric-panel'\)\.classList\.add\('show'\)/);
-  assert.match(html, /history\.replaceState\(null,'' ,location\.pathname\+location\.search\)/);
+  assert.match(html, /history\.replaceState\(null,'',location\.pathname\+location\.search\)/);
 });
