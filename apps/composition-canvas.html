@@ -748,8 +748,14 @@ function appendSelectedDialogueSentences(){
   Object.entries(additions).forEach(([section,lines])=>{
     if(!lines.length)return;
     const field=document.getElementById(ids[section]);
-    const existing=field.value.split(/\n+/).map(line=>line.trim()).filter(Boolean);
-    const fresh=lines.filter(line=>!existing.includes(line));
+    const existing=new Set(field.value.split(/\n+/).map(line=>line.trim()).filter(Boolean));
+    const fresh=[];
+    lines.forEach(line=>{
+      if(!existing.has(line)){
+        existing.add(line);
+        fresh.push(line);
+      }
+    });
     if(fresh.length){field.value=[field.value.trim(),...fresh].filter(Boolean).join('\n');added+=fresh.length;}
   });
   if(added){
