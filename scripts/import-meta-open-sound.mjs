@@ -119,6 +119,7 @@ async function importCollection(id) {
 
   const uniqueFiles = [...new Set(regions.map(region => region.file))];
   const destination = path.join(ROOT, "audio", "assets", id);
+  let totalBytes = 0;
   const oggDir = path.join(destination, "ogg");
   await mkdir(oggDir, { recursive: true });
 
@@ -129,6 +130,7 @@ async function importCollection(id) {
     const actual = createHash("sha256").update(bytes).digest("hex");
     if (actual !== expected) throw new Error("SHA-256 mismatch: " + id + "/" + relativeFile);
     await writeFile(path.join(destination, relativeFile), bytes);
+    totalBytes += bytes.length;
   });
 
   await Promise.all([
@@ -154,7 +156,7 @@ async function importCollection(id) {
     }))
   };
   await writeFile(path.join(ROOT, "audio", id + ".manifest.json"), JSON.stringify(instrument, null, 2) + "\n");
-  return { id, samples: uniqueFiles.length, bytes: uniqueFiles.reduce((sum, file) => sum, 0) };
+  return { id, samples: uniqueFiles.length, bytes: totalBytes };
 }
 
 const results = [];
