@@ -1,0 +1,10 @@
+{
+  "purpose": "Trigger verified CC0 violin-section and cello-section WAV import on this development branch only.",
+  "sourceLicense": "CC0-1.0",
+  "targetFormat": "24-bit PCM WAV, mono, 48 kHz",
+  "expectedZones": {
+    "violin": 30,
+    "cello": 26
+  },
+  "note": "The import workflow performs a dry-run first, verifies source licenses and per-zone SHA-256 checksums, then downloads the samples. It does not modify main or the published site."
+}
