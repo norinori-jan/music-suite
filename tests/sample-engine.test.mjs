@@ -6,7 +6,7 @@ import path from "node:path";
 
 const require = createRequire(import.meta.url);
 const enginePath = path.join(path.dirname(fileURLToPath(import.meta.url)), "..", "audio", "sample-engine.js");
-const { createSampleAudioEngine, chooseSample, validateManifest } = require(enginePath);
+const { createSampleAudioEngine, chooseSample, chooseSampleLayers, validateManifest } = require(enginePath);
 
 function makeContext() {
   const sources = [];
@@ -76,6 +76,29 @@ test("sample selection honors note range and velocity layers", () => {
   assert.equal(chooseSample(manifest.instruments.piano.samples, 60, 30).url, "/audio/piano-c4-soft.ogg");
   assert.equal(chooseSample(manifest.instruments.piano.samples, 60, 100).url, "/audio/piano-c4-hard.ogg");
   assert.equal(chooseSample(manifest.instruments.piano.samples, 63, 100), null);
+});
+
+
+test("velocity transitions crossfade adjacent recorded layers without a hard step", () => {
+  const layers = [
+    { url: "soft", rootMidi: 60, keyLow: 60, keyHigh: 60, velocityLow: 1, velocityHigh: 39, xfoutLovel: 24, xfoutHivel: 39 },
+    { url: "medium", rootMidi: 60, keyLow: 60, keyHigh: 60, velocityLow: 24, velocityHigh: 71, xfinLovel: 24, xfinHivel: 39, xfoutLovel: 56, xfoutHivel: 71 },
+    { url: "loud", rootMidi: 60, keyLow: 60, keyHigh: 60, velocityLow: 56, velocityHigh: 127, xfinLovel: 56, xfinHivel: 71 }
+  ];
+  const selected = chooseSampleLayers(layers, 60, 31.5);
+  assert.equal(selected.length, 2);
+  const power = selected.reduce((sum, item) => sum + item.weight * item.weight, 0);
+  assert.ok(Math.abs(power - 1) < 1e-9);
+});
+
+test("nylon guitar selects the lowest practical string for first-position fingering", () => {
+  const samples = [
+    { url: "low-e", string: "LowE", rootMidi: 48, keyLow: 48, keyHigh: 48, velocityLow: 1, velocityHigh: 127, swLast: 24 },
+    { url: "a", string: "A", rootMidi: 48, keyLow: 48, keyHigh: 48, velocityLow: 1, velocityHigh: 127, swLast: 24 },
+    { url: "d", string: "D", rootMidi: 48, keyLow: 48, keyHigh: 48, velocityLow: 1, velocityHigh: 127, swLast: 24 }
+  ];
+  const selected = chooseSample(samples, 48, 80, { stringSelection: "guitar-first-position", techniqueSelection: "auto" });
+  assert.equal(selected.url, "a");
 });
 
 test("manifest rejects invalid sample ranges", () => {
