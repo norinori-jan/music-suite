@@ -1,0 +1,1939 @@
+{
+  "instruments": {
+    "meta-swagbass": {
+      "id": "meta-swagbass",
+      "name": "Karoryfer Swagbass Clean",
+      "license": "CC0-1.0",
+      "sourceRepository": "https://github.com/sfzinstruments/karoryfer.swagbass",
+      "sourceCommit": "9d10fcae71af1975988ddecd5af1c95d372c7355",
+      "sampleFormat": "PCM WAV 24-bit / 48 kHz mono",
+      "noteOffMode": "release",
+      "velocityMode": "layer",
+      "roundRobin": true,
+      "attack": 0.004,
+      "release": 0.18,
+      "samples": [
+        {
+          "url": "../audio/assets/meta-swagbass/samples/bass/a1_p_rr3.wav",
+          "rootMidi": 21,
+          "keyLow": 9,
+          "keyHigh": 22,
+          "velocityLow": 1,
+          "velocityHigh": 50,
+          "roundRobinGroup": "bass-21-1-50",
+          "roundRobinIndex": 3
+        },
+        {
+          "url": "../audio/assets/meta-swagbass/samples/bass/a1_p_rr4.wav",
+          "rootMidi": 21,
+          "keyLow": 9,
+          "keyHigh": 22,
+          "velocityLow": 1,
+          "velocityHigh": 50,
+          "roundRobinGroup": "bass-21-1-50",
+          "roundRobinIndex": 4
+        },
+        {
+          "url": "../audio/assets/meta-swagbass/samples/bass/a1_p_rr2.wav",
+          "rootMidi": 21,
+          "keyLow": 9,
+          "keyHigh": 22,
+          "velocityLow": 1,
+          "velocityHigh": 50,
+          "roundRobinGroup": "bass-21-1-50",
+          "roundRobinIndex": 2
+        },
+        {
+          "url": "../audio/assets/meta-swagbass/samples/bass/a1_p_rr1.wav",
+          "rootMidi": 21,
+          "keyLow": 9,
+          "keyHigh": 22,
+          "velocityLow": 1,
+          "velocityHigh": 50,
+          "roundRobinGroup": "bass-21-1-50",
+          "roundRobinIndex": 1
+        },
+        {
+          "url": "../audio/assets/meta-swagbass/samples/bass/a1_f_rr1.wav",
+          "rootMidi": 21,
+          "keyLow": 9,
+          "keyHigh": 22,
+          "velocityLow": 51,
+          "velocityHigh": 110,
+          "roundRobinGroup": "bass-21-51-110",
+          "roundRobinIndex": 1
+        },
+        {
+          "url": "../audio/assets/meta-swagbass/samples/bass/a1_f_rr2.wav",
+          "rootMidi": 21,
+          "keyLow": 9,
+          "keyHigh": 22,
+          "velocityLow": 51,
+          "velocityHigh": 110,
+          "roundRobinGroup": "bass-21-51-110",
+          "roundRobinIndex": 2
+        },
+        {
+          "url": "../audio/assets/meta-swagbass/samples/bass/a1_f_rr3.wav",
+          "rootMidi": 21,
+          "keyLow": 9,
+          "keyHigh": 22,
+          "velocityLow": 51,
+          "velocityHigh": 110,
+          "roundRobinGroup": "bass-21-51-110",
+          "roundRobinIndex": 3
+        },
+        {
+          "url": "../audio/assets/meta-swagbass/samples/bass/a1_f_rr4.wav",
+          "rootMidi": 21,
+          "keyLow": 9,
+          "keyHigh": 22,
+          "velocityLow": 51,
+          "velocityHigh": 110,
+          "roundRobinGroup": "bass-21-51-110",
+          "roundRobinIndex": 4
+        },
+        {
+          "url": "../audio/assets/meta-swagbass/samples/bass/a1_fff_rr1.wav",
+          "rootMidi": 21,
+          "keyLow": 9,
+          "keyHigh": 22,
+          "velocityLow": 111,
+          "velocityHigh": 127,
+          "roundRobinGroup": "bass-21-111-127",
+          "roundRobinIndex": 1
+        },
+        {
+          "url": "../audio/assets/meta-swagbass/samples/bass/a1_fff_rr2.wav",
+          "rootMidi": 21,
+          "keyLow": 9,
+          "keyHigh": 22,
+          "velocityLow": 111,
+          "velocityHigh": 127,
+          "roundRobinGroup": "bass-21-111-127",
+          "roundRobinIndex": 2
+        },
+        {
+          "url": "../audio/assets/meta-swagbass/samples/bass/a1_fff_rr3.wav",
+          "rootMidi": 21,
+          "keyLow": 9,
+          "keyHigh": 22,
+          "velocityLow": 111,
+          "velocityHigh": 127,
+          "roundRobinGroup": "bass-21-111-127",
+          "roundRobinIndex": 3
+        },
+        {
+          "url": "../audio/assets/meta-swagbass/samples/bass/a1_fff_rr4.wav",
+          "rootMidi": 21,
+          "keyLow": 9,
+          "keyHigh": 22,
+          "velocityLow": 111,
+          "velocityHigh": 127,
+          "roundRobinGroup": "bass-21-111-127",
+          "roundRobinIndex": 4
+        },
+        {
+          "url": "../audio/assets/meta-swagbass/samples/bass/c2_p_rr1.wav",
+          "rootMidi": 24,
+          "keyLow": 23,
+          "keyHigh": 25,
+          "velocityLow": 1,
+          "velocityHigh": 50,
+          "roundRobinGroup": "bass-24-1-50",
+          "roundRobinIndex": 1
+        },
+        {
+          "url": "../audio/assets/meta-swagbass/samples/bass/c2_p_rr2.wav",
+          "rootMidi": 24,
+          "keyLow": 23,
+          "keyHigh": 25,
+          "velocityLow": 1,
+          "velocityHigh": 50,
+          "roundRobinGroup": "bass-24-1-50",
+          "roundRobinIndex": 2
+        },
+        {
+          "url": "../audio/assets/meta-swagbass/samples/bass/c2_p_rr3.wav",
+          "rootMidi": 24,
+          "keyLow": 23,
+          "keyHigh": 25,
+          "velocityLow": 1,
+          "velocityHigh": 50,
+          "roundRobinGroup": "bass-24-1-50",
+          "roundRobinIndex": 3
+        },
+        {
+          "url": "../audio/assets/meta-swagbass/samples/bass/c2_p_rr4.wav",
+          "rootMidi": 24,
+          "keyLow": 23,
+          "keyHigh": 25,
+          "velocityLow": 1,
+          "velocityHigh": 50,
+          "roundRobinGroup": "bass-24-1-50",
+          "roundRobinIndex": 4
+        },
+        {
+          "url": "../audio/assets/meta-swagbass/samples/bass/c2_f_rr1.wav",
+          "rootMidi": 24,
+          "keyLow": 23,
+          "keyHigh": 25,
+          "velocityLow": 51,
+          "velocityHigh": 110,
+          "roundRobinGroup": "bass-24-51-110",
+          "roundRobinIndex": 1
+        },
+        {
+          "url": "../audio/assets/meta-swagbass/samples/bass/c2_f_rr2.wav",
+          "rootMidi": 24,
+          "keyLow": 23,
+          "keyHigh": 25,
+          "velocityLow": 51,
+          "velocityHigh": 110,
+          "roundRobinGroup": "bass-24-51-110",
+          "roundRobinIndex": 2
+        },
+        {
+          "url": "../audio/assets/meta-swagbass/samples/bass/c2_f_rr3.wav",
+          "rootMidi": 24,
+          "keyLow": 23,
+          "keyHigh": 25,
+          "velocityLow": 51,
+          "velocityHigh": 110,
+          "roundRobinGroup": "bass-24-51-110",
+          "roundRobinIndex": 3
+        },
+        {
+          "url": "../audio/assets/meta-swagbass/samples/bass/c2_f_rr4.wav",
+          "rootMidi": 24,
+          "keyLow": 23,
+          "keyHigh": 25,
+          "velocityLow": 51,
+          "velocityHigh": 110,
+          "roundRobinGroup": "bass-24-51-110",
+          "roundRobinIndex": 4
+        },
+        {
+          "url": "../audio/assets/meta-swagbass/samples/bass/c2_fff_rr1.wav",
+          "rootMidi": 24,
+          "keyLow": 23,
+          "keyHigh": 25,
+          "velocityLow": 111,
+          "velocityHigh": 127,
+          "roundRobinGroup": "bass-24-111-127",
+          "roundRobinIndex": 1
+        },
+        {
+          "url": "../audio/assets/meta-swagbass/samples/bass/c2_fff_rr2.wav",
+          "rootMidi": 24,
+          "keyLow": 23,
+          "keyHigh": 25,
+          "velocityLow": 111,
+          "velocityHigh": 127,
+          "roundRobinGroup": "bass-24-111-127",
+          "roundRobinIndex": 2
+        },
+        {
+          "url": "../audio/assets/meta-swagbass/samples/bass/c2_fff_rr3.wav",
+          "rootMidi": 24,
+          "keyLow": 23,
+          "keyHigh": 25,
+          "velocityLow": 111,
+          "velocityHigh": 127,
+          "roundRobinGroup": "bass-24-111-127",
+          "roundRobinIndex": 3
+        },
+        {
+          "url": "../audio/assets/meta-swagbass/samples/bass/c2_fff_rr4.wav",
+          "rootMidi": 24,
+          "keyLow": 23,
+          "keyHigh": 25,
+          "velocityLow": 111,
+          "velocityHigh": 127,
+          "roundRobinGroup": "bass-24-111-127",
+          "roundRobinIndex": 4
+        },
+        {
+          "url": "../audio/assets/meta-swagbass/samples/bass/eb2_p_rr4.wav",
+          "rootMidi": 27,
+          "keyLow": 26,
+          "keyHigh": 28,
+          "velocityLow": 1,
+          "velocityHigh": 50,
+          "roundRobinGroup": "bass-27-1-50",
+          "roundRobinIndex": 4
+        },
+        {
+          "url": "../audio/assets/meta-swagbass/samples/bass/eb2_p_rr3.wav",
+          "rootMidi": 27,
+          "keyLow": 26,
+          "keyHigh": 28,
+          "velocityLow": 1,
+          "velocityHigh": 50,
+          "roundRobinGroup": "bass-27-1-50",
+          "roundRobinIndex": 3
+        },
+        {
+          "url": "../audio/assets/meta-swagbass/samples/bass/eb2_p_rr2.wav",
+          "rootMidi": 27,
+          "keyLow": 26,
+          "keyHigh": 28,
+          "velocityLow": 1,
+          "velocityHigh": 50,
+          "roundRobinGroup": "bass-27-1-50",
+          "roundRobinIndex": 2
+        },
+        {
+          "url": "../audio/assets/meta-swagbass/samples/bass/eb2_p_rr1.wav",
+          "rootMidi": 27,
+          "keyLow": 26,
+          "keyHigh": 28,
+          "velocityLow": 1,
+          "velocityHigh": 50,
+          "roundRobinGroup": "bass-27-1-50",
+          "roundRobinIndex": 1
+        },
+        {
+          "url": "../audio/assets/meta-swagbass/samples/bass/eb2_f_rr4.wav",
+          "rootMidi": 27,
+          "keyLow": 26,
+          "keyHigh": 28,
+          "velocityLow": 51,
+          "velocityHigh": 110,
+          "roundRobinGroup": "bass-27-51-110",
+          "roundRobinIndex": 4
+        },
+        {
+          "url": "../audio/assets/meta-swagbass/samples/bass/eb2_f_rr3.wav",
+          "rootMidi": 27,
+          "keyLow": 26,
+          "keyHigh": 28,
+          "velocityLow": 51,
+          "velocityHigh": 110,
+          "roundRobinGroup": "bass-27-51-110",
+          "roundRobinIndex": 3
+        },
+        {
+          "url": "../audio/assets/meta-swagbass/samples/bass/eb2_f_rr2.wav",
+          "rootMidi": 27,
+          "keyLow": 26,
+          "keyHigh": 28,
+          "velocityLow": 51,
+          "velocityHigh": 110,
+          "roundRobinGroup": "bass-27-51-110",
+          "roundRobinIndex": 2
+        },
+        {
+          "url": "../audio/assets/meta-swagbass/samples/bass/eb2_f_rr1.wav",
+          "rootMidi": 27,
+          "keyLow": 26,
+          "keyHigh": 28,
+          "velocityLow": 51,
+          "velocityHigh": 110,
+          "roundRobinGroup": "bass-27-51-110",
+          "roundRobinIndex": 1
+        },
+        {
+          "url": "../audio/assets/meta-swagbass/samples/bass/eb2_fff_rr4.wav",
+          "rootMidi": 27,
+          "keyLow": 26,
+          "keyHigh": 28,
+          "velocityLow": 111,
+          "velocityHigh": 127,
+          "roundRobinGroup": "bass-27-111-127",
+          "roundRobinIndex": 4
+        },
+        {
+          "url": "../audio/assets/meta-swagbass/samples/bass/eb2_fff_rr3.wav",
+          "rootMidi": 27,
+          "keyLow": 26,
+          "keyHigh": 28,
+          "velocityLow": 111,
+          "velocityHigh": 127,
+          "roundRobinGroup": "bass-27-111-127",
+          "roundRobinIndex": 3
+        },
+        {
+          "url": "../audio/assets/meta-swagbass/samples/bass/eb2_fff_rr2.wav",
+          "rootMidi": 27,
+          "keyLow": 26,
+          "keyHigh": 28,
+          "velocityLow": 111,
+          "velocityHigh": 127,
+          "roundRobinGroup": "bass-27-111-127",
+          "roundRobinIndex": 2
+        },
+        {
+          "url": "../audio/assets/meta-swagbass/samples/bass/eb2_fff_rr1.wav",
+          "rootMidi": 27,
+          "keyLow": 26,
+          "keyHigh": 28,
+          "velocityLow": 111,
+          "velocityHigh": 127,
+          "roundRobinGroup": "bass-27-111-127",
+          "roundRobinIndex": 1
+        },
+        {
+          "url": "../audio/assets/meta-swagbass/samples/bass/gb2_p_rr4.wav",
+          "rootMidi": 30,
+          "keyLow": 29,
+          "keyHigh": 31,
+          "velocityLow": 1,
+          "velocityHigh": 50,
+          "roundRobinGroup": "bass-30-1-50",
+          "roundRobinIndex": 4
+        },
+        {
+          "url": "../audio/assets/meta-swagbass/samples/bass/gb2_p_rr3.wav",
+          "rootMidi": 30,
+          "keyLow": 29,
+          "keyHigh": 31,
+          "velocityLow": 1,
+          "velocityHigh": 50,
+          "roundRobinGroup": "bass-30-1-50",
+          "roundRobinIndex": 3
+        },
+        {
+          "url": "../audio/assets/meta-swagbass/samples/bass/gb2_p_rr2.wav",
+          "rootMidi": 30,
+          "keyLow": 29,
+          "keyHigh": 31,
+          "velocityLow": 1,
+          "velocityHigh": 50,
+          "roundRobinGroup": "bass-30-1-50",
+          "roundRobinIndex": 2
+        },
+        {
+          "url": "../audio/assets/meta-swagbass/samples/bass/gb2_p_rr1.wav",
+          "rootMidi": 30,
+          "keyLow": 29,
+          "keyHigh": 31,
+          "velocityLow": 1,
+          "velocityHigh": 50,
+          "roundRobinGroup": "bass-30-1-50",
+          "roundRobinIndex": 1
+        },
+        {
+          "url": "../audio/assets/meta-swagbass/samples/bass/gb2_f_rr4.wav",
+          "rootMidi": 30,
+          "keyLow": 29,
+          "keyHigh": 31,
+          "velocityLow": 51,
+          "velocityHigh": 110,
+          "roundRobinGroup": "bass-30-51-110",
+          "roundRobinIndex": 4
+        },
+        {
+          "url": "../audio/assets/meta-swagbass/samples/bass/gb2_f_rr3.wav",
+          "rootMidi": 30,
+          "keyLow": 29,
+          "keyHigh": 31,
+          "velocityLow": 51,
+          "velocityHigh": 110,
+          "roundRobinGroup": "bass-30-51-110",
+          "roundRobinIndex": 3
+        },
+        {
+          "url": "../audio/assets/meta-swagbass/samples/bass/gb2_f_rr2.wav",
+          "rootMidi": 30,
+          "keyLow": 29,
+          "keyHigh": 31,
+          "velocityLow": 51,
+          "velocityHigh": 110,
+          "roundRobinGroup": "bass-30-51-110",
+          "roundRobinIndex": 2
+        },
+        {
+          "url": "../audio/assets/meta-swagbass/samples/bass/gb2_f_rr1.wav",
+          "rootMidi": 30,
+          "keyLow": 29,
+          "keyHigh": 31,
+          "velocityLow": 51,
+          "velocityHigh": 110,
+          "roundRobinGroup": "bass-30-51-110",
+          "roundRobinIndex": 1
+        },
+        {
+          "url": "../audio/assets/meta-swagbass/samples/bass/gb2_fff_rr4.wav",
+          "rootMidi": 30,
+          "keyLow": 29,
+          "keyHigh": 31,
+          "velocityLow": 111,
+          "velocityHigh": 127,
+          "roundRobinGroup": "bass-30-111-127",
+          "roundRobinIndex": 4
+        },
+        {
+          "url": "../audio/assets/meta-swagbass/samples/bass/gb2_fff_rr3.wav",
+          "rootMidi": 30,
+          "keyLow": 29,
+          "keyHigh": 31,
+          "velocityLow": 111,
+          "velocityHigh": 127,
+          "roundRobinGroup": "bass-30-111-127",
+          "roundRobinIndex": 3
+        },
+        {
+          "url": "../audio/assets/meta-swagbass/samples/bass/gb2_fff_rr2.wav",
+          "rootMidi": 30,
+          "keyLow": 29,
+          "keyHigh": 31,
+          "velocityLow": 111,
+          "velocityHigh": 127,
+          "roundRobinGroup": "bass-30-111-127",
+          "roundRobinIndex": 2
+        },
+        {
+          "url": "../audio/assets/meta-swagbass/samples/bass/gb2_fff_rr1.wav",
+          "rootMidi": 30,
+          "keyLow": 29,
+          "keyHigh": 31,
+          "velocityLow": 111,
+          "velocityHigh": 127,
+          "roundRobinGroup": "bass-30-111-127",
+          "roundRobinIndex": 1
+        },
+        {
+          "url": "../audio/assets/meta-swagbass/samples/bass/a2_p_rr4.wav",
+          "rootMidi": 33,
+          "keyLow": 32,
+          "keyHigh": 34,
+          "velocityLow": 1,
+          "velocityHigh": 50,
+          "roundRobinGroup": "bass-33-1-50",
+          "roundRobinIndex": 4
+        },
+        {
+          "url": "../audio/assets/meta-swagbass/samples/bass/a2_p_rr3.wav",
+          "rootMidi": 33,
+          "keyLow": 32,
+          "keyHigh": 34,
+          "velocityLow": 1,
+          "velocityHigh": 50,
+          "roundRobinGroup": "bass-33-1-50",
+          "roundRobinIndex": 3
+        },
+        {
+          "url": "../audio/assets/meta-swagbass/samples/bass/a2_p_rr2.wav",
+          "rootMidi": 33,
+          "keyLow": 32,
+          "keyHigh": 34,
+          "velocityLow": 1,
+          "velocityHigh": 50,
+          "roundRobinGroup": "bass-33-1-50",
+          "roundRobinIndex": 2
+        },
+        {
+          "url": "../audio/assets/meta-swagbass/samples/bass/a2_p_rr1.wav",
+          "rootMidi": 33,
+          "keyLow": 32,
+          "keyHigh": 34,
+          "velocityLow": 1,
+          "velocityHigh": 50,
+          "roundRobinGroup": "bass-33-1-50",
+          "roundRobinIndex": 1
+        },
+        {
+          "url": "../audio/assets/meta-swagbass/samples/bass/a2_f_rr4.wav",
+          "rootMidi": 33,
+          "keyLow": 32,
+          "keyHigh": 34,
+          "velocityLow": 51,
+          "velocityHigh": 110,
+          "roundRobinGroup": "bass-33-51-110",
+          "roundRobinIndex": 4
+        },
+        {
+          "url": "../audio/assets/meta-swagbass/samples/bass/a2_f_rr3.wav",
+          "rootMidi": 33,
+          "keyLow": 32,
+          "keyHigh": 34,
+          "velocityLow": 51,
+          "velocityHigh": 110,
+          "roundRobinGroup": "bass-33-51-110",
+          "roundRobinIndex": 3
+        },
+        {
+          "url": "../audio/assets/meta-swagbass/samples/bass/a2_f_rr2.wav",
+          "rootMidi": 33,
+          "keyLow": 32,
+          "keyHigh": 34,
+          "velocityLow": 51,
+          "velocityHigh": 110,
+          "roundRobinGroup": "bass-33-51-110",
+          "roundRobinIndex": 2
+        },
+        {
+          "url": "../audio/assets/meta-swagbass/samples/bass/a2_f_rr1.wav",
+          "rootMidi": 33,
+          "keyLow": 32,
+          "keyHigh": 34,
+          "velocityLow": 51,
+          "velocityHigh": 110,
+          "roundRobinGroup": "bass-33-51-110",
+          "roundRobinIndex": 1
+        },
+        {
+          "url": "../audio/assets/meta-swagbass/samples/bass/a2_fff_rr4.wav",
+          "rootMidi": 33,
+          "keyLow": 32,
+          "keyHigh": 34,
+          "velocityLow": 111,
+          "velocityHigh": 127,
+          "roundRobinGroup": "bass-33-111-127",
+          "roundRobinIndex": 4
+        },
+        {
+          "url": "../audio/assets/meta-swagbass/samples/bass/a2_fff_rr3.wav",
+          "rootMidi": 33,
+          "keyLow": 32,
+          "keyHigh": 34,
+          "velocityLow": 111,
+          "velocityHigh": 127,
+          "roundRobinGroup": "bass-33-111-127",
+          "roundRobinIndex": 3
+        },
+        {
+          "url": "../audio/assets/meta-swagbass/samples/bass/a2_fff_rr2.wav",
+          "rootMidi": 33,
+          "keyLow": 32,
+          "keyHigh": 34,
+          "velocityLow": 111,
+          "velocityHigh": 127,
+          "roundRobinGroup": "bass-33-111-127",
+          "roundRobinIndex": 2
+        },
+        {
+          "url": "../audio/assets/meta-swagbass/samples/bass/a2_fff_rr1.wav",
+          "rootMidi": 33,
+          "keyLow": 32,
+          "keyHigh": 34,
+          "velocityLow": 111,
+          "velocityHigh": 127,
+          "roundRobinGroup": "bass-33-111-127",
+          "roundRobinIndex": 1
+        },
+        {
+          "url": "../audio/assets/meta-swagbass/samples/bass/c3_p_rr4.wav",
+          "rootMidi": 36,
+          "keyLow": 35,
+          "keyHigh": 37,
+          "velocityLow": 1,
+          "velocityHigh": 50,
+          "roundRobinGroup": "bass-36-1-50",
+          "roundRobinIndex": 4
+        },
+        {
+          "url": "../audio/assets/meta-swagbass/samples/bass/c3_p_rr3.wav",
+          "rootMidi": 36,
+          "keyLow": 35,
+          "keyHigh": 37,
+          "velocityLow": 1,
+          "velocityHigh": 50,
+          "roundRobinGroup": "bass-36-1-50",
+          "roundRobinIndex": 3
+        },
+        {
+          "url": "../audio/assets/meta-swagbass/samples/bass/c3_p_rr2.wav",
+          "rootMidi": 36,
+          "keyLow": 35,
+          "keyHigh": 37,
+          "velocityLow": 1,
+          "velocityHigh": 50,
+          "roundRobinGroup": "bass-36-1-50",
+          "roundRobinIndex": 2
+        },
+        {
+          "url": "../audio/assets/meta-swagbass/samples/bass/c3_p_rr1.wav",
+          "rootMidi": 36,
+          "keyLow": 35,
+          "keyHigh": 37,
+          "velocityLow": 1,
+          "velocityHigh": 50,
+          "roundRobinGroup": "bass-36-1-50",
+          "roundRobinIndex": 1
+        },
+        {
+          "url": "../audio/assets/meta-swagbass/samples/bass/c3_f_rr4.wav",
+          "rootMidi": 36,
+          "keyLow": 35,
+          "keyHigh": 37,
+          "velocityLow": 51,
+          "velocityHigh": 110,
+          "roundRobinGroup": "bass-36-51-110",
+          "roundRobinIndex": 4
+        },
+        {
+          "url": "../audio/assets/meta-swagbass/samples/bass/c3_f_rr3.wav",
+          "rootMidi": 36,
+          "keyLow": 35,
+          "keyHigh": 37,
+          "velocityLow": 51,
+          "velocityHigh": 110,
+          "roundRobinGroup": "bass-36-51-110",
+          "roundRobinIndex": 3
+        },
+        {
+          "url": "../audio/assets/meta-swagbass/samples/bass/c3_f_rr2.wav",
+          "rootMidi": 36,
+          "keyLow": 35,
+          "keyHigh": 37,
+          "velocityLow": 51,
+          "velocityHigh": 110,
+          "roundRobinGroup": "bass-36-51-110",
+          "roundRobinIndex": 2
+        },
+        {
+          "url": "../audio/assets/meta-swagbass/samples/bass/c3_f_rr1.wav",
+          "rootMidi": 36,
+          "keyLow": 35,
+          "keyHigh": 37,
+          "velocityLow": 51,
+          "velocityHigh": 110,
+          "roundRobinGroup": "bass-36-51-110",
+          "roundRobinIndex": 1
+        },
+        {
+          "url": "../audio/assets/meta-swagbass/samples/bass/c3_fff_rr4.wav",
+          "rootMidi": 36,
+          "keyLow": 35,
+          "keyHigh": 37,
+          "velocityLow": 111,
+          "velocityHigh": 127,
+          "roundRobinGroup": "bass-36-111-127",
+          "roundRobinIndex": 4
+        },
+        {
+          "url": "../audio/assets/meta-swagbass/samples/bass/c3_fff_rr3.wav",
+          "rootMidi": 36,
+          "keyLow": 35,
+          "keyHigh": 37,
+          "velocityLow": 111,
+          "velocityHigh": 127,
+          "roundRobinGroup": "bass-36-111-127",
+          "roundRobinIndex": 3
+        },
+        {
+          "url": "../audio/assets/meta-swagbass/samples/bass/c3_fff_rr2.wav",
+          "rootMidi": 36,
+          "keyLow": 35,
+          "keyHigh": 37,
+          "velocityLow": 111,
+          "velocityHigh": 127,
+          "roundRobinGroup": "bass-36-111-127",
+          "roundRobinIndex": 2
+        },
+        {
+          "url": "../audio/assets/meta-swagbass/samples/bass/c3_fff_rr1.wav",
+          "rootMidi": 36,
+          "keyLow": 35,
+          "keyHigh": 37,
+          "velocityLow": 111,
+          "velocityHigh": 127,
+          "roundRobinGroup": "bass-36-111-127",
+          "roundRobinIndex": 1
+        },
+        {
+          "url": "../audio/assets/meta-swagbass/samples/bass/eb3_p_rr4.wav",
+          "rootMidi": 39,
+          "keyLow": 38,
+          "keyHigh": 40,
+          "velocityLow": 1,
+          "velocityHigh": 50,
+          "roundRobinGroup": "bass-39-1-50",
+          "roundRobinIndex": 4
+        },
+        {
+          "url": "../audio/assets/meta-swagbass/samples/bass/eb3_p_rr3.wav",
+          "rootMidi": 39,
+          "keyLow": 38,
+          "keyHigh": 40,
+          "velocityLow": 1,
+          "velocityHigh": 50,
+          "roundRobinGroup": "bass-39-1-50",
+          "roundRobinIndex": 3
+        },
+        {
+          "url": "../audio/assets/meta-swagbass/samples/bass/eb3_p_rr2.wav",
+          "rootMidi": 39,
+          "keyLow": 38,
+          "keyHigh": 40,
+          "velocityLow": 1,
+          "velocityHigh": 50,
+          "roundRobinGroup": "bass-39-1-50",
+          "roundRobinIndex": 2
+        },
+        {
+          "url": "../audio/assets/meta-swagbass/samples/bass/eb3_p_rr1.wav",
+          "rootMidi": 39,
+          "keyLow": 38,
+          "keyHigh": 40,
+          "velocityLow": 1,
+          "velocityHigh": 50,
+          "roundRobinGroup": "bass-39-1-50",
+          "roundRobinIndex": 1
+        },
+        {
+          "url": "../audio/assets/meta-swagbass/samples/bass/eb3_f_rr4.wav",
+          "rootMidi": 39,
+          "keyLow": 38,
+          "keyHigh": 40,
+          "velocityLow": 51,
+          "velocityHigh": 110,
+          "roundRobinGroup": "bass-39-51-110",
+          "roundRobinIndex": 4
+        },
+        {
+          "url": "../audio/assets/meta-swagbass/samples/bass/eb3_f_rr3.wav",
+          "rootMidi": 39,
+          "keyLow": 38,
+          "keyHigh": 40,
+          "velocityLow": 51,
+          "velocityHigh": 110,
+          "roundRobinGroup": "bass-39-51-110",
+          "roundRobinIndex": 3
+        },
+        {
+          "url": "../audio/assets/meta-swagbass/samples/bass/eb3_f_rr2.wav",
+          "rootMidi": 39,
+          "keyLow": 38,
+          "keyHigh": 40,
+          "velocityLow": 51,
+          "velocityHigh": 110,
+          "roundRobinGroup": "bass-39-51-110",
+          "roundRobinIndex": 2
+        },
+        {
+          "url": "../audio/assets/meta-swagbass/samples/bass/eb3_f_rr1.wav",
+          "rootMidi": 39,
+          "keyLow": 38,
+          "keyHigh": 40,
+          "velocityLow": 51,
+          "velocityHigh": 110,
+          "roundRobinGroup": "bass-39-51-110",
+          "roundRobinIndex": 1
+        },
+        {
+          "url": "../audio/assets/meta-swagbass/samples/bass/eb3_fff_rr4.wav",
+          "rootMidi": 39,
+          "keyLow": 38,
+          "keyHigh": 40,
+          "velocityLow": 111,
+          "velocityHigh": 127,
+          "roundRobinGroup": "bass-39-111-127",
+          "roundRobinIndex": 4
+        },
+        {
+          "url": "../audio/assets/meta-swagbass/samples/bass/eb3_fff_rr3.wav",
+          "rootMidi": 39,
+          "keyLow": 38,
+          "keyHigh": 40,
+          "velocityLow": 111,
+          "velocityHigh": 127,
+          "roundRobinGroup": "bass-39-111-127",
+          "roundRobinIndex": 3
+        },
+        {
+          "url": "../audio/assets/meta-swagbass/samples/bass/eb3_fff_rr2.wav",
+          "rootMidi": 39,
+          "keyLow": 38,
+          "keyHigh": 40,
+          "velocityLow": 111,
+          "velocityHigh": 127,
+          "roundRobinGroup": "bass-39-111-127",
+          "roundRobinIndex": 2
+        },
+        {
+          "url": "../audio/assets/meta-swagbass/samples/bass/eb3_fff_rr1.wav",
+          "rootMidi": 39,
+          "keyLow": 38,
+          "keyHigh": 40,
+          "velocityLow": 111,
+          "velocityHigh": 127,
+          "roundRobinGroup": "bass-39-111-127",
+          "roundRobinIndex": 1
+        },
+        {
+          "url": "../audio/assets/meta-swagbass/samples/bass/gb3_p_rr4.wav",
+          "rootMidi": 42,
+          "keyLow": 41,
+          "keyHigh": 43,
+          "velocityLow": 1,
+          "velocityHigh": 50,
+          "roundRobinGroup": "bass-42-1-50",
+          "roundRobinIndex": 4
+        },
+        {
+          "url": "../audio/assets/meta-swagbass/samples/bass/gb3_p_rr3.wav",
+          "rootMidi": 42,
+          "keyLow": 41,
+          "keyHigh": 43,
+          "velocityLow": 1,
+          "velocityHigh": 50,
+          "roundRobinGroup": "bass-42-1-50",
+          "roundRobinIndex": 3
+        },
+        {
+          "url": "../audio/assets/meta-swagbass/samples/bass/gb3_p_rr2.wav",
+          "rootMidi": 42,
+          "keyLow": 41,
+          "keyHigh": 43,
+          "velocityLow": 1,
+          "velocityHigh": 50,
+          "roundRobinGroup": "bass-42-1-50",
+          "roundRobinIndex": 2
+        },
+        {
+          "url": "../audio/assets/meta-swagbass/samples/bass/gb3_p_rr1.wav",
+          "rootMidi": 42,
+          "keyLow": 41,
+          "keyHigh": 43,
+          "velocityLow": 1,
+          "velocityHigh": 50,
+          "roundRobinGroup": "bass-42-1-50",
+          "roundRobinIndex": 1
+        },
+        {
+          "url": "../audio/assets/meta-swagbass/samples/bass/gb3_f_rr4.wav",
+          "rootMidi": 42,
+          "keyLow": 41,
+          "keyHigh": 43,
+          "velocityLow": 51,
+          "velocityHigh": 110,
+          "roundRobinGroup": "bass-42-51-110",
+          "roundRobinIndex": 4
+        },
+        {
+          "url": "../audio/assets/meta-swagbass/samples/bass/gb3_f_rr3.wav",
+          "rootMidi": 42,
+          "keyLow": 41,
+          "keyHigh": 43,
+          "velocityLow": 51,
+          "velocityHigh": 110,
+          "roundRobinGroup": "bass-42-51-110",
+          "roundRobinIndex": 3
+        },
+        {
+          "url": "../audio/assets/meta-swagbass/samples/bass/gb3_f_rr2.wav",
+          "rootMidi": 42,
+          "keyLow": 41,
+          "keyHigh": 43,
+          "velocityLow": 51,
+          "velocityHigh": 110,
+          "roundRobinGroup": "bass-42-51-110",
+          "roundRobinIndex": 2
+        },
+        {
+          "url": "../audio/assets/meta-swagbass/samples/bass/gb3_f_rr1.wav",
+          "rootMidi": 42,
+          "keyLow": 41,
+          "keyHigh": 43,
+          "velocityLow": 51,
+          "velocityHigh": 110,
+          "roundRobinGroup": "bass-42-51-110",
+          "roundRobinIndex": 1
+        },
+        {
+          "url": "../audio/assets/meta-swagbass/samples/bass/gb3_fff_rr4.wav",
+          "rootMidi": 42,
+          "keyLow": 41,
+          "keyHigh": 43,
+          "velocityLow": 111,
+          "velocityHigh": 127,
+          "roundRobinGroup": "bass-42-111-127",
+          "roundRobinIndex": 4
+        },
+        {
+          "url": "../audio/assets/meta-swagbass/samples/bass/gb3_fff_rr3.wav",
+          "rootMidi": 42,
+          "keyLow": 41,
+          "keyHigh": 43,
+          "velocityLow": 111,
+          "velocityHigh": 127,
+          "roundRobinGroup": "bass-42-111-127",
+          "roundRobinIndex": 3
+        },
+        {
+          "url": "../audio/assets/meta-swagbass/samples/bass/gb3_fff_rr2.wav",
+          "rootMidi": 42,
+          "keyLow": 41,
+          "keyHigh": 43,
+          "velocityLow": 111,
+          "velocityHigh": 127,
+          "roundRobinGroup": "bass-42-111-127",
+          "roundRobinIndex": 2
+        },
+        {
+          "url": "../audio/assets/meta-swagbass/samples/bass/gb3_fff_rr1.wav",
+          "rootMidi": 42,
+          "keyLow": 41,
+          "keyHigh": 43,
+          "velocityLow": 111,
+          "velocityHigh": 127,
+          "roundRobinGroup": "bass-42-111-127",
+          "roundRobinIndex": 1
+        },
+        {
+          "url": "../audio/assets/meta-swagbass/samples/bass/a3_p_rr4.wav",
+          "rootMidi": 45,
+          "keyLow": 44,
+          "keyHigh": 46,
+          "velocityLow": 1,
+          "velocityHigh": 50,
+          "roundRobinGroup": "bass-45-1-50",
+          "roundRobinIndex": 4
+        },
+        {
+          "url": "../audio/assets/meta-swagbass/samples/bass/a3_p_rr3.wav",
+          "rootMidi": 45,
+          "keyLow": 44,
+          "keyHigh": 46,
+          "velocityLow": 1,
+          "velocityHigh": 50,
+          "roundRobinGroup": "bass-45-1-50",
+          "roundRobinIndex": 3
+        },
+        {
+          "url": "../audio/assets/meta-swagbass/samples/bass/a3_p_rr2.wav",
+          "rootMidi": 45,
+          "keyLow": 44,
+          "keyHigh": 46,
+          "velocityLow": 1,
+          "velocityHigh": 50,
+          "roundRobinGroup": "bass-45-1-50",
+          "roundRobinIndex": 2
+        },
+        {
+          "url": "../audio/assets/meta-swagbass/samples/bass/a3_p_rr1.wav",
+          "rootMidi": 45,
+          "keyLow": 44,
+          "keyHigh": 46,
+          "velocityLow": 1,
+          "velocityHigh": 50,
+          "roundRobinGroup": "bass-45-1-50",
+          "roundRobinIndex": 1
+        },
+        {
+          "url": "../audio/assets/meta-swagbass/samples/bass/a3_f_rr4.wav",
+          "rootMidi": 45,
+          "keyLow": 44,
+          "keyHigh": 46,
+          "velocityLow": 51,
+          "velocityHigh": 110,
+          "roundRobinGroup": "bass-45-51-110",
+          "roundRobinIndex": 4
+        },
+        {
+          "url": "../audio/assets/meta-swagbass/samples/bass/a3_f_rr3.wav",
+          "rootMidi": 45,
+          "keyLow": 44,
+          "keyHigh": 46,
+          "velocityLow": 51,
+          "velocityHigh": 110,
+          "roundRobinGroup": "bass-45-51-110",
+          "roundRobinIndex": 3
+        },
+        {
+          "url": "../audio/assets/meta-swagbass/samples/bass/a3_f_rr2.wav",
+          "rootMidi": 45,
+          "keyLow": 44,
+          "keyHigh": 46,
+          "velocityLow": 51,
+          "velocityHigh": 110,
+          "roundRobinGroup": "bass-45-51-110",
+          "roundRobinIndex": 2
+        },
+        {
+          "url": "../audio/assets/meta-swagbass/samples/bass/a3_f_rr1.wav",
+          "rootMidi": 45,
+          "keyLow": 44,
+          "keyHigh": 46,
+          "velocityLow": 51,
+          "velocityHigh": 110,
+          "roundRobinGroup": "bass-45-51-110",
+          "roundRobinIndex": 1
+        },
+        {
+          "url": "../audio/assets/meta-swagbass/samples/bass/a3_fff_rr4.wav",
+          "rootMidi": 45,
+          "keyLow": 44,
+          "keyHigh": 46,
+          "velocityLow": 111,
+          "velocityHigh": 127,
+          "roundRobinGroup": "bass-45-111-127",
+          "roundRobinIndex": 4
+        },
+        {
+          "url": "../audio/assets/meta-swagbass/samples/bass/a3_fff_rr3.wav",
+          "rootMidi": 45,
+          "keyLow": 44,
+          "keyHigh": 46,
+          "velocityLow": 111,
+          "velocityHigh": 127,
+          "roundRobinGroup": "bass-45-111-127",
+          "roundRobinIndex": 3
+        },
+        {
+          "url": "../audio/assets/meta-swagbass/samples/bass/a3_fff_rr2.wav",
+          "rootMidi": 45,
+          "keyLow": 44,
+          "keyHigh": 46,
+          "velocityLow": 111,
+          "velocityHigh": 127,
+          "roundRobinGroup": "bass-45-111-127",
+          "roundRobinIndex": 2
+        },
+        {
+          "url": "../audio/assets/meta-swagbass/samples/bass/a3_fff_rr1.wav",
+          "rootMidi": 45,
+          "keyLow": 44,
+          "keyHigh": 46,
+          "velocityLow": 111,
+          "velocityHigh": 127,
+          "roundRobinGroup": "bass-45-111-127",
+          "roundRobinIndex": 1
+        },
+        {
+          "url": "../audio/assets/meta-swagbass/samples/bass/c4_p_rr4.wav",
+          "rootMidi": 48,
+          "keyLow": 47,
+          "keyHigh": 49,
+          "velocityLow": 1,
+          "velocityHigh": 50,
+          "roundRobinGroup": "bass-48-1-50",
+          "roundRobinIndex": 4
+        },
+        {
+          "url": "../audio/assets/meta-swagbass/samples/bass/c4_p_rr3.wav",
+          "rootMidi": 48,
+          "keyLow": 47,
+          "keyHigh": 49,
+          "velocityLow": 1,
+          "velocityHigh": 50,
+          "roundRobinGroup": "bass-48-1-50",
+          "roundRobinIndex": 3
+        },
+        {
+          "url": "../audio/assets/meta-swagbass/samples/bass/c4_p_rr2.wav",
+          "rootMidi": 48,
+          "keyLow": 47,
+          "keyHigh": 49,
+          "velocityLow": 1,
+          "velocityHigh": 50,
+          "roundRobinGroup": "bass-48-1-50",
+          "roundRobinIndex": 2
+        },
+        {
+          "url": "../audio/assets/meta-swagbass/samples/bass/c4_p_rr1.wav",
+          "rootMidi": 48,
+          "keyLow": 47,
+          "keyHigh": 49,
+          "velocityLow": 1,
+          "velocityHigh": 50,
+          "roundRobinGroup": "bass-48-1-50",
+          "roundRobinIndex": 1
+        },
+        {
+          "url": "../audio/assets/meta-swagbass/samples/bass/c4_f_rr4.wav",
+          "rootMidi": 48,
+          "keyLow": 47,
+          "keyHigh": 49,
+          "velocityLow": 51,
+          "velocityHigh": 110,
+          "roundRobinGroup": "bass-48-51-110",
+          "roundRobinIndex": 4
+        },
+        {
+          "url": "../audio/assets/meta-swagbass/samples/bass/c4_f_rr3.wav",
+          "rootMidi": 48,
+          "keyLow": 47,
+          "keyHigh": 49,
+          "velocityLow": 51,
+          "velocityHigh": 110,
+          "roundRobinGroup": "bass-48-51-110",
+          "roundRobinIndex": 3
+        },
+        {
+          "url": "../audio/assets/meta-swagbass/samples/bass/c4_f_rr2.wav",
+          "rootMidi": 48,
+          "keyLow": 47,
+          "keyHigh": 49,
+          "velocityLow": 51,
+          "velocityHigh": 110,
+          "roundRobinGroup": "bass-48-51-110",
+          "roundRobinIndex": 2
+        },
+        {
+          "url": "../audio/assets/meta-swagbass/samples/bass/c4_f_rr1.wav",
+          "rootMidi": 48,
+          "keyLow": 47,
+          "keyHigh": 49,
+          "velocityLow": 51,
+          "velocityHigh": 110,
+          "roundRobinGroup": "bass-48-51-110",
+          "roundRobinIndex": 1
+        },
+        {
+          "url": "../audio/assets/meta-swagbass/samples/bass/c4_fff_rr4.wav",
+          "rootMidi": 48,
+          "keyLow": 47,
+          "keyHigh": 49,
+          "velocityLow": 111,
+          "velocityHigh": 127,
+          "roundRobinGroup": "bass-48-111-127",
+          "roundRobinIndex": 4
+        },
+        {
+          "url": "../audio/assets/meta-swagbass/samples/bass/c4_fff_rr3.wav",
+          "rootMidi": 48,
+          "keyLow": 47,
+          "keyHigh": 49,
+          "velocityLow": 111,
+          "velocityHigh": 127,
+          "roundRobinGroup": "bass-48-111-127",
+          "roundRobinIndex": 3
+        },
+        {
+          "url": "../audio/assets/meta-swagbass/samples/bass/c4_fff_rr2.wav",
+          "rootMidi": 48,
+          "keyLow": 47,
+          "keyHigh": 49,
+          "velocityLow": 111,
+          "velocityHigh": 127,
+          "roundRobinGroup": "bass-48-111-127",
+          "roundRobinIndex": 2
+        },
+        {
+          "url": "../audio/assets/meta-swagbass/samples/bass/c4_fff_rr1.wav",
+          "rootMidi": 48,
+          "keyLow": 47,
+          "keyHigh": 49,
+          "velocityLow": 111,
+          "velocityHigh": 127,
+          "roundRobinGroup": "bass-48-111-127",
+          "roundRobinIndex": 1
+        },
+        {
+          "url": "../audio/assets/meta-swagbass/samples/bass/eb4_p_rr4.wav",
+          "rootMidi": 51,
+          "keyLow": 50,
+          "keyHigh": 52,
+          "velocityLow": 1,
+          "velocityHigh": 50,
+          "roundRobinGroup": "bass-51-1-50",
+          "roundRobinIndex": 4
+        },
+        {
+          "url": "../audio/assets/meta-swagbass/samples/bass/eb4_p_rr3.wav",
+          "rootMidi": 51,
+          "keyLow": 50,
+          "keyHigh": 52,
+          "velocityLow": 1,
+          "velocityHigh": 50,
+          "roundRobinGroup": "bass-51-1-50",
+          "roundRobinIndex": 3
+        },
+        {
+          "url": "../audio/assets/meta-swagbass/samples/bass/eb4_p_rr2.wav",
+          "rootMidi": 51,
+          "keyLow": 50,
+          "keyHigh": 52,
+          "velocityLow": 1,
+          "velocityHigh": 50,
+          "roundRobinGroup": "bass-51-1-50",
+          "roundRobinIndex": 2
+        },
+        {
+          "url": "../audio/assets/meta-swagbass/samples/bass/eb4_p_rr1.wav",
+          "rootMidi": 51,
+          "keyLow": 50,
+          "keyHigh": 52,
+          "velocityLow": 1,
+          "velocityHigh": 50,
+          "roundRobinGroup": "bass-51-1-50",
+          "roundRobinIndex": 1
+        },
+        {
+          "url": "../audio/assets/meta-swagbass/samples/bass/eb4_f_rr4.wav",
+          "rootMidi": 51,
+          "keyLow": 50,
+          "keyHigh": 52,
+          "velocityLow": 51,
+          "velocityHigh": 110,
+          "roundRobinGroup": "bass-51-51-110",
+          "roundRobinIndex": 4
+        },
+        {
+          "url": "../audio/assets/meta-swagbass/samples/bass/eb4_f_rr3.wav",
+          "rootMidi": 51,
+          "keyLow": 50,
+          "keyHigh": 52,
+          "velocityLow": 51,
+          "velocityHigh": 110,
+          "roundRobinGroup": "bass-51-51-110",
+          "roundRobinIndex": 3
+        },
+        {
+          "url": "../audio/assets/meta-swagbass/samples/bass/eb4_f_rr2.wav",
+          "rootMidi": 51,
+          "keyLow": 50,
+          "keyHigh": 52,
+          "velocityLow": 51,
+          "velocityHigh": 110,
+          "roundRobinGroup": "bass-51-51-110",
+          "roundRobinIndex": 2
+        },
+        {
+          "url": "../audio/assets/meta-swagbass/samples/bass/eb4_f_rr1.wav",
+          "rootMidi": 51,
+          "keyLow": 50,
+          "keyHigh": 52,
+          "velocityLow": 51,
+          "velocityHigh": 110,
+          "roundRobinGroup": "bass-51-51-110",
+          "roundRobinIndex": 1
+        },
+        {
+          "url": "../audio/assets/meta-swagbass/samples/bass/eb4_fff_rr4.wav",
+          "rootMidi": 51,
+          "keyLow": 50,
+          "keyHigh": 52,
+          "velocityLow": 111,
+          "velocityHigh": 127,
+          "roundRobinGroup": "bass-51-111-127",
+          "roundRobinIndex": 4
+        },
+        {
+          "url": "../audio/assets/meta-swagbass/samples/bass/eb4_fff_rr3.wav",
+          "rootMidi": 51,
+          "keyLow": 50,
+          "keyHigh": 52,
+          "velocityLow": 111,
+          "velocityHigh": 127,
+          "roundRobinGroup": "bass-51-111-127",
+          "roundRobinIndex": 3
+        },
+        {
+          "url": "../audio/assets/meta-swagbass/samples/bass/eb4_fff_rr2.wav",
+          "rootMidi": 51,
+          "keyLow": 50,
+          "keyHigh": 52,
+          "velocityLow": 111,
+          "velocityHigh": 127,
+          "roundRobinGroup": "bass-51-111-127",
+          "roundRobinIndex": 2
+        },
+        {
+          "url": "../audio/assets/meta-swagbass/samples/bass/eb4_fff_rr1.wav",
+          "rootMidi": 51,
+          "keyLow": 50,
+          "keyHigh": 52,
+          "velocityLow": 111,
+          "velocityHigh": 127,
+          "roundRobinGroup": "bass-51-111-127",
+          "roundRobinIndex": 1
+        },
+        {
+          "url": "../audio/assets/meta-swagbass/samples/bass/gb4_p_rr4.wav",
+          "rootMidi": 54,
+          "keyLow": 53,
+          "keyHigh": 55,
+          "velocityLow": 1,
+          "velocityHigh": 50,
+          "roundRobinGroup": "bass-54-1-50",
+          "roundRobinIndex": 4
+        },
+        {
+          "url": "../audio/assets/meta-swagbass/samples/bass/gb4_p_rr3.wav",
+          "rootMidi": 54,
+          "keyLow": 53,
+          "keyHigh": 55,
+          "velocityLow": 1,
+          "velocityHigh": 50,
+          "roundRobinGroup": "bass-54-1-50",
+          "roundRobinIndex": 3
+        },
+        {
+          "url": "../audio/assets/meta-swagbass/samples/bass/gb4_p_rr2.wav",
+          "rootMidi": 54,
+          "keyLow": 53,
+          "keyHigh": 55,
+          "velocityLow": 1,
+          "velocityHigh": 50,
+          "roundRobinGroup": "bass-54-1-50",
+          "roundRobinIndex": 2
+        },
+        {
+          "url": "../audio/assets/meta-swagbass/samples/bass/gb4_p_rr1.wav",
+          "rootMidi": 54,
+          "keyLow": 53,
+          "keyHigh": 55,
+          "velocityLow": 1,
+          "velocityHigh": 50,
+          "roundRobinGroup": "bass-54-1-50",
+          "roundRobinIndex": 1
+        },
+        {
+          "url": "../audio/assets/meta-swagbass/samples/bass/gb4_f_rr4.wav",
+          "rootMidi": 54,
+          "keyLow": 53,
+          "keyHigh": 55,
+          "velocityLow": 51,
+          "velocityHigh": 110,
+          "roundRobinGroup": "bass-54-51-110",
+          "roundRobinIndex": 4
+        },
+        {
+          "url": "../audio/assets/meta-swagbass/samples/bass/gb4_f_rr3.wav",
+          "rootMidi": 54,
+          "keyLow": 53,
+          "keyHigh": 55,
+          "velocityLow": 51,
+          "velocityHigh": 110,
+          "roundRobinGroup": "bass-54-51-110",
+          "roundRobinIndex": 3
+        },
+        {
+          "url": "../audio/assets/meta-swagbass/samples/bass/gb4_f_rr2.wav",
+          "rootMidi": 54,
+          "keyLow": 53,
+          "keyHigh": 55,
+          "velocityLow": 51,
+          "velocityHigh": 110,
+          "roundRobinGroup": "bass-54-51-110",
+          "roundRobinIndex": 2
+        },
+        {
+          "url": "../audio/assets/meta-swagbass/samples/bass/gb4_f_rr1.wav",
+          "rootMidi": 54,
+          "keyLow": 53,
+          "keyHigh": 55,
+          "velocityLow": 51,
+          "velocityHigh": 110,
+          "roundRobinGroup": "bass-54-51-110",
+          "roundRobinIndex": 1
+        },
+        {
+          "url": "../audio/assets/meta-swagbass/samples/bass/gb4_fff_rr4.wav",
+          "rootMidi": 54,
+          "keyLow": 53,
+          "keyHigh": 55,
+          "velocityLow": 111,
+          "velocityHigh": 127,
+          "roundRobinGroup": "bass-54-111-127",
+          "roundRobinIndex": 4
+        },
+        {
+          "url": "../audio/assets/meta-swagbass/samples/bass/gb4_fff_rr3.wav",
+          "rootMidi": 54,
+          "keyLow": 53,
+          "keyHigh": 55,
+          "velocityLow": 111,
+          "velocityHigh": 127,
+          "roundRobinGroup": "bass-54-111-127",
+          "roundRobinIndex": 3
+        },
+        {
+          "url": "../audio/assets/meta-swagbass/samples/bass/gb4_fff_rr2.wav",
+          "rootMidi": 54,
+          "keyLow": 53,
+          "keyHigh": 55,
+          "velocityLow": 111,
+          "velocityHigh": 127,
+          "roundRobinGroup": "bass-54-111-127",
+          "roundRobinIndex": 2
+        },
+        {
+          "url": "../audio/assets/meta-swagbass/samples/bass/gb4_fff_rr1.wav",
+          "rootMidi": 54,
+          "keyLow": 53,
+          "keyHigh": 55,
+          "velocityLow": 111,
+          "velocityHigh": 127,
+          "roundRobinGroup": "bass-54-111-127",
+          "roundRobinIndex": 1
+        },
+        {
+          "url": "../audio/assets/meta-swagbass/samples/bass/a4_p_rr4.wav",
+          "rootMidi": 57,
+          "keyLow": 56,
+          "keyHigh": 58,
+          "velocityLow": 1,
+          "velocityHigh": 50,
+          "roundRobinGroup": "bass-57-1-50",
+          "roundRobinIndex": 4
+        },
+        {
+          "url": "../audio/assets/meta-swagbass/samples/bass/a4_p_rr3.wav",
+          "rootMidi": 57,
+          "keyLow": 56,
+          "keyHigh": 58,
+          "velocityLow": 1,
+          "velocityHigh": 50,
+          "roundRobinGroup": "bass-57-1-50",
+          "roundRobinIndex": 3
+        },
+        {
+          "url": "../audio/assets/meta-swagbass/samples/bass/a4_p_rr2.wav",
+          "rootMidi": 57,
+          "keyLow": 56,
+          "keyHigh": 58,
+          "velocityLow": 1,
+          "velocityHigh": 50,
+          "roundRobinGroup": "bass-57-1-50",
+          "roundRobinIndex": 2
+        },
+        {
+          "url": "../audio/assets/meta-swagbass/samples/bass/a4_p_rr1.wav",
+          "rootMidi": 57,
+          "keyLow": 56,
+          "keyHigh": 58,
+          "velocityLow": 1,
+          "velocityHigh": 50,
+          "roundRobinGroup": "bass-57-1-50",
+          "roundRobinIndex": 1
+        },
+        {
+          "url": "../audio/assets/meta-swagbass/samples/bass/a4_f_rr4.wav",
+          "rootMidi": 57,
+          "keyLow": 56,
+          "keyHigh": 58,
+          "velocityLow": 51,
+          "velocityHigh": 110,
+          "roundRobinGroup": "bass-57-51-110",
+          "roundRobinIndex": 4
+        },
+        {
+          "url": "../audio/assets/meta-swagbass/samples/bass/a4_f_rr3.wav",
+          "rootMidi": 57,
+          "keyLow": 56,
+          "keyHigh": 58,
+          "velocityLow": 51,
+          "velocityHigh": 110,
+          "roundRobinGroup": "bass-57-51-110",
+          "roundRobinIndex": 3
+        },
+        {
+          "url": "../audio/assets/meta-swagbass/samples/bass/a4_f_rr2.wav",
+          "rootMidi": 57,
+          "keyLow": 56,
+          "keyHigh": 58,
+          "velocityLow": 51,
+          "velocityHigh": 110,
+          "roundRobinGroup": "bass-57-51-110",
+          "roundRobinIndex": 2
+        },
+        {
+          "url": "../audio/assets/meta-swagbass/samples/bass/a4_f_rr1.wav",
+          "rootMidi": 57,
+          "keyLow": 56,
+          "keyHigh": 58,
+          "velocityLow": 51,
+          "velocityHigh": 110,
+          "roundRobinGroup": "bass-57-51-110",
+          "roundRobinIndex": 1
+        },
+        {
+          "url": "../audio/assets/meta-swagbass/samples/bass/a4_fff_rr4.wav",
+          "rootMidi": 57,
+          "keyLow": 56,
+          "keyHigh": 58,
+          "velocityLow": 111,
+          "velocityHigh": 127,
+          "roundRobinGroup": "bass-57-111-127",
+          "roundRobinIndex": 4
+        },
+        {
+          "url": "../audio/assets/meta-swagbass/samples/bass/a4_fff_rr3.wav",
+          "rootMidi": 57,
+          "keyLow": 56,
+          "keyHigh": 58,
+          "velocityLow": 111,
+          "velocityHigh": 127,
+          "roundRobinGroup": "bass-57-111-127",
+          "roundRobinIndex": 3
+        },
+        {
+          "url": "../audio/assets/meta-swagbass/samples/bass/a4_fff_rr2.wav",
+          "rootMidi": 57,
+          "keyLow": 56,
+          "keyHigh": 58,
+          "velocityLow": 111,
+          "velocityHigh": 127,
+          "roundRobinGroup": "bass-57-111-127",
+          "roundRobinIndex": 2
+        },
+        {
+          "url": "../audio/assets/meta-swagbass/samples/bass/a4_fff_rr1.wav",
+          "rootMidi": 57,
+          "keyLow": 56,
+          "keyHigh": 58,
+          "velocityLow": 111,
+          "velocityHigh": 127,
+          "roundRobinGroup": "bass-57-111-127",
+          "roundRobinIndex": 1
+        },
+        {
+          "url": "../audio/assets/meta-swagbass/samples/bass/eb5_p_rr4.wav",
+          "rootMidi": 63,
+          "keyLow": 62,
+          "keyHigh": 64,
+          "velocityLow": 1,
+          "velocityHigh": 50,
+          "roundRobinGroup": "bass-63-1-50",
+          "roundRobinIndex": 4
+        },
+        {
+          "url": "../audio/assets/meta-swagbass/samples/bass/eb5_p_rr3.wav",
+          "rootMidi": 63,
+          "keyLow": 62,
+          "keyHigh": 64,
+          "velocityLow": 1,
+          "velocityHigh": 50,
+          "roundRobinGroup": "bass-63-1-50",
+          "roundRobinIndex": 3
+        },
+        {
+          "url": "../audio/assets/meta-swagbass/samples/bass/eb5_p_rr2.wav",
+          "rootMidi": 63,
+          "keyLow": 62,
+          "keyHigh": 64,
+          "velocityLow": 1,
+          "velocityHigh": 50,
+          "roundRobinGroup": "bass-63-1-50",
+          "roundRobinIndex": 2
+        },
+        {
+          "url": "../audio/assets/meta-swagbass/samples/bass/eb5_p_rr1.wav",
+          "rootMidi": 63,
+          "keyLow": 62,
+          "keyHigh": 64,
+          "velocityLow": 1,
+          "velocityHigh": 50,
+          "roundRobinGroup": "bass-63-1-50",
+          "roundRobinIndex": 1
+        },
+        {
+          "url": "../audio/assets/meta-swagbass/samples/bass/eb5_f_rr4.wav",
+          "rootMidi": 63,
+          "keyLow": 62,
+          "keyHigh": 64,
+          "velocityLow": 51,
+          "velocityHigh": 110,
+          "roundRobinGroup": "bass-63-51-110",
+          "roundRobinIndex": 4
+        },
+        {
+          "url": "../audio/assets/meta-swagbass/samples/bass/eb5_f_rr3.wav",
+          "rootMidi": 63,
+          "keyLow": 62,
+          "keyHigh": 64,
+          "velocityLow": 51,
+          "velocityHigh": 110,
+          "roundRobinGroup": "bass-63-51-110",
+          "roundRobinIndex": 3
+        },
+        {
+          "url": "../audio/assets/meta-swagbass/samples/bass/eb5_f_rr2.wav",
+          "rootMidi": 63,
+          "keyLow": 62,
+          "keyHigh": 64,
+          "velocityLow": 51,
+          "velocityHigh": 110,
+          "roundRobinGroup": "bass-63-51-110",
+          "roundRobinIndex": 2
+        },
+        {
+          "url": "../audio/assets/meta-swagbass/samples/bass/eb5_f_rr1.wav",
+          "rootMidi": 63,
+          "keyLow": 62,
+          "keyHigh": 64,
+          "velocityLow": 51,
+          "velocityHigh": 110,
+          "roundRobinGroup": "bass-63-51-110",
+          "roundRobinIndex": 1
+        },
+        {
+          "url": "../audio/assets/meta-swagbass/samples/bass/eb5_fff_rr4.wav",
+          "rootMidi": 63,
+          "keyLow": 62,
+          "keyHigh": 64,
+          "velocityLow": 111,
+          "velocityHigh": 127,
+          "roundRobinGroup": "bass-63-111-127",
+          "roundRobinIndex": 4
+        },
+        {
+          "url": "../audio/assets/meta-swagbass/samples/bass/eb5_fff_rr3.wav",
+          "rootMidi": 63,
+          "keyLow": 62,
+          "keyHigh": 64,
+          "velocityLow": 111,
+          "velocityHigh": 127,
+          "roundRobinGroup": "bass-63-111-127",
+          "roundRobinIndex": 3
+        },
+        {
+          "url": "../audio/assets/meta-swagbass/samples/bass/eb5_fff_rr2.wav",
+          "rootMidi": 63,
+          "keyLow": 62,
+          "keyHigh": 64,
+          "velocityLow": 111,
+          "velocityHigh": 127,
+          "roundRobinGroup": "bass-63-111-127",
+          "roundRobinIndex": 2
+        },
+        {
+          "url": "../audio/assets/meta-swagbass/samples/bass/eb5_fff_rr1.wav",
+          "rootMidi": 63,
+          "keyLow": 62,
+          "keyHigh": 64,
+          "velocityLow": 111,
+          "velocityHigh": 127,
+          "roundRobinGroup": "bass-63-111-127",
+          "roundRobinIndex": 1
+        },
+        {
+          "url": "../audio/assets/meta-swagbass/samples/bass/gb5_p_rr4.wav",
+          "rootMidi": 66,
+          "keyLow": 65,
+          "keyHigh": 67,
+          "velocityLow": 1,
+          "velocityHigh": 50,
+          "roundRobinGroup": "bass-66-1-50",
+          "roundRobinIndex": 4
+        },
+        {
+          "url": "../audio/assets/meta-swagbass/samples/bass/gb5_p_rr3.wav",
+          "rootMidi": 66,
+          "keyLow": 65,
+          "keyHigh": 67,
+          "velocityLow": 1,
+          "velocityHigh": 50,
+          "roundRobinGroup": "bass-66-1-50",
+          "roundRobinIndex": 3
+        },
+        {
+          "url": "../audio/assets/meta-swagbass/samples/bass/gb5_p_rr2.wav",
+          "rootMidi": 66,
+          "keyLow": 65,
+          "keyHigh": 67,
+          "velocityLow": 1,
+          "velocityHigh": 50,
+          "roundRobinGroup": "bass-66-1-50",
+          "roundRobinIndex": 2
+        },
+        {
+          "url": "../audio/assets/meta-swagbass/samples/bass/gb5_p_rr1.wav",
+          "rootMidi": 66,
+          "keyLow": 65,
+          "keyHigh": 67,
+          "velocityLow": 1,
+          "velocityHigh": 50,
+          "roundRobinGroup": "bass-66-1-50",
+          "roundRobinIndex": 1
+        },
+        {
+          "url": "../audio/assets/meta-swagbass/samples/bass/gb5_f_rr4.wav",
+          "rootMidi": 66,
+          "keyLow": 65,
+          "keyHigh": 67,
+          "velocityLow": 51,
+          "velocityHigh": 110,
+          "roundRobinGroup": "bass-66-51-110",
+          "roundRobinIndex": 4
+        },
+        {
+          "url": "../audio/assets/meta-swagbass/samples/bass/gb5_f_rr3.wav",
+          "rootMidi": 66,
+          "keyLow": 65,
+          "keyHigh": 67,
+          "velocityLow": 51,
+          "velocityHigh": 110,
+          "roundRobinGroup": "bass-66-51-110",
+          "roundRobinIndex": 3
+        },
+        {
+          "url": "../audio/assets/meta-swagbass/samples/bass/gb5_f_rr2.wav",
+          "rootMidi": 66,
+          "keyLow": 65,
+          "keyHigh": 67,
+          "velocityLow": 51,
+          "velocityHigh": 110,
+          "roundRobinGroup": "bass-66-51-110",
+          "roundRobinIndex": 2
+        },
+        {
+          "url": "../audio/assets/meta-swagbass/samples/bass/gb5_f_rr1.wav",
+          "rootMidi": 66,
+          "keyLow": 65,
+          "keyHigh": 67,
+          "velocityLow": 51,
+          "velocityHigh": 110,
+          "roundRobinGroup": "bass-66-51-110",
+          "roundRobinIndex": 1
+        },
+        {
+          "url": "../audio/assets/meta-swagbass/samples/bass/gb5_fff_rr4.wav",
+          "rootMidi": 66,
+          "keyLow": 65,
+          "keyHigh": 67,
+          "velocityLow": 111,
+          "velocityHigh": 127,
+          "roundRobinGroup": "bass-66-111-127",
+          "roundRobinIndex": 4
+        },
+        {
+          "url": "../audio/assets/meta-swagbass/samples/bass/gb5_fff_rr3.wav",
+          "rootMidi": 66,
+          "keyLow": 65,
+          "keyHigh": 67,
+          "velocityLow": 111,
+          "velocityHigh": 127,
+          "roundRobinGroup": "bass-66-111-127",
+          "roundRobinIndex": 3
+        },
+        {
+          "url": "../audio/assets/meta-swagbass/samples/bass/gb5_fff_rr2.wav",
+          "rootMidi": 66,
+          "keyLow": 65,
+          "keyHigh": 67,
+          "velocityLow": 111,
+          "velocityHigh": 127,
+          "roundRobinGroup": "bass-66-111-127",
+          "roundRobinIndex": 2
+        },
+        {
+          "url": "../audio/assets/meta-swagbass/samples/bass/gb5_fff_rr1.wav",
+          "rootMidi": 66,
+          "keyLow": 65,
+          "keyHigh": 67,
+          "velocityLow": 111,
+          "velocityHigh": 127,
+          "roundRobinGroup": "bass-66-111-127",
+          "roundRobinIndex": 1
+        },
+        {
+          "url": "../audio/assets/meta-swagbass/samples/bass/a5_p_rr4.wav",
+          "rootMidi": 69,
+          "keyLow": 68,
+          "keyHigh": 72,
+          "velocityLow": 1,
+          "velocityHigh": 50,
+          "roundRobinGroup": "bass-69-1-50",
+          "roundRobinIndex": 4
+        },
+        {
+          "url": "../audio/assets/meta-swagbass/samples/bass/a5_p_rr3.wav",
+          "rootMidi": 69,
+          "keyLow": 68,
+          "keyHigh": 72,
+          "velocityLow": 1,
+          "velocityHigh": 50,
+          "roundRobinGroup": "bass-69-1-50",
+          "roundRobinIndex": 3
+        },
+        {
+          "url": "../audio/assets/meta-swagbass/samples/bass/a5_p_rr2.wav",
+          "rootMidi": 69,
+          "keyLow": 68,
+          "keyHigh": 72,
+          "velocityLow": 1,
+          "velocityHigh": 50,
+          "roundRobinGroup": "bass-69-1-50",
+          "roundRobinIndex": 2
+        },
+        {
+          "url": "../audio/assets/meta-swagbass/samples/bass/a5_p_rr1.wav",
+          "rootMidi": 69,
+          "keyLow": 68,
+          "keyHigh": 72,
+          "velocityLow": 1,
+          "velocityHigh": 50,
+          "roundRobinGroup": "bass-69-1-50",
+          "roundRobinIndex": 1
+        },
+        {
+          "url": "../audio/assets/meta-swagbass/samples/bass/a5_f_rr4.wav",
+          "rootMidi": 69,
+          "keyLow": 68,
+          "keyHigh": 72,
+          "velocityLow": 51,
+          "velocityHigh": 110,
+          "roundRobinGroup": "bass-69-51-110",
+          "roundRobinIndex": 4
+        },
+        {
+          "url": "../audio/assets/meta-swagbass/samples/bass/a5_f_rr3.wav",
+          "rootMidi": 69,
+          "keyLow": 68,
+          "keyHigh": 72,
+          "velocityLow": 51,
+          "velocityHigh": 110,
+          "roundRobinGroup": "bass-69-51-110",
+          "roundRobinIndex": 3
+        },
+        {
+          "url": "../audio/assets/meta-swagbass/samples/bass/a5_f_rr2.wav",
+          "rootMidi": 69,
+          "keyLow": 68,
+          "keyHigh": 72,
+          "velocityLow": 51,
+          "velocityHigh": 110,
+          "roundRobinGroup": "bass-69-51-110",
+          "roundRobinIndex": 2
+        },
+        {
+          "url": "../audio/assets/meta-swagbass/samples/bass/a5_f_rr1.wav",
+          "rootMidi": 69,
+          "keyLow": 68,
+          "keyHigh": 72,
+          "velocityLow": 51,
+          "velocityHigh": 110,
+          "roundRobinGroup": "bass-69-51-110",
+          "roundRobinIndex": 1
+        },
+        {
+          "url": "../audio/assets/meta-swagbass/samples/bass/a5_fff_rr4.wav",
+          "rootMidi": 69,
+          "keyLow": 68,
+          "keyHigh": 72,
+          "velocityLow": 111,
+          "velocityHigh": 127,
+          "roundRobinGroup": "bass-69-111-127",
+          "roundRobinIndex": 4
+        },
+        {
+          "url": "../audio/assets/meta-swagbass/samples/bass/a5_fff_rr3.wav",
+          "rootMidi": 69,
+          "keyLow": 68,
+          "keyHigh": 72,
+          "velocityLow": 111,
+          "velocityHigh": 127,
+          "roundRobinGroup": "bass-69-111-127",
+          "roundRobinIndex": 3
+        },
+        {
+          "url": "../audio/assets/meta-swagbass/samples/bass/a5_fff_rr2.wav",
+          "rootMidi": 69,
+          "keyLow": 68,
+          "keyHigh": 72,
+          "velocityLow": 111,
+          "velocityHigh": 127,
+          "roundRobinGroup": "bass-69-111-127",
+          "roundRobinIndex": 2
+        },
+        {
+          "url": "../audio/assets/meta-swagbass/samples/bass/a5_fff_rr1.wav",
+          "rootMidi": 69,
+          "keyLow": 68,
+          "keyHigh": 72,
+          "velocityLow": 111,
+          "velocityHigh": 127,
+          "roundRobinGroup": "bass-69-111-127",
+          "roundRobinIndex": 1
+        }
+      ]
+    }
+  }
+}

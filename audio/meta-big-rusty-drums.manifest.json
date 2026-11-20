@@ -1,0 +1,1459 @@
+{
+  "instruments": {
+    "meta-big-rusty-drums": {
+      "id": "meta-big-rusty-drums",
+      "name": "Karoryfer Big Rusty Drums",
+      "license": "CC0-1.0",
+      "sourceRepository": "https://github.com/sfzinstruments/karoryfer.big-rusty-drums",
+      "sourceCommit": "f07ce00df34a46b6b08375be56fe116cf15782bc",
+      "sampleFormat": "FLAC source converted to PCM WAV 24-bit / 48 kHz mono",
+      "noteOffMode": "one-shot",
+      "velocityMode": "layer",
+      "roundRobin": true,
+      "attack": 0.001,
+      "release": 0.03,
+      "samples": [
+        {
+          "url": "../audio/assets/meta-big-rusty-drums/samples/drums/kick/k_vl2_rr1.wav",
+          "rootMidi": 36,
+          "keyLow": 36,
+          "keyHigh": 36,
+          "velocityLow": 10,
+          "velocityHigh": 18,
+          "roundRobinGroup": "kick-10-18",
+          "roundRobinIndex": 1
+        },
+        {
+          "url": "../audio/assets/meta-big-rusty-drums/samples/drums/kick/k_vl2_rr2.wav",
+          "rootMidi": 36,
+          "keyLow": 36,
+          "keyHigh": 36,
+          "velocityLow": 10,
+          "velocityHigh": 18,
+          "roundRobinGroup": "kick-10-18",
+          "roundRobinIndex": 2
+        },
+        {
+          "url": "../audio/assets/meta-big-rusty-drums/samples/drums/kick/k_vl2_rr3.wav",
+          "rootMidi": 36,
+          "keyLow": 36,
+          "keyHigh": 36,
+          "velocityLow": 10,
+          "velocityHigh": 18,
+          "roundRobinGroup": "kick-10-18",
+          "roundRobinIndex": 3
+        },
+        {
+          "url": "../audio/assets/meta-big-rusty-drums/samples/drums/kick/k_vl2_rr4.wav",
+          "rootMidi": 36,
+          "keyLow": 36,
+          "keyHigh": 36,
+          "velocityLow": 10,
+          "velocityHigh": 18,
+          "roundRobinGroup": "kick-10-18",
+          "roundRobinIndex": 4
+        },
+        {
+          "url": "../audio/assets/meta-big-rusty-drums/samples/drums/kick/k_vl3_rr1.wav",
+          "rootMidi": 36,
+          "keyLow": 36,
+          "keyHigh": 36,
+          "velocityLow": 19,
+          "velocityHigh": 27,
+          "roundRobinGroup": "kick-19-27",
+          "roundRobinIndex": 1
+        },
+        {
+          "url": "../audio/assets/meta-big-rusty-drums/samples/drums/kick/k_vl3_rr2.wav",
+          "rootMidi": 36,
+          "keyLow": 36,
+          "keyHigh": 36,
+          "velocityLow": 19,
+          "velocityHigh": 27,
+          "roundRobinGroup": "kick-19-27",
+          "roundRobinIndex": 2
+        },
+        {
+          "url": "../audio/assets/meta-big-rusty-drums/samples/drums/kick/k_vl3_rr3.wav",
+          "rootMidi": 36,
+          "keyLow": 36,
+          "keyHigh": 36,
+          "velocityLow": 19,
+          "velocityHigh": 27,
+          "roundRobinGroup": "kick-19-27",
+          "roundRobinIndex": 3
+        },
+        {
+          "url": "../audio/assets/meta-big-rusty-drums/samples/drums/kick/k_vl3_rr4.wav",
+          "rootMidi": 36,
+          "keyLow": 36,
+          "keyHigh": 36,
+          "velocityLow": 19,
+          "velocityHigh": 27,
+          "roundRobinGroup": "kick-19-27",
+          "roundRobinIndex": 4
+        },
+        {
+          "url": "../audio/assets/meta-big-rusty-drums/samples/drums/kick/k_vl4_rr1.wav",
+          "rootMidi": 36,
+          "keyLow": 36,
+          "keyHigh": 36,
+          "velocityLow": 28,
+          "velocityHigh": 36,
+          "roundRobinGroup": "kick-28-36",
+          "roundRobinIndex": 1
+        },
+        {
+          "url": "../audio/assets/meta-big-rusty-drums/samples/drums/kick/k_vl4_rr2.wav",
+          "rootMidi": 36,
+          "keyLow": 36,
+          "keyHigh": 36,
+          "velocityLow": 28,
+          "velocityHigh": 36,
+          "roundRobinGroup": "kick-28-36",
+          "roundRobinIndex": 2
+        },
+        {
+          "url": "../audio/assets/meta-big-rusty-drums/samples/drums/kick/k_vl4_rr3.wav",
+          "rootMidi": 36,
+          "keyLow": 36,
+          "keyHigh": 36,
+          "velocityLow": 28,
+          "velocityHigh": 36,
+          "roundRobinGroup": "kick-28-36",
+          "roundRobinIndex": 3
+        },
+        {
+          "url": "../audio/assets/meta-big-rusty-drums/samples/drums/kick/k_vl4_rr4.wav",
+          "rootMidi": 36,
+          "keyLow": 36,
+          "keyHigh": 36,
+          "velocityLow": 28,
+          "velocityHigh": 36,
+          "roundRobinGroup": "kick-28-36",
+          "roundRobinIndex": 4
+        },
+        {
+          "url": "../audio/assets/meta-big-rusty-drums/samples/drums/kick/k_vl5_rr1.wav",
+          "rootMidi": 36,
+          "keyLow": 36,
+          "keyHigh": 36,
+          "velocityLow": 37,
+          "velocityHigh": 45,
+          "roundRobinGroup": "kick-37-45",
+          "roundRobinIndex": 1
+        },
+        {
+          "url": "../audio/assets/meta-big-rusty-drums/samples/drums/kick/k_vl5_rr2.wav",
+          "rootMidi": 36,
+          "keyLow": 36,
+          "keyHigh": 36,
+          "velocityLow": 37,
+          "velocityHigh": 45,
+          "roundRobinGroup": "kick-37-45",
+          "roundRobinIndex": 2
+        },
+        {
+          "url": "../audio/assets/meta-big-rusty-drums/samples/drums/kick/k_vl5_rr3.wav",
+          "rootMidi": 36,
+          "keyLow": 36,
+          "keyHigh": 36,
+          "velocityLow": 37,
+          "velocityHigh": 45,
+          "roundRobinGroup": "kick-37-45",
+          "roundRobinIndex": 3
+        },
+        {
+          "url": "../audio/assets/meta-big-rusty-drums/samples/drums/kick/k_vl5_rr4.wav",
+          "rootMidi": 36,
+          "keyLow": 36,
+          "keyHigh": 36,
+          "velocityLow": 37,
+          "velocityHigh": 45,
+          "roundRobinGroup": "kick-37-45",
+          "roundRobinIndex": 4
+        },
+        {
+          "url": "../audio/assets/meta-big-rusty-drums/samples/drums/kick/k_vl6_rr1.wav",
+          "rootMidi": 36,
+          "keyLow": 36,
+          "keyHigh": 36,
+          "velocityLow": 46,
+          "velocityHigh": 54,
+          "roundRobinGroup": "kick-46-54",
+          "roundRobinIndex": 1
+        },
+        {
+          "url": "../audio/assets/meta-big-rusty-drums/samples/drums/kick/k_vl6_rr2.wav",
+          "rootMidi": 36,
+          "keyLow": 36,
+          "keyHigh": 36,
+          "velocityLow": 46,
+          "velocityHigh": 54,
+          "roundRobinGroup": "kick-46-54",
+          "roundRobinIndex": 2
+        },
+        {
+          "url": "../audio/assets/meta-big-rusty-drums/samples/drums/kick/k_vl6_rr3.wav",
+          "rootMidi": 36,
+          "keyLow": 36,
+          "keyHigh": 36,
+          "velocityLow": 46,
+          "velocityHigh": 54,
+          "roundRobinGroup": "kick-46-54",
+          "roundRobinIndex": 3
+        },
+        {
+          "url": "../audio/assets/meta-big-rusty-drums/samples/drums/kick/k_vl6_rr4.wav",
+          "rootMidi": 36,
+          "keyLow": 36,
+          "keyHigh": 36,
+          "velocityLow": 46,
+          "velocityHigh": 54,
+          "roundRobinGroup": "kick-46-54",
+          "roundRobinIndex": 4
+        },
+        {
+          "url": "../audio/assets/meta-big-rusty-drums/samples/drums/kick/k_vl7_rr1.wav",
+          "rootMidi": 36,
+          "keyLow": 36,
+          "keyHigh": 36,
+          "velocityLow": 55,
+          "velocityHigh": 64,
+          "roundRobinGroup": "kick-55-64",
+          "roundRobinIndex": 1
+        },
+        {
+          "url": "../audio/assets/meta-big-rusty-drums/samples/drums/kick/k_vl7_rr2.wav",
+          "rootMidi": 36,
+          "keyLow": 36,
+          "keyHigh": 36,
+          "velocityLow": 55,
+          "velocityHigh": 64,
+          "roundRobinGroup": "kick-55-64",
+          "roundRobinIndex": 2
+        },
+        {
+          "url": "../audio/assets/meta-big-rusty-drums/samples/drums/kick/k_vl7_rr3.wav",
+          "rootMidi": 36,
+          "keyLow": 36,
+          "keyHigh": 36,
+          "velocityLow": 55,
+          "velocityHigh": 64,
+          "roundRobinGroup": "kick-55-64",
+          "roundRobinIndex": 3
+        },
+        {
+          "url": "../audio/assets/meta-big-rusty-drums/samples/drums/kick/k_vl7_rr4.wav",
+          "rootMidi": 36,
+          "keyLow": 36,
+          "keyHigh": 36,
+          "velocityLow": 55,
+          "velocityHigh": 64,
+          "roundRobinGroup": "kick-55-64",
+          "roundRobinIndex": 4
+        },
+        {
+          "url": "../audio/assets/meta-big-rusty-drums/samples/drums/kick/k_vl8_rr1.wav",
+          "rootMidi": 36,
+          "keyLow": 36,
+          "keyHigh": 36,
+          "velocityLow": 65,
+          "velocityHigh": 73,
+          "roundRobinGroup": "kick-65-73",
+          "roundRobinIndex": 1
+        },
+        {
+          "url": "../audio/assets/meta-big-rusty-drums/samples/drums/kick/k_vl8_rr2.wav",
+          "rootMidi": 36,
+          "keyLow": 36,
+          "keyHigh": 36,
+          "velocityLow": 65,
+          "velocityHigh": 73,
+          "roundRobinGroup": "kick-65-73",
+          "roundRobinIndex": 2
+        },
+        {
+          "url": "../audio/assets/meta-big-rusty-drums/samples/drums/kick/k_vl8_rr3.wav",
+          "rootMidi": 36,
+          "keyLow": 36,
+          "keyHigh": 36,
+          "velocityLow": 65,
+          "velocityHigh": 73,
+          "roundRobinGroup": "kick-65-73",
+          "roundRobinIndex": 3
+        },
+        {
+          "url": "../audio/assets/meta-big-rusty-drums/samples/drums/kick/k_vl8_rr4.wav",
+          "rootMidi": 36,
+          "keyLow": 36,
+          "keyHigh": 36,
+          "velocityLow": 65,
+          "velocityHigh": 73,
+          "roundRobinGroup": "kick-65-73",
+          "roundRobinIndex": 4
+        },
+        {
+          "url": "../audio/assets/meta-big-rusty-drums/samples/drums/kick/k_vl9_rr1.wav",
+          "rootMidi": 36,
+          "keyLow": 36,
+          "keyHigh": 36,
+          "velocityLow": 74,
+          "velocityHigh": 83,
+          "roundRobinGroup": "kick-74-83",
+          "roundRobinIndex": 1
+        },
+        {
+          "url": "../audio/assets/meta-big-rusty-drums/samples/drums/kick/k_vl9_rr2.wav",
+          "rootMidi": 36,
+          "keyLow": 36,
+          "keyHigh": 36,
+          "velocityLow": 74,
+          "velocityHigh": 83,
+          "roundRobinGroup": "kick-74-83",
+          "roundRobinIndex": 2
+        },
+        {
+          "url": "../audio/assets/meta-big-rusty-drums/samples/drums/kick/k_vl9_rr3.wav",
+          "rootMidi": 36,
+          "keyLow": 36,
+          "keyHigh": 36,
+          "velocityLow": 74,
+          "velocityHigh": 83,
+          "roundRobinGroup": "kick-74-83",
+          "roundRobinIndex": 3
+        },
+        {
+          "url": "../audio/assets/meta-big-rusty-drums/samples/drums/kick/k_vl9_rr4.wav",
+          "rootMidi": 36,
+          "keyLow": 36,
+          "keyHigh": 36,
+          "velocityLow": 74,
+          "velocityHigh": 83,
+          "roundRobinGroup": "kick-74-83",
+          "roundRobinIndex": 4
+        },
+        {
+          "url": "../audio/assets/meta-big-rusty-drums/samples/drums/kick/k_vl10_rr1.wav",
+          "rootMidi": 36,
+          "keyLow": 36,
+          "keyHigh": 36,
+          "velocityLow": 84,
+          "velocityHigh": 91,
+          "roundRobinGroup": "kick-84-91",
+          "roundRobinIndex": 1
+        },
+        {
+          "url": "../audio/assets/meta-big-rusty-drums/samples/drums/kick/k_vl10_rr2.wav",
+          "rootMidi": 36,
+          "keyLow": 36,
+          "keyHigh": 36,
+          "velocityLow": 84,
+          "velocityHigh": 91,
+          "roundRobinGroup": "kick-84-91",
+          "roundRobinIndex": 2
+        },
+        {
+          "url": "../audio/assets/meta-big-rusty-drums/samples/drums/kick/k_vl10_rr3.wav",
+          "rootMidi": 36,
+          "keyLow": 36,
+          "keyHigh": 36,
+          "velocityLow": 84,
+          "velocityHigh": 91,
+          "roundRobinGroup": "kick-84-91",
+          "roundRobinIndex": 3
+        },
+        {
+          "url": "../audio/assets/meta-big-rusty-drums/samples/drums/kick/k_vl10_rr4.wav",
+          "rootMidi": 36,
+          "keyLow": 36,
+          "keyHigh": 36,
+          "velocityLow": 84,
+          "velocityHigh": 91,
+          "roundRobinGroup": "kick-84-91",
+          "roundRobinIndex": 4
+        },
+        {
+          "url": "../audio/assets/meta-big-rusty-drums/samples/drums/kick/k_vl11_rr1.wav",
+          "rootMidi": 36,
+          "keyLow": 36,
+          "keyHigh": 36,
+          "velocityLow": 92,
+          "velocityHigh": 100,
+          "roundRobinGroup": "kick-92-100",
+          "roundRobinIndex": 1
+        },
+        {
+          "url": "../audio/assets/meta-big-rusty-drums/samples/drums/kick/k_vl11_rr2.wav",
+          "rootMidi": 36,
+          "keyLow": 36,
+          "keyHigh": 36,
+          "velocityLow": 92,
+          "velocityHigh": 100,
+          "roundRobinGroup": "kick-92-100",
+          "roundRobinIndex": 2
+        },
+        {
+          "url": "../audio/assets/meta-big-rusty-drums/samples/drums/kick/k_vl11_rr3.wav",
+          "rootMidi": 36,
+          "keyLow": 36,
+          "keyHigh": 36,
+          "velocityLow": 92,
+          "velocityHigh": 100,
+          "roundRobinGroup": "kick-92-100",
+          "roundRobinIndex": 3
+        },
+        {
+          "url": "../audio/assets/meta-big-rusty-drums/samples/drums/kick/k_vl11_rr4.wav",
+          "rootMidi": 36,
+          "keyLow": 36,
+          "keyHigh": 36,
+          "velocityLow": 92,
+          "velocityHigh": 100,
+          "roundRobinGroup": "kick-92-100",
+          "roundRobinIndex": 4
+        },
+        {
+          "url": "../audio/assets/meta-big-rusty-drums/samples/drums/kick/k_vl12_rr1.wav",
+          "rootMidi": 36,
+          "keyLow": 36,
+          "keyHigh": 36,
+          "velocityLow": 101,
+          "velocityHigh": 109,
+          "roundRobinGroup": "kick-101-109",
+          "roundRobinIndex": 1
+        },
+        {
+          "url": "../audio/assets/meta-big-rusty-drums/samples/drums/kick/k_vl12_rr2.wav",
+          "rootMidi": 36,
+          "keyLow": 36,
+          "keyHigh": 36,
+          "velocityLow": 101,
+          "velocityHigh": 109,
+          "roundRobinGroup": "kick-101-109",
+          "roundRobinIndex": 2
+        },
+        {
+          "url": "../audio/assets/meta-big-rusty-drums/samples/drums/kick/k_vl12_rr3.wav",
+          "rootMidi": 36,
+          "keyLow": 36,
+          "keyHigh": 36,
+          "velocityLow": 101,
+          "velocityHigh": 109,
+          "roundRobinGroup": "kick-101-109",
+          "roundRobinIndex": 3
+        },
+        {
+          "url": "../audio/assets/meta-big-rusty-drums/samples/drums/kick/k_vl12_rr4.wav",
+          "rootMidi": 36,
+          "keyLow": 36,
+          "keyHigh": 36,
+          "velocityLow": 101,
+          "velocityHigh": 109,
+          "roundRobinGroup": "kick-101-109",
+          "roundRobinIndex": 4
+        },
+        {
+          "url": "../audio/assets/meta-big-rusty-drums/samples/drums/kick/k_vl13_rr1.wav",
+          "rootMidi": 36,
+          "keyLow": 36,
+          "keyHigh": 36,
+          "velocityLow": 110,
+          "velocityHigh": 118,
+          "roundRobinGroup": "kick-110-118",
+          "roundRobinIndex": 1
+        },
+        {
+          "url": "../audio/assets/meta-big-rusty-drums/samples/drums/kick/k_vl13_rr2.wav",
+          "rootMidi": 36,
+          "keyLow": 36,
+          "keyHigh": 36,
+          "velocityLow": 110,
+          "velocityHigh": 118,
+          "roundRobinGroup": "kick-110-118",
+          "roundRobinIndex": 2
+        },
+        {
+          "url": "../audio/assets/meta-big-rusty-drums/samples/drums/kick/k_vl13_rr3.wav",
+          "rootMidi": 36,
+          "keyLow": 36,
+          "keyHigh": 36,
+          "velocityLow": 110,
+          "velocityHigh": 118,
+          "roundRobinGroup": "kick-110-118",
+          "roundRobinIndex": 3
+        },
+        {
+          "url": "../audio/assets/meta-big-rusty-drums/samples/drums/kick/k_vl13_rr4.wav",
+          "rootMidi": 36,
+          "keyLow": 36,
+          "keyHigh": 36,
+          "velocityLow": 110,
+          "velocityHigh": 118,
+          "roundRobinGroup": "kick-110-118",
+          "roundRobinIndex": 4
+        },
+        {
+          "url": "../audio/assets/meta-big-rusty-drums/samples/drums/kick/k_vl14_rr1.wav",
+          "rootMidi": 36,
+          "keyLow": 36,
+          "keyHigh": 36,
+          "velocityLow": 119,
+          "velocityHigh": 127,
+          "roundRobinGroup": "kick-119-127",
+          "roundRobinIndex": 1
+        },
+        {
+          "url": "../audio/assets/meta-big-rusty-drums/samples/drums/kick/k_vl14_rr2.wav",
+          "rootMidi": 36,
+          "keyLow": 36,
+          "keyHigh": 36,
+          "velocityLow": 119,
+          "velocityHigh": 127,
+          "roundRobinGroup": "kick-119-127",
+          "roundRobinIndex": 2
+        },
+        {
+          "url": "../audio/assets/meta-big-rusty-drums/samples/drums/kick/k_vl14_rr3.wav",
+          "rootMidi": 36,
+          "keyLow": 36,
+          "keyHigh": 36,
+          "velocityLow": 119,
+          "velocityHigh": 127,
+          "roundRobinGroup": "kick-119-127",
+          "roundRobinIndex": 3
+        },
+        {
+          "url": "../audio/assets/meta-big-rusty-drums/samples/drums/kick/k_vl14_rr4.wav",
+          "rootMidi": 36,
+          "keyLow": 36,
+          "keyHigh": 36,
+          "velocityLow": 119,
+          "velocityHigh": 127,
+          "roundRobinGroup": "kick-119-127",
+          "roundRobinIndex": 4
+        },
+        {
+          "url": "../audio/assets/meta-big-rusty-drums/samples/drums/snare/sn_center_vl1_rr1.wav",
+          "rootMidi": 38,
+          "keyLow": 38,
+          "keyHigh": 38,
+          "velocityLow": 1,
+          "velocityHigh": 13,
+          "roundRobinGroup": "snare-1-13",
+          "roundRobinIndex": 1
+        },
+        {
+          "url": "../audio/assets/meta-big-rusty-drums/samples/drums/snare/sn_center_vl1_rr2.wav",
+          "rootMidi": 38,
+          "keyLow": 38,
+          "keyHigh": 38,
+          "velocityLow": 1,
+          "velocityHigh": 13,
+          "roundRobinGroup": "snare-1-13",
+          "roundRobinIndex": 2
+        },
+        {
+          "url": "../audio/assets/meta-big-rusty-drums/samples/drums/snare/sn_center_vl1_rr3.wav",
+          "rootMidi": 38,
+          "keyLow": 38,
+          "keyHigh": 38,
+          "velocityLow": 1,
+          "velocityHigh": 13,
+          "roundRobinGroup": "snare-1-13",
+          "roundRobinIndex": 3
+        },
+        {
+          "url": "../audio/assets/meta-big-rusty-drums/samples/drums/snare/sn_center_vl1_rr4.wav",
+          "rootMidi": 38,
+          "keyLow": 38,
+          "keyHigh": 38,
+          "velocityLow": 1,
+          "velocityHigh": 13,
+          "roundRobinGroup": "snare-1-13",
+          "roundRobinIndex": 4
+        },
+        {
+          "url": "../audio/assets/meta-big-rusty-drums/samples/drums/snare/sn_center_vl2_rr1.wav",
+          "rootMidi": 38,
+          "keyLow": 38,
+          "keyHigh": 38,
+          "velocityLow": 14,
+          "velocityHigh": 25,
+          "roundRobinGroup": "snare-14-25",
+          "roundRobinIndex": 1
+        },
+        {
+          "url": "../audio/assets/meta-big-rusty-drums/samples/drums/snare/sn_center_vl2_rr2.wav",
+          "rootMidi": 38,
+          "keyLow": 38,
+          "keyHigh": 38,
+          "velocityLow": 14,
+          "velocityHigh": 25,
+          "roundRobinGroup": "snare-14-25",
+          "roundRobinIndex": 2
+        },
+        {
+          "url": "../audio/assets/meta-big-rusty-drums/samples/drums/snare/sn_center_vl2_rr3.wav",
+          "rootMidi": 38,
+          "keyLow": 38,
+          "keyHigh": 38,
+          "velocityLow": 14,
+          "velocityHigh": 25,
+          "roundRobinGroup": "snare-14-25",
+          "roundRobinIndex": 3
+        },
+        {
+          "url": "../audio/assets/meta-big-rusty-drums/samples/drums/snare/sn_center_vl2_rr4.wav",
+          "rootMidi": 38,
+          "keyLow": 38,
+          "keyHigh": 38,
+          "velocityLow": 14,
+          "velocityHigh": 25,
+          "roundRobinGroup": "snare-14-25",
+          "roundRobinIndex": 4
+        },
+        {
+          "url": "../audio/assets/meta-big-rusty-drums/samples/drums/snare/sn_center_vl3_rr1.wav",
+          "rootMidi": 38,
+          "keyLow": 38,
+          "keyHigh": 38,
+          "velocityLow": 26,
+          "velocityHigh": 38,
+          "roundRobinGroup": "snare-26-38",
+          "roundRobinIndex": 1
+        },
+        {
+          "url": "../audio/assets/meta-big-rusty-drums/samples/drums/snare/sn_center_vl3_rr2.wav",
+          "rootMidi": 38,
+          "keyLow": 38,
+          "keyHigh": 38,
+          "velocityLow": 26,
+          "velocityHigh": 38,
+          "roundRobinGroup": "snare-26-38",
+          "roundRobinIndex": 2
+        },
+        {
+          "url": "../audio/assets/meta-big-rusty-drums/samples/drums/snare/sn_center_vl3_rr3.wav",
+          "rootMidi": 38,
+          "keyLow": 38,
+          "keyHigh": 38,
+          "velocityLow": 26,
+          "velocityHigh": 38,
+          "roundRobinGroup": "snare-26-38",
+          "roundRobinIndex": 3
+        },
+        {
+          "url": "../audio/assets/meta-big-rusty-drums/samples/drums/snare/sn_center_vl3_rr4.wav",
+          "rootMidi": 38,
+          "keyLow": 38,
+          "keyHigh": 38,
+          "velocityLow": 26,
+          "velocityHigh": 38,
+          "roundRobinGroup": "snare-26-38",
+          "roundRobinIndex": 4
+        },
+        {
+          "url": "../audio/assets/meta-big-rusty-drums/samples/drums/snare/sn_center_vl4_rr1.wav",
+          "rootMidi": 38,
+          "keyLow": 38,
+          "keyHigh": 38,
+          "velocityLow": 39,
+          "velocityHigh": 51,
+          "roundRobinGroup": "snare-39-51",
+          "roundRobinIndex": 1
+        },
+        {
+          "url": "../audio/assets/meta-big-rusty-drums/samples/drums/snare/sn_center_vl4_rr2.wav",
+          "rootMidi": 38,
+          "keyLow": 38,
+          "keyHigh": 38,
+          "velocityLow": 39,
+          "velocityHigh": 51,
+          "roundRobinGroup": "snare-39-51",
+          "roundRobinIndex": 2
+        },
+        {
+          "url": "../audio/assets/meta-big-rusty-drums/samples/drums/snare/sn_center_vl4_rr3.wav",
+          "rootMidi": 38,
+          "keyLow": 38,
+          "keyHigh": 38,
+          "velocityLow": 39,
+          "velocityHigh": 51,
+          "roundRobinGroup": "snare-39-51",
+          "roundRobinIndex": 3
+        },
+        {
+          "url": "../audio/assets/meta-big-rusty-drums/samples/drums/snare/sn_center_vl4_rr4.wav",
+          "rootMidi": 38,
+          "keyLow": 38,
+          "keyHigh": 38,
+          "velocityLow": 39,
+          "velocityHigh": 51,
+          "roundRobinGroup": "snare-39-51",
+          "roundRobinIndex": 4
+        },
+        {
+          "url": "../audio/assets/meta-big-rusty-drums/samples/drums/snare/sn_center_vl5_rr1.wav",
+          "rootMidi": 38,
+          "keyLow": 38,
+          "keyHigh": 38,
+          "velocityLow": 52,
+          "velocityHigh": 64,
+          "roundRobinGroup": "snare-52-64",
+          "roundRobinIndex": 1
+        },
+        {
+          "url": "../audio/assets/meta-big-rusty-drums/samples/drums/snare/sn_center_vl5_rr2.wav",
+          "rootMidi": 38,
+          "keyLow": 38,
+          "keyHigh": 38,
+          "velocityLow": 52,
+          "velocityHigh": 64,
+          "roundRobinGroup": "snare-52-64",
+          "roundRobinIndex": 2
+        },
+        {
+          "url": "../audio/assets/meta-big-rusty-drums/samples/drums/snare/sn_center_vl5_rr3.wav",
+          "rootMidi": 38,
+          "keyLow": 38,
+          "keyHigh": 38,
+          "velocityLow": 52,
+          "velocityHigh": 64,
+          "roundRobinGroup": "snare-52-64",
+          "roundRobinIndex": 3
+        },
+        {
+          "url": "../audio/assets/meta-big-rusty-drums/samples/drums/snare/sn_center_vl5_rr4.wav",
+          "rootMidi": 38,
+          "keyLow": 38,
+          "keyHigh": 38,
+          "velocityLow": 52,
+          "velocityHigh": 64,
+          "roundRobinGroup": "snare-52-64",
+          "roundRobinIndex": 4
+        },
+        {
+          "url": "../audio/assets/meta-big-rusty-drums/samples/drums/snare/sn_center_vl6_rr1.wav",
+          "rootMidi": 38,
+          "keyLow": 38,
+          "keyHigh": 38,
+          "velocityLow": 65,
+          "velocityHigh": 76,
+          "roundRobinGroup": "snare-65-76",
+          "roundRobinIndex": 1
+        },
+        {
+          "url": "../audio/assets/meta-big-rusty-drums/samples/drums/snare/sn_center_vl6_rr2.wav",
+          "rootMidi": 38,
+          "keyLow": 38,
+          "keyHigh": 38,
+          "velocityLow": 65,
+          "velocityHigh": 76,
+          "roundRobinGroup": "snare-65-76",
+          "roundRobinIndex": 2
+        },
+        {
+          "url": "../audio/assets/meta-big-rusty-drums/samples/drums/snare/sn_center_vl6_rr3.wav",
+          "rootMidi": 38,
+          "keyLow": 38,
+          "keyHigh": 38,
+          "velocityLow": 65,
+          "velocityHigh": 76,
+          "roundRobinGroup": "snare-65-76",
+          "roundRobinIndex": 3
+        },
+        {
+          "url": "../audio/assets/meta-big-rusty-drums/samples/drums/snare/sn_center_vl6_rr4.wav",
+          "rootMidi": 38,
+          "keyLow": 38,
+          "keyHigh": 38,
+          "velocityLow": 65,
+          "velocityHigh": 76,
+          "roundRobinGroup": "snare-65-76",
+          "roundRobinIndex": 4
+        },
+        {
+          "url": "../audio/assets/meta-big-rusty-drums/samples/drums/snare/sn_center_vl7_rr1.wav",
+          "rootMidi": 38,
+          "keyLow": 38,
+          "keyHigh": 38,
+          "velocityLow": 77,
+          "velocityHigh": 89,
+          "roundRobinGroup": "snare-77-89",
+          "roundRobinIndex": 1
+        },
+        {
+          "url": "../audio/assets/meta-big-rusty-drums/samples/drums/snare/sn_center_vl7_rr2.wav",
+          "rootMidi": 38,
+          "keyLow": 38,
+          "keyHigh": 38,
+          "velocityLow": 77,
+          "velocityHigh": 89,
+          "roundRobinGroup": "snare-77-89",
+          "roundRobinIndex": 2
+        },
+        {
+          "url": "../audio/assets/meta-big-rusty-drums/samples/drums/snare/sn_center_vl7_rr3.wav",
+          "rootMidi": 38,
+          "keyLow": 38,
+          "keyHigh": 38,
+          "velocityLow": 77,
+          "velocityHigh": 89,
+          "roundRobinGroup": "snare-77-89",
+          "roundRobinIndex": 3
+        },
+        {
+          "url": "../audio/assets/meta-big-rusty-drums/samples/drums/snare/sn_center_vl7_rr4.wav",
+          "rootMidi": 38,
+          "keyLow": 38,
+          "keyHigh": 38,
+          "velocityLow": 77,
+          "velocityHigh": 89,
+          "roundRobinGroup": "snare-77-89",
+          "roundRobinIndex": 4
+        },
+        {
+          "url": "../audio/assets/meta-big-rusty-drums/samples/drums/snare/sn_center_vl8_rr1.wav",
+          "rootMidi": 38,
+          "keyLow": 38,
+          "keyHigh": 38,
+          "velocityLow": 90,
+          "velocityHigh": 101,
+          "roundRobinGroup": "snare-90-101",
+          "roundRobinIndex": 1
+        },
+        {
+          "url": "../audio/assets/meta-big-rusty-drums/samples/drums/snare/sn_center_vl8_rr2.wav",
+          "rootMidi": 38,
+          "keyLow": 38,
+          "keyHigh": 38,
+          "velocityLow": 90,
+          "velocityHigh": 101,
+          "roundRobinGroup": "snare-90-101",
+          "roundRobinIndex": 2
+        },
+        {
+          "url": "../audio/assets/meta-big-rusty-drums/samples/drums/snare/sn_center_vl8_rr3.wav",
+          "rootMidi": 38,
+          "keyLow": 38,
+          "keyHigh": 38,
+          "velocityLow": 90,
+          "velocityHigh": 101,
+          "roundRobinGroup": "snare-90-101",
+          "roundRobinIndex": 3
+        },
+        {
+          "url": "../audio/assets/meta-big-rusty-drums/samples/drums/snare/sn_center_vl8_rr4.wav",
+          "rootMidi": 38,
+          "keyLow": 38,
+          "keyHigh": 38,
+          "velocityLow": 90,
+          "velocityHigh": 101,
+          "roundRobinGroup": "snare-90-101",
+          "roundRobinIndex": 4
+        },
+        {
+          "url": "../audio/assets/meta-big-rusty-drums/samples/drums/snare/sn_center_vl9_rr1.wav",
+          "rootMidi": 38,
+          "keyLow": 38,
+          "keyHigh": 38,
+          "velocityLow": 102,
+          "velocityHigh": 114,
+          "roundRobinGroup": "snare-102-114",
+          "roundRobinIndex": 1
+        },
+        {
+          "url": "../audio/assets/meta-big-rusty-drums/samples/drums/snare/sn_center_vl9_rr2.wav",
+          "rootMidi": 38,
+          "keyLow": 38,
+          "keyHigh": 38,
+          "velocityLow": 102,
+          "velocityHigh": 114,
+          "roundRobinGroup": "snare-102-114",
+          "roundRobinIndex": 2
+        },
+        {
+          "url": "../audio/assets/meta-big-rusty-drums/samples/drums/snare/sn_center_vl9_rr3.wav",
+          "rootMidi": 38,
+          "keyLow": 38,
+          "keyHigh": 38,
+          "velocityLow": 102,
+          "velocityHigh": 114,
+          "roundRobinGroup": "snare-102-114",
+          "roundRobinIndex": 3
+        },
+        {
+          "url": "../audio/assets/meta-big-rusty-drums/samples/drums/snare/sn_center_vl9_rr4.wav",
+          "rootMidi": 38,
+          "keyLow": 38,
+          "keyHigh": 38,
+          "velocityLow": 102,
+          "velocityHigh": 114,
+          "roundRobinGroup": "snare-102-114",
+          "roundRobinIndex": 4
+        },
+        {
+          "url": "../audio/assets/meta-big-rusty-drums/samples/drums/snare/sn_center_vl10_rr1.wav",
+          "rootMidi": 38,
+          "keyLow": 38,
+          "keyHigh": 38,
+          "velocityLow": 115,
+          "velocityHigh": 127,
+          "roundRobinGroup": "snare-115-127",
+          "roundRobinIndex": 1
+        },
+        {
+          "url": "../audio/assets/meta-big-rusty-drums/samples/drums/snare/sn_center_vl10_rr2.wav",
+          "rootMidi": 38,
+          "keyLow": 38,
+          "keyHigh": 38,
+          "velocityLow": 115,
+          "velocityHigh": 127,
+          "roundRobinGroup": "snare-115-127",
+          "roundRobinIndex": 2
+        },
+        {
+          "url": "../audio/assets/meta-big-rusty-drums/samples/drums/snare/sn_center_vl10_rr3.wav",
+          "rootMidi": 38,
+          "keyLow": 38,
+          "keyHigh": 38,
+          "velocityLow": 115,
+          "velocityHigh": 127,
+          "roundRobinGroup": "snare-115-127",
+          "roundRobinIndex": 3
+        },
+        {
+          "url": "../audio/assets/meta-big-rusty-drums/samples/drums/snare/sn_center_vl10_rr4.wav",
+          "rootMidi": 38,
+          "keyLow": 38,
+          "keyHigh": 38,
+          "velocityLow": 115,
+          "velocityHigh": 127,
+          "roundRobinGroup": "snare-115-127",
+          "roundRobinIndex": 4
+        },
+        {
+          "url": "../audio/assets/meta-big-rusty-drums/samples/drums/hat/ht_tc_vl1_rr1.wav",
+          "rootMidi": 42,
+          "keyLow": 42,
+          "keyHigh": 42,
+          "velocityLow": 1,
+          "velocityHigh": 15,
+          "roundRobinGroup": "hat-1-15",
+          "roundRobinIndex": 1
+        },
+        {
+          "url": "../audio/assets/meta-big-rusty-drums/samples/drums/hat/ht_tc_vl1_rr2.wav",
+          "rootMidi": 42,
+          "keyLow": 42,
+          "keyHigh": 42,
+          "velocityLow": 1,
+          "velocityHigh": 15,
+          "roundRobinGroup": "hat-1-15",
+          "roundRobinIndex": 2
+        },
+        {
+          "url": "../audio/assets/meta-big-rusty-drums/samples/drums/hat/ht_tc_vl1_rr3.wav",
+          "rootMidi": 42,
+          "keyLow": 42,
+          "keyHigh": 42,
+          "velocityLow": 1,
+          "velocityHigh": 15,
+          "roundRobinGroup": "hat-1-15",
+          "roundRobinIndex": 3
+        },
+        {
+          "url": "../audio/assets/meta-big-rusty-drums/samples/drums/hat/ht_tc_vl1_rr4.wav",
+          "rootMidi": 42,
+          "keyLow": 42,
+          "keyHigh": 42,
+          "velocityLow": 1,
+          "velocityHigh": 15,
+          "roundRobinGroup": "hat-1-15",
+          "roundRobinIndex": 4
+        },
+        {
+          "url": "../audio/assets/meta-big-rusty-drums/samples/drums/hat/ht_tc_vl2_rr1.wav",
+          "rootMidi": 42,
+          "keyLow": 42,
+          "keyHigh": 42,
+          "velocityLow": 16,
+          "velocityHigh": 31,
+          "roundRobinGroup": "hat-16-31",
+          "roundRobinIndex": 1
+        },
+        {
+          "url": "../audio/assets/meta-big-rusty-drums/samples/drums/hat/ht_tc_vl2_rr2.wav",
+          "rootMidi": 42,
+          "keyLow": 42,
+          "keyHigh": 42,
+          "velocityLow": 16,
+          "velocityHigh": 31,
+          "roundRobinGroup": "hat-16-31",
+          "roundRobinIndex": 2
+        },
+        {
+          "url": "../audio/assets/meta-big-rusty-drums/samples/drums/hat/ht_tc_vl2_rr3.wav",
+          "rootMidi": 42,
+          "keyLow": 42,
+          "keyHigh": 42,
+          "velocityLow": 16,
+          "velocityHigh": 31,
+          "roundRobinGroup": "hat-16-31",
+          "roundRobinIndex": 3
+        },
+        {
+          "url": "../audio/assets/meta-big-rusty-drums/samples/drums/hat/ht_tc_vl2_rr4.wav",
+          "rootMidi": 42,
+          "keyLow": 42,
+          "keyHigh": 42,
+          "velocityLow": 16,
+          "velocityHigh": 31,
+          "roundRobinGroup": "hat-16-31",
+          "roundRobinIndex": 4
+        },
+        {
+          "url": "../audio/assets/meta-big-rusty-drums/samples/drums/hat/ht_tc_vl3_rr1.wav",
+          "rootMidi": 42,
+          "keyLow": 42,
+          "keyHigh": 42,
+          "velocityLow": 32,
+          "velocityHigh": 47,
+          "roundRobinGroup": "hat-32-47",
+          "roundRobinIndex": 1
+        },
+        {
+          "url": "../audio/assets/meta-big-rusty-drums/samples/drums/hat/ht_tc_vl3_rr2.wav",
+          "rootMidi": 42,
+          "keyLow": 42,
+          "keyHigh": 42,
+          "velocityLow": 32,
+          "velocityHigh": 47,
+          "roundRobinGroup": "hat-32-47",
+          "roundRobinIndex": 2
+        },
+        {
+          "url": "../audio/assets/meta-big-rusty-drums/samples/drums/hat/ht_tc_vl3_rr3.wav",
+          "rootMidi": 42,
+          "keyLow": 42,
+          "keyHigh": 42,
+          "velocityLow": 32,
+          "velocityHigh": 47,
+          "roundRobinGroup": "hat-32-47",
+          "roundRobinIndex": 3
+        },
+        {
+          "url": "../audio/assets/meta-big-rusty-drums/samples/drums/hat/ht_tc_vl3_rr4.wav",
+          "rootMidi": 42,
+          "keyLow": 42,
+          "keyHigh": 42,
+          "velocityLow": 32,
+          "velocityHigh": 47,
+          "roundRobinGroup": "hat-32-47",
+          "roundRobinIndex": 4
+        },
+        {
+          "url": "../audio/assets/meta-big-rusty-drums/samples/drums/hat/ht_tc_vl4_rr1.wav",
+          "rootMidi": 42,
+          "keyLow": 42,
+          "keyHigh": 42,
+          "velocityLow": 48,
+          "velocityHigh": 63,
+          "roundRobinGroup": "hat-48-63",
+          "roundRobinIndex": 1
+        },
+        {
+          "url": "../audio/assets/meta-big-rusty-drums/samples/drums/hat/ht_tc_vl4_rr2.wav",
+          "rootMidi": 42,
+          "keyLow": 42,
+          "keyHigh": 42,
+          "velocityLow": 48,
+          "velocityHigh": 63,
+          "roundRobinGroup": "hat-48-63",
+          "roundRobinIndex": 2
+        },
+        {
+          "url": "../audio/assets/meta-big-rusty-drums/samples/drums/hat/ht_tc_vl4_rr3.wav",
+          "rootMidi": 42,
+          "keyLow": 42,
+          "keyHigh": 42,
+          "velocityLow": 48,
+          "velocityHigh": 63,
+          "roundRobinGroup": "hat-48-63",
+          "roundRobinIndex": 3
+        },
+        {
+          "url": "../audio/assets/meta-big-rusty-drums/samples/drums/hat/ht_tc_vl4_rr4.wav",
+          "rootMidi": 42,
+          "keyLow": 42,
+          "keyHigh": 42,
+          "velocityLow": 48,
+          "velocityHigh": 63,
+          "roundRobinGroup": "hat-48-63",
+          "roundRobinIndex": 4
+        },
+        {
+          "url": "../audio/assets/meta-big-rusty-drums/samples/drums/hat/ht_tc_vl5_rr1.wav",
+          "rootMidi": 42,
+          "keyLow": 42,
+          "keyHigh": 42,
+          "velocityLow": 64,
+          "velocityHigh": 79,
+          "roundRobinGroup": "hat-64-79",
+          "roundRobinIndex": 1
+        },
+        {
+          "url": "../audio/assets/meta-big-rusty-drums/samples/drums/hat/ht_tc_vl5_rr2.wav",
+          "rootMidi": 42,
+          "keyLow": 42,
+          "keyHigh": 42,
+          "velocityLow": 64,
+          "velocityHigh": 79,
+          "roundRobinGroup": "hat-64-79",
+          "roundRobinIndex": 2
+        },
+        {
+          "url": "../audio/assets/meta-big-rusty-drums/samples/drums/hat/ht_tc_vl5_rr3.wav",
+          "rootMidi": 42,
+          "keyLow": 42,
+          "keyHigh": 42,
+          "velocityLow": 64,
+          "velocityHigh": 79,
+          "roundRobinGroup": "hat-64-79",
+          "roundRobinIndex": 3
+        },
+        {
+          "url": "../audio/assets/meta-big-rusty-drums/samples/drums/hat/ht_tc_vl5_rr4.wav",
+          "rootMidi": 42,
+          "keyLow": 42,
+          "keyHigh": 42,
+          "velocityLow": 64,
+          "velocityHigh": 79,
+          "roundRobinGroup": "hat-64-79",
+          "roundRobinIndex": 4
+        },
+        {
+          "url": "../audio/assets/meta-big-rusty-drums/samples/drums/hat/ht_tc_vl6_rr1.wav",
+          "rootMidi": 42,
+          "keyLow": 42,
+          "keyHigh": 42,
+          "velocityLow": 80,
+          "velocityHigh": 95,
+          "roundRobinGroup": "hat-80-95",
+          "roundRobinIndex": 1
+        },
+        {
+          "url": "../audio/assets/meta-big-rusty-drums/samples/drums/hat/ht_tc_vl6_rr2.wav",
+          "rootMidi": 42,
+          "keyLow": 42,
+          "keyHigh": 42,
+          "velocityLow": 80,
+          "velocityHigh": 95,
+          "roundRobinGroup": "hat-80-95",
+          "roundRobinIndex": 2
+        },
+        {
+          "url": "../audio/assets/meta-big-rusty-drums/samples/drums/hat/ht_tc_vl6_rr3.wav",
+          "rootMidi": 42,
+          "keyLow": 42,
+          "keyHigh": 42,
+          "velocityLow": 80,
+          "velocityHigh": 95,
+          "roundRobinGroup": "hat-80-95",
+          "roundRobinIndex": 3
+        },
+        {
+          "url": "../audio/assets/meta-big-rusty-drums/samples/drums/hat/ht_tc_vl6_rr4.wav",
+          "rootMidi": 42,
+          "keyLow": 42,
+          "keyHigh": 42,
+          "velocityLow": 80,
+          "velocityHigh": 95,
+          "roundRobinGroup": "hat-80-95",
+          "roundRobinIndex": 4
+        },
+        {
+          "url": "../audio/assets/meta-big-rusty-drums/samples/drums/hat/ht_tc_vl7_rr1.wav",
+          "rootMidi": 42,
+          "keyLow": 42,
+          "keyHigh": 42,
+          "velocityLow": 96,
+          "velocityHigh": 111,
+          "roundRobinGroup": "hat-96-111",
+          "roundRobinIndex": 1
+        },
+        {
+          "url": "../audio/assets/meta-big-rusty-drums/samples/drums/hat/ht_tc_vl7_rr2.wav",
+          "rootMidi": 42,
+          "keyLow": 42,
+          "keyHigh": 42,
+          "velocityLow": 96,
+          "velocityHigh": 111,
+          "roundRobinGroup": "hat-96-111",
+          "roundRobinIndex": 2
+        },
+        {
+          "url": "../audio/assets/meta-big-rusty-drums/samples/drums/hat/ht_tc_vl7_rr3.wav",
+          "rootMidi": 42,
+          "keyLow": 42,
+          "keyHigh": 42,
+          "velocityLow": 96,
+          "velocityHigh": 111,
+          "roundRobinGroup": "hat-96-111",
+          "roundRobinIndex": 3
+        },
+        {
+          "url": "../audio/assets/meta-big-rusty-drums/samples/drums/hat/ht_tc_vl7_rr4.wav",
+          "rootMidi": 42,
+          "keyLow": 42,
+          "keyHigh": 42,
+          "velocityLow": 96,
+          "velocityHigh": 111,
+          "roundRobinGroup": "hat-96-111",
+          "roundRobinIndex": 4
+        },
+        {
+          "url": "../audio/assets/meta-big-rusty-drums/samples/drums/hat/ht_tc_vl8_rr1.wav",
+          "rootMidi": 42,
+          "keyLow": 42,
+          "keyHigh": 42,
+          "velocityLow": 112,
+          "velocityHigh": 127,
+          "roundRobinGroup": "hat-112-127",
+          "roundRobinIndex": 1
+        },
+        {
+          "url": "../audio/assets/meta-big-rusty-drums/samples/drums/hat/ht_tc_vl8_rr2.wav",
+          "rootMidi": 42,
+          "keyLow": 42,
+          "keyHigh": 42,
+          "velocityLow": 112,
+          "velocityHigh": 127,
+          "roundRobinGroup": "hat-112-127",
+          "roundRobinIndex": 2
+        },
+        {
+          "url": "../audio/assets/meta-big-rusty-drums/samples/drums/hat/ht_tc_vl8_rr3.wav",
+          "rootMidi": 42,
+          "keyLow": 42,
+          "keyHigh": 42,
+          "velocityLow": 112,
+          "velocityHigh": 127,
+          "roundRobinGroup": "hat-112-127",
+          "roundRobinIndex": 3
+        },
+        {
+          "url": "../audio/assets/meta-big-rusty-drums/samples/drums/hat/ht_tc_vl8_rr4.wav",
+          "rootMidi": 42,
+          "keyLow": 42,
+          "keyHigh": 42,
+          "velocityLow": 112,
+          "velocityHigh": 127,
+          "roundRobinGroup": "hat-112-127",
+          "roundRobinIndex": 4
+        },
+        {
+          "url": "../audio/assets/meta-big-rusty-drums/samples/drums/crash/cr_vl1_rr1.wav",
+          "rootMidi": 49,
+          "keyLow": 49,
+          "keyHigh": 49,
+          "velocityLow": 1,
+          "velocityHigh": 25,
+          "roundRobinGroup": "crash-1-25",
+          "roundRobinIndex": 1
+        },
+        {
+          "url": "../audio/assets/meta-big-rusty-drums/samples/drums/crash/cr_vl1_rr2.wav",
+          "rootMidi": 49,
+          "keyLow": 49,
+          "keyHigh": 49,
+          "velocityLow": 1,
+          "velocityHigh": 25,
+          "roundRobinGroup": "crash-1-25",
+          "roundRobinIndex": 2
+        },
+        {
+          "url": "../audio/assets/meta-big-rusty-drums/samples/drums/crash/cr_vl1_rr3.wav",
+          "rootMidi": 49,
+          "keyLow": 49,
+          "keyHigh": 49,
+          "velocityLow": 1,
+          "velocityHigh": 25,
+          "roundRobinGroup": "crash-1-25",
+          "roundRobinIndex": 3
+        },
+        {
+          "url": "../audio/assets/meta-big-rusty-drums/samples/drums/crash/cr_vl1_rr4.wav",
+          "rootMidi": 49,
+          "keyLow": 49,
+          "keyHigh": 49,
+          "velocityLow": 1,
+          "velocityHigh": 25,
+          "roundRobinGroup": "crash-1-25",
+          "roundRobinIndex": 4
+        },
+        {
+          "url": "../audio/assets/meta-big-rusty-drums/samples/drums/crash/cr_vl2_rr1.wav",
+          "rootMidi": 49,
+          "keyLow": 49,
+          "keyHigh": 49,
+          "velocityLow": 26,
+          "velocityHigh": 51,
+          "roundRobinGroup": "crash-26-51",
+          "roundRobinIndex": 1
+        },
+        {
+          "url": "../audio/assets/meta-big-rusty-drums/samples/drums/crash/cr_vl2_rr2.wav",
+          "rootMidi": 49,
+          "keyLow": 49,
+          "keyHigh": 49,
+          "velocityLow": 26,
+          "velocityHigh": 51,
+          "roundRobinGroup": "crash-26-51",
+          "roundRobinIndex": 2
+        },
+        {
+          "url": "../audio/assets/meta-big-rusty-drums/samples/drums/crash/cr_vl2_rr3.wav",
+          "rootMidi": 49,
+          "keyLow": 49,
+          "keyHigh": 49,
+          "velocityLow": 26,
+          "velocityHigh": 51,
+          "roundRobinGroup": "crash-26-51",
+          "roundRobinIndex": 3
+        },
+        {
+          "url": "../audio/assets/meta-big-rusty-drums/samples/drums/crash/cr_vl2_rr4.wav",
+          "rootMidi": 49,
+          "keyLow": 49,
+          "keyHigh": 49,
+          "velocityLow": 26,
+          "velocityHigh": 51,
+          "roundRobinGroup": "crash-26-51",
+          "roundRobinIndex": 4
+        },
+        {
+          "url": "../audio/assets/meta-big-rusty-drums/samples/drums/crash/cr_vl3_rr1.wav",
+          "rootMidi": 49,
+          "keyLow": 49,
+          "keyHigh": 49,
+          "velocityLow": 52,
+          "velocityHigh": 76,
+          "roundRobinGroup": "crash-52-76",
+          "roundRobinIndex": 1
+        },
+        {
+          "url": "../audio/assets/meta-big-rusty-drums/samples/drums/crash/cr_vl3_rr2.wav",
+          "rootMidi": 49,
+          "keyLow": 49,
+          "keyHigh": 49,
+          "velocityLow": 52,
+          "velocityHigh": 76,
+          "roundRobinGroup": "crash-52-76",
+          "roundRobinIndex": 2
+        },
+        {
+          "url": "../audio/assets/meta-big-rusty-drums/samples/drums/crash/cr_vl3_rr3.wav",
+          "rootMidi": 49,
+          "keyLow": 49,
+          "keyHigh": 49,
+          "velocityLow": 52,
+          "velocityHigh": 76,
+          "roundRobinGroup": "crash-52-76",
+          "roundRobinIndex": 3
+        },
+        {
+          "url": "../audio/assets/meta-big-rusty-drums/samples/drums/crash/cr_vl3_rr4.wav",
+          "rootMidi": 49,
+          "keyLow": 49,
+          "keyHigh": 49,
+          "velocityLow": 52,
+          "velocityHigh": 76,
+          "roundRobinGroup": "crash-52-76",
+          "roundRobinIndex": 4
+        },
+        {
+          "url": "../audio/assets/meta-big-rusty-drums/samples/drums/crash/cr_vl4_rr1.wav",
+          "rootMidi": 49,
+          "keyLow": 49,
+          "keyHigh": 49,
+          "velocityLow": 77,
+          "velocityHigh": 101,
+          "roundRobinGroup": "crash-77-101",
+          "roundRobinIndex": 1
+        },
+        {
+          "url": "../audio/assets/meta-big-rusty-drums/samples/drums/crash/cr_vl4_rr2.wav",
+          "rootMidi": 49,
+          "keyLow": 49,
+          "keyHigh": 49,
+          "velocityLow": 77,
+          "velocityHigh": 101,
+          "roundRobinGroup": "crash-77-101",
+          "roundRobinIndex": 2
+        },
+        {
+          "url": "../audio/assets/meta-big-rusty-drums/samples/drums/crash/cr_vl4_rr3.wav",
+          "rootMidi": 49,
+          "keyLow": 49,
+          "keyHigh": 49,
+          "velocityLow": 77,
+          "velocityHigh": 101,
+          "roundRobinGroup": "crash-77-101",
+          "roundRobinIndex": 3
+        },
+        {
+          "url": "../audio/assets/meta-big-rusty-drums/samples/drums/crash/cr_vl4_rr4.wav",
+          "rootMidi": 49,
+          "keyLow": 49,
+          "keyHigh": 49,
+          "velocityLow": 77,
+          "velocityHigh": 101,
+          "roundRobinGroup": "crash-77-101",
+          "roundRobinIndex": 4
+        },
+        {
+          "url": "../audio/assets/meta-big-rusty-drums/samples/drums/crash/cr_vl5_rr1.wav",
+          "rootMidi": 49,
+          "keyLow": 49,
+          "keyHigh": 49,
+          "velocityLow": 102,
+          "velocityHigh": 127,
+          "roundRobinGroup": "crash-102-127",
+          "roundRobinIndex": 1
+        },
+        {
+          "url": "../audio/assets/meta-big-rusty-drums/samples/drums/crash/cr_vl5_rr2.wav",
+          "rootMidi": 49,
+          "keyLow": 49,
+          "keyHigh": 49,
+          "velocityLow": 102,
+          "velocityHigh": 127,
+          "roundRobinGroup": "crash-102-127",
+          "roundRobinIndex": 2
+        },
+        {
+          "url": "../audio/assets/meta-big-rusty-drums/samples/drums/crash/cr_vl5_rr3.wav",
+          "rootMidi": 49,
+          "keyLow": 49,
+          "keyHigh": 49,
+          "velocityLow": 102,
+          "velocityHigh": 127,
+          "roundRobinGroup": "crash-102-127",
+          "roundRobinIndex": 3
+        },
+        {
+          "url": "../audio/assets/meta-big-rusty-drums/samples/drums/crash/cr_vl5_rr4.wav",
+          "rootMidi": 49,
+          "keyLow": 49,
+          "keyHigh": 49,
+          "velocityLow": 102,
+          "velocityHigh": 127,
+          "roundRobinGroup": "crash-102-127",
+          "roundRobinIndex": 4
+        }
+      ]
+    }
+  }
+}

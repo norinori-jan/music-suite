@@ -1,0 +1,12 @@
+{
+  "repository": "sfzinstruments/karoryfer.big-rusty-drums",
+  "revision": "f07ce00df34a46b6b08375be56fe116cf15782bc",
+  "license": "CC0-1.0",
+  "sampleRate": 48000,
+  "channels": 1,
+  "bitsPerSample": 24,
+  "zoneCount": 144,
+  "sourceFilesSHA256Verified": true,
+  "sourceGitBlobSHA1Verified": true,
+  "convertedFilesSHA256Recorded": true
+}

@@ -1,0 +1,12 @@
+{
+  "repository": "sfzinstruments/karoryfer.swagbass",
+  "revision": "9d10fcae71af1975988ddecd5af1c95d372c7355",
+  "license": "CC0-1.0",
+  "sampleRate": 48000,
+  "channels": 1,
+  "bitsPerSample": 24,
+  "zoneCount": 192,
+  "sourceFilesSHA256Verified": true,
+  "sourceGitBlobSHA1Verified": true,
+  "convertedFilesSHA256Recorded": true
+}
