@@ -99,7 +99,6 @@ test("preload deduplicates concurrent requests and decodes once", async () => {
 test("scheduleNote uses the selected real sample, transposes from its root and schedules on the shared clock", async () => {
   const context = makeContext();
   const network = fakeFetch();
-  const engine = createSampleAudioEngine({ audioContext: context, manifest, fetchImpl: network.fetch });
   const transpositionManifest = structuredClone(manifest);
   transpositionManifest.instruments.piano.samples.forEach(sample => { sample.keyHigh = 62; });
   const transpositionEngine = createSampleAudioEngine({ audioContext: context, manifest: transpositionManifest, fetchImpl: network.fetch });
@@ -108,7 +107,7 @@ test("scheduleNote uses the selected real sample, transposes from its root and s
   assert.equal(voice.sampleUrl, "/audio/piano-c4-hard.ogg");
   assert.equal(context.sources[0].startedAt, 10.5);
   assert.ok(Math.abs(context.sources[0].rate - Math.pow(2, 2 / 12)) < 1e-9);
-  assert.equal(engine.getStats().activeVoices, 1);
+  assert.equal(transpositionEngine.getStats().activeVoices, 1);
   voice.stop(11);
   assert.equal(context.sources[0].stoppedAt, 11.02);
 });
