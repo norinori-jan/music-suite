@@ -27,4 +27,5 @@ test("service worker caches the app shell and only audio samples requested at ru
   assert.match(sw, /cache\.put\(request, response\.clone\(\)\)/);
   assert.match(sw, /networkFirst\(request, AUDIO_CACHE\)/);
   assert.doesNotMatch(sw, /audio\/assets\/\*\*/);
+  assert.match(sw, /name\.startsWith\("music-suite-"\)/);
 });
