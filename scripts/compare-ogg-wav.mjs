@@ -22,7 +22,7 @@ function stats(buffer) {
 function compare(label, wav, ogg) {
   const a = stats(wav), b = stats(ogg), count = Math.min(a.count, b.count);
   let errorSq = 0, cross = 0, aSq = 0, bSq = 0, peakError = 0;
-  let attackErrorSq = 0, attackSignalSq = 0;
+  let attackErrorSq = 0, attackSignalSq = 0, attackCross = 0, attackOggSq = 0;
   const attackCount = Math.min(count, 4800);
   for (let i = 0; i < count; i++) {
     const av = a.values[i] - a.mean, bv = b.values[i] - b.mean;
@@ -35,6 +35,8 @@ function compare(label, wav, ogg) {
     if (i < attackCount) {
       attackErrorSq += diff * diff;
       attackSignalSq += av * av;
+      attackCross += av * bv;
+      attackOggSq += bv * bv;
     }
   }
   const errorRms = Math.sqrt(errorSq / count);
@@ -42,13 +44,22 @@ function compare(label, wav, ogg) {
   const correlation = cross / Math.sqrt(Math.max(1e-30, aSq * bSq));
   const attackErrorRms = Math.sqrt(attackErrorSq / attackCount);
   const attackSnrDb = 20 * Math.log10(Math.sqrt(attackSignalSq / attackCount) / Math.max(1e-15, attackErrorRms));
+  const bestOggGain = cross / Math.max(1e-30, bSq);
+  const gainMatchedErrorSq = Math.max(0, aSq - 2 * bestOggGain * cross + bestOggGain * bestOggGain * bSq);
+  const gainMatchedSnrDb = 10 * Math.log10(aSq / Math.max(1e-30, gainMatchedErrorSq));
+  const attackBestGain = attackCross / Math.max(1e-30, attackOggSq);
+  const attackMatchedErrorSq = Math.max(0, attackSignalSq - 2 * attackBestGain * attackCross + attackBestGain * attackBestGain * attackOggSq);
+  const attackGainMatchedSnrDb = 10 * Math.log10(attackSignalSq / Math.max(1e-30, attackMatchedErrorSq));
   return {
     label, wavFrames: a.count, oggFrames: b.count, comparedFrames: count,
     wavRms: Number(a.rms.toFixed(7)), oggRms: Number(b.rms.toFixed(7)),
     levelDeltaDb: Number((20 * Math.log10(Math.max(1e-15, b.rms) / Math.max(1e-15, a.rms))).toFixed(3)),
     errorRms: Number(errorRms.toFixed(7)), peakAbsoluteDifference: Number(peakError.toFixed(6)),
     correlation: Number(correlation.toFixed(7)), snrDb: Number(snrDb.toFixed(2)),
-    attackWindowMs: Number((attackCount / 48).toFixed(1)), attackSnrDb: Number(attackSnrDb.toFixed(2))
+    oggGainToMatchWav: Number(bestOggGain.toFixed(5)), oggGainToMatchWavDb: Number((20 * Math.log10(bestOggGain)).toFixed(2)),
+    gainMatchedSnrDb: Number(gainMatchedSnrDb.toFixed(2)),
+    attackWindowMs: Number((attackCount / 48).toFixed(1)), attackSnrDb: Number(attackSnrDb.toFixed(2)),
+    attackGainMatchedSnrDb: Number(attackGainMatchedSnrDb.toFixed(2))
   };
 }
 
