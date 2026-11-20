@@ -205,7 +205,9 @@ test("imported CC0 violin and cello WAV zones match every pinned manifest SHA-25
       assert.equal(createHash("sha256").update(bytes).digest("hex"), zone.sha256);
       assert.equal(bytes.toString("ascii", 0, 4), "RIFF");
       assert.equal(bytes.toString("ascii", 8, 12), "WAVE");
-      assert.equal(bytes.readUInt16LE(20), 1, "must be PCM");
+      const wavFormat = bytes.readUInt16LE(20);
+      assert.ok(wavFormat === 1 || (wavFormat === 65534 && bytes.readUInt32LE(44) === 1), "must be PCM or WAVE_FORMAT_EXTENSIBLE PCM");
+      if (wavFormat === 65534) assert.equal(bytes.readUInt16LE(38), 24, "extensible valid bits must be 24");
       assert.equal(bytes.readUInt16LE(22), 1, "must be mono");
       assert.equal(bytes.readUInt32LE(24), 48000, "must be 48 kHz");
       assert.equal(bytes.readUInt16LE(34), 24, "must be 24-bit");
