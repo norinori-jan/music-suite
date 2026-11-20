@@ -15,5 +15,6 @@
   "retryAfterDrumParserFix": true,
   "retryAfterBassZoneCountFix": true,
   "retryAfterConversionPathFix": true,
+  "retryAfterExtensiblePcmFix": true,
   "note": "The workflow verifies pinned Git blob SHA-1 for every source file, source SHA-256, conversion output format, and records converted sample SHA-256. It imports only selected SFZ velocity layers and round robins."
 }
