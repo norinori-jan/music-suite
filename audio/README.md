@@ -19,13 +19,13 @@ Expected generated structure:
 - `audio/meta-piano.manifest.json`
 - `audio/meta-nylon-guitar.manifest.json`
 
-The upstream collections are CC0 1.0. Their source LICENSE, README, SFZ mapping, and checksum files are copied beside the generated audio assets. The importer does not include the separate Oculus Audio Pack (CC BY 4.0).
+The upstream collections are CC0 1.0. Their source LICENSE, README, SFZ mapping, and checksum files are copied beside the generated audio assets. The official release also supplies 24-bit / 48 kHz WAV masters; the OGG files are the web-preview encodings, and the production format decision remains open pending a representative WAV/OGG comparison. The importer does not include the separate Oculus Audio Pack (CC BY 4.0).
 
 ## Runtime
 
 `sample-engine.js` is a dependency-free Web Audio multisample playback module. It uses explicit sample maps, velocity layers, shared AudioContext scheduling, lazy fetch/decode, request deduplication, and a bounded decoded-buffer cache. Missing/unloaded samples throw explicit errors; the engine never silently substitutes an oscillator.
 
-The importer has not been run as part of this commit, so generated OGG assets and instrument manifests are not yet present. Do not report sample playback as enabled until the generated assets are included and loaded successfully.
+The CC0 import has now completed on the development branch. All 352 Meta Piano OGG files and all 348 Meta Nylon Guitar OGG files are present, together with both generated manifests and the upstream LICENSE, README, SFZ, and SHA256SUMS files. The import job verified every downloaded OGG against the pinned upstream SHA-256 entry before committing the assets. Total encoded sample payload: 65,023,677 bytes (about 62.0 MiB). A regression test now re-reads every imported file and re-computes all 700 SHA-256 digests in CI. This confirms file integrity and local availability; browser playback and musical quality still require separate validation.
 
 ## Audio-quality decision (not yet finalized)
 
