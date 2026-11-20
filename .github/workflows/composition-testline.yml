@@ -28,4 +28,4 @@ jobs:
         with:
           node-version: 22
       - name: Run composition regression tests including imported asset integrity
-        run: node --check scripts/import-meta-open-sound.mjs && node scripts/import-meta-open-sound.mjs --dry-run && node --test tests/composition-testline.test.mjs tests/composition-multitrack.test.mjs tests/conversation-composition.test.mjs tests/sample-engine.test.mjs
+        run: node --check scripts/import-meta-open-sound.mjs && node --check scripts/compare-ogg-wav.mjs && node --check sw.js && node scripts/import-meta-open-sound.mjs --dry-run && node --test tests/composition-testline.test.mjs tests/composition-multitrack.test.mjs tests/conversation-composition.test.mjs tests/sample-engine.test.mjs tests/pwa-offline.test.mjs
