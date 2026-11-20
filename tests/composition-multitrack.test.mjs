@@ -357,6 +357,8 @@ test("MT-09 A/B/C define distinct sampled instrument palettes and articulation/r
     const profile = html.slice(start, end);
     assert.match(profile, new RegExp("melodyInstrument:'" + instrument + "'"));
     assert.ok(profile.includes(release), "missing performance release for " + id);
+    assert.ok(profile.includes("bassInstrument:'meta-swagbass'"));
+    assert.ok(profile.includes("drumInstrument:'meta-big-rusty-drums'"));
     if (id === "dramatic") assert.ok(profile.includes("chordInstrument:'meta-violin-section'"));
     if (id === "bittersweet") assert.ok(profile.includes("chordInstrument:'meta-cello-section'"));
   }
@@ -369,6 +371,11 @@ test("MT-10 sampled preview loads local manifests, preloads notes, and schedules
   assert.match(html, /meta-nylon-guitar\.manifest\.json/);
   assert.match(html, /meta-violin-section\.manifest\.json/);
   assert.match(html, /meta-cello-section\.manifest\.json/);
+  assert.match(html, /meta-swagbass\.manifest\.json/);
+  assert.match(html, /meta-big-rusty-drums\.manifest\.json/);
+  assert.match(html, /drumMidi=\{kick:36,snare:38,hat:42,crash:49\}/);
+  assert.match(html, /実サンプル音源再生中/);
+  assert.doesNotMatch(html, /playCompositionPreviewDrums/);
   assert.match(html, /engine\.preload\(job\.instrument/);
   assert.match(html, /engine\.scheduleNote\(/);
   assert.match(html, /compositionSampleEngine\.stopAll\(\)/);
