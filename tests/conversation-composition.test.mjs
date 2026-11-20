@@ -244,10 +244,14 @@ test("Canvas receives the full speak-native dialogue as read-only source materia
   assert.match(html, /payload\.source==='speak-native-dialogue'/);
   assert.match(html, /window\.__incomingLyricProject=payload/);
   assert.match(html, /renderSourceDialogue\(payload\)/);
-  assert.match(html, /会話をA\/Bの歌詞編集欄へ展開/);
-  assert.match(html, /原文は保持されています/);
+  assert.match(html, /id="source-dialogue-panel"/);
+  assert.match(html, /id="lyric-selection-panel"/);
+  assert.match(html, /英文を選んで歌詞へ取り込む/);
+  assert.match(html, /原文とは独立した作業欄/);
   assert.match(html, /body\.textContent=String\(turn\.text\|\|''\)/);
-  assert.match(html, /function convertDialogueToLyricDraft\(\)/);
+  assert.match(html, /function renderDialogueSentenceSelection\(\)/);
+  assert.match(html, /function appendSelectedDialogueSentences\(\)/);
+  assert.doesNotMatch(html, /会話をA\/Bの歌詞編集欄へ展開/);
 });
 
 test("Canvas receives speak-native lyrics imports and restores the lyrics into the editor", async () => {
