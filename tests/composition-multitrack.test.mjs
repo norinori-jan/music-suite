@@ -274,7 +274,10 @@ test("MT-10 arrangement cards select an independent full-song profile without ch
 
 test("MT-11 switching full arrangement profiles keeps tempo offsets anchored and lyrics untouched", async () => {
   const html = await loadCanvas();
-  const code = extractFunction(html, "selectCompositionArrangement", "previewCompositionVariant");
+  const start = html.indexOf("function selectCompositionArrangement(");
+  const end = html.indexOf("async function previewCompositionVariant(", start);
+  assert.ok(start >= 0 && end > start);
+  const code = html.slice(start, end);
   const fields = {
     "note-sequence-bpm": { value: "96" },
     "chord-progression-input": { value: "" },
