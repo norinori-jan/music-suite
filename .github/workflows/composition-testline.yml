@@ -26,4 +26,4 @@ jobs:
         with:
           node-version: 22
       - name: Run composition regression tests
-        run: node --test tests/composition-testline.test.mjs tests/composition-multitrack.test.mjs tests/conversation-composition.test.mjs
+        run: node --test tests/composition-testline.test.mjs tests/composition-multitrack.test.mjs tests/conversation-composition.test.mjs tests/sample-engine.test.mjs
