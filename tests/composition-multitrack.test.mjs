@@ -60,12 +60,13 @@ test("MT-01 executes the lyric generator and creates three independent melody va
       progression: [{
         id: "ch-" + style,
         chord: style,
+        degree: style === "sad" ? 6 : 1,
         beats: 4,
         tones: style === "sad" ? [9, 0, 4] : style === "rock" ? [0, 5, 9] : [0, 4, 7]
       }]
     }],
     lyricEstimateSyllables: () => 1,
-    resolveMelodyChordDegree: () => 1,
+    resolveMelodyChordDegree: sections => sections[0].progression[0].degree,
     makeMelodyNoteId: index => "note-" + index,
     renderGeneratedChordSections: () => {},
     renderCompositionArrangement: () => {},
@@ -90,10 +91,7 @@ test("MT-01 executes the lyric generator and creates three independent melody va
   assert.deepEqual(Array.from(profiles, profile => profile.progression), ["warm", "rock", "sad"]);
   assert.equal(context.window.__compositionArrangement.selectedArrangement, "warm");
   assert.ok(profiles.every(profile => profile.notesByMelody.hook.length === 4));
-  assert.notDeepEqual(
-    Array.from(profiles, profile => profile.notesByMelody.hook.map(note => note.note)),
-    Array.from([profiles[0]], profile => profile.notesByMelody.hook.map(note => note.note))
-  );
+  assert.equal(new Set(Array.from(profiles, profile => profile.notesByMelody.hook.map(note => note.note).join(","))).size, 3);
 });
 
 test("MT-02 arrangement builds independent melody, chord, bass, drum and lyric tracks", async () => {
@@ -239,8 +237,8 @@ test("MT-09 three full arrangement profiles produce distinct chords, bass, drums
       Math, Number, String, Array, Map
     };
     vm.runInNewContext(builder + "\nbuildCompositionTracks(" + JSON.stringify([
-      { id: "m1", note: "C4", startBeat: 0, durationBeats: 1, word: "We", lyric: "We will rise", role: "LEAD", section: "Verse", velocity: 0.7 },
-      { id: "m2", note: "E4", startBeat: 1, durationBeats: 1, word: "rise", lyric: "We will rise", role: "LEAD", section: "Verse", velocity: 1 }
+      { id: "m1", note: "C4", startBeat: 0, durationBeats: 4, word: "We", lyric: "We will rise", role: "LEAD", section: "Verse", velocity: 0.7 },
+      { id: "m2", note: "E4", startBeat: 4, durationBeats: 4, word: "rise", lyric: "We will rise", role: "LEAD", section: "Verse", velocity: 1 }
     ]) + ");", context);
     return context.window.__compositionArrangement.tracks;
   });
