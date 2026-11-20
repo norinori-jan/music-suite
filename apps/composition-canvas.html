@@ -1458,6 +1458,7 @@ function restoreSavedCompositionArrangement(){
       renderNoteCards(state.lastNotes,'Restored composition arrangement');
     }
     window.__lyricMusicSketch={...saved,melody:melody?.notes||[]};
+    if(Array.isArray(saved.arrangementVariants)&&saved.arrangementVariants.length){renderCompositionArrangement();renderGeneratedChordSections(saved.chordSections||[]);}
     renderCompositionTracks();return true;
   }catch(error){console.warn('composition arrangement restore failed',error);return false;}
 }
