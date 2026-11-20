@@ -173,10 +173,10 @@ async function importCollection(id) {
     sampleCount: uniqueFiles.length,
     samples: regions.map(region => ({
       ...region,
-      url: "./assets/" + id + "/" + region.file
+      url: "../audio/assets/" + id + "/" + region.file
     }))
   };
-  await writeFile(path.join(ROOT, "audio", id + ".manifest.json"), JSON.stringify(instrument, null, 2) + "\n");
+  await writeFile(path.join(ROOT, "audio", id + ".manifest.json"), JSON.stringify({ instruments: { [id]: instrument } }, null, 2) + "\n");
   return { id, samples: uniqueFiles.length, bytes: totalBytes };
 }
 
