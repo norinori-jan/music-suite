@@ -343,3 +343,30 @@ test("MT-12 saved arrangement restoration restores the selected A/B/C profile an
   assert.ok(calls.some(call => call[0] === "chords"));
   assert.ok(calls.some(call => call[0] === "tracks"));
 });
+
+test("MT-09 A/B/C define distinct sampled instrument palettes and articulation/release profiles", async () => {
+  const html = await loadCanvas();
+  for (const [id, instrument, release] of [
+    ["warm", "meta-nylon-guitar", "melodyRelease:0.28"],
+    ["dramatic", "meta-piano", "melodyRelease:0.38"],
+    ["bittersweet", "meta-piano", "melodyRelease:0.62"]
+  ]) {
+    const start = html.indexOf("{id:'" + id + "'");
+    assert.notEqual(start, -1, "missing arrangement profile " + id);
+    const end = html.indexOf("},", start);
+    const profile = html.slice(start, end);
+    assert.match(profile, new RegExp("melodyInstrument:'" + instrument + "'"));
+    assert.ok(profile.includes(release), "missing performance release for " + id);
+  }
+});
+
+test("MT-10 sampled preview loads local manifests, preloads notes, and schedules all pitched tracks", async () => {
+  const html = await loadCanvas();
+  assert.match(html, /getCompositionSampleEngine/);
+  assert.match(html, /meta-piano\.manifest\.json/);
+  assert.match(html, /meta-nylon-guitar\.manifest\.json/);
+  assert.match(html, /engine\.preload\(job\.instrument/);
+  assert.match(html, /engine\.scheduleNote\(/);
+  assert.match(html, /compositionSampleEngine\.stopAll\(\)/);
+  assert.match(html, /開発用シンセプレビュー（実音源未準備）/);
+});
