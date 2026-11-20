@@ -139,3 +139,34 @@ These are starting palette definitions, not a final mix. The sound must be judge
 ## Completion rule
 
 The oscillator/noise preview is not an acceptable final instrument engine. A stage is complete only when its tests pass and its stated acceptance checks are evidenced. Automated tests alone do not prove musical quality; listening and iPhone verification remain separate gates.
+
+
+## Rights and license compliance gate (mandatory)
+
+No sample asset may be committed, hosted, bundled, transformed, or redistributed until its exact source file and applicable license have been verified.
+
+1. **Source provenance**
+   - Record the original repository, release/tag or immutable commit, exact asset path, source checksum, and retrieval date for every adopted asset.
+   - A license for a repository, instrument collection, or neighboring folder must not be assumed to cover unrelated assets. Verify the license at the exact collection/file scope.
+2. **License allowlist**
+   - Prefer CC0 1.0 or another license whose commercial use, modification, and redistribution terms are explicitly compatible with this app.
+   - CC BY assets may be used only when attribution, license link, change notices, and any other required notices are included in the app's credits and distribution package.
+   - Do not adopt NC, ND, non-redistributable, unclear, or conflicting-license assets for the bundled sample library.
+   - Do not treat "free download", "royalty-free", "open source", or public availability as permission to redistribute.
+3. **Third-party code is separate from sample licenses**
+   - Audit the runtime library's own license independently from the recordings and mappings.
+   - Preserve required copyright notices and license texts for code dependencies.
+   - Avoid GPL/AGPL dependencies unless compatibility is deliberately reviewed and approved; do not silently introduce copyleft obligations.
+4. **Transformations**
+   - Format conversion, trimming, normalization, resampling, compression, and derived sample generation are allowed only when the source license permits them.
+   - Keep source and derived checksums plus a reproducible transformation record. Never remove required notices or misrepresent the original recording.
+5. **Distribution**
+   - Bundle only verified assets. Include a third-party notices/credits file and the relevant license texts in the deployed app.
+   - Do not hotlink third-party sample URLs as a substitute for permission or as the final production delivery path.
+   - If a license or provenance cannot be verified, exclude the asset and find a compliant alternative.
+6. **Current verified candidate scope**
+   - The Meta Open Sound repository README states that the Meta Piano, Meta Nylon Guitar, and Meta Steel Guitar collections are CC0 1.0; each collection also has its own LICENSE, README, manifest, checksums, and SFZ map. Verify the selected release and individual files/checksums again at asset-import time.
+   - The same repository separately identifies the Oculus Audio Pack as CC BY 4.0. Its license must not be confused with the CC0 instrument collections; any Oculus asset requires its own attribution and notice review.
+   - A candidate license check is not a final legal opinion. Record exact notices and retain the source license files in the project.
+
+**Hard stop:** if an asset's redistribution rights are uncertain, do not import it. Sound quality targets never override this rule.
