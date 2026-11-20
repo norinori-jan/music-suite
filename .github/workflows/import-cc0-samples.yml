@@ -1,0 +1,39 @@
+name: Import verified CC0 instrument samples
+
+on:
+  push:
+    branches:
+      - feature/three-melody-track-foundation
+    paths:
+      - "audio/IMPORT_SAMPLES_NOW.json"
+
+permissions:
+  contents: write
+
+jobs:
+  import-cc0-samples:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout development branch
+        uses: actions/checkout@v4
+        with:
+          ref: ${{ github.ref_name }}
+          fetch-depth: 0
+      - name: Setup Node
+        uses: actions/setup-node@v4
+        with:
+          node-version: 22
+      - name: Verify importer and license/checksum maps
+        run: |
+          node --check scripts/import-meta-open-sound.mjs
+          node scripts/import-meta-open-sound.mjs --dry-run
+      - name: Download CC0 OGG samples and verify every SHA-256
+        run: node scripts/import-meta-open-sound.mjs
+      - name: Commit verified assets to this development branch
+        run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git add audio/assets audio/*.manifest.json
+          git diff --cached --quiet && echo "No sample asset changes" && exit 0
+          git commit -m "assets: import SHA-256 verified CC0 piano and nylon guitar samples"
+          git push origin "HEAD:${{ github.ref_name }}"
