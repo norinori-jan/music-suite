@@ -304,3 +304,38 @@ test("MT-11 switching full arrangement profiles keeps tempo offsets anchored and
   assert.equal(context.window.__incomingLyricProject.dialogue[0].text, originalLyrics);
   assert.equal(calls.filter(call => call === "apply").length, 2);
 });
+
+
+test("MT-12 saved arrangement restoration restores the selected A/B/C profile and choice controls", async () => {
+  const html = await loadCanvas();
+  const code = extractFunction(html, "restoreSavedCompositionArrangement", "applySelectedComposition");
+  const saved = {
+    selectedArrangement: "bittersweet",
+    selectedMelody: "arch",
+    selectedRhythm: "ballad",
+    baseBpm: 96,
+    bpm: 86,
+    arrangementVariants: [{ id: "warm" }, { id: "dramatic" }, { id: "bittersweet" }],
+    chordSections: [{ label: "Verse", progression: [{ chord: "Am" }] }],
+    tracks: [{ id: "melody", notes: [{ id: "n1", note: "A3", startBeat: 0, durationBeats: 1 }] }]
+  };
+  const calls = [];
+  const context = {
+    window: { __incomingLyricProject: { projectId: "song-restore" } },
+    localStorage: { getItem: key => key === "compositionArrangement:song-restore" ? JSON.stringify(saved) : null },
+    state: { lastNotes: [] },
+    renderNoteCards: notes => calls.push(["notes", notes.length]),
+    renderCompositionArrangement: () => calls.push(["choices"]),
+    renderGeneratedChordSections: sections => calls.push(["chords", sections.length]),
+    renderCompositionTracks: () => calls.push(["tracks"]),
+    console: { warn() {} },
+    Number, String, Array, JSON
+  };
+  const result = vm.runInNewContext(code + "\nrestoreSavedCompositionArrangement();", context);
+  assert.equal(result, true);
+  assert.equal(context.window.__compositionArrangement.selectedArrangement, "bittersweet");
+  assert.equal(context.window.__compositionArrangement.bpm, 86);
+  assert.ok(calls.some(call => call[0] === "choices"));
+  assert.ok(calls.some(call => call[0] === "chords"));
+  assert.ok(calls.some(call => call[0] === "tracks"));
+});
