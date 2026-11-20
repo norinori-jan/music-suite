@@ -1,0 +1,11 @@
+{
+  "packRepository": "AEmotionStudio/stringstudio-cello-samples",
+  "packRevision": "e47c4f52e23181143789a48c26906e0bfc09d1d8",
+  "sourceRepository": "sgossner/VSCO-2-CE",
+  "sourceLicenseRevision": "440300901dfe9275fd84e0b7763af1f8443ae62e",
+  "license": "CC0-1.0",
+  "sampleRate": 48000,
+  "channels": 1,
+  "bitsPerSample": 24,
+  "zoneCount": 26
+}

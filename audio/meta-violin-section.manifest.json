@@ -1,0 +1,254 @@
+{
+  "instruments": {
+    "meta-violin-section": {
+      "license": "CC0-1.0",
+      "sourceLibrary": "VSCO 2 Community Edition",
+      "noteOffMode": "sustain",
+      "velocityGainMinDb": -12,
+      "attack": 0.12,
+      "release": 0.5,
+      "samples": [
+        {
+          "url": "../audio/assets/meta-violin-section/samples/55_v0-63_rr1.wav",
+          "rootMidi": 55,
+          "keyLow": 31,
+          "keyHigh": 56,
+          "velocityLow": 0,
+          "velocityHigh": 63
+        },
+        {
+          "url": "../audio/assets/meta-violin-section/samples/55_v64-127_rr1.wav",
+          "rootMidi": 55,
+          "keyLow": 31,
+          "keyHigh": 56,
+          "velocityLow": 64,
+          "velocityHigh": 127
+        },
+        {
+          "url": "../audio/assets/meta-violin-section/samples/57_v0-63_rr1.wav",
+          "rootMidi": 57,
+          "keyLow": 57,
+          "keyHigh": 58,
+          "velocityLow": 0,
+          "velocityHigh": 63
+        },
+        {
+          "url": "../audio/assets/meta-violin-section/samples/57_v64-127_rr1.wav",
+          "rootMidi": 57,
+          "keyLow": 57,
+          "keyHigh": 58,
+          "velocityLow": 64,
+          "velocityHigh": 127
+        },
+        {
+          "url": "../audio/assets/meta-violin-section/samples/60_v0-63_rr1.wav",
+          "rootMidi": 60,
+          "keyLow": 59,
+          "keyHigh": 62,
+          "velocityLow": 0,
+          "velocityHigh": 63
+        },
+        {
+          "url": "../audio/assets/meta-violin-section/samples/60_v64-127_rr1.wav",
+          "rootMidi": 60,
+          "keyLow": 59,
+          "keyHigh": 62,
+          "velocityLow": 64,
+          "velocityHigh": 127
+        },
+        {
+          "url": "../audio/assets/meta-violin-section/samples/64_v0-63_rr1.wav",
+          "rootMidi": 64,
+          "keyLow": 63,
+          "keyHigh": 65,
+          "velocityLow": 0,
+          "velocityHigh": 63
+        },
+        {
+          "url": "../audio/assets/meta-violin-section/samples/64_v64-127_rr1.wav",
+          "rootMidi": 64,
+          "keyLow": 63,
+          "keyHigh": 65,
+          "velocityLow": 64,
+          "velocityHigh": 127
+        },
+        {
+          "url": "../audio/assets/meta-violin-section/samples/67_v0-63_rr1.wav",
+          "rootMidi": 67,
+          "keyLow": 66,
+          "keyHigh": 68,
+          "velocityLow": 0,
+          "velocityHigh": 63
+        },
+        {
+          "url": "../audio/assets/meta-violin-section/samples/67_v64-127_rr1.wav",
+          "rootMidi": 67,
+          "keyLow": 66,
+          "keyHigh": 68,
+          "velocityLow": 64,
+          "velocityHigh": 127
+        },
+        {
+          "url": "../audio/assets/meta-violin-section/samples/69_v0-63_rr1.wav",
+          "rootMidi": 69,
+          "keyLow": 69,
+          "keyHigh": 70,
+          "velocityLow": 0,
+          "velocityHigh": 63
+        },
+        {
+          "url": "../audio/assets/meta-violin-section/samples/69_v64-127_rr1.wav",
+          "rootMidi": 69,
+          "keyLow": 69,
+          "keyHigh": 70,
+          "velocityLow": 64,
+          "velocityHigh": 127
+        },
+        {
+          "url": "../audio/assets/meta-violin-section/samples/72_v0-63_rr1.wav",
+          "rootMidi": 72,
+          "keyLow": 71,
+          "keyHigh": 74,
+          "velocityLow": 0,
+          "velocityHigh": 63
+        },
+        {
+          "url": "../audio/assets/meta-violin-section/samples/72_v64-127_rr1.wav",
+          "rootMidi": 72,
+          "keyLow": 71,
+          "keyHigh": 74,
+          "velocityLow": 64,
+          "velocityHigh": 127
+        },
+        {
+          "url": "../audio/assets/meta-violin-section/samples/76_v0-63_rr1.wav",
+          "rootMidi": 76,
+          "keyLow": 75,
+          "keyHigh": 77,
+          "velocityLow": 0,
+          "velocityHigh": 63
+        },
+        {
+          "url": "../audio/assets/meta-violin-section/samples/76_v64-127_rr1.wav",
+          "rootMidi": 76,
+          "keyLow": 75,
+          "keyHigh": 77,
+          "velocityLow": 64,
+          "velocityHigh": 127
+        },
+        {
+          "url": "../audio/assets/meta-violin-section/samples/79_v0-63_rr1.wav",
+          "rootMidi": 79,
+          "keyLow": 78,
+          "keyHigh": 80,
+          "velocityLow": 0,
+          "velocityHigh": 63
+        },
+        {
+          "url": "../audio/assets/meta-violin-section/samples/79_v64-127_rr1.wav",
+          "rootMidi": 79,
+          "keyLow": 78,
+          "keyHigh": 80,
+          "velocityLow": 64,
+          "velocityHigh": 127
+        },
+        {
+          "url": "../audio/assets/meta-violin-section/samples/81_v0-63_rr1.wav",
+          "rootMidi": 81,
+          "keyLow": 81,
+          "keyHigh": 82,
+          "velocityLow": 0,
+          "velocityHigh": 63
+        },
+        {
+          "url": "../audio/assets/meta-violin-section/samples/81_v64-127_rr1.wav",
+          "rootMidi": 81,
+          "keyLow": 81,
+          "keyHigh": 82,
+          "velocityLow": 64,
+          "velocityHigh": 127
+        },
+        {
+          "url": "../audio/assets/meta-violin-section/samples/84_v0-63_rr1.wav",
+          "rootMidi": 84,
+          "keyLow": 83,
+          "keyHigh": 86,
+          "velocityLow": 0,
+          "velocityHigh": 63
+        },
+        {
+          "url": "../audio/assets/meta-violin-section/samples/84_v64-127_rr1.wav",
+          "rootMidi": 84,
+          "keyLow": 83,
+          "keyHigh": 86,
+          "velocityLow": 64,
+          "velocityHigh": 127
+        },
+        {
+          "url": "../audio/assets/meta-violin-section/samples/88_v0-63_rr1.wav",
+          "rootMidi": 88,
+          "keyLow": 87,
+          "keyHigh": 89,
+          "velocityLow": 0,
+          "velocityHigh": 63
+        },
+        {
+          "url": "../audio/assets/meta-violin-section/samples/88_v64-127_rr1.wav",
+          "rootMidi": 88,
+          "keyLow": 87,
+          "keyHigh": 89,
+          "velocityLow": 64,
+          "velocityHigh": 127
+        },
+        {
+          "url": "../audio/assets/meta-violin-section/samples/91_v0-63_rr1.wav",
+          "rootMidi": 91,
+          "keyLow": 90,
+          "keyHigh": 92,
+          "velocityLow": 0,
+          "velocityHigh": 63
+        },
+        {
+          "url": "../audio/assets/meta-violin-section/samples/91_v64-127_rr1.wav",
+          "rootMidi": 91,
+          "keyLow": 90,
+          "keyHigh": 92,
+          "velocityLow": 64,
+          "velocityHigh": 127
+        },
+        {
+          "url": "../audio/assets/meta-violin-section/samples/93_v0-63_rr1.wav",
+          "rootMidi": 93,
+          "keyLow": 93,
+          "keyHigh": 94,
+          "velocityLow": 0,
+          "velocityHigh": 63
+        },
+        {
+          "url": "../audio/assets/meta-violin-section/samples/93_v64-127_rr1.wav",
+          "rootMidi": 93,
+          "keyLow": 93,
+          "keyHigh": 94,
+          "velocityLow": 64,
+          "velocityHigh": 127
+        },
+        {
+          "url": "../audio/assets/meta-violin-section/samples/96_v0-63_rr1.wav",
+          "rootMidi": 96,
+          "keyLow": 95,
+          "keyHigh": 120,
+          "velocityLow": 0,
+          "velocityHigh": 63
+        },
+        {
+          "url": "../audio/assets/meta-violin-section/samples/96_v64-127_rr1.wav",
+          "rootMidi": 96,
+          "keyLow": 95,
+          "keyHigh": 120,
+          "velocityLow": 64,
+          "velocityHigh": 127
+        }
+      ]
+    }
+  }
+}

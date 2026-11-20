@@ -1,0 +1,222 @@
+{
+  "instruments": {
+    "meta-cello-section": {
+      "license": "CC0-1.0",
+      "sourceLibrary": "VSCO 2 Community Edition",
+      "noteOffMode": "sustain",
+      "velocityGainMinDb": -12,
+      "attack": 0.18,
+      "release": 0.75,
+      "samples": [
+        {
+          "url": "../audio/assets/meta-cello-section/samples/36_v0-63_rr1.wav",
+          "rootMidi": 36,
+          "keyLow": 12,
+          "keyHigh": 38,
+          "velocityLow": 0,
+          "velocityHigh": 63
+        },
+        {
+          "url": "../audio/assets/meta-cello-section/samples/36_v64-127_rr1.wav",
+          "rootMidi": 36,
+          "keyLow": 12,
+          "keyHigh": 38,
+          "velocityLow": 64,
+          "velocityHigh": 127
+        },
+        {
+          "url": "../audio/assets/meta-cello-section/samples/40_v0-63_rr1.wav",
+          "rootMidi": 40,
+          "keyLow": 39,
+          "keyHigh": 41,
+          "velocityLow": 0,
+          "velocityHigh": 63
+        },
+        {
+          "url": "../audio/assets/meta-cello-section/samples/40_v64-127_rr1.wav",
+          "rootMidi": 40,
+          "keyLow": 39,
+          "keyHigh": 41,
+          "velocityLow": 64,
+          "velocityHigh": 127
+        },
+        {
+          "url": "../audio/assets/meta-cello-section/samples/43_v0-63_rr1.wav",
+          "rootMidi": 43,
+          "keyLow": 42,
+          "keyHigh": 45,
+          "velocityLow": 0,
+          "velocityHigh": 63
+        },
+        {
+          "url": "../audio/assets/meta-cello-section/samples/43_v64-127_rr1.wav",
+          "rootMidi": 43,
+          "keyLow": 42,
+          "keyHigh": 45,
+          "velocityLow": 64,
+          "velocityHigh": 127
+        },
+        {
+          "url": "../audio/assets/meta-cello-section/samples/47_v0-63_rr1.wav",
+          "rootMidi": 47,
+          "keyLow": 46,
+          "keyHigh": 48,
+          "velocityLow": 0,
+          "velocityHigh": 63
+        },
+        {
+          "url": "../audio/assets/meta-cello-section/samples/47_v64-127_rr1.wav",
+          "rootMidi": 47,
+          "keyLow": 46,
+          "keyHigh": 48,
+          "velocityLow": 64,
+          "velocityHigh": 127
+        },
+        {
+          "url": "../audio/assets/meta-cello-section/samples/50_v0-63_rr1.wav",
+          "rootMidi": 50,
+          "keyLow": 49,
+          "keyHigh": 51,
+          "velocityLow": 0,
+          "velocityHigh": 63
+        },
+        {
+          "url": "../audio/assets/meta-cello-section/samples/50_v64-127_rr1.wav",
+          "rootMidi": 50,
+          "keyLow": 49,
+          "keyHigh": 51,
+          "velocityLow": 64,
+          "velocityHigh": 127
+        },
+        {
+          "url": "../audio/assets/meta-cello-section/samples/53_v0-63_rr1.wav",
+          "rootMidi": 53,
+          "keyLow": 52,
+          "keyHigh": 55,
+          "velocityLow": 0,
+          "velocityHigh": 63
+        },
+        {
+          "url": "../audio/assets/meta-cello-section/samples/53_v64-127_rr1.wav",
+          "rootMidi": 53,
+          "keyLow": 52,
+          "keyHigh": 55,
+          "velocityLow": 64,
+          "velocityHigh": 127
+        },
+        {
+          "url": "../audio/assets/meta-cello-section/samples/57_v0-63_rr1.wav",
+          "rootMidi": 57,
+          "keyLow": 56,
+          "keyHigh": 58,
+          "velocityLow": 0,
+          "velocityHigh": 63
+        },
+        {
+          "url": "../audio/assets/meta-cello-section/samples/57_v64-127_rr1.wav",
+          "rootMidi": 57,
+          "keyLow": 56,
+          "keyHigh": 58,
+          "velocityLow": 64,
+          "velocityHigh": 127
+        },
+        {
+          "url": "../audio/assets/meta-cello-section/samples/60_v0-63_rr1.wav",
+          "rootMidi": 60,
+          "keyLow": 59,
+          "keyHigh": 62,
+          "velocityLow": 0,
+          "velocityHigh": 63
+        },
+        {
+          "url": "../audio/assets/meta-cello-section/samples/60_v64-127_rr1.wav",
+          "rootMidi": 60,
+          "keyLow": 59,
+          "keyHigh": 62,
+          "velocityLow": 64,
+          "velocityHigh": 127
+        },
+        {
+          "url": "../audio/assets/meta-cello-section/samples/64_v0-63_rr1.wav",
+          "rootMidi": 64,
+          "keyLow": 63,
+          "keyHigh": 65,
+          "velocityLow": 0,
+          "velocityHigh": 63
+        },
+        {
+          "url": "../audio/assets/meta-cello-section/samples/64_v64-127_rr1.wav",
+          "rootMidi": 64,
+          "keyLow": 63,
+          "keyHigh": 65,
+          "velocityLow": 64,
+          "velocityHigh": 127
+        },
+        {
+          "url": "../audio/assets/meta-cello-section/samples/67_v0-63_rr1.wav",
+          "rootMidi": 67,
+          "keyLow": 66,
+          "keyHigh": 69,
+          "velocityLow": 0,
+          "velocityHigh": 63
+        },
+        {
+          "url": "../audio/assets/meta-cello-section/samples/67_v64-127_rr1.wav",
+          "rootMidi": 67,
+          "keyLow": 66,
+          "keyHigh": 69,
+          "velocityLow": 64,
+          "velocityHigh": 127
+        },
+        {
+          "url": "../audio/assets/meta-cello-section/samples/71_v0-63_rr1.wav",
+          "rootMidi": 71,
+          "keyLow": 70,
+          "keyHigh": 72,
+          "velocityLow": 0,
+          "velocityHigh": 63
+        },
+        {
+          "url": "../audio/assets/meta-cello-section/samples/71_v64-127_rr1.wav",
+          "rootMidi": 71,
+          "keyLow": 70,
+          "keyHigh": 72,
+          "velocityLow": 64,
+          "velocityHigh": 127
+        },
+        {
+          "url": "../audio/assets/meta-cello-section/samples/74_v0-63_rr1.wav",
+          "rootMidi": 74,
+          "keyLow": 73,
+          "keyHigh": 75,
+          "velocityLow": 0,
+          "velocityHigh": 63
+        },
+        {
+          "url": "../audio/assets/meta-cello-section/samples/74_v64-127_rr1.wav",
+          "rootMidi": 74,
+          "keyLow": 73,
+          "keyHigh": 75,
+          "velocityLow": 64,
+          "velocityHigh": 127
+        },
+        {
+          "url": "../audio/assets/meta-cello-section/samples/77_v0-63_rr1.wav",
+          "rootMidi": 77,
+          "keyLow": 76,
+          "keyHigh": 101,
+          "velocityLow": 0,
+          "velocityHigh": 63
+        },
+        {
+          "url": "../audio/assets/meta-cello-section/samples/77_v64-127_rr1.wav",
+          "rootMidi": 77,
+          "keyLow": 76,
+          "keyHigh": 101,
+          "velocityLow": 64,
+          "velocityHigh": 127
+        }
+      ]
+    }
+  }
+}

@@ -1,0 +1,11 @@
+{
+  "packRepository": "AEmotionStudio/stringstudio-violin-samples",
+  "packRevision": "1e4e0ca43aa1dd1da8601c5d021ad12681257b6f",
+  "sourceRepository": "sgossner/VSCO-2-CE",
+  "sourceLicenseRevision": "440300901dfe9275fd84e0b7763af1f8443ae62e",
+  "license": "CC0-1.0",
+  "sampleRate": 48000,
+  "channels": 1,
+  "bitsPerSample": 24,
+  "zoneCount": 30
+}
