@@ -322,6 +322,7 @@ test("MT-12 saved arrangement restoration restores the selected A/B/C profile an
   const calls = [];
   const context = {
     window: { __incomingLyricProject: { projectId: "song-restore" } },
+    compositionArrangementStorageKey: () => "compositionArrangement:song-restore",
     localStorage: { getItem: key => key === "compositionArrangement:song-restore" ? JSON.stringify(saved) : null },
     state: { lastNotes: [] },
     renderNoteCards: notes => calls.push(["notes", notes.length]),
