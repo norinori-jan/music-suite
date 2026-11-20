@@ -10,7 +10,7 @@ Run from the repository root:
 node scripts/import-meta-open-sound.mjs
 ```
 
-The importer downloads the complete Meta Piano (352 OGG samples) and Meta Nylon Guitar (348 OGG samples) collections from the immutable upstream source revision recorded in the script. It verifies each OGG against the upstream `SHA256SUMS` before writing any asset and checks the collection's CC0 1.0 license before importing.
+The importer downloads the complete Meta Piano (352 OGG samples) and Meta Nylon Guitar (348 OGG samples) collections from the immutable upstream source revision recorded in the script. It verifies each OGG against the upstream `SHA256SUMS` before writing any asset and checks the collection's CC0 1.0 license before importing. Each generated manifest uses the sampler's required `{ instruments: { [instrumentId]: instrument } }` shape, and sample URLs are relative to `apps/composition-canvas.html`.
 
 Expected generated structure:
 
