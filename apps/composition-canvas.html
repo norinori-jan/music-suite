@@ -139,7 +139,13 @@
     <strong>🗣 speak-nativeから受け取った会話（原文・編集不可）</strong>
     <p style="font-size:12px;opacity:.8">A/Bの発言順を保持しています。ここは原文保管欄です。歌詞への編集は下の欄で行います。</p>
     <div id="source-dialogue-view" style="display:grid;gap:8px"></div>
-    <button type="button" onclick="convertDialogueToLyricDraft()">会話をA/Bの歌詞編集欄へ展開</button>
+  </section>
+  <section id="lyric-selection-panel" style="display:none;margin:12px 0;padding:12px;border:1px solid #786b9c;border-radius:10px">
+    <strong>✂️ 英文を選んで歌詞へ取り込む</strong>
+    <p style="font-size:12px;opacity:.8">上の会話原文とは独立した作業欄です。英文を選び、追加先を指定してください。ここで編集しても原文は変わりません。</p>
+    <div id="lyric-selection-list" style="display:grid;gap:8px"></div>
+    <button type="button" onclick="appendSelectedDialogueSentences()">選択した英文を歌詞に追加</button>
+    <span id="lyric-selection-status" style="font-size:12px" aria-live="polite"></span>
   </section>
   <div id="duet-editors" style="display:none">
     <div><label for="duet-canvas-a">A：話者Aの歌詞</label><textarea id="duet-canvas-a"></textarea></div>
@@ -684,6 +690,76 @@ function openEditDialog(card) {
    C+E+G+H：音名カード生成
 ────────────────────────────── */
 
+function getIncomingDialogueTurns(){
+  const payload=window.__incomingLyricProject||{};
+  return Array.isArray(payload.dialogue)?payload.dialogue:Array.isArray(payload.dialogue?.turns)?payload.dialogue.turns:[];
+}
+function splitDialogueIntoSentences(text){
+  const source=String(text||'').trim();
+  if(!source)return [];
+  if(typeof Intl!=='undefined'&&Intl.Segmenter){
+    try{return [...new Intl.Segmenter('en',{granularity:'sentence'}).segment(source)].map(item=>item.segment.trim()).filter(Boolean);}
+    catch(_){}
+  }
+  return source.split(/(?<=[.!?])\s+(?=[A-Z"'“‘])/).map(item=>item.trim()).filter(Boolean);
+}
+function dialogueSentenceId(turnIndex,sentenceIndex){
+  return String(turnIndex)+':'+String(sentenceIndex);
+}
+function renderDialogueSentenceSelection(){
+  const panel=document.getElementById('lyric-selection-panel'),list=document.getElementById('lyric-selection-list');
+  if(!panel||!list)return;
+  list.replaceChildren();
+  const turns=getIncomingDialogueTurns();
+  const saved=window.__lyricSelectionState||{};
+  turns.forEach((turn,turnIndex)=>{
+    const speaker=turn.speaker||(turn.role==='user'?'A':'B');
+    splitDialogueIntoSentences(turn.text).forEach((sentence,sentenceIndex)=>{
+      const id=dialogueSentenceId(turnIndex,sentenceIndex);
+      const prior=saved[id]||{};
+      const row=document.createElement('div');
+      row.style.cssText='display:grid;grid-template-columns:auto minmax(0,1fr) minmax(105px,auto);gap:8px;align-items:start;padding:8px;border:1px solid #454553;border-radius:8px';
+      const check=document.createElement('input');check.type='checkbox';check.dataset.sentenceId=id;check.checked=!!prior.selected;check.setAttribute('aria-label','英文を選択');
+      const sentenceLabel=document.createElement('label');sentenceLabel.textContent=speaker+' · '+sentence;sentenceLabel.style.cssText='font-size:13px;line-height:1.45;overflow-wrap:anywhere';
+      const target=document.createElement('select');target.dataset.targetId=id;target.setAttribute('aria-label','歌詞の追加先');
+      [['A verse','Aメロ'],['B verse','Bメロ'],['Chorus','サビ'],['Bridge','Bridge']].forEach(([value,label])=>{const option=document.createElement('option');option.value=value;option.textContent=label;target.appendChild(option);});
+      target.value=prior.target|| (speaker==='A'?'A verse':'B verse');
+      row.append(check,sentenceLabel,target);
+      list.appendChild(row);
+      check.addEventListener('change',()=>{if(!window.__lyricSelectionState)window.__lyricSelectionState={};window.__lyricSelectionState[id]={...(window.__lyricSelectionState[id]||{}),selected:check.checked,target:target.value};});
+      target.addEventListener('change',()=>{if(!window.__lyricSelectionState)window.__lyricSelectionState={};window.__lyricSelectionState[id]={...(window.__lyricSelectionState[id]||{}),selected:check.checked,target:target.value};});
+    });
+  });
+  panel.style.display=turns.length?'block':'none';
+}
+function appendSelectedDialogueSentences(){
+  const turns=getIncomingDialogueTurns(),list=document.getElementById('lyric-selection-list');
+  if(!turns.length||!list)return false;
+  const additions={'A verse':[],'B verse':[],'Chorus':[],'Bridge':[]};
+  list.querySelectorAll('input[type="checkbox"][data-sentence-id]:checked').forEach(check=>{
+    const [turnPart,sentencePart]=check.dataset.sentenceId.split(':').map(Number);
+    const turn=turns[turnPart];if(!turn)return;
+    const sentence=splitDialogueIntoSentences(turn.text)[sentencePart];if(!sentence)return;
+    const target=list.querySelector('select[data-target-id="'+check.dataset.sentenceId+'"]')?.value;
+    if(additions[target])additions[target].push(sentence);
+  });
+  const ids={'A verse':'duet-canvas-a','B verse':'duet-canvas-b','Chorus':'duet-canvas-chorus','Bridge':'duet-canvas-bridge'};
+  let added=0;
+  Object.entries(additions).forEach(([section,lines])=>{
+    if(!lines.length)return;
+    const field=document.getElementById(ids[section]);
+    const existing=field.value.split(/\n+/).map(line=>line.trim()).filter(Boolean);
+    const fresh=lines.filter(line=>!existing.includes(line));
+    if(fresh.length){field.value=[field.value.trim(),...fresh].filter(Boolean).join('\n');added+=fresh.length;}
+  });
+  if(added){
+    lyricSectionsWrite(lyricSectionsRead());
+    lyricRenderPreview();
+  }
+  const status=document.getElementById('lyric-selection-status');
+  if(status)status.textContent=added?added+'件を歌詞へ追加しました。原文は変更されていません。':'追加する英文を選択してください（追加済みの英文は重複しません）。';
+  return added>0;
+}
 function renderSourceDialogue(payload){
   const turns=Array.isArray(payload?.dialogue)?payload.dialogue:Array.isArray(payload?.dialogue?.turns)?payload.dialogue.turns:[];
   const panel=document.getElementById('source-dialogue-panel'),view=document.getElementById('source-dialogue-view');
@@ -698,21 +774,7 @@ function renderSourceDialogue(payload){
     item.append(label,body);view.appendChild(item);
   });
   panel.style.display=turns.length?'block':'none';
-}
-function convertDialogueToLyricDraft(){
-  const payload=window.__incomingLyricProject||{};
-  const turns=Array.isArray(payload.dialogue)?payload.dialogue:Array.isArray(payload.dialogue?.turns)?payload.dialogue.turns:[];
-  if(!turns.length){showToast('会話データがありません');return false;}
-  const a=turns.filter(t=>(t.speaker||(t.role==='user'?'A':'B'))==='A').map(t=>String(t.text||'').trim()).filter(Boolean);
-  const b=turns.filter(t=>(t.speaker||(t.role==='user'?'A':'B'))==='B').map(t=>String(t.text||'').trim()).filter(Boolean);
-  document.getElementById('duet-canvas-a').value=a.join('\n');
-  document.getElementById('duet-canvas-b').value=b.join('\n');
-  document.getElementById('duet-canvas-chorus').value='';
-  document.getElementById('duet-canvas-bridge').value='';
-  lyricSectionsWrite([{role:'A',label:'A verse',text:a.join('\n')},{role:'B',label:'B verse',text:b.join('\n')}]);
-  lyricRenderPreview();
-  showToast('会話をA/B別の歌詞編集欄へ展開しました。原文は保持されています');
-  return true;
+  renderDialogueSentenceSelection();
 }
 function lyricSectionsRead(){
   return [['A','A verse','duet-canvas-a'],['B','B verse','duet-canvas-b'],['DUET','Chorus','duet-canvas-chorus'],['DUET','Bridge','duet-canvas-bridge']]
@@ -1497,13 +1559,14 @@ function renderCompositionTracks(){
 }
 function saveLyricCanvasProject(){
   const incoming=window.__incomingLyricProject||{},cards=[...document.querySelectorAll('#canvas .card')];
-  const project={version:4,schemaVersion:'music-suite-project-v1',projectId:incoming.projectId||window.__musicProjectId||('song-'+Date.now()),source:'composition-canvas-lyrics',kind:incoming.kind||((incoming.dialogue||incoming.sourceDialogue)?'duet':'single'),name:incoming.title||'会話から作る曲',title:incoming.title||'会話から作る曲',story:incoming.story||'',emotion:incoming.emotion||'neutral',bpm:Number(incoming.bpm)||120,original:incoming.original||'',sourceDialogue:incoming.dialogue||incoming.sourceDialogue||null,dialogue:incoming.dialogue||incoming.sourceDialogue||null,sections:lyricSectionsRead(),lyrics:lyricTextRead(),analysis:incoming.analysis||null,translation:incoming.translation||null,generatedMusic:window.__lyricMusicSketch||incoming.generatedMusic||null,rhythm:window.__lastDrumProject||null,melody:window.__lastDrumProject?.melody||null,notes:cards.map((card,index)=>({id:card.dataset.noteId||makeMelodyNoteId(index),lyricId:card.dataset.lyricId||null,startBeat:card.dataset.startBeat!==undefined?Number(card.dataset.startBeat):null,note:card.dataset.note||card.firstChild?.textContent||'',lyric:card.dataset.lyric||'',role:card.dataset.lyricRole||'',section:card.dataset.lyricSection||'',length:Number(card.dataset.length)||4,x:parseInt(card.style.left)||0,y:parseInt(card.style.top)||0,color:card.style.backgroundColor||'#ffffff',index})),updatedAt:new Date().toISOString()};
+  const project={version:4,schemaVersion:'music-suite-project-v1',projectId:incoming.projectId||window.__musicProjectId||('song-'+Date.now()),source:'composition-canvas-lyrics',kind:incoming.kind||((incoming.dialogue||incoming.sourceDialogue)?'duet':'single'),name:incoming.title||'会話から作る曲',title:incoming.title||'会話から作る曲',story:incoming.story||'',emotion:incoming.emotion||'neutral',bpm:Number(incoming.bpm)||120,original:incoming.original||'',sourceDialogue:incoming.dialogue||incoming.sourceDialogue||null,dialogue:incoming.dialogue||incoming.sourceDialogue||null,lyricSelection:window.__lyricSelectionState||{},sections:lyricSectionsRead(),lyrics:lyricTextRead(),analysis:incoming.analysis||null,translation:incoming.translation||null,generatedMusic:window.__lyricMusicSketch||incoming.generatedMusic||null,rhythm:window.__lastDrumProject||null,melody:window.__lastDrumProject?.melody||null,notes:cards.map((card,index)=>({id:card.dataset.noteId||makeMelodyNoteId(index),lyricId:card.dataset.lyricId||null,startBeat:card.dataset.startBeat!==undefined?Number(card.dataset.startBeat):null,note:card.dataset.note||card.firstChild?.textContent||'',lyric:card.dataset.lyric||'',role:card.dataset.lyricRole||'',section:card.dataset.lyricSection||'',length:Number(card.dataset.length)||4,x:parseInt(card.style.left)||0,y:parseInt(card.style.top)||0,color:card.style.backgroundColor||'#ffffff',index})),updatedAt:new Date().toISOString()};
   try{localStorage.setItem('compositionLyricProject',JSON.stringify(project));if(typeof msRegister==='function')msRegister(project);window.__savedLyricCanvasProject=project;showToast('A・B・サビ・ブリッジと音符カードの割当を保存しました')}
   catch(e){showToast('保存できませんでした: '+e.message)}
 }
 function restoreLyricCanvasProject(project){
   if(!project||project.source!=='composition-canvas-lyrics')return false;
   window.__incomingLyricProject=project;window.__musicProjectId=project.projectId||window.__musicProjectId||('song-'+Date.now());
+  window.__lyricSelectionState=project.lyricSelection&&typeof project.lyricSelection==='object'?project.lyricSelection:{};
   window.__lyricMusicSketch=project.generatedMusic||null;
   restoreChordProgressionInput(window.__lyricMusicSketch);
   document.getElementById('lyric-panel').classList.add('show');
