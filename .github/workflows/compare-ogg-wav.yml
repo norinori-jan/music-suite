@@ -1,0 +1,77 @@
+name: Compare official OGG previews with 24-bit WAV masters
+
+on:
+  push:
+    branches:
+      - feature/three-melody-track-foundation
+    paths:
+      - "audio/COMPARE_FORMATS_NOW.json"
+
+permissions:
+  contents: read
+
+jobs:
+  compare-formats:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout development branch
+        uses: actions/checkout@v4
+        with:
+          ref: ${{ github.ref_name }}
+      - name: Install audio analysis tools
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y ffmpeg unzip
+      - name: Download official 24-bit WAV masters
+        run: |
+          curl --fail --location --retry 3 --retry-delay 2 -o /tmp/meta-piano-wav.zip "https://github.com/facebookincubator/Meta-open-sound/releases/download/meta-piano-v1.0.0/meta-open-sound-meta-piano-wav.zip"
+          curl --fail --location --retry 3 --retry-delay 2 -o /tmp/meta-nylon-guitar-wav.zip "https://github.com/facebookincubator/Meta-open-sound/releases/download/meta-nylon-guitar-v1.0.0/meta-open-sound-meta-nylon-guitar-wav.zip"
+          unzip -Z1 /tmp/meta-piano-wav.zip > /tmp/piano-files.txt
+          unzip -Z1 /tmp/meta-nylon-guitar-wav.zip > /tmp/guitar-files.txt
+      - name: Extract representative matching samples
+        run: |
+          mkdir -p /tmp/format-compare
+          extract_sample() {
+            archive="$1"; listing="$2"; name="$3"
+            entry="$(grep -E "(^|/)${name}$" "$listing" | head -n 1)"
+            test -n "$entry"
+            unzip -p "$archive" "$entry" > "/tmp/format-compare/${name}"
+            test -s "/tmp/format-compare/${name}"
+          }
+          for name in INSPiano_Vel01_C4_01.wav INSPiano_Vel02_C4_01.wav INSPiano_Vel03_C4_01.wav INSPiano_Vel04_C4_01.wav; do
+            extract_sample /tmp/meta-piano-wav.zip /tmp/piano-files.txt "$name"
+          done
+          for name in INSGuitarNylon_StringLowE_Vel01Finger_E2_01.wav INSGuitarNylon_StringLowE_Vel02Pick_E2_01.wav INSGuitarNylon_StringLowE_Vel03Pick_E2_01.wav; do
+            extract_sample /tmp/meta-nylon-guitar-wav.zip /tmp/guitar-files.txt "$name"
+          done
+      - name: Decode matching WAV and OGG to common PCM format
+        run: |
+          convert_pair() {
+            label="$1"; wav="$2"; ogg="$3"
+            ffmpeg -y -v error -i "$wav" -af "pan=mono|c0=0.5*c0+0.5*c1" -ar 48000 -ac 1 -c:a pcm_f32le -f f32le "/tmp/format-compare/${label}-wav.f32"
+            ffmpeg -y -v error -i "$ogg" -ar 48000 -ac 1 -c:a pcm_f32le -f f32le "/tmp/format-compare/${label}-ogg.f32"
+          }
+          convert_pair piano-pp /tmp/format-compare/INSPiano_Vel01_C4_01.wav audio/assets/meta-piano/ogg/INSPiano_Vel01_C4_01.ogg
+          convert_pair piano-mp /tmp/format-compare/INSPiano_Vel02_C4_01.wav audio/assets/meta-piano/ogg/INSPiano_Vel02_C4_01.ogg
+          convert_pair piano-mf /tmp/format-compare/INSPiano_Vel03_C4_01.wav audio/assets/meta-piano/ogg/INSPiano_Vel03_C4_01.ogg
+          convert_pair piano-ff /tmp/format-compare/INSPiano_Vel04_C4_01.wav audio/assets/meta-piano/ogg/INSPiano_Vel04_C4_01.ogg
+          convert_pair guitar-finger /tmp/format-compare/INSGuitarNylon_StringLowE_Vel01Finger_E2_01.wav audio/assets/meta-nylon-guitar/ogg/INSGuitarNylon_StringLowE_Vel01Finger_E2_01.ogg
+          convert_pair guitar-pick-medium /tmp/format-compare/INSGuitarNylon_StringLowE_Vel02Pick_E2_01.wav audio/assets/meta-nylon-guitar/ogg/INSGuitarNylon_StringLowE_Vel02Pick_E2_01.ogg
+          convert_pair guitar-pick-hard /tmp/format-compare/INSGuitarNylon_StringLowE_Vel03Pick_E2_01.wav audio/assets/meta-nylon-guitar/ogg/INSGuitarNylon_StringLowE_Vel03Pick_E2_01.ogg
+      - name: Calculate objective comparison metrics
+        run: |
+          node --check scripts/compare-ogg-wav.mjs
+          node scripts/compare-ogg-wav.mjs \
+            --pair piano-pp /tmp/format-compare/piano-pp-wav.f32 /tmp/format-compare/piano-pp-ogg.f32 \
+            --pair piano-mp /tmp/format-compare/piano-mp-wav.f32 /tmp/format-compare/piano-mp-ogg.f32 \
+            --pair piano-mf /tmp/format-compare/piano-mf-wav.f32 /tmp/format-compare/piano-mf-ogg.f32 \
+            --pair piano-ff /tmp/format-compare/piano-ff-wav.f32 /tmp/format-compare/piano-ff-ogg.f32 \
+            --pair guitar-finger /tmp/format-compare/guitar-finger-wav.f32 /tmp/format-compare/guitar-finger-ogg.f32 \
+            --pair guitar-pick-medium /tmp/format-compare/guitar-pick-medium-wav.f32 /tmp/format-compare/guitar-pick-medium-ogg.f32 \
+            --pair guitar-pick-hard /tmp/format-compare/guitar-pick-hard-wav.f32 /tmp/format-compare/guitar-pick-hard-ogg.f32
+      - name: Save comparison report
+        uses: actions/upload-artifact@v4
+        with:
+          name: ogg-wav-quality-comparison
+          path: ogg-wav-comparison.json
+          retention-days: 30
