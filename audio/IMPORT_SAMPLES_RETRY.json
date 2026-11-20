@@ -1,0 +1,9 @@
+{
+  "purpose": "Retry trigger for SHA-256 verified Meta Open Sound CC0 sample import.",
+  "sourceCommit": "514c926efecdb3c7812bf00eedf8e5c8d61dd681",
+  "collections": [
+    "meta-piano",
+    "meta-nylon-guitar"
+  ],
+  "retry": 2
+}
