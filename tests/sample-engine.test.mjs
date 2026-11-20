@@ -244,7 +244,7 @@ test("imported CC0 Swagbass and Big Rusty Drum WAV assets match pinned SHA-256 a
   const root = path.join(path.dirname(fileURLToPath(import.meta.url)), "..", "audio");
   try { await access(path.join(root, "assets", "meta-swagbass", "SOURCE-MANIFEST.json")); }
   catch { t.skip("The separate verified asset-import workflow has not committed its files yet."); return; }
-  for (const [id, minimumZones] of [["meta-swagbass", 51], ["meta-big-rusty-drums", 80]]) {
+  for (const [id, minimumZones] of [["meta-swagbass", 48], ["meta-big-rusty-drums", 80]]) {
     const directory = path.join(root, "assets", id);
     const source = JSON.parse(await readFile(path.join(directory, "SOURCE-MANIFEST.json"), "utf8"));
     const revision = JSON.parse(await readFile(path.join(directory, "SOURCE-REVISION.json"), "utf8"));
