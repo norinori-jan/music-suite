@@ -173,3 +173,40 @@ test("imported CC0 piano and nylon guitar assets match every upstream SHA-256", 
     }
   }
 });
+
+
+test("imported CC0 violin and cello WAV zones match every pinned manifest SHA-256", async () => {
+  const root = path.join(path.dirname(fileURLToPath(import.meta.url)), "..", "audio");
+  for (const [id, expectedZones] of [
+    ["meta-violin-section", 30],
+    ["meta-cello-section", 26]
+  ]) {
+    const source = JSON.parse(await readFile(path.join(root, "assets", id, "SOURCE-MANIFEST.json"), "utf8"));
+    const manifest = JSON.parse(await readFile(path.join(root, id + ".manifest.json"), "utf8"));
+    const instrument = manifest.instruments?.[id];
+    assert.equal(source.license, "CC0-1.0");
+    assert.equal(source.sampleRate, 48000);
+    assert.equal(source.channels, 1);
+    assert.equal(source.bitsPerSample, 24);
+    assert.equal(source.zoneCount, expectedZones);
+    assert.equal(instrument.samples.length, expectedZones);
+    assert.equal(instrument.license, "CC0-1.0");
+    const license = await readFile(path.join(root, "assets", id, "LICENSE"), "utf8");
+    assert.match(license.slice(0, 500), /CC0 1\.0 Universal/);
+    const sourceZones = new Map(source.zones.map(zone => [zone.file, zone]));
+    for (const sample of instrument.samples) {
+      const relative = sample.url.replace("../audio/assets/" + id + "/", "");
+      const zone = sourceZones.get(relative);
+      assert.ok(zone, "missing source manifest zone " + id + "/" + relative);
+      const bytes = await readFile(path.join(root, "assets", id, relative));
+      assert.equal(bytes.length, zone.sizeBytes);
+      assert.equal(createHash("sha256").update(bytes).digest("hex"), zone.sha256);
+      assert.equal(bytes.toString("ascii", 0, 4), "RIFF");
+      assert.equal(bytes.toString("ascii", 8, 12), "WAVE");
+      assert.equal(bytes.readUInt16LE(20), 1, "must be PCM");
+      assert.equal(bytes.readUInt16LE(22), 1, "must be mono");
+      assert.equal(bytes.readUInt32LE(24), 48000, "must be 48 kHz");
+      assert.equal(bytes.readUInt16LE(34), 24, "must be 24-bit");
+    }
+  }
+});
