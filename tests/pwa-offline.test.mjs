@@ -12,6 +12,7 @@ test("music-suite declares an installable standalone web app", async () => {
   assert.match(html, /rel="manifest" href="\.\/manifest\.webmanifest"/);
   assert.match(html, /navigator\.serviceWorker\.register\("\.\/sw\.js"/);
   assert.match(html, /apple-mobile-web-app-capable/);
+  assert.match(html, /apple-touch-icon" href="\.\/icon-512\.png"/);
   assert.equal(manifest.name, "music-suite");
   assert.equal(manifest.display, "standalone");
   assert.equal(manifest.start_url, "./");
