@@ -190,7 +190,9 @@
     <div id="lyric-music-result" aria-live="polite" style="display:block;width:100%;max-width:100%;min-width:0;box-sizing:border-box;overflow-wrap:anywhere;word-break:break-word;white-space:normal;overflow-x:hidden;font-size:13px"></div>
     <section id="composition-arrangement" style="display:none;margin:14px 0;padding:14px;border:2px solid #38a3a5;border-radius:12px;background:#10252b;color:#e8fbff">
       <h3 style="margin:0 0 6px">🎧 作曲プレビュー — メロディーとリズムを比較</h3>
-      <p style="font-size:12px;margin:0 0 12px">同じ歌詞・コードから3種類の旋律案と3種類のリズムを作ります。選んだ組み合わせは下の音符カードと再生データに反映されます。</p>
+      <p style="font-size:12px;margin:0 0 12px">歌詞は共通のまま、コード・旋律・伴奏・ベース・ドラム・強弱を組み替えた3種類のアレンジを比較します。</p>
+      <div id="composition-style-choices" style="display:grid;grid-template-columns:repeat(auto-fit,minmax(190px,1fr));gap:8px"></div>
+      <div style="margin-top:14px"><strong>🎼 主旋律の輪郭（選択中アレンジ内で変更）</strong></div>
       <div id="composition-melody-choices" style="display:grid;grid-template-columns:repeat(auto-fit,minmax(180px,1fr));gap:8px"></div>
       <div style="margin-top:14px"><strong>🥁 リズムパターン</strong><div id="composition-rhythm-choices" style="display:flex;gap:8px;flex-wrap:wrap;margin-top:8px"></div></div>
       <div style="display:flex;gap:8px;flex-wrap:wrap;margin-top:14px">
@@ -1312,7 +1314,37 @@ function generateLyricMusicSketch(){
     });
     return {...contour,notes};
   });
-  window.__compositionArrangement={key,mood,progression,chordSections,chords:allSectionChords,melodyVariants:variants,rhythmStyles,selectedMelody:'hook',selectedRhythm:'straight',bpm:Math.max(40,Math.min(220,Number(document.getElementById('note-sequence-bpm')?.value)||96)),method:'rule-based-composition-draft-v2',warning:'音節数は英語発音の概算です。実際の強勢・音節・歌いやすさは試聴して調整してください。'};
+  const styleProfiles=[
+    {id:'warm',name:'A案：温かく親しみやすい',description:'柔らかなコード、分散和音、丸いベース。自然に口ずさめる温度感',progression:'warm',rhythmVariant:0,melodyId:'hook',rhythmId:'straight',bpmOffset:-4,chordMode:'arpeggio',bassMode:'root-fifth',drumMode:'soft-pop',melodyWave:'triangle',chordWave:'sine',melodyGain:0.115,chordGain:0.026,bassGain:0.085,drumGain:0.72,dynamics:'gentle'},
+    {id:'dramatic',name:'B案：壮大でドラマチック',description:'広がるコード、力強い低音、強い拍とサビの高揚。大きな景色を描く',progression:'cinematic',rhythmVariant:2,melodyId:'rise',rhythmId:'syncopated',bpmOffset:5,chordMode:'wide-pad',bassMode:'pulse',drumMode:'anthem',melodyWave:'sawtooth',chordWave:'triangle',melodyGain:0.13,chordGain:0.032,bassGain:0.12,drumGain:1,dynamics:'rising'},
+    {id:'bittersweet',name:'C案：切なく余韻のある',description:'短調寄りの進行、間を生かした低音と控えめな打楽器。静かな余韻を残す',progression:'sad',rhythmVariant:4,melodyId:'arch',rhythmId:'ballad',bpmOffset:-10,chordMode:'soft-pad',bassMode:'sustain',drumMode:'sparse',melodyWave:'triangle',chordWave:'sine',melodyGain:0.095,chordGain:0.022,bassGain:0.07,drumGain:0.48,dynamics:'falling'}
+  ];
+  const arrangementVariants=styleProfiles.map(profile=>{
+    const profileStyles={};
+    Object.keys(sectionProgressionIds).forEach(label=>{profileStyles[label]=profile.progression;});
+    const profileChords=buildSectionChordProgressions(key,sections,profile.progression,profileStyles,profile.rhythmVariant);
+    const notesByMelody={};
+    contours.forEach((contour,variantIndex)=>{
+      const localCounts={};
+      notesByMelody[contour.id]=syllables.slice(0,128).map((item,index)=>{
+        const sectionKey=item.label||'Full song';
+        const localIndex=localCounts[sectionKey]||0;localCounts[sectionKey]=localIndex+1;
+        const chordDegree=resolveMelodyChordDegree(profileChords,sectionKey,localIndex);
+        const contourOffset=contour.shape[index%contour.shape.length];
+        const scaleIndex=(chordDegree-1+contourOffset)%7;
+        let octave=4;
+        if(profile.id==='dramatic'&&contourOffset>=4)octave=5;
+        if(profile.id==='bittersweet'&&contourOffset>=5)octave=3;
+        if(profile.id==='warm'&&contourOffset>=6)octave=5;
+        const midi=60+root+scale[scaleIndex]+(octave-4)*12;
+        const note=LYRIC_NOTE_NAMES[((midi-60)%12+12)%12]+(4+Math.floor((midi-60)/12));
+        return {id:makeMelodyNoteId((profile.id==='warm'?0:profile.id==='dramatic'?3000:6000)+variantIndex*1000+index),note,word:item.word,lyric:item.phrase,role:item.role,section:item.label,lyricId:'lyric-'+String(index+1).padStart(4,'0'),scaleDegree:scaleIndex+1,velocity:profile.id==='dramatic'?(index%8===0?1:0.88):profile.id==='bittersweet'?0.68+(index%4)*0.06:0.78+(index%4)*0.04};
+      });
+    });
+    return {...profile,chordSections:profileChords,notesByMelody};
+  });
+  const initialProfile=arrangementVariants[0];
+  window.__compositionArrangement={key,mood,progression,chordSections:initialProfile.chordSections,chords:initialProfile.chordSections.flatMap(section=>section.progression),melodyVariants:variants,arrangementVariants,selectedArrangement:'warm',selectedMelody:initialProfile.melodyId,selectedRhythm:initialProfile.rhythmId,rhythmStyles,bpm:Math.max(40,Math.min(220,(Number(document.getElementById('note-sequence-bpm')?.value)||96)+initialProfile.bpmOffset)),method:'three-style-full-arrangement-v1',warning:'英語の音節数は概算です。3案は音楽的な方向性を変えた作曲スケッチです。実際の強勢・歌いやすさ・音色は試聴して調整してください。'};
   window.__lyricMusicSketch={...window.__compositionArrangement,melody:[]};
   renderCompositionArrangement();
   applySelectedComposition();
@@ -1323,9 +1355,23 @@ function generateLyricMusicSketch(){
 function renderCompositionArrangement(){
   const arrangement=window.__compositionArrangement;if(!arrangement)return;
   const panel=document.getElementById('composition-arrangement');
+  const styles=document.getElementById('composition-style-choices');
   const melodies=document.getElementById('composition-melody-choices');
   const rhythms=document.getElementById('composition-rhythm-choices');
   panel.style.display='block';
+  if(styles){
+    styles.replaceChildren();
+    (arrangement.arrangementVariants||[]).forEach(profile=>{
+      const card=document.createElement('div');const active=profile.id===arrangement.selectedArrangement;
+      card.style.cssText='border:1px solid '+(active?'#56d6cf':'#53636b')+';border-radius:9px;padding:11px;background:'+(active?'#1c4148':'#172f36');
+      const title=document.createElement('strong');title.textContent=profile.name;
+      const desc=document.createElement('p');desc.style.cssText='font-size:12px;line-height:1.5;min-height:52px';desc.textContent=profile.description;
+      const detail=document.createElement('small');detail.textContent='コード：'+profile.progression+' ／ リズム：'+profile.rhythmId+' ／ '+(arrangement.bpm+profile.bpmOffset)+' BPM';
+      const button=document.createElement('button');button.type='button';button.textContent=active?'✓ このアレンジを選択中':'このアレンジを選ぶ';
+      button.addEventListener('click',()=>selectCompositionArrangement(profile.id));
+      card.append(title,desc,detail,document.createElement('br'),button);styles.appendChild(card);
+    });
+  }
   melodies.replaceChildren();
   arrangement.melodyVariants.forEach(variant=>{
     const card=document.createElement('div');card.style.cssText='border:1px solid '+(variant.id===arrangement.selectedMelody?'#56d6cf':'#53636b')+';border-radius:9px;padding:10px;background:'+(variant.id===arrangement.selectedMelody?'#1c4148':'#172f36');
@@ -1343,7 +1389,28 @@ function renderCompositionArrangement(){
   });
   const selected=arrangement.melodyVariants.find(v=>v.id===arrangement.selectedMelody);
   const rhythm=arrangement.rhythmStyles.find(r=>r.id===arrangement.selectedRhythm);
-  document.getElementById('composition-selected-summary').textContent='選択中：'+selected.name+' × '+rhythm.name+' ／ '+arrangement.bpm+' BPM ／ '+selected.notes.length+'音';
+  const profile=(arrangement.arrangementVariants||[]).find(item=>item.id===arrangement.selectedArrangement);
+  document.getElementById('composition-selected-summary').textContent='選択中：'+(profile?.name||'従来アレンジ')+' ／ '+selected.name+' × '+rhythm.name+' ／ '+arrangement.bpm+' BPM ／ '+selected.notes.length+'音';
+}
+function selectCompositionArrangement(profileId){
+  const arrangement=window.__compositionArrangement;
+  const profile=arrangement?.arrangementVariants?.find(item=>item.id===profileId);
+  if(!profile)return false;
+  arrangement.selectedArrangement=profile.id;
+  arrangement.selectedMelody=profile.melodyId;
+  arrangement.selectedRhythm=profile.rhythmId;
+  arrangement.chordSections=profile.chordSections;
+  arrangement.chords=profile.chordSections.flatMap(section=>section.progression);
+  arrangement.bpm=Math.max(40,Math.min(220,(Number(document.getElementById('note-sequence-bpm')?.value)||96)+profile.bpmOffset));
+  renderGeneratedChordSections(arrangement.chordSections);
+  const chordText=arrangement.chords.map(item=>item.chord).join(', ');
+  const chordInput=document.getElementById('chord-progression-input');
+  const chordOutput=document.getElementById('lyric-generated-chord-output');
+  if(chordInput)chordInput.value=chordText;
+  if(chordOutput)chordOutput.value=chordText;
+  renderCompositionArrangement();
+  applySelectedComposition();
+  return true;
 }
 async function previewCompositionVariant(variantId){
   const arrangement=window.__compositionArrangement;
@@ -1357,9 +1424,12 @@ async function previewCompositionVariant(variantId){
 function buildSelectedCompositionNotes(){
   const arrangement=window.__compositionArrangement;
   const variant=arrangement.melodyVariants.find(v=>v.id===arrangement.selectedMelody);
+  const profile=(arrangement.arrangementVariants||[]).find(item=>item.id===arrangement.selectedArrangement);
+  const sourceNotes=profile?.notesByMelody?.[arrangement.selectedMelody]||variant?.notes||[];
   const rhythm=arrangement.rhythmStyles.find(r=>r.id===arrangement.selectedRhythm);
+  if(!rhythm||!Array.isArray(rhythm.beats)||!rhythm.beats.length)return [];
   let beat=0;
-  return variant.notes.map((note,index)=>{
+  return sourceNotes.map((note,index)=>{
     const duration=rhythm.beats[index%rhythm.beats.length];
     const result={...note,startBeat:beat,length:duration*4,durationBeats:duration};
     beat+=duration;
@@ -1393,6 +1463,8 @@ function restoreSavedCompositionArrangement(){
 }
 function applySelectedComposition(){
   const arrangement=window.__compositionArrangement;if(!arrangement)return false;
+  const profile=(arrangement.arrangementVariants||[]).find(item=>item.id===arrangement.selectedArrangement);
+  if(profile){arrangement.chordSections=profile.chordSections;arrangement.chords=profile.chordSections.flatMap(section=>section.progression);}
   if(!window.__musicProjectId&&!window.__incomingLyricProject?.projectId)window.__musicProjectId='song-'+Date.now();
   const notes=buildSelectedCompositionNotes();
   state.lastNotes=notes.map(n=>({id:n.id,note:n.note,length:n.length,startBeat:n.startBeat,lyricId:n.lyricId}));
@@ -1428,19 +1500,25 @@ async function playSelectedComposition(){
     osc.connect(gain);gain.connect(ctx.destination);osc.start(at);osc.stop(at+duration+0.02);noteSequenceNodes.push(osc);
   };
   const melody=audible.find(t=>t.id==='melody');
-  if(melody)melody.notes.forEach(n=>playTone(noteToMidi(n.note),start+n.startBeat*beatSeconds,n.durationBeats*beatSeconds*0.88,0.13,'triangle'));
+  const profile=(arrangement.arrangementVariants||[]).find(item=>item.id===arrangement.selectedArrangement)||{};
+  if(melody)melody.notes.forEach(n=>playTone(noteToMidi(n.note),start+n.startBeat*beatSeconds,n.durationBeats*beatSeconds*0.88,(profile.melodyGain||0.12)*(n.velocity||1),profile.melodyWave||'triangle'));
   const chords=audible.find(t=>t.id==='chords');
-  if(chords)chords.notes.forEach(chord=>chord.pitches.forEach((midi,index)=>playTone(midi,start+chord.startBeat*beatSeconds,chord.durationBeats*beatSeconds*0.94,index===0?0.035:0.025,index===0?'sine':'triangle')));
+  if(chords)chords.notes.forEach(chord=>chord.pitches.forEach((midi,index)=>{
+    const stagger=chord.playMode==='arpeggio'?index*0.11:chord.playMode==='wide-pad'?index*0.025:0;
+    const length=chord.playMode==='arpeggio'?Math.min(chord.durationBeats*beatSeconds*0.72,0.7):chord.durationBeats*beatSeconds*0.94;
+    playTone(midi,start+chord.startBeat*beatSeconds+stagger,length,(profile.chordGain||0.026)*(index===0?1:0.82),profile.chordWave||'sine');
+  }));
   const bass=audible.find(t=>t.id==='bass');
-  if(bass)bass.notes.forEach(n=>playTone(n.midi,start+n.startBeat*beatSeconds,n.durationBeats*beatSeconds*0.9,0.11,'sawtooth'));
+  if(bass)bass.notes.forEach(n=>playTone(n.midi,start+n.startBeat*beatSeconds,n.durationBeats*beatSeconds*0.9,(profile.bassGain||0.09)*(n.velocity||1),'sawtooth'));
   const drums=audible.find(t=>t.id==='drums');
   if(drums){
     const noiseBuffer=ctx.createBuffer(1,Math.floor(ctx.sampleRate*0.12),ctx.sampleRate),data=noiseBuffer.getChannelData(0);
     for(let i=0;i<data.length;i++)data[i]=(Math.random()*2-1);
     drums.notes.forEach(hit=>{
       const at=start+hit.startBeat*beatSeconds,source=ctx.createBufferSource(),gain=ctx.createGain(),filter=ctx.createBiquadFilter();source.buffer=noiseBuffer;
-      filter.type='highpass';filter.frequency.value=hit.kind==='hat'?7000:hit.kind==='snare'?1200:80;
-      gain.gain.setValueAtTime(hit.kind==='hat'?0.025:hit.kind==='snare'?0.07:0.12,at);gain.gain.exponentialRampToValueAtTime(0.001,at+(hit.kind==='hat'?0.035:hit.kind==='snare'?0.11:0.18));
+      filter.type='highpass';filter.frequency.value=hit.kind==='hat'?7000:hit.kind==='snare'?1200:hit.kind==='crash'?4200:80;
+      const drumLevel=(profile.drumGain||0.7)*(hit.velocity||1);
+      gain.gain.setValueAtTime((hit.kind==='hat'?0.025:hit.kind==='snare'?0.07:hit.kind==='crash'?0.045:0.12)*drumLevel,at);gain.gain.exponentialRampToValueAtTime(0.001,at+(hit.kind==='hat'?0.035:hit.kind==='snare'?0.11:hit.kind==='crash'?0.45:0.18));
       source.connect(filter);filter.connect(gain);gain.connect(ctx.destination);source.start(at);noteSequenceNodes.push(source);
       if(hit.kind==='kick'){const osc=ctx.createOscillator(),amp=ctx.createGain();osc.frequency.setValueAtTime(115,at);osc.frequency.exponentialRampToValueAtTime(48,at+0.14);amp.gain.setValueAtTime(0.16,at);amp.gain.exponentialRampToValueAtTime(0.001,at+0.16);osc.connect(amp);amp.connect(ctx.destination);osc.start(at);osc.stop(at+0.17);noteSequenceNodes.push(osc);}
     });
@@ -1456,6 +1534,7 @@ function buildCompositionTracks(melodyNotes){
   const totalBeats=Math.max(4,...notes.map(n=>n.startBeat+n.durationBeats));
   const melodyTrack={id:'melody',name:'MELODY · 主旋律',kind:'pitched',muted:false,solo:false,notes:notes.map(n=>({id:n.id,note:n.note,startBeat:n.startBeat,durationBeats:n.durationBeats,word:n.word,lyric:n.lyric,role:n.role,section:n.section}))};
   const chordNotes=[],bassNotes=[];
+  const profile=(arrangement.arrangementVariants||[]).find(item=>item.id===arrangement.selectedArrangement)||{};
   (arrangement.chordSections||[]).forEach(section=>{
     const sectionNotes=notes.filter(n=>n.section===section.label);
     if(!sectionNotes.length)return;
@@ -1464,18 +1543,39 @@ function buildCompositionTracks(melodyNotes){
     progression.forEach(chord=>{
       const duration=span*(Number(chord.beats)||4)/(progression.reduce((sum,c)=>sum+(Number(c.beats)||4),0)||1);
       const start=from+offset;offset+=duration;
-      const pitches=(chord.tones||[]).map(pc=>{let midi=48+Number(pc);while(midi<48)midi+=12;while(midi>64)midi-=12;return midi;});
-      chordNotes.push({id:chord.id,chord:chord.chord,startBeat:start,durationBeats:duration,pitches,section:section.label});
-      if(pitches.length)bassNotes.push({id:'bass-'+chord.id,midi:pitches[0]-12,startBeat:start,durationBeats:duration,chord:chord.chord,section:section.label});
+      let pitches=(chord.tones||[]).map(pc=>{let midi=48+Number(pc);while(midi<48)midi+=12;while(midi>64)midi-=12;return midi;});
+      if(profile.id==='dramatic')pitches=pitches.map((midi,index)=>midi+(index===2?12:0));
+      if(profile.id==='bittersweet')pitches=pitches.map((midi,index)=>midi+(index===1?12:0));
+      chordNotes.push({id:chord.id,chord:chord.chord,startBeat:start,durationBeats:duration,pitches,playMode:profile.chordMode||'block',section:section.label});
+      if(pitches.length){
+        if(profile.bassMode==='pulse'){
+          for(let pulse=0;pulse<Math.max(1,Math.floor(duration));pulse++)bassNotes.push({id:'bass-'+chord.id+'-'+pulse,midi:pitches[0]-12,startBeat:start+pulse,durationBeats:Math.min(0.9,duration-pulse),chord:chord.chord,section:section.label});
+        }else if(profile.bassMode==='root-fifth'&&duration>=2){
+          bassNotes.push({id:'bass-'+chord.id+'-root',midi:pitches[0]-12,startBeat:start,durationBeats:duration/2,chord:chord.chord,section:section.label});
+          bassNotes.push({id:'bass-'+chord.id+'-fifth',midi:pitches[0]-5,startBeat:start+duration/2,durationBeats:duration/2,chord:chord.chord,section:section.label});
+        }else bassNotes.push({id:'bass-'+chord.id,midi:pitches[0]-12,startBeat:start,durationBeats:duration,chord:chord.chord,section:section.label});
+      }
     });
   });
   const rhythm=arrangement.selectedRhythm,drumNotes=[];
   for(let beat=0;beat<Math.ceil(totalBeats);beat++){
-    if(beat%4===0||beat%4===2)drumNotes.push({id:'kick-'+beat,startBeat:beat,durationBeats:0.25,kind:'kick'});
-    if(beat%4===1||beat%4===3)drumNotes.push({id:'snare-'+beat,startBeat:beat,durationBeats:0.25,kind:'snare'});
-    if(rhythm==='straight'){drumNotes.push({id:'hat-'+beat,startBeat:beat,durationBeats:0.125,kind:'hat'},{id:'hat-e-'+beat,startBeat:beat+0.5,durationBeats:0.125,kind:'hat'});}
-    else if(rhythm==='syncopated')drumNotes.push({id:'hat-'+beat,startBeat:beat+(beat%2===0?0.75:0.25),durationBeats:0.125,kind:'hat'});
-    else if(beat%2===0)drumNotes.push({id:'hat-'+beat,startBeat:beat,durationBeats:0.125,kind:'hat'});
+    const barBeat=beat%4;
+    if(profile.drumMode==='anthem'){
+      if(barBeat===0||barBeat===2)drumNotes.push({id:'kick-'+beat,startBeat:beat,durationBeats:0.3,kind:'kick',velocity:1});
+      if(barBeat===1||barBeat===3)drumNotes.push({id:'snare-'+beat,startBeat:beat,durationBeats:0.25,kind:'snare',velocity:0.9});
+      drumNotes.push({id:'hat-'+beat,startBeat:beat,durationBeats:0.125,kind:'hat',velocity:0.7});
+      if(barBeat===0&&beat>0)drumNotes.push({id:'crash-'+beat,startBeat:beat,durationBeats:0.5,kind:'crash',velocity:0.8});
+    }else if(profile.drumMode==='sparse'){
+      if(barBeat===0)drumNotes.push({id:'kick-'+beat,startBeat:beat,durationBeats:0.35,kind:'kick',velocity:0.55});
+      if(barBeat===2)drumNotes.push({id:'snare-'+beat,startBeat:beat,durationBeats:0.2,kind:'snare',velocity:0.38});
+      if(barBeat===3)drumNotes.push({id:'hat-'+beat,startBeat:beat+0.5,durationBeats:0.1,kind:'hat',velocity:0.22});
+    }else{
+      if(barBeat===0||barBeat===2)drumNotes.push({id:'kick-'+beat,startBeat:beat,durationBeats:0.25,kind:'kick',velocity:0.65});
+      if(barBeat===1||barBeat===3)drumNotes.push({id:'snare-'+beat,startBeat:beat,durationBeats:0.25,kind:'snare',velocity:0.55});
+      if(rhythm==='straight'){drumNotes.push({id:'hat-'+beat,startBeat:beat,durationBeats:0.125,kind:'hat',velocity:0.35},{id:'hat-e-'+beat,startBeat:beat+0.5,durationBeats:0.125,kind:'hat',velocity:0.22});}
+      else if(rhythm==='syncopated')drumNotes.push({id:'hat-'+beat,startBeat:beat+(beat%2===0?0.75:0.25),durationBeats:0.125,kind:'hat',velocity:0.38});
+      else if(barBeat===0||barBeat===2)drumNotes.push({id:'hat-'+beat,startBeat:beat,durationBeats:0.125,kind:'hat',velocity:0.2});
+    }
   }
   const lyricLines=[];
   const lyricSource=lyricSectionsRead();
