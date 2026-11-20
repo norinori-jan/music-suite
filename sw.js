@@ -4,6 +4,7 @@ const SHELL_URLS = [
   "./",
   "./manifest.webmanifest",
   "./icon.svg",
+  "./icon-512.png",
   "./apps/composition-canvas.html",
   "./audio/sample-engine.js"
 ];
