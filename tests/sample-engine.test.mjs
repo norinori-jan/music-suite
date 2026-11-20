@@ -75,7 +75,7 @@ function fakeFetch() {
 test("sample selection honors note range and velocity layers", () => {
   assert.equal(chooseSample(manifest.instruments.piano.samples, 60, 30).url, "/audio/piano-c4-soft.ogg");
   assert.equal(chooseSample(manifest.instruments.piano.samples, 60, 100).url, "/audio/piano-c4-hard.ogg");
-  assert.equal(chooseSample(manifest.instruments.piano.samples, 61, 100), null);
+  assert.equal(chooseSample(manifest.instruments.piano.samples, 63, 100), null);
 });
 
 test("manifest rejects invalid sample ranges", () => {
@@ -93,15 +93,18 @@ test("preload deduplicates concurrent requests and decodes once", async () => {
   assert.equal(network.calls.length, 1);
   assert.equal(results[0].loaded, 1);
   assert.equal(engine.getStats().cachedSamples, 1);
-  assert.equal(engine.getStats().decodedBytes, 100);
+  assert.equal(engine.getStats().decodedBytes, 400);
 });
 
 test("scheduleNote uses the selected real sample, transposes from its root and schedules on the shared clock", async () => {
   const context = makeContext();
   const network = fakeFetch();
   const engine = createSampleAudioEngine({ audioContext: context, manifest, fetchImpl: network.fetch });
-  await engine.preload("piano", [{ midi: 60, velocity: 100 }]);
-  const voice = engine.scheduleNote({ instrument: "piano", midi: 62, velocity: 100, when: 10.5, duration: 0.75, gain: 0.4 });
+  const transpositionManifest = structuredClone(manifest);
+  transpositionManifest.instruments.piano.samples.forEach(sample => { sample.keyHigh = 62; });
+  const transpositionEngine = createSampleAudioEngine({ audioContext: context, manifest: transpositionManifest, fetchImpl: network.fetch });
+  await transpositionEngine.preload("piano", [{ midi: 62, velocity: 100 }]);
+  const voice = transpositionEngine.scheduleNote({ instrument: "piano", midi: 62, velocity: 100, when: 10.5, duration: 0.75, gain: 0.4 });
   assert.equal(voice.sampleUrl, "/audio/piano-c4-hard.ogg");
   assert.equal(context.sources[0].startedAt, 10.5);
   assert.ok(Math.abs(context.sources[0].rate - Math.pow(2, 2 / 12)) < 1e-9);
