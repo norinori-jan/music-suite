@@ -31,7 +31,8 @@ test("dialogue sentence selection adds only checked sentences to chosen lyric se
   const checks = [
     { checked: true, dataset: { sentenceId: "0:0" } },
     { checked: false, dataset: { sentenceId: "0:1" } },
-    { checked: true, dataset: { sentenceId: "1:0" } }
+    { checked: true, dataset: { sentenceId: "1:0" } },
+    { checked: true, dataset: { sentenceId: "0:0" } }
   ];
   const targets = { "0:0": "Chorus", "0:1": "A verse", "1:0": "Bridge" };
   const list = {
@@ -257,4 +258,50 @@ test("Canvas receives speak-native lyrics imports and restores the lyrics into t
   assert.match(html, /document\.getElementById\('canvas-lyrics'\)\.value=project\.lyrics\|\|''/);
   assert.match(html, /document\.getElementById\('lyric-panel'\)\.classList\.add\('show'\)/);
   assert.match(html, /history\.replaceState\(null,'',location\.pathname\+location\.search\)/);
+});
+
+test("English sentence splitting handles abbreviations, punctuation, and fallback mode", async () => {
+  const html = await readFile(canvasPath, "utf8");
+  const start = html.indexOf("function splitDialogueIntoSentences(");
+  const end = html.indexOf("function dialogueSentenceId(", start);
+  assert.ok(start >= 0 && end > start);
+  const splitter = html.slice(start, end);
+  const modern = vm.runInNewContext(splitter + "; splitDialogueIntoSentences", { Intl });
+  const sentences = modern('I arrived at 7 p.m. We talked. "It worked!"');
+  assert.ok(sentences.length >= 2);
+  assert.match(sentences[0], /^I arrived/);
+  const fallback = vm.runInNewContext(splitter + "; splitDialogueIntoSentences", { Intl: undefined });
+  assert.deepEqual(Array.from(fallback("First sentence. Second sentence?")), ["First sentence.", "Second sentence?"]);
+  assert.deepEqual(Array.from(fallback("  ")), []);
+});
+
+test("saved sentence selection is restored into the separate selection controls", async () => {
+  const html = await readFile(canvasPath, "utf8");
+  const start = html.indexOf("function getIncomingDialogueTurns()");
+  const end = html.indexOf("function appendSelectedDialogueSentences(", start);
+  assert.ok(start >= 0 && end > start);
+  const selectionFunctions = html.slice(start, end);
+  const made = [];
+  const list = { replaceChildren(){ this.children=[]; }, appendChild(node){ this.children.push(node); } };
+  const panel = { style: {} };
+  const context = {
+    window: {
+      __incomingLyricProject: { dialogue: [{ role: "user", speaker: "A", text: "We found our way home." }] },
+      __lyricSelectionState: { "0:0": { selected: true, target: "Chorus" } }
+    },
+    document: {
+      getElementById(id){ return id === "lyric-selection-panel" ? panel : list; },
+      createElement(tag){
+        const node = { tag, dataset: {}, style: {}, children: [], addEventListener(){}, setAttribute(){}, append(...items){this.children.push(...items);}, appendChild(item){this.children.push(item);} };
+        made.push(node); return node;
+      }
+    },
+    Intl
+  };
+  vm.runInNewContext(selectionFunctions + "; renderDialogueSentenceSelection();", context);
+  const checkbox = made.find(node => node.tag === "input");
+  const select = made.find(node => node.tag === "select");
+  assert.equal(checkbox.checked, true);
+  assert.equal(select.value, "Chorus");
+  assert.equal(panel.style.display, "block");
 });
