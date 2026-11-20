@@ -155,7 +155,7 @@ if (dryRun) {
 const imported = { bass: [], drums: [] };
 for (const zone of allZones) {
   const source = await fetchVerified(zone.sourceRepo, zone.revision, zone.tree, zone.sourceFile);
-  const sourcePath = path.join(ROOT, ".tmp-rhythm", zone.pack, String(zone.index) + path.extname(zone.sourceFile));
+  const sourcePath = path.join(ROOT, ".tmp-rhythm", zone.pack, String(zone.index) + ".source" + path.extname(zone.sourceFile));
   const outputPath = path.join(ROOT, ".tmp-rhythm", zone.pack, String(zone.index) + ".wav");
   await mkdir(path.dirname(sourcePath), { recursive: true });
   await writeFile(sourcePath, source.bytes);
