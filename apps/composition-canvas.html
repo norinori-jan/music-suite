@@ -1614,7 +1614,7 @@ async function playSelectedComposition(){
   }
   const totalBeats=Math.max(1,...tracks.flatMap(t=>t.notes.map(n=>n.startBeat+(n.durationBeats||0))));
   const totalMs=Math.ceil((totalBeats*beatSeconds+0.4)*1000);
-  document.getElementById('composition-preview-status').textContent='開発用シンセプレビュー（実音源未準備）：'+audible.map(t=>t.name).join(' / ')+' · '+bpm+' BPM';
+  document.getElementById('composition-preview-status').textContent='開発用シンセプレビュー（実音源未準備）：全トラック再生中 '+audible.map(t=>t.name).join(' / ')+' · '+bpm+' BPM';
   window.setTimeout(()=>{noteSequenceNodes=[];const el=document.getElementById('composition-preview-status');if(el&&el.textContent.startsWith('開発用シンセプレビュー'))el.textContent='開発用シンセプレビューが完了しました。';},totalMs);
 }
 function buildCompositionTracks(melodyNotes){
