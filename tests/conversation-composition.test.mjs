@@ -16,34 +16,71 @@ function extractFunction(source, name, nextName) {
   return source.slice(start, end).trim();
 }
 
-test("actual Canvas converter preserves A/B utterances without inventing chorus text", async () => {
+test("dialogue sentence selection adds only checked sentences to chosen lyric sections", async () => {
   const html = await readFile(canvasPath, "utf8");
-  const converter = extractFunction(html, "convertDialogueToLyricDraft", "lyricSectionsRead");
-  const elements = {
-    "duet-canvas-a": { value: "" },
+  const start = html.indexOf("function getIncomingDialogueTurns()");
+  const end = html.indexOf("function renderSourceDialogue(", start);
+  assert.ok(start >= 0 && end > start);
+  const selectionFunctions = html.slice(start, end);
+  const fields = {
+    "duet-canvas-a": { value: "Existing A line" },
     "duet-canvas-b": { value: "" },
     "duet-canvas-chorus": { value: "" },
     "duet-canvas-bridge": { value: "" }
   };
+  const checks = [
+    { checked: true, dataset: { sentenceId: "0:0" } },
+    { checked: false, dataset: { sentenceId: "0:1" } },
+    { checked: true, dataset: { sentenceId: "1:0" } }
+  ];
+  const targets = { "0:0": "Chorus", "0:1": "A verse", "1:0": "Bridge" };
+  const list = {
+    querySelectorAll(selector) {
+      if (selector === 'input[type="checkbox"][data-sentence-id]:checked') return checks.filter(item => item.checked);
+      return [];
+    },
+    querySelector(selector) {
+      const id = selector.match(/data-target-id="([^"]+)"/)?.[1];
+      return { value: targets[id] };
+    }
+  };
   let writtenSections = null;
   const context = {
     window: { __incomingLyricProject: { dialogue: [
-      { speaker: "A", role: "user", text: "I missed the last train." },
-      { speaker: "B", role: "assistant", text: "That sounds frustrating." },
-      { speaker: "A", role: "user", text: "I will walk home tonight." },
+      { speaker: "A", role: "user", text: "I missed the last train. I will walk home tonight." },
       { speaker: "B", role: "assistant", text: "I can keep you company." }
     ] } },
-    document: { getElementById: id => elements[id] },
+    document: {
+      getElementById(id) { return id === "lyric-selection-list" ? list : fields[id] || (fields[id] = { value: "", textContent: "" }); }
+    },
+    lyricSectionsRead: () => [
+      { role: "A", label: "A verse", text: fields["duet-canvas-a"].value },
+      { role: "B", label: "B verse", text: fields["duet-canvas-b"].value },
+      { role: "DUET", label: "Chorus", text: fields["duet-canvas-chorus"].value },
+      { role: "DUET", label: "Bridge", text: fields["duet-canvas-bridge"].value }
+    ],
     lyricSectionsWrite: sections => { writtenSections = sections; },
-    lyricRenderPreview: () => {},
-    showToast: () => {}
+    lyricRenderPreview: () => {}
   };
-  vm.runInNewContext(converter + "; convertDialogueToLyricDraft();", context);
-  assert.equal(elements["duet-canvas-a"].value, "I missed the last train.\nI will walk home tonight.");
-  assert.equal(elements["duet-canvas-b"].value, "That sounds frustrating.\nI can keep you company.");
-  assert.equal(elements["duet-canvas-chorus"].value, "");
-  assert.equal(elements["duet-canvas-bridge"].value, "");
-  assert.deepEqual(JSON.parse(JSON.stringify(writtenSections)).map(x => x.role), ["A", "B"]);
+  vm.runInNewContext(selectionFunctions + "; result=appendSelectedDialogueSentences();", context);
+  assert.equal(context.result, true);
+  assert.equal(fields["duet-canvas-a"].value, "Existing A line");
+  assert.equal(fields["duet-canvas-chorus"].value, "I missed the last train.");
+  assert.equal(fields["duet-canvas-bridge"].value, "I can keep you company.");
+  assert.ok(writtenSections.some(section => section.label === "Chorus" && section.text === "I missed the last train."));
+  assert.equal(context.window.__incomingLyricProject.dialogue[0].text, "I missed the last train. I will walk home tonight.");
+});
+
+test("dialogue source display and lyric selection are separate and source text stays read-only", async () => {
+  const html = await readFile(canvasPath, "utf8");
+  assert.match(html, /id="source-dialogue-panel"/);
+  assert.match(html, /id="lyric-selection-panel"/);
+  assert.match(html, /英文を選んで歌詞へ取り込む/);
+  assert.match(html, /body\.textContent=String\(turn\.text\|\|''\)/);
+  assert.match(html, /function renderDialogueSentenceSelection\(\)/);
+  assert.match(html, /function appendSelectedDialogueSentences\(\)/);
+  assert.doesNotMatch(html, /会話をA\/Bの歌詞編集欄へ展開/);
+  assert.match(html, /lyricSelection:window\.__lyricSelectionState\|\|\{\}/);
 });
 
 test("Canvas project return carries stable identity and source dialogue to specialist apps", async () => {
