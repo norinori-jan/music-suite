@@ -9,21 +9,54 @@
     return Math.min(max, Math.max(min, value));
   }
 
-  function chooseSample(samples, midi, velocity) {
-    const candidates = samples.filter(sample =>
+  function guitarStringForFirstPosition(midi) {
+    if (midi >= 64) return "HighE";
+    const strings = [
+      ["LowE", 40], ["A", 45], ["D", 50], ["G", 55], ["B", 59]
+    ];
+    const match = strings.find(([, openMidi]) => midi >= openMidi && midi - openMidi <= 4);
+    return match ? match[0] : null;
+  }
+
+  function velocityLayerWeight(sample, velocity) {
+    let weight = 1;
+    if (Number.isFinite(sample.xfinLovel) && Number.isFinite(sample.xfinHivel) &&
+        velocity >= sample.xfinLovel && velocity <= sample.xfinHivel) {
+      const span = Math.max(1, sample.xfinHivel - sample.xfinLovel);
+      const position = clamp((velocity - sample.xfinLovel) / span, 0, 1);
+      weight *= Math.sin(position * Math.PI / 2);
+    }
+    if (Number.isFinite(sample.xfoutLovel) && Number.isFinite(sample.xfoutHivel) &&
+        velocity >= sample.xfoutLovel && velocity <= sample.xfoutHivel) {
+      const span = Math.max(1, sample.xfoutHivel - sample.xfoutLovel);
+      const position = clamp((velocity - sample.xfoutLovel) / span, 0, 1);
+      weight *= Math.cos(position * Math.PI / 2);
+    }
+    return weight;
+  }
+
+  function chooseSampleLayers(samples, midi, velocity, instrument) {
+    const options = instrument || {};
+    let candidates = samples.filter(sample =>
       midi >= sample.keyLow && midi <= sample.keyHigh &&
       velocity >= sample.velocityLow && velocity <= sample.velocityHigh
     );
-    if (!candidates.length) return null;
-    candidates.sort((a, b) => {
-      const aDistance = Math.abs(midi - a.rootMidi);
-      const bDistance = Math.abs(midi - b.rootMidi);
-      if (aDistance !== bDistance) return aDistance - bDistance;
-      const aCenter = (a.velocityLow + a.velocityHigh) / 2;
-      const bCenter = (b.velocityLow + b.velocityHigh) / 2;
-      return Math.abs(velocity - aCenter) - Math.abs(velocity - bCenter);
-    });
-    return candidates[0];
+    if (options.stringSelection === "guitar-first-position") {
+      const string = guitarStringForFirstPosition(midi);
+      if (!string) return [];
+      candidates = candidates.filter(sample => sample.string === string);
+    }
+    return candidates.map(sample => ({
+      sample,
+      weight: velocityLayerWeight(sample, velocity)
+    })).filter(item => item.weight > 0.0001);
+  }
+
+  function chooseSample(samples, midi, velocity, instrument) {
+    const layers = chooseSampleLayers(samples, midi, velocity, instrument);
+    if (!layers.length) return null;
+    layers.sort((a, b) => b.weight - a.weight);
+    return layers[0].sample;
   }
 
   function validateManifest(manifest) {
@@ -98,6 +131,7 @@
         }
         const encoded = await response.arrayBuffer();
         const buffer = await context.decodeAudioData(encoded.slice(0));
+        assertActive();
         const bytes = Math.max(1, buffer.length * buffer.numberOfChannels * 4);
         cache.set(url, { buffer, bytes, refs: 0, lastUsed: Date.now() });
         decodedBytes += bytes;
@@ -121,10 +155,12 @@
       for (const note of requested) {
         const midi = Number(typeof note === "object" ? note.midi : note);
         const velocity = clamp(Number(typeof note === "object" ? note.velocity : 80) || 80, 1, 127);
-        const sample = chooseSample(instrument.samples, midi, velocity);
-        if (sample) urls.add(sample.url);
+        for (const layer of chooseSampleLayers(instrument.samples, midi, velocity, instrument)) {
+          urls.add(layer.sample.url);
+        }
       }
       await Promise.all(Array.from(urls, loadBuffer));
+      evictIfNeeded();
       return { instrumentId, loaded: urls.size, decodedBytes };
     }
 
@@ -137,55 +173,72 @@
       const velocity = clamp(Number(p.velocity) || 1, 1, 127);
       const when = Math.max(context.currentTime, Number(p.when) || context.currentTime);
       const duration = Math.max(0.01, Number(p.duration) || 0.25);
-      const sample = chooseSample(instrument.samples, midi, velocity);
-      if (!sample) throw new Error("No mapped sample for " + p.instrument + " MIDI " + midi + " velocity " + velocity);
-      const cached = cache.get(sample.url);
-      if (!cached) throw new Error("Sample is not loaded: " + sample.url + ". Call preload() first.");
-      touch(cached);
-      const source = context.createBufferSource();
-      const gain = context.createGain();
-      source.buffer = cached.buffer;
-      source.playbackRate.setValueAtTime(Math.pow(2, (midi - sample.rootMidi) / 12), when);
-      const destination = p.destination || context.destination;
-      const peak = clamp(Number(p.gain) || 1, 0, 2) * (velocity / 127);
-      const attack = Math.max(0.001, Number(instrument.attack) || 0.006);
+      const layers = chooseSampleLayers(instrument.samples, midi, velocity, instrument);
+      if (!layers.length) throw new Error("No mapped sample for " + p.instrument + " MIDI " + midi + " velocity " + velocity);
+      const missing = layers.find(layer => !cache.has(layer.sample.url));
+      if (missing) throw new Error("Sample is not loaded: " + missing.sample.url + ". Call preload() first.");
+
+      const velocityGain = instrument.velocityMode === "layer" ? 1 :
+        Number.isFinite(instrument.velocityGainMinDb)
+          ? Math.pow(10, (instrument.velocityGainMinDb * (1 - velocity / 127)) / 20)
+          : velocity / 127;
       const release = Math.max(0.025, Number(p.release) || Number(instrument.release) || 0.18);
       const noteOff = when + duration;
-      gain.gain.setValueAtTime(0.0001, when);
-      gain.gain.linearRampToValueAtTime(Math.max(0.0001, peak), when + attack);
-      gain.gain.setValueAtTime(Math.max(0.0001, peak), Math.max(when + attack, noteOff));
-      gain.gain.linearRampToValueAtTime(0.0001, noteOff + release);
-      source.connect(gain);
-      gain.connect(destination);
-      const voice = { source, gain, sampleUrl: sample.url, stopped: false };
-      activeVoices.add(voice);
-      const cacheEntry = cache.get(sample.url);
-      cacheEntry.refs += 1;
-      source.onended = () => {
-        if (voice.stopped) return;
-        voice.stopped = true;
-        activeVoices.delete(voice);
-        const current = cache.get(sample.url);
-        if (current) current.refs = Math.max(0, current.refs - 1);
-        try { source.disconnect(); } catch (_) {}
-        try { gain.disconnect(); } catch (_) {}
-        evictIfNeeded();
-      };
-      source.start(when);
-      return {
-        source,
-        gain,
-        sampleUrl: sample.url,
-        stop(at) {
+      const voices = [];
+
+      for (const layer of layers) {
+        const sample = layer.sample;
+        const cached = cache.get(sample.url);
+        touch(cached);
+        const source = context.createBufferSource();
+        const gain = context.createGain();
+        source.buffer = cached.buffer;
+        source.playbackRate.setValueAtTime(Math.pow(2, (midi - sample.rootMidi) / 12), when);
+        const destination = p.destination || context.destination;
+        const peak = clamp(Number(p.gain) || 1, 0, 2) * velocityGain * layer.weight;
+        const attack = Math.max(0.001, Number(instrument.attack) || 0.006);
+        gain.gain.setValueAtTime(0.0001, when);
+        gain.gain.linearRampToValueAtTime(Math.max(0.0001, peak), when + attack);
+        gain.gain.setValueAtTime(Math.max(0.0001, peak), Math.max(when + attack, noteOff));
+        gain.gain.linearRampToValueAtTime(0.0001, noteOff + release);
+        source.connect(gain);
+        gain.connect(destination);
+        const voice = { source, gain, sampleUrl: sample.url, stopped: false };
+        activeVoices.add(voice);
+        cached.refs += 1;
+        source.onended = () => {
           if (voice.stopped) return;
-          const stopAt = Math.max(context.currentTime, Number(at) || context.currentTime);
+          voice.stopped = true;
+          activeVoices.delete(voice);
+          const current = cache.get(sample.url);
+          if (current) current.refs = Math.max(0, current.refs - 1);
+          try { source.disconnect(); } catch (_) {}
+          try { gain.disconnect(); } catch (_) {}
+          evictIfNeeded();
+        };
+        source.start(when);
+        voices.push(voice);
+      }
+
+      function stop(at) {
+        const stopAt = Math.max(context.currentTime, Number(at) || context.currentTime);
+        for (const voice of voices) {
+          if (voice.stopped) continue;
           try {
-            gain.gain.cancelScheduledValues(stopAt);
-            gain.gain.setValueAtTime(Math.max(0.0001, gain.gain.value), stopAt);
-            gain.gain.linearRampToValueAtTime(0.0001, stopAt + 0.012);
-            source.stop(stopAt + 0.02);
+            voice.gain.gain.cancelScheduledValues(stopAt);
+            voice.gain.gain.setValueAtTime(Math.max(0.0001, voice.gain.gain.value), stopAt);
+            voice.gain.gain.linearRampToValueAtTime(0.0001, stopAt + 0.012);
+            voice.source.stop(stopAt + 0.02);
           } catch (_) {}
         }
+      }
+
+      return {
+        source: voices[0].source,
+        gain: voices[0].gain,
+        sampleUrl: voices[0].sampleUrl,
+        sampleUrls: voices.map(voice => voice.sampleUrl),
+        stop
       };
     }
 
@@ -223,5 +276,5 @@
     return Object.freeze({ preload, scheduleNote, stopAll, getStats, dispose });
   }
 
-  return Object.freeze({ createSampleAudioEngine, chooseSample, validateManifest });
+  return Object.freeze({ createSampleAudioEngine, chooseSample, chooseSampleLayers, validateManifest });
 });
