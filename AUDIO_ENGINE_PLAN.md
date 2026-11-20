@@ -216,3 +216,27 @@ The OGG files are official web-optimized previews; they are not the same source 
 - Added a CI regression that checks CC0 license text, manifest mapping counts, local file presence, and every sample's SHA-256 against the copied upstream checksum file. On commit `2a1597ea5fabb4e132ce8431c08012467302c085`, all **97 tests passed**.
 - Official release metadata confirms the full-quality WAV masters are 24-bit / 48 kHz; official OGG files are web-preview encodings. A dedicated comparison workflow downloads the matching WAV releases and compares representative piano velocity layers plus nylon-guitar finger/pick layers after decoding both formats to common 48 kHz mono PCM. This technical comparison is not a substitute for listening to complete musical arrangements.
 - Still pending: evaluate the WAV/OGG report, choose the delivery format without compromising audible quality, integrate licensed strings/bass/drums, and test real browser playback/offline/iPhone performance.
+
+
+## OGG versus WAV technical comparison (2026-11-21)
+
+Official Meta release assets identify the WAV masters as 24-bit / 48 kHz and describe OGG Vorbis as the web-preview format. The official piano WAV ZIP is 752,311,261 bytes; the nylon-guitar WAV ZIP is 423,127,309 bytes. The corresponding official OGG ZIPs are 48,182,366 and 16,483,193 bytes.
+
+A GitHub Actions comparison decoded seven matching WAV/OGG sample pairs to 48 kHz mono float PCM and compared equal-length frames without loudness normalization or time shifting:
+
+| Sample group | OGG/WAV level difference | Correlation | Gain-matched SNR |
+|---|---:|---:|---:|
+| Piano C4, four velocity layers | -0.003 to +0.016 dB | 0.99908–0.99985 | 27.33–35.23 dB |
+| Nylon guitar E2, finger/pick layers | about -3.0 dB | 0.99922–0.99956 | 28.04–30.53 dB |
+
+The guitar OGG previews are consistently about 3 dB quieter than the WAV masters in the tested E2 layers. The initial unadjusted SNR (~10.6 dB) includes this level offset; after mathematically matching the OGG gain to the WAV, the residual SNR is about 28–31 dB. This is a derived signal comparison, not a subjective listening result.
+
+**Provisional decision:** OGG remains the current web-delivery candidate because the measured sample correlation is high and the payload is about 18 times smaller than the full WAV packages. It is not yet approved as the final sound-quality choice: compare complete A/B/C rendered passages, assess transient/decay perception, and decide whether the nylon-guitar level calibration is needed. Keep the 24-bit WAV source as the reference master.
+
+## iPhone/PWA readiness audit
+
+- The current root `index.html` has Apple mobile-web-app metadata but does not contain a web app manifest link or service-worker registration.
+- No root service worker or web app manifest exists in this branch at this checkpoint.
+- Therefore, offline PWA behavior and audio asset caching are **not implemented or tested** yet.
+- OGG Vorbis support is available in iOS Safari 18.4 and later; older iOS Safari versions have partial or no support. The target device's exact OS and Web Audio `decodeAudioData` behavior must be verified before relying on OGG alone.
+- Next: add a minimal app manifest and service worker with runtime caching for manifests and only the samples actually loaded. Do not precache all 700 files at install time.
