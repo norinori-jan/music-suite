@@ -7,6 +7,9 @@
 <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
 <meta name="apple-mobile-web-app-title" content="music-suite">
 <title>music-suite - Music Analysis Edition</title>
+<link rel="manifest" href="./manifest.webmanifest">
+<link rel="icon" type="image/svg+xml" href="./icon.svg">
+<meta name="theme-color" content="#0a0a0d">
 <style>
 :root{
   --bg:#0a0a0d;--bg2:#121217;--bg3:#1a1a22;--bg4:#22222e;
@@ -1292,6 +1295,14 @@ async function msSyncNow(){var c=msCfg();if(!c)return{ok:false,msg:'同期の設
     localStorage.setItem(MS_LAST,String(Date.now()));return{ok:true,works:m.works.length,projects:m.projects.length}}
   catch(e){return{ok:false,msg:String(e&&e.message||e)}}finally{msBusy=false}}
 function msSyncSoon(){if(!msCfg())return;clearTimeout(msTimer);msTimer=setTimeout(function(){msSyncNow().then(function(r){if(typeof msAfterSync==='function')msAfterSync(r)})},1500)}
+</script>
+<script>
+if ("serviceWorker" in navigator && location.protocol === "https:") {
+  window.addEventListener("load", () => {
+    navigator.serviceWorker.register("./sw.js", { scope: "./" })
+      .catch(error => console.warn("music-suite offline cache registration failed:", error));
+  });
+}
 </script>
 </body>
 </html>
