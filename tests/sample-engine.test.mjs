@@ -212,3 +212,77 @@ test("imported CC0 violin and cello WAV zones match every pinned manifest SHA-25
     }
   }
 });
+
+test("round-robin sample groups rotate one recorded take per hit instead of layering every take", async () => {
+  const context = makeContext();
+  const network = fakeFetch();
+  const kit = {
+    instruments: {
+      drums: {
+        noteOffMode: "one-shot",
+        samples: [1, 2, 3, 4].map(index => ({
+          url: "/audio/drums/kick-rr" + index + ".wav",
+          rootMidi: 36, keyLow: 36, keyHigh: 36,
+          velocityLow: 1, velocityHigh: 127,
+          roundRobinGroup: "kick-main", roundRobinIndex: index
+        }))
+      }
+    }
+  };
+  const engine = createSampleAudioEngine({ audioContext: context, manifest: kit, fetchImpl: network.fetch });
+  await engine.preload("drums", [{ midi: 36, velocity: 90 }]);
+  const first = engine.scheduleNote({ instrument: "drums", midi: 36, velocity: 90, when: 10, gain: 0.5 });
+  const second = engine.scheduleNote({ instrument: "drums", midi: 36, velocity: 90, when: 10.5, gain: 0.5 });
+  const third = engine.scheduleNote({ instrument: "drums", midi: 36, velocity: 90, when: 11, gain: 0.5 });
+  assert.deepEqual(first.sampleUrls, ["/audio/drums/kick-rr1.wav"]);
+  assert.deepEqual(second.sampleUrls, ["/audio/drums/kick-rr2.wav"]);
+  assert.deepEqual(third.sampleUrls, ["/audio/drums/kick-rr3.wav"]);
+  assert.equal(network.calls.length, 4);
+});
+
+test("imported CC0 Swagbass and Big Rusty Drum WAV assets match pinned SHA-256 and PCM format", async () => {
+  const root = path.join(path.dirname(fileURLToPath(import.meta.url)), "..", "audio");
+  for (const [id, minimumZones] of [["meta-swagbass", 51], ["meta-big-rusty-drums", 80]]) {
+    const directory = path.join(root, "assets", id);
+    const source = JSON.parse(await readFile(path.join(directory, "SOURCE-MANIFEST.json"), "utf8"));
+    const revision = JSON.parse(await readFile(path.join(directory, "SOURCE-REVISION.json"), "utf8"));
+    const manifest = JSON.parse(await readFile(path.join(root, id + ".manifest.json"), "utf8"));
+    const instrument = manifest.instruments?.[id];
+    assert.equal(source.license, "CC0-1.0");
+    assert.equal(revision.license, "CC0-1.0");
+    assert.equal(revision.sampleRate, 48000);
+    assert.equal(revision.channels, 1);
+    assert.equal(revision.bitsPerSample, 24);
+    assert.equal(revision.sourceFilesSHA256Verified, true);
+    assert.equal(revision.sourceGitBlobSHA1Verified, true);
+    assert.equal(revision.convertedFilesSHA256Recorded, true);
+    assert.ok(source.zones.length >= minimumZones);
+    assert.equal(instrument.samples.length, source.zones.length);
+    const license = await readFile(path.join(directory, "LICENSE"), "utf8");
+    assert.match(license.slice(0, 500), /CC0 1\\.0 Universal/);
+    const zones = new Map(source.zones.map(zone => [zone.file, zone]));
+    const roundRobins = new Map();
+    for (const sample of instrument.samples) {
+      const relative = sample.url.replace("../audio/assets/" + id + "/", "");
+      const zone = zones.get(relative);
+      assert.ok(zone, "missing imported zone " + id + "/" + relative);
+      const bytes = await readFile(path.join(directory, relative));
+      assert.equal(bytes.length, zone.sizeBytes);
+      assert.equal(createHash("sha256").update(bytes).digest("hex"), zone.sha256);
+      assert.equal(bytes.toString("ascii", 0, 4), "RIFF");
+      assert.equal(bytes.toString("ascii", 8, 12), "WAVE");
+      assert.equal(bytes.readUInt16LE(20), 1, "must be PCM");
+      assert.equal(bytes.readUInt16LE(22), 1, "must be mono");
+      assert.equal(bytes.readUInt32LE(24), 48000, "must be 48 kHz");
+      assert.equal(bytes.readUInt16LE(34), 24, "must be 24-bit");
+      if (sample.roundRobinGroup) {
+        if (!roundRobins.has(sample.roundRobinGroup)) roundRobins.set(sample.roundRobinGroup, new Set());
+        roundRobins.get(sample.roundRobinGroup).add(sample.roundRobinIndex);
+      }
+    }
+    if (id === "meta-big-rusty-drums") {
+      assert.ok(roundRobins.size > 0);
+      assert.ok([...roundRobins.values()].every(indices => indices.size === 4), "each drum velocity zone must contain four round-robin takes");
+    }
+  }
+});
