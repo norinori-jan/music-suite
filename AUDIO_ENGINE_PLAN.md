@@ -206,3 +206,13 @@ The OGG files are official web-optimized previews; they are not the same source 
 - Added regression coverage for the A/B/C sampled instrument profiles and the sampled playback route.
 - GitHub Actions run for commit `ff1e3a308370dda3d3a491fd192452336209ba95` completed successfully: **96 tests passed, 0 failed**. The CI import step remains a dry run and verified 352 piano samples / 352 regions and 348 nylon-guitar samples / 960 regions. No sample audio files were downloaded or committed by that run.
 - Remaining gates: run the checksum-verifying asset import, compare OGG against the 24-bit / 48 kHz WAV sources for actual rendered passages, integrate licensed strings/bass/drums, then validate on iPhone Safari/PWA and offline cache.
+
+
+## Verified asset import and format-comparison checkpoint (2026-11-21)
+
+- Successfully imported 352 piano OGG files and 348 nylon-guitar OGG files from the pinned CC0 source revision `514c926efecdb3c7812bf00eedf8e5c8d61dd681`.
+- The import workflow checked the upstream SHA-256 for every file before writing it to the feature branch. It committed the generated manifests plus original LICENSE, source README, SFZ and checksum files. No asset files were added to `main`.
+- Total OGG payload: 65,023,677 bytes (about 62.0 MiB).
+- Added a CI regression that checks CC0 license text, manifest mapping counts, local file presence, and every sample's SHA-256 against the copied upstream checksum file. On commit `2a1597ea5fabb4e132ce8431c08012467302c085`, all **97 tests passed**.
+- Official release metadata confirms the full-quality WAV masters are 24-bit / 48 kHz; official OGG files are web-preview encodings. A dedicated comparison workflow downloads the matching WAV releases and compares representative piano velocity layers plus nylon-guitar finger/pick layers after decoding both formats to common 48 kHz mono PCM. This technical comparison is not a substitute for listening to complete musical arrangements.
+- Still pending: evaluate the WAV/OGG report, choose the delivery format without compromising audible quality, integrate licensed strings/bass/drums, and test real browser playback/offline/iPhone performance.
