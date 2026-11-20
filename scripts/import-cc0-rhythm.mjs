@@ -96,7 +96,7 @@ function parseDrumZones(id, midi, sfzText) {
     const velocityLow = field(group, "lovel", 1), velocityHigh = field(group, "hivel", 127);
     const regions = group.split(/<region>/i).slice(1);
     for (const region of regions) {
-      const match = region.match(/^\\s*sample=\\.\\.\\/Samples\\/([^\\r\\n]+)/m);
+      const match = region.match(/^\s*sample=\.\.\/Samples\/([^\r\n]+)/m);
       if (!match) continue;
       const sourceFile = "Samples/" + match[1].replace(/\\/g, "/");
       if (!/_rr[1-4]\.flac$/i.test(sourceFile)) continue;
