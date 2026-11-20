@@ -6,6 +6,7 @@ on:
       - feature/three-melody-track-foundation
     paths:
       - "audio/IMPORT_SAMPLES_NOW.json"
+      - "audio/IMPORT_SAMPLES_RETRY.json"
 
 permissions:
   contents: write
