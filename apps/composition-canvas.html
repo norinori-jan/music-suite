@@ -1512,7 +1512,7 @@ async function playSelectedComposition(){
   if(bass)bass.notes.forEach(n=>playTone(n.midi,start+n.startBeat*beatSeconds,n.durationBeats*beatSeconds*0.9,(profile.bassGain||0.09)*(n.velocity||1),'sawtooth'));
   const drums=audible.find(t=>t.id==='drums');
   if(drums){
-    const noiseBuffer=ctx.createBuffer(1,Math.floor(ctx.sampleRate*0.12),ctx.sampleRate),data=noiseBuffer.getChannelData(0);
+    const noiseBuffer=ctx.createBuffer(1,Math.floor(ctx.sampleRate*0.5),ctx.sampleRate),data=noiseBuffer.getChannelData(0);
     for(let i=0;i<data.length;i++)data[i]=(Math.random()*2-1);
     drums.notes.forEach(hit=>{
       const at=start+hit.startBeat*beatSeconds,source=ctx.createBufferSource(),gain=ctx.createGain(),filter=ctx.createBiquadFilter();source.buffer=noiseBuffer;
@@ -1532,7 +1532,7 @@ function buildCompositionTracks(melodyNotes){
   const arrangement=window.__compositionArrangement;if(!arrangement)return [];
   const notes=Array.isArray(melodyNotes)?melodyNotes:[];
   const totalBeats=Math.max(4,...notes.map(n=>n.startBeat+n.durationBeats));
-  const melodyTrack={id:'melody',name:'MELODY · 主旋律',kind:'pitched',muted:false,solo:false,notes:notes.map(n=>({id:n.id,note:n.note,startBeat:n.startBeat,durationBeats:n.durationBeats,word:n.word,lyric:n.lyric,role:n.role,section:n.section}))};
+  const melodyTrack={id:'melody',name:'MELODY · 主旋律',kind:'pitched',muted:false,solo:false,notes:notes.map(n=>({id:n.id,note:n.note,startBeat:n.startBeat,durationBeats:n.durationBeats,word:n.word,lyric:n.lyric,role:n.role,section:n.section,velocity:n.velocity}))};
   const chordNotes=[],bassNotes=[];
   const profile=(arrangement.arrangementVariants||[]).find(item=>item.id===arrangement.selectedArrangement)||{};
   (arrangement.chordSections||[]).forEach(section=>{
