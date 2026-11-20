@@ -1,0 +1,20 @@
+{
+  "id": "./",
+  "name": "music-suite",
+  "short_name": "music-suite",
+  "description": "作曲・編曲・五線譜・トラック編集",
+  "start_url": "./",
+  "scope": "./",
+  "display": "standalone",
+  "orientation": "any",
+  "background_color": "#0a0a0d",
+  "theme_color": "#0a0a0d",
+  "icons": [
+    {
+      "src": "./icon.svg",
+      "sizes": "any",
+      "type": "image/svg+xml",
+      "purpose": "any"
+    }
+  ]
+}
