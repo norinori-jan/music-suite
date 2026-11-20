@@ -170,3 +170,24 @@ No sample asset may be committed, hosted, bundled, transformed, or redistributed
    - A candidate license check is not a final legal opinion. Record exact notices and retain the source license files in the project.
 
 **Hard stop:** if an asset's redistribution rights are uncertain, do not import it. Sound quality targets never override this rule.
+
+
+## Sample-engine implementation checkpoint (2026-11-20)
+
+- Added `audio/sample-engine.js`: browser-native sample loader/player, explicit map validation, note/velocity selection, equal-power velocity-layer crossfades, first-position nylon-guitar string selection, guitar technique keyswitch selection, shared AudioContext scheduling, request deduplication, decoded-buffer cache, stop/dispose handling, and explicit missing-sample errors.
+- Added `scripts/import-meta-open-sound.mjs`: immutable upstream revision, per-file SHA-256 verification, collection-level CC0 check, SFZ-derived mappings, and full piano/nylon OGG import. It also supports `--dry-run`.
+- Added automated tests for velocity mapping/crossfades, guitar string selection, request deduplication, sample scheduling/transposition, missing assets, and disposal.
+- CI dry-run verified 352 piano samples / 352 SFZ regions and 348 nylon-guitar sample files / 960 SFZ regions. All 94 regression tests passed at the latest verified run.
+- The app now loads the sampler module, but it is **not yet the active composition playback backend**. The current oscillator/noise playback remains in place until local assets and instrument manifests are imported and integration is tested.
+
+### Audio fidelity decision is still open
+
+The official Meta Open Sound release publishes both web OGG and source WAV packages:
+
+| Collection | OGG package | 24-bit / 48 kHz WAV package |
+| --- | ---: | ---: |
+| Meta Piano | 48.2 MB | 752.3 MB |
+| Meta Nylon Guitar | 15.7 MB | 403.5 MB |
+| Total | 63.9 MB | 1,155.8 MB |
+
+The OGG files are official web-optimized previews; they are not the same source fidelity as the 24-bit / 48 kHz WAVs. Do not choose OGG as the final production format merely because it is smaller. Compare the actual rendered passages, transient quality, tails, CPU, decode memory, and iPhone playback before making the final decision. If OGG does not meet the musical quality target, evaluate lossless/high-quality delivery via separate asset hosting and lazy streaming rather than silently reducing sample quality or sample coverage.
