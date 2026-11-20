@@ -82,9 +82,9 @@ function parseBassZones(sfzText) {
     if (![rootMidi, keyLow, keyHigh].every(Number.isFinite)) continue;
     const regionText = group.split(/<region>/i).slice(1);
     for (const region of regionText) {
-      const match = region.match(/^\\s*sample=notes[\\\\/]([^\\r\\n]+)/m);
-      if (!match || !/_rr1\\.wav$/i.test(match[1])) continue;
-      zones.push({ sourceFile: "notes/" + match[1].replace(/\\\\/g, "/"), rootMidi, keyLow, keyHigh, velocityLow, velocityHigh, velocityMode: "sfz" });
+      const match = region.match(/^\s*sample=notes(?:\\|\/)([^\r\n]+)/m);
+      if (!match || !/_rr1\.wav$/i.test(match[1])) continue;
+      zones.push({ sourceFile: "notes/" + match[1].replace(/\\/g, "/"), rootMidi, keyLow, keyHigh, velocityLow, velocityHigh, velocityMode: "sfz" });
     }
   }
   const unique = new Map(zones.map(zone => [zone.sourceFile, zone]));
@@ -98,9 +98,9 @@ function parseDrumZones(id, midi, sfzText) {
     for (const region of regions) {
       const match = region.match(/^\\s*sample=\\.\\.\\/Samples\\/([^\\r\\n]+)/m);
       if (!match) continue;
-      const sourceFile = "Samples/" + match[1].replace(/\\\\/g, "/");
-      if (!/_rr[1-4]\\.flac$/i.test(sourceFile)) continue;
-      const rr = Number((sourceFile.match(/_rr([1-4])\\.flac$/i) || [])[1]);
+      const sourceFile = "Samples/" + match[1].replace(/\\/g, "/");
+      if (!/_rr[1-4]\.flac$/i.test(sourceFile)) continue;
+      const rr = Number((sourceFile.match(/_rr([1-4])\.flac$/i) || [])[1]);
       const filename = path.posix.basename(sourceFile);
       zones.push({ instrument: id, midi, rootMidi: midi, keyLow: midi, keyHigh: midi, velocityLow, velocityHigh, roundRobinGroup: id + "-" + velocityLow + "-" + velocityHigh, roundRobinIndex: rr, sourceFile });
     }
@@ -132,8 +132,8 @@ for (const map of DRUM_MAPS) {
 if (drumZones.length < 80) throw new Error("Expected multi-velocity, four-round-robin drum maps; found only " + drumZones.length + " zones");
 
 const allZones = [
-  ...bassZones.map((zone, index) => ({ ...zone, pack: "bass", sourceRepo: BASS_REPO, revision: BASS_REV, tree: bassTree, outputFile: "samples/bass/" + path.posix.basename(zone.sourceFile).replace(/_rr1\\.wav$/i, ".wav"), index })),
-  ...drumZones.map((zone, index) => ({ ...zone, pack: "drums", sourceRepo: DRUM_REPO, revision: DRUM_REV, tree: drumTree, outputFile: "samples/drums/" + zone.instrument + "/" + path.posix.basename(zone.sourceFile).replace(/_rr[1-4]\\.flac$/i, "_rr" + zone.roundRobinIndex + ".wav"), index }))
+  ...bassZones.map((zone, index) => ({ ...zone, pack: "bass", sourceRepo: BASS_REPO, revision: BASS_REV, tree: bassTree, outputFile: "samples/bass/" + path.posix.basename(zone.sourceFile).replace(/_rr1\.wav$/i, ".wav"), index })),
+  ...drumZones.map((zone, index) => ({ ...zone, pack: "drums", sourceRepo: DRUM_REPO, revision: DRUM_REV, tree: drumTree, outputFile: "samples/drums/" + zone.instrument + "/" + path.posix.basename(zone.sourceFile).replace(/_rr[1-4]\.flac$/i, "_rr" + zone.roundRobinIndex + ".wav"), index }))
 ];
 const totals = { bass: 0, drums: 0 };
 for (const zone of allZones) {
