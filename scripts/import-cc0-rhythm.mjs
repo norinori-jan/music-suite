@@ -44,12 +44,13 @@ function inspectWav(buffer, label) {
   while (offset + 8 <= buffer.length) {
     const id = buffer.toString("ascii", offset, offset + 4), size = buffer.readUInt32LE(offset + 4);
     if (id === "fmt ") {
-      fmt = { format: buffer.readUInt16LE(offset + 8), channels: buffer.readUInt16LE(offset + 10), sampleRate: buffer.readUInt32LE(offset + 12), bitsPerSample: buffer.readUInt16LE(offset + 22) };
+      fmt = { format: buffer.readUInt16LE(offset + 8), channels: buffer.readUInt16LE(offset + 10), sampleRate: buffer.readUInt32LE(offset + 12), bitsPerSample: buffer.readUInt16LE(offset + 22), cbSize: size >= 18 ? buffer.readUInt16LE(offset + 16) : 0, validBits: size >= 24 ? buffer.readUInt16LE(offset + 18) : 0, subFormat: size >= 40 ? buffer.readUInt32LE(offset + 24) : 0, subFormatTail: size >= 40 ? buffer.subarray(offset + 28, offset + 40) : null };
       break;
     }
     offset += 8 + size + (size % 2);
   }
-  if (!fmt || fmt.format !== 1 || fmt.channels !== 1 || fmt.sampleRate !== 48000 || fmt.bitsPerSample !== 24) {
+  const extensiblePcm = fmt && fmt.format === 65534 && fmt.cbSize >= 22 && fmt.validBits === 24 && fmt.subFormat === 1 && fmt.subFormatTail.equals(Buffer.from([0, 0, 16, 0, 128, 0, 0, 170, 0, 56, 155, 113]));
+  if (!fmt || (fmt.format !== 1 && !extensiblePcm) || fmt.channels !== 1 || fmt.sampleRate !== 48000 || fmt.bitsPerSample !== 24) {
     throw new Error(label + " unexpected WAV format: " + JSON.stringify(fmt));
   }
   return fmt;
