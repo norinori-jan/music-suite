@@ -161,7 +161,7 @@ test("imported CC0 piano and nylon guitar assets match every upstream SHA-256", 
     const license = await readFile(path.join(root, "assets", id, "LICENSE"), "utf8");
     assert.match(license.slice(0, 500), /CC0 1\.0 Universal/);
     const sumsText = await readFile(path.join(root, "assets", id, "SOURCE-SHA256SUMS"), "utf8");
-    const sums = new Map([...sumsText.matchAll(/^([a-f0-9]{64})\\s+\\*?(.+)$/gim)].map(match => [match[2].trim(), match[1].toLowerCase()]));
+    const sums = new Map([...sumsText.matchAll(/^([a-f0-9]{64})\s+\*?(.+)$/gim)].map(match => [match[2].trim(), match[1].toLowerCase()]));
     const files = new Set(instrument.samples.map(sample => sample.url.replace("../audio/assets/" + id + "/", "")));
     assert.equal(files.size, expectedSamples);
     for (const relative of files) {
