@@ -236,9 +236,10 @@ The guitar OGG previews are consistently about 3 dB quieter than the WAV masters
 ## iPhone/PWA readiness audit
 
 - Added `manifest.webmanifest`, PNG/SVG install icons, and root-page service-worker registration.
-- Added a service worker that pre-caches only the app shell and sampler module. Instrument manifests use network-first with cached fallback; OGG sample files use cache-first after their first successful online fetch.
+- Added a service worker that pre-caches only the app shell and sampler module. Instrument manifests use network-first with cached fallback; sample files under `audio/assets/` use cache-first after their first successful online fetch, including the 24-bit string WAVs.
 - Cache cleanup is limited to cache names prefixed `music-suite-`, so unrelated PWA caches on the shared `norinori-jan.github.io` origin are preserved.
-- Added CI checks for manifest registration, iPhone home-screen icon declaration, runtime-only audio caching, and cross-app cache preservation. The latest regression run completed with **99 tests passed, 0 failed**.
+- Added CI checks for manifest registration, iPhone home-screen icon declaration, runtime-only audio caching, cross-app cache preservation, and imported sample integrity. The latest regression run completed with **100 tests passed, 0 failed**.
+- Imported CC0-1.0 VSCO 2 CE violin-section (30 zones) and cello-section (26 zones) samples as mono PCM 24-bit / 48 kHz WAV. The pinned source manifest SHA-256 and byte-size values are checked by CI.
 - This is implementation and static CI coverage only. Real iPhone installation, first-play download, subsequent offline playback, storage quota behavior, and Safari audio decoding are still **not verified on a physical device**.
 - OGG Vorbis support is available in iOS Safari 18.4 and later; older iOS Safari versions have partial or no support. The target device's exact OS and Web Audio `decodeAudioData` behavior must be verified before relying on OGG alone.
-- Next: add a minimal app manifest and service worker with runtime caching for manifests and only the samples actually loaded. Do not precache all 700 files at install time.
+- Current next steps: add dedicated recorded bass and drum sample packs after license verification; improve the string articulations and sample mapping; then render identical lyric/melody passages through A/B/C and compare their complete sound. Keep all sample assets runtime-cached rather than precaching the entire library.
