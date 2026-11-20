@@ -1344,7 +1344,7 @@ function generateLyricMusicSketch(){
     return {...profile,chordSections:profileChords,notesByMelody};
   });
   const initialProfile=arrangementVariants[0];
-  window.__compositionArrangement={key,mood,progression,chordSections:initialProfile.chordSections,chords:initialProfile.chordSections.flatMap(section=>section.progression),melodyVariants:variants,arrangementVariants,selectedArrangement:'warm',selectedMelody:initialProfile.melodyId,selectedRhythm:initialProfile.rhythmId,rhythmStyles,bpm:Math.max(40,Math.min(220,(Number(document.getElementById('note-sequence-bpm')?.value)||96)+initialProfile.bpmOffset)),method:'three-style-full-arrangement-v1',warning:'英語の音節数は概算です。3案は音楽的な方向性を変えた作曲スケッチです。実際の強勢・歌いやすさ・音色は試聴して調整してください。'};
+  window.__compositionArrangement={key,mood,progression,chordSections:initialProfile.chordSections,chords:initialProfile.chordSections.flatMap(section=>section.progression),melodyVariants:variants,arrangementVariants,selectedArrangement:'warm',selectedMelody:initialProfile.melodyId,selectedRhythm:initialProfile.rhythmId,rhythmStyles,baseBpm:Math.max(40,Math.min(220,Number(document.getElementById('note-sequence-bpm')?.value)||96)),bpm:Math.max(40,Math.min(220,(Number(document.getElementById('note-sequence-bpm')?.value)||96)+initialProfile.bpmOffset)),method:'three-style-full-arrangement-v1',warning:'英語の音節数は概算です。3案は音楽的な方向性を変えた作曲スケッチです。実際の強勢・歌いやすさ・音色は試聴して調整してください。'};
   window.__lyricMusicSketch={...window.__compositionArrangement,melody:[]};
   renderCompositionArrangement();
   applySelectedComposition();
@@ -1366,7 +1366,7 @@ function renderCompositionArrangement(){
       card.style.cssText='border:1px solid '+(active?'#56d6cf':'#53636b')+';border-radius:9px;padding:11px;background:'+(active?'#1c4148':'#172f36');
       const title=document.createElement('strong');title.textContent=profile.name;
       const desc=document.createElement('p');desc.style.cssText='font-size:12px;line-height:1.5;min-height:52px';desc.textContent=profile.description;
-      const detail=document.createElement('small');detail.textContent='コード：'+profile.progression+' ／ リズム：'+profile.rhythmId+' ／ '+(arrangement.bpm+profile.bpmOffset)+' BPM';
+      const detail=document.createElement('small');detail.textContent='コード：'+profile.progression+' ／ リズム：'+profile.rhythmId+' ／ '+(arrangement.baseBpm+profile.bpmOffset)+' BPM';
       const button=document.createElement('button');button.type='button';button.textContent=active?'✓ このアレンジを選択中':'このアレンジを選ぶ';
       button.addEventListener('click',()=>selectCompositionArrangement(profile.id));
       card.append(title,desc,detail,document.createElement('br'),button);styles.appendChild(card);
@@ -1401,7 +1401,7 @@ function selectCompositionArrangement(profileId){
   arrangement.selectedRhythm=profile.rhythmId;
   arrangement.chordSections=profile.chordSections;
   arrangement.chords=profile.chordSections.flatMap(section=>section.progression);
-  arrangement.bpm=Math.max(40,Math.min(220,(Number(document.getElementById('note-sequence-bpm')?.value)||96)+profile.bpmOffset));
+  arrangement.bpm=Math.max(40,Math.min(220,(Number(arrangement.baseBpm)||Number(document.getElementById('note-sequence-bpm')?.value)||96)+profile.bpmOffset));
   renderGeneratedChordSections(arrangement.chordSections);
   const chordText=arrangement.chords.map(item=>item.chord).join(', ');
   const chordInput=document.getElementById('chord-progression-input');
