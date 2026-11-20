@@ -1316,9 +1316,9 @@ function generateLyricMusicSketch(){
     return {...contour,notes};
   });
   const styleProfiles=[
-    {id:'warm',name:'A案：温かく親しみやすい',description:'柔らかなコード、分散和音、丸いベース。自然に口ずさめる温度感',progression:'warm',rhythmVariant:0,melodyId:'hook',rhythmId:'straight',bpmOffset:-4,chordMode:'arpeggio',bassMode:'root-fifth',drumMode:'soft-pop',melodyInstrument:'meta-nylon-guitar',chordInstrument:'meta-piano',bassInstrument:'meta-piano',melodyArticulation:'finger',melodyRelease:0.28,chordRelease:1.15,bassRelease:0.22,velocityScale:0.78,melodyWave:'triangle',chordWave:'sine',melodyGain:0.115,chordGain:0.026,bassGain:0.085,drumGain:0.72,dynamics:'gentle'},
-    {id:'dramatic',name:'B案：壮大でドラマチック',description:'広がるコード、力強い低音、強い拍とサビの高揚。大きな景色を描く',progression:'rock',rhythmVariant:2,melodyId:'rise',rhythmId:'syncopated',bpmOffset:5,chordMode:'wide-pad',bassMode:'pulse',drumMode:'anthem',melodyInstrument:'meta-piano',chordInstrument:'meta-violin-section',bassInstrument:'meta-piano',melodyArticulation:'bright',melodyRelease:0.38,chordRelease:1.7,bassRelease:0.3,velocityScale:1,melodyWave:'sawtooth',chordWave:'triangle',melodyGain:0.13,chordGain:0.052,bassGain:0.12,drumGain:1,dynamics:'rising'},
-    {id:'bittersweet',name:'C案：切なく余韻のある',description:'短調寄りの進行、間を生かした低音と控えめな打楽器。静かな余韻を残す',progression:'sad',rhythmVariant:4,melodyId:'arch',rhythmId:'ballad',bpmOffset:-10,chordMode:'soft-pad',bassMode:'sustain',drumMode:'sparse',melodyInstrument:'meta-piano',chordInstrument:'meta-cello-section',bassInstrument:'meta-piano',melodyArticulation:'soft',melodyRelease:0.62,chordRelease:2.8,bassRelease:0.75,velocityScale:0.62,melodyWave:'triangle',chordWave:'sine',melodyGain:0.095,chordGain:0.038,bassGain:0.07,drumGain:0.48,dynamics:'falling'}
+    {id:'warm',name:'A案：温かく親しみやすい',description:'柔らかなコード、分散和音、丸いベース。自然に口ずさめる温度感',progression:'warm',rhythmVariant:0,melodyId:'hook',rhythmId:'straight',bpmOffset:-4,chordMode:'arpeggio',bassMode:'root-fifth',drumMode:'soft-pop',drumInstrument:'meta-big-rusty-drums',melodyInstrument:'meta-nylon-guitar',chordInstrument:'meta-piano',bassInstrument:'meta-swagbass',melodyArticulation:'finger',melodyRelease:0.28,chordRelease:1.15,bassRelease:0.22,velocityScale:0.78,melodyWave:'triangle',chordWave:'sine',melodyGain:0.115,chordGain:0.026,bassGain:0.085,drumGain:0.72,dynamics:'gentle'},
+    {id:'dramatic',name:'B案：壮大でドラマチック',description:'広がるコード、力強い低音、強い拍とサビの高揚。大きな景色を描く',progression:'rock',rhythmVariant:2,melodyId:'rise',rhythmId:'syncopated',bpmOffset:5,chordMode:'wide-pad',bassMode:'pulse',drumMode:'anthem',drumInstrument:'meta-big-rusty-drums',melodyInstrument:'meta-piano',chordInstrument:'meta-violin-section',bassInstrument:'meta-piano',melodyArticulation:'bright',melodyRelease:0.38,chordRelease:1.7,bassRelease:0.3,velocityScale:1,melodyWave:'sawtooth',chordWave:'triangle',melodyGain:0.13,chordGain:0.052,bassGain:0.12,drumGain:1,dynamics:'rising'},
+    {id:'bittersweet',name:'C案：切なく余韻のある',description:'短調寄りの進行、間を生かした低音と控えめな打楽器。静かな余韻を残す',progression:'sad',rhythmVariant:4,melodyId:'arch',rhythmId:'ballad',bpmOffset:-10,chordMode:'soft-pad',bassMode:'sustain',drumMode:'sparse',drumInstrument:'meta-big-rusty-drums',melodyInstrument:'meta-piano',chordInstrument:'meta-cello-section',bassInstrument:'meta-piano',melodyArticulation:'soft',melodyRelease:0.62,chordRelease:2.8,bassRelease:0.75,velocityScale:0.62,melodyWave:'triangle',chordWave:'sine',melodyGain:0.095,chordGain:0.038,bassGain:0.07,drumGain:0.48,dynamics:'falling'}
   ];
   const arrangementVariants=styleProfiles.map(profile=>{
     const profileStyles={};
@@ -1489,7 +1489,7 @@ async function getCompositionSampleEngine(ctx){
   if(compositionSampleEnginePromise)return compositionSampleEnginePromise;
   compositionSampleEnginePromise=(async()=>{
     if(!window.SampleAudioEngine)throw new Error('サンプラー本体が読み込まれていません');
-    const urls=['../audio/meta-piano.manifest.json','../audio/meta-nylon-guitar.manifest.json','../audio/meta-violin-section.manifest.json','../audio/meta-cello-section.manifest.json'];
+    const urls=['../audio/meta-piano.manifest.json','../audio/meta-nylon-guitar.manifest.json','../audio/meta-violin-section.manifest.json','../audio/meta-cello-section.manifest.json','../audio/meta-swagbass.manifest.json','../audio/meta-big-rusty-drums.manifest.json'];
     const manifests=await Promise.all(urls.map(async url=>{
       const response=await fetch(url,{cache:'no-cache'});
       if(!response.ok)throw new Error('音源マニフェストを読み込めません：'+url+' ('+response.status+')');
@@ -1507,7 +1507,7 @@ async function playSampledComposition(arrangement,ctx){
   const soloTracks=tracks.filter(t=>t.kind!=='lyrics'&&t.solo&&!t.muted);
   const audible=soloTracks.length?soloTracks:tracks.filter(t=>!t.muted);
   const profile=(arrangement.arrangementVariants||[]).find(item=>item.id===arrangement.selectedArrangement)||{};
-  const melody=audible.find(t=>t.id==='melody'),chords=audible.find(t=>t.id==='chords'),bass=audible.find(t=>t.id==='bass');
+  const melody=audible.find(t=>t.id==='melody'),chords=audible.find(t=>t.id==='chords'),bass=audible.find(t=>t.id==='bass'),drums=audible.find(t=>t.id==='drums');
   const beatSeconds=60/arrangement.bpm;let start=0;
   const jobs=[];
   if(melody&&melody.notes.length)jobs.push({track:melody,instrument:profile.melodyInstrument||'meta-piano',notes:melody.notes.map(n=>({midi:noteToMidi(n.note),velocity:Math.max(1,Math.min(127,Math.round(127*(n.velocity||0.78)*(profile.velocityScale||1)))),whenOffset:n.startBeat*beatSeconds,duration:n.durationBeats*beatSeconds*0.88,gain:(profile.melodyGain||0.1)*(n.velocity||0.78),release:profile.melodyRelease||0.3,technique:profile.melodyArticulation||'auto'}))});
@@ -1515,7 +1515,8 @@ async function playSampledComposition(arrangement,ctx){
     const stagger=chord.playMode==='arpeggio'?index*0.105:chord.playMode==='wide-pad'?index*0.035:chord.playMode==='soft-pad'?index*0.018:0;
     return {midi,velocity:Math.round(chord.playMode==='wide-pad'?100:chord.playMode==='soft-pad'?57:76),whenOffset:(chord.startBeat*beatSeconds)+stagger,duration:Math.max(0.12,chord.durationBeats*beatSeconds*(chord.playMode==='arpeggio'?0.72:0.94)),gain:(profile.chordGain||0.025)*(index===0?1:0.82),release:profile.chordRelease||1.2};
   }))});
-  if(bass&&bass.notes.length)jobs.push({track:bass,instrument:profile.bassInstrument||'meta-piano',notes:bass.notes.map(n=>({midi:n.midi,velocity:Math.max(1,Math.min(127,Math.round(127*(n.velocity||0.72)*(profile.velocityScale||1)))),whenOffset:n.startBeat*beatSeconds,duration:n.durationBeats*beatSeconds*0.9,gain:(profile.bassGain||0.08)*(n.velocity||0.72),release:profile.bassRelease||0.3}))});
+  if(bass&&bass.notes.length)jobs.push({track:bass,instrument:profile.bassInstrument||'meta-swagbass',notes:bass.notes.map(n=>({midi:n.midi,velocity:Math.max(1,Math.min(127,Math.round(127*(n.velocity||0.72)*(profile.velocityScale||1)))),whenOffset:n.startBeat*beatSeconds,duration:n.durationBeats*beatSeconds*0.9,gain:(profile.bassGain||0.08)*(n.velocity||0.72),release:profile.bassRelease||0.3}))});
+  if(drums&&drums.notes.length){const drumMidi={kick:36,snare:38,hat:42,crash:49};jobs.push({track:drums,instrument:profile.drumInstrument||'meta-big-rusty-drums',notes:drums.notes.map(hit=>{const midi=drumMidi[hit.kind];if(!midi)throw new Error('未対応のドラム音色：'+hit.kind);return {midi,velocity:Math.max(1,Math.min(127,Math.round(127*(hit.velocity||0.7)))),whenOffset:hit.startBeat*beatSeconds,duration:Math.max(0.04,(hit.durationBeats||0.1)*beatSeconds),gain:(profile.drumGain||0.7)*(hit.velocity||0.7),release:0.03};})})}
   const engine=await getCompositionSampleEngine(ctx);
   for(const job of jobs){
     if(!engineManifestHasInstrument(engine,job.instrument))throw new Error('必要な楽器がマニフェストにありません：'+job.instrument);
@@ -1538,27 +1539,13 @@ async function playSampledComposition(arrangement,ctx){
   }
   const totalBeats=Math.max(1,...tracks.flatMap(t=>t.notes.map(n=>n.startBeat+(n.durationBeats||0))));
   const totalMs=Math.ceil((totalBeats*beatSeconds+3.2)*1000);
-  const drumTrack=audible.find(t=>t.id==='drums');
-  if(drumTrack)playCompositionPreviewDrums(drumTrack,profile,ctx,start,beatSeconds);
   const status=document.getElementById('composition-preview-status');
-  if(status)status.textContent='サンプル音源再生中：'+jobs.map(job=>job.instrument==='meta-nylon-guitar'?'ナイロンギター':job.instrument==='meta-violin-section'?'バイオリンセクション':job.instrument==='meta-cello-section'?'チェロセクション':'ピアノ').join(' / ')+' · 打楽器は仮音源 · '+arrangement.bpm+' BPM';
+  if(status)status.textContent='実サンプル音源再生中：'+jobs.map(job=>({ 'meta-nylon-guitar':'ナイロンギター','meta-violin-section':'バイオリン','meta-cello-section':'チェロ','meta-swagbass':'ベース','meta-big-rusty-drums':'ドラム','meta-piano':'ピアノ' }[job.instrument]||job.instrument)).join(' / ')+' · '+arrangement.bpm+' BPM';
   window.setTimeout(()=>{noteSequenceNodes=[];const el=document.getElementById('composition-preview-status');if(el&&el.textContent.startsWith('サンプル音源再生中'))el.textContent='サンプル音源の再生が完了しました。';},totalMs);
   return true;
 }
 function engineManifestHasInstrument(engine,instrumentId){
   return Boolean(window.__compositionSampleManifest?.instruments?.[instrumentId]);
-}
-function playCompositionPreviewDrums(track,profile,ctx,start,beatSeconds){
-  const noiseBuffer=ctx.createBuffer(1,Math.floor(ctx.sampleRate*0.5),ctx.sampleRate),data=noiseBuffer.getChannelData(0);
-  for(let i=0;i<data.length;i++)data[i]=(Math.random()*2-1);
-  track.notes.forEach(hit=>{
-    const at=start+hit.startBeat*beatSeconds,source=ctx.createBufferSource(),gain=ctx.createGain(),filter=ctx.createBiquadFilter();source.buffer=noiseBuffer;
-    filter.type='highpass';filter.frequency.value=hit.kind==='hat'?7000:hit.kind==='snare'?1200:hit.kind==='crash'?4200:80;
-    const drumLevel=(profile.drumGain||0.7)*(hit.velocity||1);
-    gain.gain.setValueAtTime((hit.kind==='hat'?0.025:hit.kind==='snare'?0.07:hit.kind==='crash'?0.045:0.12)*drumLevel,at);gain.gain.exponentialRampToValueAtTime(0.001,at+(hit.kind==='hat'?0.035:hit.kind==='snare'?0.11:hit.kind==='crash'?0.45:0.18));
-    source.connect(filter);filter.connect(gain);gain.connect(ctx.destination);source.start(at);noteSequenceNodes.push(source);
-    if(hit.kind==='kick'){const osc=ctx.createOscillator(),amp=ctx.createGain();osc.frequency.setValueAtTime(115,at);osc.frequency.exponentialRampToValueAtTime(48,at+0.14);amp.gain.setValueAtTime(0.16,at);amp.gain.exponentialRampToValueAtTime(0.001,at+0.16);osc.connect(amp);amp.connect(ctx.destination);osc.start(at);osc.stop(at+0.17);noteSequenceNodes.push(osc);}
-  });
 }
 function stopCompositionPreview(){
   if(compositionSampleEngine)compositionSampleEngine.stopAll();
