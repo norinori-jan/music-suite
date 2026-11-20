@@ -1316,7 +1316,7 @@ function generateLyricMusicSketch(){
   });
   const styleProfiles=[
     {id:'warm',name:'A案：温かく親しみやすい',description:'柔らかなコード、分散和音、丸いベース。自然に口ずさめる温度感',progression:'warm',rhythmVariant:0,melodyId:'hook',rhythmId:'straight',bpmOffset:-4,chordMode:'arpeggio',bassMode:'root-fifth',drumMode:'soft-pop',melodyWave:'triangle',chordWave:'sine',melodyGain:0.115,chordGain:0.026,bassGain:0.085,drumGain:0.72,dynamics:'gentle'},
-    {id:'dramatic',name:'B案：壮大でドラマチック',description:'広がるコード、力強い低音、強い拍とサビの高揚。大きな景色を描く',progression:'cinematic',rhythmVariant:2,melodyId:'rise',rhythmId:'syncopated',bpmOffset:5,chordMode:'wide-pad',bassMode:'pulse',drumMode:'anthem',melodyWave:'sawtooth',chordWave:'triangle',melodyGain:0.13,chordGain:0.032,bassGain:0.12,drumGain:1,dynamics:'rising'},
+    {id:'dramatic',name:'B案：壮大でドラマチック',description:'広がるコード、力強い低音、強い拍とサビの高揚。大きな景色を描く',progression:'rock',rhythmVariant:2,melodyId:'rise',rhythmId:'syncopated',bpmOffset:5,chordMode:'wide-pad',bassMode:'pulse',drumMode:'anthem',melodyWave:'sawtooth',chordWave:'triangle',melodyGain:0.13,chordGain:0.032,bassGain:0.12,drumGain:1,dynamics:'rising'},
     {id:'bittersweet',name:'C案：切なく余韻のある',description:'短調寄りの進行、間を生かした低音と控えめな打楽器。静かな余韻を残す',progression:'sad',rhythmVariant:4,melodyId:'arch',rhythmId:'ballad',bpmOffset:-10,chordMode:'soft-pad',bassMode:'sustain',drumMode:'sparse',melodyWave:'triangle',chordWave:'sine',melodyGain:0.095,chordGain:0.022,bassGain:0.07,drumGain:0.48,dynamics:'falling'}
   ];
   const arrangementVariants=styleProfiles.map(profile=>{
@@ -1475,7 +1475,7 @@ function applySelectedComposition(){
   arrangement.selectedNotes=notes;
   buildCompositionTracks(notes);
   renderCompositionTracks();
-  window.__lyricMusicSketch={...arrangement,melody:notes.map(n=>({id:n.id,lyricId:n.lyricId,pitch:n.note,startBeat:n.startBeat,durationBeats:n.durationBeats,word:n.word,lyric:n.lyric,role:n.role,section:n.section}))};
+  window.__lyricMusicSketch={...arrangement,melody:notes.map(n=>({id:n.id,lyricId:n.lyricId,pitch:n.note,startBeat:n.startBeat,durationBeats:n.durationBeats,word:n.word,lyric:n.lyric,role:n.role,section:n.section,velocity:n.velocity}))};
   persistCompositionArrangement();
   document.getElementById('composition-preview-status').textContent='Canvasに反映済み：'+notes.length+'音。再生して確認できます。';
   return true;
