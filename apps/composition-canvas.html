@@ -189,7 +189,7 @@
     </div>
     <div id="lyric-music-result" aria-live="polite" style="display:block;width:100%;max-width:100%;min-width:0;box-sizing:border-box;overflow-wrap:anywhere;word-break:break-word;white-space:normal;overflow-x:hidden;font-size:13px"></div>
     <section id="composition-arrangement" style="display:none;margin:14px 0;padding:14px;border:2px solid #38a3a5;border-radius:12px;background:#10252b;color:#e8fbff">
-      <h3 style="margin:0 0 6px">🎧 作曲プレビュー — メロディーとリズムを比較</h3>
+      <h3 style="margin:0 0 6px">🎧 3つの音楽表現を比較</h3>
       <p style="font-size:12px;margin:0 0 12px">歌詞は共通のまま、コード・旋律・伴奏・ベース・ドラム・強弱を組み替えた3種類のアレンジを比較します。</p>
       <div id="composition-style-choices" style="display:grid;grid-template-columns:repeat(auto-fit,minmax(190px,1fr));gap:8px"></div>
       <div style="margin-top:14px"><strong>🎼 主旋律の輪郭（選択中アレンジ内で変更）</strong></div>
@@ -1349,7 +1349,7 @@ function generateLyricMusicSketch(){
   renderCompositionArrangement();
   applySelectedComposition();
   const chordNames=allSectionChords.map(item=>item.chord).join(' – ');
-  document.getElementById('lyric-music-result').innerHTML='<strong>作曲素材を生成しました</strong><p>英語 '+syllables.length+' 音節 / '+variants.length+'種類の旋律 / '+rhythmStyles.length+'種類のリズム / '+allSectionChords.length+'個のコード</p><p>コード：'+escapeHtmlCanvas(chordNames)+'</p><small>下の3案を聴き比べ、旋律とリズムを選んでください。</small>';
+  document.getElementById('lyric-music-result').innerHTML='<strong>3つの音楽アレンジを生成しました</strong><p>同じ歌詞から、温かいA案・壮大なB案・切ないC案を作成しました。各案の旋律・コード・伴奏・ベース・ドラム・強弱が異なります。</p><p>英語 '+syllables.length+' 音節 / '+variants.length+'種類の旋律輪郭 / '+rhythmStyles.length+'種類のリズム / '+allSectionChords.length+'個の初期コード</p><p>コード：'+escapeHtmlCanvas(chordNames)+'</p><small>まず3案の全体表現を比較し、必要なら各案の中で旋律とリズムを調整してください。</small>';
   showToast('3種類のメロディーと3種類のリズムを生成しました');
 }
 function renderCompositionArrangement(){
