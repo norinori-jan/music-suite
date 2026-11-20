@@ -1377,7 +1377,7 @@ function renderCompositionArrangement(){
     const card=document.createElement('div');card.style.cssText='border:1px solid '+(variant.id===arrangement.selectedMelody?'#56d6cf':'#53636b')+';border-radius:9px;padding:10px;background:'+(variant.id===arrangement.selectedMelody?'#1c4148':'#172f36');
     const title=document.createElement('strong');title.textContent=variant.name;
     const desc=document.createElement('p');desc.style.cssText='font-size:12px;min-height:34px';desc.textContent=variant.description;
-    const notes=document.createElement('div');notes.style.cssText='font-size:12px;line-height:1.6;overflow-wrap:anywhere';notes.textContent=variant.notes.slice(0,12).map(n=>n.note).join(' · ')+(variant.notes.length>12?' …':'');
+    const activeProfile=(arrangement.arrangementVariants||[]).find(item=>item.id===arrangement.selectedArrangement);const displayNotes=activeProfile?.notesByMelody?.[variant.id]||variant.notes;const notes=document.createElement('div');notes.style.cssText='font-size:12px;line-height:1.6;overflow-wrap:anywhere';notes.textContent=displayNotes.slice(0,12).map(n=>n.note).join(' · ')+(displayNotes.length>12?' …':'');
     const button=document.createElement('button');button.type='button';button.textContent=variant.id===arrangement.selectedMelody?'✓ 選択中':'この旋律を選ぶ';button.addEventListener('click',()=>{arrangement.selectedMelody=variant.id;renderCompositionArrangement();applySelectedComposition();});
     const audition=document.createElement('button');audition.type='button';audition.textContent='▶ この案を試聴';audition.setAttribute('aria-label',variant.name+'を単独試聴');audition.addEventListener('click',()=>previewCompositionVariant(variant.id));
     card.append(title,desc,notes,button,audition);melodies.appendChild(card);
