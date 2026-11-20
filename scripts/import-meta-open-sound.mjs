@@ -16,6 +16,7 @@ const SOURCE = "https://raw.githubusercontent.com/facebookincubator/Meta-open-so
 const SOURCE_REPO = "https://github.com/facebookincubator/Meta-open-sound";
 const COLLECTIONS = ["meta-piano", "meta-nylon-guitar"];
 const CONCURRENCY = 6;
+const DRY_RUN = process.argv.includes("--dry-run");
 
 function parseAttrs(line) {
   const attrs = {};
@@ -123,6 +124,15 @@ async function importCollection(id) {
   if (!regions.length) throw new Error("No SFZ regions found for " + id);
 
   const uniqueFiles = [...new Set(regions.map(region => region.file))];
+  const expectedCount = id === "meta-piano" ? 352 : 348;
+  if (uniqueFiles.length !== expectedCount) {
+    throw new Error("Unexpected sample count for " + id + ": " + uniqueFiles.length + " (expected " + expectedCount + ")");
+  }
+  for (const relativeFile of uniqueFiles) {
+    if (!checksums.has(relativeFile)) throw new Error("No upstream SHA-256 for " + id + "/" + relativeFile);
+  }
+  if (DRY_RUN) return { id, samples: uniqueFiles.length, regions: regions.length, verifiedMappings: true, dryRun: true };
+
   const destination = path.join(ROOT, "audio", "assets", id);
   let totalBytes = 0;
   const oggDir = path.join(destination, "ogg");
@@ -172,4 +182,4 @@ async function importCollection(id) {
 
 const results = [];
 for (const id of COLLECTIONS) results.push(await importCollection(id));
-console.log("Imported verified CC0 sample collections:", JSON.stringify(results));
+console.log(DRY_RUN ? "Verified CC0 sample import plan:" : "Imported verified CC0 sample collections:", JSON.stringify(results));
