@@ -4,5 +4,6 @@
   "collections": [
     "meta-piano",
     "meta-nylon-guitar"
-  ]
+  ],
+  "retry": 1
 }
