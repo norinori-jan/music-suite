@@ -182,13 +182,15 @@ test("imported CC0 violin and cello WAV zones match every pinned manifest SHA-25
     ["meta-cello-section", 26]
   ]) {
     const source = JSON.parse(await readFile(path.join(root, "assets", id, "SOURCE-MANIFEST.json"), "utf8"));
+    const revision = JSON.parse(await readFile(path.join(root, "assets", id, "SOURCE-REVISION.json"), "utf8"));
     const manifest = JSON.parse(await readFile(path.join(root, id + ".manifest.json"), "utf8"));
     const instrument = manifest.instruments?.[id];
     assert.equal(source.license, "CC0-1.0");
-    assert.equal(source.sampleRate, 48000);
-    assert.equal(source.channels, 1);
-    assert.equal(source.bitsPerSample, 24);
-    assert.equal(source.zoneCount, expectedZones);
+    assert.equal(revision.license, "CC0-1.0");
+    assert.equal(revision.sampleRate, 48000);
+    assert.equal(revision.channels, 1);
+    assert.equal(revision.bitsPerSample, 24);
+    assert.equal(revision.zoneCount, expectedZones);
     assert.equal(instrument.samples.length, expectedZones);
     assert.equal(instrument.license, "CC0-1.0");
     const license = await readFile(path.join(root, "assets", id, "LICENSE"), "utf8");
