@@ -1,0 +1,15 @@
+{
+  "purpose": "Trigger pinned, license-verified CC0 electric bass and acoustic drum sample import on the development branch only.",
+  "bass": {
+    "repository": "sfzinstruments/karoryfer.swagbass",
+    "revision": "9d10fcae71af1975988ddecd5af1c95d372c7355",
+    "license": "CC0-1.0"
+  },
+  "drums": {
+    "repository": "sfzinstruments/karoryfer.big-rusty-drums",
+    "revision": "f07ce00df34a46b6b08375be56fe116cf15782bc",
+    "license": "CC0-1.0"
+  },
+  "outputFormat": "mono PCM 24-bit / 48 kHz WAV",
+  "note": "The workflow verifies pinned Git blob SHA-1 for every source file, source SHA-256, conversion output format, and records converted sample SHA-256. It imports only selected SFZ velocity layers and round robins."
+}
