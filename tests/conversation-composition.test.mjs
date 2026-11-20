@@ -201,6 +201,17 @@ test("Composition arrangement is persisted by project identity and restores all 
 });
 
 
+test("Canvas receives the full speak-native dialogue as read-only source material before lyric editing", async () => {
+  const html = await readFile(canvasPath, "utf8");
+  assert.match(html, /payload\.source==='speak-native-dialogue'/);
+  assert.match(html, /window\.__incomingLyricProject=payload/);
+  assert.match(html, /renderSourceDialogue\(payload\)/);
+  assert.match(html, /会話をA\/Bの歌詞編集欄へ展開/);
+  assert.match(html, /原文は保持されています/);
+  assert.match(html, /body\.textContent=String\(turn\.text\|\|''\)/);
+  assert.match(html, /function convertDialogueToLyricDraft\(\)/);
+});
+
 test("Canvas receives speak-native lyrics imports and restores the lyrics into the editor", async () => {
   const html = await readFile(canvasPath, "utf8");
   assert.match(html, /hash\.startsWith\('import='\)/);
