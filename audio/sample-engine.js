@@ -63,6 +63,24 @@
     return layers[0].sample;
   }
 
+  function selectRoundRobinLayers(layers, counters) {
+    const groups = new Map();
+    const singles = [];
+    for (const layer of layers) {
+      const group = layer.sample.roundRobinGroup;
+      if (!group) { singles.push(layer); continue; }
+      if (!groups.has(group)) groups.set(group, []);
+      groups.get(group).push(layer);
+    }
+    for (const [group, choices] of groups) {
+      choices.sort((a, b) => (a.sample.roundRobinIndex || 0) - (b.sample.roundRobinIndex || 0));
+      const index = counters.get(group) || 0;
+      singles.push(choices[index % choices.length]);
+      counters.set(group, index + 1);
+    }
+    return singles;
+  }
+
   function validateManifest(manifest) {
     if (!manifest || typeof manifest !== "object" || !manifest.instruments) {
       throw new TypeError("A manifest with an instruments object is required");
@@ -91,6 +109,7 @@
     const cache = new Map();
     const pending = new Map();
     const activeVoices = new Set();
+    const roundRobinCounters = new Map();
     let decodedBytes = 0;
     let disposed = false;
 
@@ -177,7 +196,7 @@
       const velocity = clamp(Number(p.velocity) || 1, 1, 127);
       const when = Math.max(context.currentTime, Number(p.when) || context.currentTime);
       const duration = Math.max(0.01, Number(p.duration) || 0.25);
-      const layers = chooseSampleLayers(instrument.samples, midi, velocity, instrument);
+      const layers = selectRoundRobinLayers(chooseSampleLayers(instrument.samples, midi, velocity, instrument), roundRobinCounters);
       if (!layers.length) throw new Error("No mapped sample for " + p.instrument + " MIDI " + midi + " velocity " + velocity);
       const missing = layers.find(layer => !cache.has(layer.sample.url));
       if (missing) throw new Error("Sample is not loaded: " + missing.sample.url + ". Call preload() first.");
