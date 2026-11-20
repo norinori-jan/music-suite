@@ -48,7 +48,7 @@ jobs:
         run: |
           convert_pair() {
             label="$1"; wav="$2"; ogg="$3"
-            ffmpeg -y -v error -i "$wav" -af "pan=mono|c0=0.5*c0+0.5*c1" -ar 48000 -ac 1 -c:a pcm_f32le -f f32le "/tmp/format-compare/${label}-wav.f32"
+            ffmpeg -y -v error -i "$wav" -ar 48000 -ac 1 -c:a pcm_f32le -f f32le "/tmp/format-compare/${label}-wav.f32"
             ffmpeg -y -v error -i "$ogg" -ar 48000 -ac 1 -c:a pcm_f32le -f f32le "/tmp/format-compare/${label}-ogg.f32"
           }
           convert_pair piano-pp /tmp/format-compare/INSPiano_Vel01_C4_01.wav audio/assets/meta-piano/ogg/INSPiano_Vel01_C4_01.ogg
