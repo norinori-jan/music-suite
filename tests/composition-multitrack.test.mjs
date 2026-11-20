@@ -270,3 +270,37 @@ test("MT-10 arrangement cards select an independent full-song profile without ch
   assert.match(html, /velocity:n\.velocity/);
   assert.match(html, /lyric-selection-panel/);
 });
+
+
+test("MT-11 switching full arrangement profiles keeps tempo offsets anchored and lyrics untouched", async () => {
+  const html = await loadCanvas();
+  const code = extractFunction(html, "selectCompositionArrangement", "previewCompositionVariant");
+  const fields = {
+    "note-sequence-bpm": { value: "96" },
+    "chord-progression-input": { value: "" },
+    "lyric-generated-chord-output": { value: "" }
+  };
+  const calls = [];
+  const profiles = [
+    { id: "warm", melodyId: "hook", rhythmId: "straight", bpmOffset: -4, chordSections: [{ label: "Verse", progression: [{ chord: "C" }] }] },
+    { id: "dramatic", melodyId: "rise", rhythmId: "syncopated", bpmOffset: 5, chordSections: [{ label: "Verse", progression: [{ chord: "G" }] }] },
+    { id: "bittersweet", melodyId: "arch", rhythmId: "ballad", bpmOffset: -10, chordSections: [{ label: "Verse", progression: [{ chord: "Am" }] }] }
+  ];
+  const originalLyrics = "The original selected lyric remains here.";
+  const context = {
+    window: { __compositionArrangement: { baseBpm: 96, bpm: 92, arrangementVariants: profiles, selectedArrangement: "warm", selectedMelody: "hook", selectedRhythm: "straight" }, __incomingLyricProject: { dialogue: [{ text: originalLyrics }] } },
+    document: { getElementById(id) { return fields[id] || null; } },
+    renderGeneratedChordSections: () => calls.push("chords"),
+    renderCompositionArrangement: () => calls.push("render"),
+    applySelectedComposition: () => calls.push("apply"),
+    Math, Number, String, Array
+  };
+  vm.runInNewContext(code + "\nselectCompositionArrangement('dramatic'); selectCompositionArrangement('bittersweet');", context);
+  const arrangement = context.window.__compositionArrangement;
+  assert.equal(arrangement.bpm, 86);
+  assert.equal(arrangement.selectedMelody, "arch");
+  assert.equal(arrangement.selectedRhythm, "ballad");
+  assert.equal(fields["chord-progression-input"].value, "Am");
+  assert.equal(context.window.__incomingLyricProject.dialogue[0].text, originalLyrics);
+  assert.equal(calls.filter(call => call === "apply").length, 2);
+});
