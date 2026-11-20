@@ -36,4 +36,6 @@ jobs:
           git add audio/assets audio/*.manifest.json
           git diff --cached --quiet && echo "No sample asset changes" && exit 0
           git commit -m "assets: import SHA-256 verified CC0 piano and nylon guitar samples"
+          git fetch origin "${{ github.ref_name }}"
+          git rebase "origin/${{ github.ref_name }}"
           git push origin "HEAD:${{ github.ref_name }}"
