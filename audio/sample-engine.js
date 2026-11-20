@@ -46,6 +46,10 @@
       if (!string) return [];
       candidates = candidates.filter(sample => sample.string === string);
     }
+    if (options.techniqueSelection) {
+      const switchKey = { auto: 24, finger: 25, pick: 26 }[options.techniqueSelection];
+      if (switchKey) candidates = candidates.filter(sample => sample.swLast === undefined || sample.swLast === switchKey);
+    }
     return candidates.map(sample => ({
       sample,
       weight: velocityLayerWeight(sample, velocity)
@@ -183,7 +187,6 @@
           ? Math.pow(10, (instrument.velocityGainMinDb * (1 - velocity / 127)) / 20)
           : velocity / 127;
       const release = Math.max(0.025, Number(p.release) || Number(instrument.release) || 0.18);
-      const noteOff = when + duration;
       const voices = [];
 
       for (const layer of layers) {
@@ -195,12 +198,17 @@
         source.buffer = cached.buffer;
         source.playbackRate.setValueAtTime(Math.pow(2, (midi - sample.rootMidi) / 12), when);
         const destination = p.destination || context.destination;
+        const playbackRate = Math.pow(2, (midi - sample.rootMidi) / 12);
+        const noteOff = instrument.noteOffMode === "one-shot"
+          ? when + cached.buffer.duration / playbackRate
+          : when + duration;
         const peak = clamp(Number(p.gain) || 1, 0, 2) * velocityGain * layer.weight;
         const attack = Math.max(0.001, Number(instrument.attack) || 0.006);
         gain.gain.setValueAtTime(0.0001, when);
         gain.gain.linearRampToValueAtTime(Math.max(0.0001, peak), when + attack);
         gain.gain.setValueAtTime(Math.max(0.0001, peak), Math.max(when + attack, noteOff));
         gain.gain.linearRampToValueAtTime(0.0001, noteOff + release);
+        source.stop(noteOff + release + 0.01);
         source.connect(gain);
         gain.connect(destination);
         const voice = { source, gain, sampleUrl: sample.url, stopped: false };
