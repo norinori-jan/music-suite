@@ -1,4 +1,6 @@
 import test from "node:test";
+import { createHash } from "node:crypto";
+import { readFile } from "node:fs/promises";
 import assert from "node:assert/strict";
 import { createRequire } from "node:module";
 import { fileURLToPath } from "node:url";
@@ -142,4 +144,32 @@ test("missing samples and disposed engines fail explicitly rather than silently 
   assert.throws(() => engine.scheduleNote({ instrument: "piano", midi: 60 }), /not loaded/);
   engine.dispose();
   await assert.rejects(() => engine.preload("piano", [60]), /disposed/);
+});
+
+
+test("imported CC0 piano and nylon guitar assets match every upstream SHA-256", async () => {
+  const root = path.join(path.dirname(fileURLToPath(import.meta.url)), "..", "audio");
+  for (const [id, expectedSamples, expectedRegions] of [
+    ["meta-piano", 352, 352],
+    ["meta-nylon-guitar", 348, 960]
+  ]) {
+    const manifest = JSON.parse(await readFile(path.join(root, id + ".manifest.json"), "utf8"));
+    const instrument = manifest.instruments?.[id];
+    assert.ok(instrument, id + " manifest is missing");
+    assert.equal(instrument.license, "CC0-1.0");
+    assert.equal(instrument.samples.length, expectedRegions);
+    const license = await readFile(path.join(root, "assets", id, "LICENSE"), "utf8");
+    assert.match(license.slice(0, 500), /CC0 1\.0 Universal/);
+    const sumsText = await readFile(path.join(root, "assets", id, "SOURCE-SHA256SUMS"), "utf8");
+    const sums = new Map([...sumsText.matchAll(/^([a-f0-9]{64})\\s+\\*?(.+)$/gim)].map(match => [match[2].trim(), match[1].toLowerCase()]));
+    const files = new Set(instrument.samples.map(sample => sample.url.replace("../audio/assets/" + id + "/", "")));
+    assert.equal(files.size, expectedSamples);
+    for (const relative of files) {
+      const expected = sums.get(relative);
+      assert.ok(expected, "missing upstream checksum for " + id + "/" + relative);
+      const bytes = await readFile(path.join(root, "assets", id, relative));
+      const actual = createHash("sha256").update(bytes).digest("hex");
+      assert.equal(actual, expected, "SHA-256 mismatch for " + id + "/" + relative);
+    }
+  }
 });
