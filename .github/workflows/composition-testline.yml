@@ -6,6 +6,8 @@ on:
       - "apps/composition-canvas.html"
       - "apps/beat-lab.html"
       - "tests/**"
+      - "audio/**"
+      - "scripts/**"
       - ".github/workflows/composition-testline.yml"
   pull_request:
     paths:
@@ -26,4 +28,4 @@ jobs:
         with:
           node-version: 22
       - name: Run composition regression tests
-        run: node --test tests/composition-testline.test.mjs tests/composition-multitrack.test.mjs tests/conversation-composition.test.mjs tests/sample-engine.test.mjs
+        run: node --check scripts/import-meta-open-sound.mjs && node --test tests/composition-testline.test.mjs tests/composition-multitrack.test.mjs tests/conversation-composition.test.mjs tests/sample-engine.test.mjs
