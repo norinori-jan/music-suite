@@ -53,7 +53,7 @@ function compare(label, wav, ogg) {
 }
 
 const args = process.argv.slice(2);
-if (args.length < 4 || args.length % 3 !== 1 || args[0] !== "--pair") {
+if (args.length < 4 || args.length % 4 !== 0 || args[0] !== "--pair") {
   throw new Error("Usage: node scripts/compare-ogg-wav.mjs --pair label wav.f32 ogg.f32 [--pair label wav.f32 ogg.f32 ...]");
 }
 const results = [];
