@@ -84,8 +84,10 @@ function parseBassZones(sfzText) {
     const regionText = group.split(/<region>/i).slice(1);
     for (const region of regionText) {
       const match = region.match(/^\s*sample=notes(?:\\|\/)([^\r\n]+)/m);
-      if (!match || !/_rr1\.wav$/i.test(match[1])) continue;
-      zones.push({ sourceFile: "notes/" + match[1].replace(/\\/g, "/"), rootMidi, keyLow, keyHigh, velocityLow, velocityHigh, velocityMode: "sfz" });
+      if (!match || !/_rr[1-4]\.wav$/i.test(match[1])) continue;
+      const sourceFile = "notes/" + match[1].replace(/\\/g, "/");
+      const roundRobinIndex = Number((sourceFile.match(/_rr([1-4])\.wav$/i) || [])[1]);
+      zones.push({ sourceFile, rootMidi, keyLow, keyHigh, velocityLow, velocityHigh, roundRobinGroup: "bass-" + rootMidi + "-" + velocityLow + "-" + velocityHigh, roundRobinIndex });
     }
   }
   const unique = new Map(zones.map(zone => [zone.sourceFile, zone]));
@@ -120,7 +122,7 @@ const [bassLicense, bassSfz, drumLicense] = await Promise.all([
 if (!bassLicense.bytes.toString("utf8").startsWith("Creative Commons Legal Code") || !bassLicense.bytes.toString("utf8").includes("CC0 1.0 Universal")) throw new Error("Swagbass license is not CC0-1.0");
 if (!drumLicense.bytes.toString("utf8").startsWith("Creative Commons Legal Code") || !drumLicense.bytes.toString("utf8").includes("CC0 1.0 Universal")) throw new Error("Big Rusty Drums license is not CC0-1.0");
 const bassZones = parseBassZones(bassSfz.bytes.toString("utf8"));
-if (bassZones.length !== 48) throw new Error("Expected 48 mapped Swagbass velocity zones; found " + bassZones.length);
+if (bassZones.length !== 192) throw new Error("Expected 192 mapped Swagbass velocity/round-robin zones; found " + bassZones.length);
 const drumZones = [];
 const drumMapMetadata = [];
 for (const map of DRUM_MAPS) {
@@ -133,7 +135,7 @@ for (const map of DRUM_MAPS) {
 if (drumZones.length < 80) throw new Error("Expected multi-velocity, four-round-robin drum maps; found only " + drumZones.length + " zones");
 
 const allZones = [
-  ...bassZones.map((zone, index) => ({ ...zone, pack: "bass", sourceRepo: BASS_REPO, revision: BASS_REV, tree: bassTree, outputFile: "samples/bass/" + path.posix.basename(zone.sourceFile).replace(/_rr1\.wav$/i, ".wav"), index })),
+  ...bassZones.map((zone, index) => ({ ...zone, pack: "bass", sourceRepo: BASS_REPO, revision: BASS_REV, tree: bassTree, outputFile: "samples/bass/" + path.posix.basename(zone.sourceFile), index })),
   ...drumZones.map((zone, index) => ({ ...zone, pack: "drums", sourceRepo: DRUM_REPO, revision: DRUM_REV, tree: drumTree, outputFile: "samples/drums/" + zone.instrument + "/" + path.posix.basename(zone.sourceFile).replace(/_rr[1-4]\.flac$/i, "_rr" + zone.roundRobinIndex + ".wav"), index }))
 ];
 const totals = { bass: 0, drums: 0 };
@@ -197,10 +199,10 @@ for (const [pack, id, repository, revision, license] of [
 }
 const bassManifest = {
   id: "meta-swagbass", name: "Karoryfer Swagbass Clean", license: "CC0-1.0", sourceRepository: "https://github.com/" + BASS_REPO,
-  sourceCommit: BASS_REV, sampleFormat: "PCM WAV 24-bit / 48 kHz mono", noteOffMode: "release", velocityMode: "layer",
+  sourceCommit: BASS_REV, sampleFormat: "PCM WAV 24-bit / 48 kHz mono", noteOffMode: "release", velocityMode: "layer", roundRobin: true,
   attack: 0.004, release: 0.18, samples: imported.bass.map(zone => ({
     url: "../audio/assets/meta-swagbass/" + zone.file, rootMidi: zone.rootMidi, keyLow: zone.keyLow, keyHigh: zone.keyHigh,
-    velocityLow: zone.velocityLow, velocityHigh: zone.velocityHigh
+    velocityLow: zone.velocityLow, velocityHigh: zone.velocityHigh, roundRobinGroup: zone.roundRobinGroup, roundRobinIndex: zone.roundRobinIndex
   }))
 };
 const drumManifest = {
