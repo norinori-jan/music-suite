@@ -1,0 +1,45 @@
+name: Import verified CC0 bass and acoustic drums
+
+on:
+  push:
+    branches:
+      - feature/three-melody-track-foundation
+    paths:
+      - "audio/IMPORT_RHYTHM_NOW.json"
+
+permissions:
+  contents: write
+
+jobs:
+  import-rhythm:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout development branch
+        uses: actions/checkout@v4
+        with:
+          ref: ${{ github.ref_name }}
+          fetch-depth: 0
+      - name: Setup Node
+        uses: actions/setup-node@v4
+        with:
+          node-version: 22
+      - name: Install audio conversion tool
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y ffmpeg
+      - name: Verify pinned CC0 source manifests and SFZ mappings
+        run: |
+          node --check scripts/import-cc0-rhythm.mjs
+          node scripts/import-cc0-rhythm.mjs --dry-run
+      - name: Download, convert and SHA-256 verify samples
+        run: node scripts/import-cc0-rhythm.mjs
+      - name: Commit verified rhythm samples to development branch
+        run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git add audio/assets/meta-swagbass audio/assets/meta-big-rusty-drums audio/meta-swagbass.manifest.json audio/meta-big-rusty-drums.manifest.json
+          git diff --cached --quiet && echo "No rhythm asset changes" && exit 0
+          git commit -m "assets: import SHA-256 verified CC0 bass and acoustic drums"
+          git fetch origin "${{ github.ref_name }}"
+          git rebase "origin/${{ github.ref_name }}"
+          git push origin "HEAD:${{ github.ref_name }}"
