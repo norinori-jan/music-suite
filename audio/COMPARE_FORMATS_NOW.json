@@ -1,0 +1,7 @@
+{
+  "purpose": "Run a technical comparison of selected official CC0 OGG previews against matching 24-bit/48kHz WAV masters. Do not promote a format based on file size alone.",
+  "pairs": [
+    "four piano C4 velocity layers",
+    "nylon guitar finger and pick layers"
+  ]
+}
