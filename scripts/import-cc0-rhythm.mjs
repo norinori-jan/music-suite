@@ -119,7 +119,7 @@ const [bassLicense, bassSfz, drumLicense] = await Promise.all([
 if (!bassLicense.bytes.toString("utf8").startsWith("Creative Commons Legal Code") || !bassLicense.bytes.toString("utf8").includes("CC0 1.0 Universal")) throw new Error("Swagbass license is not CC0-1.0");
 if (!drumLicense.bytes.toString("utf8").startsWith("Creative Commons Legal Code") || !drumLicense.bytes.toString("utf8").includes("CC0 1.0 Universal")) throw new Error("Big Rusty Drums license is not CC0-1.0");
 const bassZones = parseBassZones(bassSfz.bytes.toString("utf8"));
-if (bassZones.length !== 51) throw new Error("Expected 51 mapped Swagbass velocity zones; found " + bassZones.length);
+if (bassZones.length !== 48) throw new Error("Expected 48 mapped Swagbass velocity zones; found " + bassZones.length);
 const drumZones = [];
 const drumMapMetadata = [];
 for (const map of DRUM_MAPS) {
