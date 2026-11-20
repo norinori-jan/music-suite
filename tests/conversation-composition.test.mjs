@@ -141,9 +141,9 @@ test("Canvas creates three melody variants and three rhythm choices with playabl
   assert.match(html, /id="composition-arrangement"/);
   assert.match(html, /id="composition-melody-choices"/);
   assert.match(html, /id="composition-rhythm-choices"/);
-  assert.match(html, /id:'hook',name:'A：覚えやすいフック型'/);
-  assert.match(html, /id:'rise',name:'B：高揚する上昇型'/);
-  assert.match(html, /id:'arch',name:'C：大きな弧を描く型'/);
+  assert.match(html, /id:'hook',name:'フック型（反復）'/);
+  assert.match(html, /id:'rise',name:'上昇型（高揚）'/);
+  assert.match(html, /id:'arch',name:'アーチ型（弧）'/);
   assert.match(html, /id:'straight',name:'ストレート'/);
   assert.match(html, /id:'syncopated',name:'シンコペーション'/);
   assert.match(html, /id:'ballad',name:'バラード'/);
