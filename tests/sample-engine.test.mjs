@@ -263,7 +263,7 @@ test("imported CC0 Swagbass and Big Rusty Drum WAV assets match pinned SHA-256 a
     assert.ok(source.zones.length >= minimumZones);
     assert.equal(instrument.samples.length, source.zones.length);
     const license = await readFile(path.join(directory, "LICENSE"), "utf8");
-    assert.match(license.slice(0, 500), /CC0 1\\.0 Universal/);
+    assert.match(license.slice(0, 500), /CC0 1\.0 Universal/);
     const zones = new Map(source.zones.map(zone => [zone.file, zone]));
     const roundRobins = new Map();
     for (const sample of instrument.samples) {
