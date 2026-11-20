@@ -1,0 +1,41 @@
+name: Import verified CC0 orchestral strings
+
+on:
+  push:
+    branches:
+      - feature/three-melody-track-foundation
+    paths:
+      - "audio/IMPORT_STRINGS_NOW.json"
+
+permissions:
+  contents: write
+
+jobs:
+  import-cc0-strings:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout development branch
+        uses: actions/checkout@v4
+        with:
+          ref: ${{ github.ref_name }}
+          fetch-depth: 0
+      - name: Setup Node
+        uses: actions/setup-node@v4
+        with:
+          node-version: 22
+      - name: Verify pinned CC0 pack manifests and licenses
+        run: |
+          node --check scripts/import-cc0-strings.mjs
+          node scripts/import-cc0-strings.mjs --dry-run
+      - name: Download and verify every 24-bit WAV zone
+        run: node scripts/import-cc0-strings.mjs
+      - name: Commit verified strings to the development branch
+        run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git add audio/assets/meta-violin-section audio/assets/meta-cello-section audio/meta-violin-section.manifest.json audio/meta-cello-section.manifest.json
+          git diff --cached --quiet && echo "No string asset changes" && exit 0
+          git commit -m "assets: import SHA-256 verified CC0 violin and cello sections"
+          git fetch origin "${{ github.ref_name }}"
+          git rebase "origin/${{ github.ref_name }}"
+          git push origin "HEAD:${{ github.ref_name }}"
