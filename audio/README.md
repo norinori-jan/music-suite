@@ -36,3 +36,7 @@ The importer currently stages the official OGG collections so the sampler mappin
 ## iPhone/PWA status
 
 The root page now links a web app manifest, declares a PNG iPhone home-screen icon, and registers a service worker. The worker pre-caches the app shell and sampler only; it stores each OGG sample after that sample is fetched successfully, rather than downloading all 700 samples at install time. It only removes old caches with the `music-suite-` prefix, preserving caches belonging to other apps on the same GitHub Pages origin. CI covers this behavior statically; physical iPhone install and offline playback remain unverified. iOS Safari added OGG Vorbis support in version 18.4; older releases may not decode the current OGG assets. Confirm the target iPhone OS and test Web Audio decoding before treating OGG-only playback as supported.
+
+## CC0 orchestral string samples
+
+The development branch now includes a 30-zone violin-section pack and a 26-zone cello-section pack derived from VSCO 2 Community Edition. The pack manifests declare CC0-1.0 and 48 kHz mono 24-bit PCM WAV. The import pipeline validates the license declarations, checks every downloaded zone's byte size and SHA-256 against the pinned pack manifest, and records the source manifest and revision alongside the assets. The sampler uses the violin section for B's wide chord bed and the cello section for C's softer sustained chord bed. A keeps its nylon-guitar melody and piano chords. These are sampled-instrument connections; the bass and drum parts still need dedicated recorded sample packs.
