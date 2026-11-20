@@ -1287,9 +1287,9 @@ function generateLyricMusicSketch(){
   });
   if(!syllables.length){showToast('英語の単語を読み取れませんでした');return}
   const contours=[
-    {id:'hook',name:'A：覚えやすいフック型',description:'狭い音域で反復し、口ずさみやすさを重視',shape:[0,2,4,2,1,3,2,0]},
-    {id:'rise',name:'B：高揚する上昇型',description:'前半から少しずつ上がり、サビに向けて開く',shape:[0,1,2,3,4,3,5,6]},
-    {id:'arch',name:'C：大きな弧を描く型',description:'中盤で頂点を作り、後半で落ち着く',shape:[2,3,4,5,6,4,2,1]}
+    {id:'hook',name:'フック型（反復）',description:'狭い音域で反復し、口ずさみやすさを重視',shape:[0,2,4,2,1,3,2,0]},
+    {id:'rise',name:'上昇型（高揚）',description:'前半から少しずつ上がり、サビに向けて開く',shape:[0,1,2,3,4,3,5,6]},
+    {id:'arch',name:'アーチ型（弧）',description:'中盤で頂点を作り、後半で落ち着く',shape:[2,3,4,5,6,4,2,1]}
   ];
   const rhythmStyles=[
     {id:'straight',name:'ストレート',description:'均等な8分音符中心。言葉がはっきり届く',beats:[0.5,0.5,0.5,0.5,1,0.5,0.5]},
