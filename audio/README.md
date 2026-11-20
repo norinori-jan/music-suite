@@ -19,7 +19,7 @@ Expected generated structure:
 - `audio/meta-piano.manifest.json`
 - `audio/meta-nylon-guitar.manifest.json`
 
-The upstream collections are CC0 1.0. Their source LICENSE, README, SFZ mapping, and checksum files are copied beside the generated audio assets. The official release also supplies 24-bit / 48 kHz WAV masters; the OGG files are the web-preview encodings, and the production format decision remains open pending a representative WAV/OGG comparison. The importer does not include the separate Oculus Audio Pack (CC BY 4.0).
+The upstream collections are CC0 1.0. Their source LICENSE, README, SFZ mapping, and checksum files are copied beside the generated audio assets. The official release also supplies 24-bit / 48 kHz WAV masters; the OGG files are the web-preview encodings. A seven-sample WAV/OGG comparison found piano level differences within 0.02 dB and correlations above 0.999. The tested nylon-guitar OGGs were about 3 dB quieter than their WAV counterparts; after level matching, correlation-derived SNR was about 28–31 dB. These measurements support OGG as a web-delivery candidate, but do not replace listening to complete arrangements. Keep WAV as the source-quality reference until the A/B/C listening gate is passed. The importer does not include the separate Oculus Audio Pack (CC BY 4.0).
 
 ## Runtime
 
@@ -32,3 +32,7 @@ The CC0 import has now completed on the development branch. All 352 Meta Piano O
 The upstream release also offers 24-bit / 48 kHz WAV source packages. The complete piano + nylon WAV sets total about 1,155.8 MB, while the official web OGG packages total about 63.9 MB. OGG is a delivery candidate, not an automatic quality-equivalent replacement for the source WAVs.
 
 The importer currently stages the official OGG collections so the sampler mapping and loading path can be validated. This does **not** approve OGG as the final sound-quality choice. Final selection requires comparing actual rendered music, note attacks and decay tails, and iPhone Safari/PWA performance. If OGG is not good enough, evaluate higher-fidelity local or separately hosted assets with lazy loading rather than reducing the musical quality target.
+
+## iPhone/PWA status
+
+The current root page has Apple mobile-web-app metadata, but this branch does not yet include a web app manifest or service worker. Offline caching is not enabled. iOS Safari added OGG Vorbis support in version 18.4; older releases may not decode the current OGG assets. Confirm the target iPhone OS and test Web Audio decoding before treating OGG-only playback as supported.
