@@ -55,9 +55,14 @@ test("MT-01 executes the lyric generator and creates three independent melody va
     LYRIC_ROOTS: { C: 0 },
     LYRIC_PROGRESSIONS: { pop: [1, 5, 6, 4] },
     LYRIC_NOTE_NAMES: ["C", "C#", "D", "D#", "E", "F", "F#", "G", "G#", "A", "A#", "B"],
-    buildSectionChordProgressions: () => [{
+    buildSectionChordProgressions: (key, sections, style, sectionStyles, rhythmVariant) => [{
       label: "Verse",
-      progression: [{ id: "ch-1", chord: "C", beats: 4, tones: [0, 4, 7] }]
+      progression: [{
+        id: "ch-" + style,
+        chord: style,
+        beats: 4,
+        tones: style === "sad" ? [9, 0, 4] : style === "rock" ? [0, 5, 9] : [0, 4, 7]
+      }]
     }],
     lyricEstimateSyllables: () => 1,
     resolveMelodyChordDegree: () => 1,
@@ -79,6 +84,16 @@ test("MT-01 executes the lyric generator and creates three independent melody va
     assert.equal(new Set(Array.from(variant.notes, note => note.id)).size, 4);
   }
   assert.equal(context.window.__compositionArrangement.selectedMelody, "hook");
+  const profiles = context.window.__compositionArrangement.arrangementVariants;
+  assert.deepEqual(Array.from(profiles, profile => profile.id), ["warm", "dramatic", "bittersweet"]);
+  assert.deepEqual(Array.from(profiles, profile => profile.melodyId), ["hook", "rise", "arch"]);
+  assert.deepEqual(Array.from(profiles, profile => profile.progression), ["warm", "rock", "sad"]);
+  assert.equal(context.window.__compositionArrangement.selectedArrangement, "warm");
+  assert.ok(profiles.every(profile => profile.notesByMelody.hook.length === 4));
+  assert.notDeepEqual(
+    Array.from(profiles, profile => profile.notesByMelody.hook.map(note => note.note)),
+    Array.from([profiles[0]], profile => profile.notesByMelody.hook.map(note => note.note))
+  );
 });
 
 test("MT-02 arrangement builds independent melody, chord, bass, drum and lyric tracks", async () => {
@@ -199,4 +214,61 @@ test("MT-08 each melody card can select, apply and audition its own variant", as
   assert.equal(result, true);
   assert.equal(context.window.__compositionArrangement.selectedMelody, "rise");
   assert.deepEqual(calls, ["render", "apply", "play"]);
+});
+
+test("MT-09 three full arrangement profiles produce distinct chords, bass, drums and dynamics", async () => {
+  const html = await loadCanvas();
+  const builder = extractFunction(html, "buildCompositionTracks", "setCompositionTrackMode");
+  const profiles = [
+    { id: "warm", chordMode: "arpeggio", bassMode: "root-fifth", drumMode: "soft-pop", melodyGain: 0.115, chordGain: 0.026, bassGain: 0.085, drumGain: 0.72 },
+    { id: "dramatic", chordMode: "wide-pad", bassMode: "pulse", drumMode: "anthem", melodyGain: 0.13, chordGain: 0.032, bassGain: 0.12, drumGain: 1 },
+    { id: "bittersweet", chordMode: "soft-pad", bassMode: "sustain", drumMode: "sparse", melodyGain: 0.095, chordGain: 0.022, bassGain: 0.07, drumGain: 0.48 }
+  ];
+  const outputs = profiles.map(profile => {
+    const chordSections = [{ label: "Verse", progression: [
+      { id: "c1", chord: "C", tones: [0, 4, 7], beats: 4 },
+      { id: "c2", chord: "G", tones: [7, 11, 2], beats: 4 }
+    ] }];
+    const context = {
+      window: { __compositionArrangement: {
+        selectedArrangement: profile.id, arrangementVariants: [profile], chordSections,
+        selectedRhythm: "straight"
+      } },
+      lyricSectionsRead: () => [{ label: "Verse", role: "LEAD", text: "We will rise" }],
+      lyricTextRead: () => "We will rise",
+      Math, Number, String, Array, Map
+    };
+    vm.runInNewContext(builder + "\nbuildCompositionTracks(" + JSON.stringify([
+      { id: "m1", note: "C4", startBeat: 0, durationBeats: 1, word: "We", lyric: "We will rise", role: "LEAD", section: "Verse", velocity: 0.7 },
+      { id: "m2", note: "E4", startBeat: 1, durationBeats: 1, word: "rise", lyric: "We will rise", role: "LEAD", section: "Verse", velocity: 1 }
+    ]) + ");", context);
+    return context.window.__compositionArrangement.tracks;
+  });
+  const [warm, dramatic, bittersweet] = outputs;
+  assert.equal(warm[0].notes[0].velocity, 0.7);
+  assert.equal(warm[1].notes[0].playMode, "arpeggio");
+  assert.equal(dramatic[1].notes[0].playMode, "wide-pad");
+  assert.equal(bittersweet[1].notes[0].playMode, "soft-pad");
+  assert.equal(warm[2].notes.length, 4);
+  assert.ok(dramatic[2].notes.length > warm[2].notes.length);
+  assert.equal(bittersweet[2].notes.length, 2);
+  assert.ok(dramatic[3].notes.some(note => note.kind === "crash"));
+  assert.ok(bittersweet[3].notes.length < warm[3].notes.length);
+  assert.notDeepEqual(warm[3].notes.map(note => note.kind), dramatic[3].notes.map(note => note.kind));
+});
+
+test("MT-10 arrangement cards select an independent full-song profile without changing lyric selection UI", async () => {
+  const html = await loadCanvas();
+  assert.match(html, /id="composition-style-choices"/);
+  assert.match(html, /A案：温かく親しみやすい/);
+  assert.match(html, /B案：壮大でドラマチック/);
+  assert.match(html, /C案：切なく余韻のある/);
+  assert.match(html, /function selectCompositionArrangement\(profileId\)/);
+  assert.match(html, /notesByMelody/);
+  assert.match(html, /melodyWave/);
+  assert.match(html, /chordMode/);
+  assert.match(html, /bassMode/);
+  assert.match(html, /drumMode/);
+  assert.match(html, /velocity:n\.velocity/);
+  assert.match(html, /lyric-selection-panel/);
 });
