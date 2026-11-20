@@ -235,8 +235,10 @@ The guitar OGG previews are consistently about 3 dB quieter than the WAV masters
 
 ## iPhone/PWA readiness audit
 
-- The current root `index.html` has Apple mobile-web-app metadata but does not contain a web app manifest link or service-worker registration.
-- No root service worker or web app manifest exists in this branch at this checkpoint.
-- Therefore, offline PWA behavior and audio asset caching are **not implemented or tested** yet.
+- Added `manifest.webmanifest`, PNG/SVG install icons, and root-page service-worker registration.
+- Added a service worker that pre-caches only the app shell and sampler module. Instrument manifests use network-first with cached fallback; OGG sample files use cache-first after their first successful online fetch.
+- Cache cleanup is limited to cache names prefixed `music-suite-`, so unrelated PWA caches on the shared `norinori-jan.github.io` origin are preserved.
+- Added CI checks for manifest registration, iPhone home-screen icon declaration, runtime-only audio caching, and cross-app cache preservation. The latest regression run completed with **99 tests passed, 0 failed**.
+- This is implementation and static CI coverage only. Real iPhone installation, first-play download, subsequent offline playback, storage quota behavior, and Safari audio decoding are still **not verified on a physical device**.
 - OGG Vorbis support is available in iOS Safari 18.4 and later; older iOS Safari versions have partial or no support. The target device's exact OS and Web Audio `decodeAudioData` behavior must be verified before relying on OGG alone.
 - Next: add a minimal app manifest and service worker with runtime caching for manifests and only the samples actually loaded. Do not precache all 700 files at install time.
