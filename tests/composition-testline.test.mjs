@@ -932,3 +932,15 @@ test("TL-64 A/B/C drum candidates have different section arcs and audio-clock hi
   const chorusC=metrics(build({},section("chorus"),"C"));
   assert.ok(chorusC.ride>0&&chorusC.tom>0,"C chorus should combine ride drive with transition fills");
 });
+
+
+test("TL-65 drum voices use layered snare body, dedicated rim and filtered closed-hat texture", async () => {
+  const html=await readFile(beatLabPath,"utf8");
+  assert.match(html,/let synthKick=null,synthSnare=null,synthSnareBody=null,synthRim=null/,"snare body and rim must have independent voice instances");
+  assert.match(html,/function getSnareBody\(\)[\s\S]*?new Tone\.MembraneSynth/,"snare body must add a tuned low-mid transient");
+  assert.match(html,/function getRim\(\)[\s\S]*?new Tone\.Synth/,"rim click must not reuse the broadband snare noise");
+  assert.match(html,/new Tone\.Filter\(7200,'highpass'\)/,"closed hat must have a high-pass stage");
+  assert.match(html,/synthHat=new Tone\.NoiseSynth[\s\S]*?\.connect\(synthHatFilter\)/,"closed hat noise must pass through its filter");
+  assert.match(html,/getSnare\(\)\.triggerAttackRelease\('16n',at,safeVel\);getSnareBody\(\)\.triggerAttackRelease\('D2','16n',at,safeVel\*\.58\)/,"snare hit must combine noise and body at the same audio time");
+  assert.match(html,/getRim\(\)\.triggerAttackRelease\('D5','32n',at,safeVel\)/,"rim hit must use its dedicated short voice");
+});
