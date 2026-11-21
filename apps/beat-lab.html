@@ -1761,6 +1761,7 @@ function _buildExportData(){
   }else if(sections.length){
     const active=sections.find(x=>x.id===APP.activeSectionId);
     if(active)active.pattern=cloneRhythmData(APP.pattern);
+    if(APP.drumVariants&&APP.activeDrumVariant&&APP.drumVariants[APP.activeDrumVariant])APP.drumVariants[APP.activeDrumVariant].sections=cloneRhythmData(sections);
     sections.forEach(section=>{const start=(section.startBar-1)*APP.timeSig*stepsPerBeat,len=(section.endBar-section.startBar+1)*APP.timeSig*stepsPerBeat;
       for(let local=0;local<len;local++)ROWS.forEach(row=>{const vel=section.pattern?.[pk(row.id,local)];if(vel)notes.push({pitch:row.pitch,startBeat:+((start+local)*beatPerStep).toFixed(4),durationBeats:+(beatPerStep*.9).toFixed(4),vel:Math.round(40+vel*87),section:section.id});});
     });
@@ -1892,7 +1893,7 @@ function importJSON(input){
       });
       if(data.name)document.getElementById('project-name').value=data.name;
       if(data.arrangement)restoreSongArrangement(data.arrangement,data);
-      else{APP.sections=null;APP.activeSectionId=null;APP.arrangementEffects={fillBeforeChorus:true,breakBars:[],finalVariation:true};}
+      else{APP.sections=null;APP.activeSectionId=null;APP.drumVariants=null;APP.activeDrumVariant=null;APP.arrangementEffects={fillBeforeChorus:true,breakBars:[],finalVariation:true};}
       renderArrangementEffects();
       switchView('step');
       renderStepGrid();
