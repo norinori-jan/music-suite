@@ -344,6 +344,14 @@ body{padding-bottom:env(safe-area-inset-bottom)}
   <button class="btn pri" onclick="applyDrumArrangementIdea()">✨ セクション別に提案</button>
   <span id="drum-idea-status" style="color:var(--mu)">イントロは控えめ、サビは広げる、つなぎはフィルで変化を付けます。</span>
 </div>
+<div id="drum-candidate-panel" style="display:flex;align-items:center;gap:8px;flex-wrap:wrap;padding:8px 12px;background:var(--s1);border-bottom:1px solid var(--bd);font-size:10px">
+  <strong style="color:var(--acc)">🎧 A / B / C 比較</strong>
+  <button class="btn" id="drum-candidate-A" onclick="selectDrumCandidate('A')">A · 王道ポップ</button>
+  <button class="btn" id="drum-candidate-B" onclick="selectDrumCandidate('B')">B · ハーフタイム</button>
+  <button class="btn" id="drum-candidate-C" onclick="selectDrumCandidate('C')">C · シンコペーション</button>
+  <button class="btn pri" id="drum-only-preview-btn" onclick="playDrumCandidateOnly()">🥁 ドラムだけ試聴</button>
+  <span id="drum-candidate-status" style="color:var(--mu)">3案を生成して、同じ曲のドラムを切り替えて比較します</span>
+</div>
 
 <!-- TABS -->
 <div id="tabs">
@@ -583,6 +591,7 @@ const APP={
   undoStack:[], redoStack:[],
   sections:null, activeSectionId:null,
   arrangementEffects:{fillBeforeChorus:true,breakBars:[],finalVariation:true},
+  drumVariants:null, activeDrumVariant:null,
 };
 
 // Imported timeline drums remain authoritative until the user edits the sequencer.
@@ -837,11 +846,77 @@ function applyDrumArrangementIdea(style){
   arrangementStatus(names[selected]+'の展開案を作成しました。各区間を試聴して調整してください');
   try{msRegister(buildExportData());}catch(e){console.warn('drum arrangement suggestion sync skipped',e);}
 }
+function applyCandidateCoreGroove(pattern,section,variant){
+  const out=cloneRhythmData(pattern),spb=APP.div/4,spbar=APP.timeSig*spb,bars=Math.max(1,section.endBar-section.startBar+1),total=bars*spbar;
+  ['kick','snare','clap','hat'].forEach(row=>Object.keys(out).forEach(key=>{if(key.startsWith(row+':'))delete out[key];}));
+  const put=(row,step,vel)=>{if(step>=0&&step<total)out[pk(row,step)]=Math.max(.16,Math.min(1,vel));};
+  for(let bar=0;bar<bars;bar++){
+    const base=bar*spbar;
+    if(variant==='A'){
+      put('kick',base,.96); if(APP.timeSig>=3)put('kick',base+2*spb,.78);
+      put('snare',base+spb,.82); if(APP.timeSig>=4)put('snare',base+3*spb,.88);
+      const interval=Math.max(1,Math.floor(spb/2));for(let x=0;x<spbar;x+=interval)put('hat',base+x,x%(spb)===0?.62:.43);
+    }else if(variant==='B'){
+      put('kick',base,.98);if(APP.timeSig>=4)put('kick',base+Math.round(2.5*spb),.72);
+      put('snare',base+Math.min(spbar-1,2*spb),.96);
+      put('hat',base,.5);put('hat',base+Math.max(1,Math.round(1.5*spb)),.38);
+      if(APP.timeSig>=4)put('hat',base+3*spb,.48);
+    }else{
+      put('kick',base,.98);if(APP.timeSig>=4){put('kick',base+Math.round(1.5*spb),.72);put('kick',base+3*spb,.86);}else if(APP.timeSig===3)put('kick',base+2*spb,.78);
+      put('snare',base+spb,.84);put('snare',base+Math.max(0,spbar-1),.9);
+      const interval=Math.max(1,Math.floor(spb/2));for(let x=0;x<spbar;x+=interval)put('hat',base+x,x%spb===0?.58:.5);
+      if(spbar>=8)put('snare',base+Math.max(0,spbar-2),.34);
+    }
+  }
+  return out;
+}
+function createDrumCandidates(){
+  if(!Array.isArray(APP.sections)||!APP.sections.length){arrangementStatus('先に「曲の展開を作る」を押してください',true);return false;}
+  const current=APP.sections.find(x=>x.id===APP.activeSectionId);if(current)current.pattern=cloneRhythmData(APP.pattern);
+  const variation=document.getElementById('drum-variation-level')?.value||'normal';
+  const definitions={A:{style:'balanced',label:'王道ポップ'},B:{style:'rock',label:'ハーフタイム'},C:{style:'cinematic',label:'シンコペーション'}};
+  const source=cloneRhythmData(APP.pattern),variants={};
+  Object.entries(definitions).forEach(([id,def])=>{
+    const sections=APP.sections.map(section=>{
+      const idea=buildSectionDrumIdea(source,section,def.style,variation);
+      return {...cloneRhythmData(section),pattern:applyCandidateCoreGroove(idea,section,id)};
+    });
+    variants[id]={label:def.label,sections};
+  });
+  APP.drumVariants=variants;APP.activeDrumVariant='A';
+  applyDrumCandidateState('A');
+  const status=document.getElementById('drum-candidate-status');if(status)status.textContent='A・B・Cを生成しました。ドラム単独／全体再生で比較できます';
+  return true;
+}
+function applyDrumCandidateState(id){
+  const variant=APP.drumVariants?.[id];if(!variant)return false;
+  APP.sections=cloneRhythmData(variant.sections);APP.activeDrumVariant=id;
+  const active=APP.sections.find(x=>x.id===APP.activeSectionId)||APP.sections[0];APP.activeSectionId=active.id;APP.pattern=cloneRhythmData(active.pattern);
+  renderArrangementControls();renderStepGrid();
+  ['A','B','C'].forEach(key=>document.getElementById('drum-candidate-'+key)?.classList.toggle('on',key===id));
+  const status=document.getElementById('drum-candidate-status');if(status)status.textContent=id+'案：'+variant.label+' — '+APP.sections.length+'区間を切替';
+  return true;
+}
+function selectDrumCandidate(id){
+  if(APP.playing)stopPlay();
+  if(!APP.drumVariants){if(!createDrumCandidates())return;}
+  else if(APP.activeDrumVariant&&APP.sections){const active=APP.sections.find(x=>x.id===APP.activeSectionId);if(active)active.pattern=cloneRhythmData(APP.pattern);APP.drumVariants[APP.activeDrumVariant].sections=cloneRhythmData(APP.sections);}
+  applyDrumCandidateState(id);
+}
+let drumOnlyMixSnapshot=null;
+function playDrumCandidateOnly(){
+  if(!APP.drumVariants){if(!createDrumCandidates())return;}
+  if(APP.playing){stopPlay();return;}
+  drumOnlyMixSnapshot={melody:document.getElementById('melody-enabled').checked,bass:document.getElementById('bass-enabled').checked};
+  document.getElementById('melody-enabled').checked=false;document.getElementById('bass-enabled').checked=false;
+  const status=document.getElementById('mix-status');if(status)status.textContent='ドラム単独試聴中 — 停止するとミックス設定を元に戻します';
+  togglePlay();
+}
 function sectionAtStep(step){if(!Array.isArray(APP.sections)||!APP.sections.length)return null;const spb=APP.timeSig*(APP.div/4),bar=Math.floor(step/spb)+1;return APP.sections.find(x=>bar>=x.startBar&&bar<=x.endBar)||null;}
 function sectionPatternStep(section,step){const spb=APP.timeSig*(APP.div/4),start=(section.startBar-1)*spb,len=(section.endBar-section.startBar+1)*spb;return (step-start)%Math.max(1,len);}
 function restoreSongArrangement(data){
   if(!data||!Array.isArray(data.sections)||!data.sections.length)return false;
-  APP.sections=cloneRhythmData(data.sections).map(x=>{if(!x.effects){x.effects={fillBeforeChorus:x.id==='chorus',fillBars:1,fillDensity:'normal',finalVariation:x.id==='final',finalStyle:'accent'};}return x;});APP.arrangementEffects=cloneRhythmData(data.effects||{breakBars:[]});APP.bars=Math.min(32,Math.max(5,Number(data.bars)||APP.bars));document.getElementById('step-bars').value=APP.bars;renderArrangementEffects();
+  APP.sections=cloneRhythmData(data.sections).map(x=>{if(!x.effects){x.effects={fillBeforeChorus:x.id==='chorus',fillBars:1,fillDensity:'normal',finalVariation:x.id==='final',finalStyle:'accent'};}return x;});APP.drumVariants=data.drumVariants&&typeof data.drumVariants==='object'?cloneRhythmData(data.drumVariants):null;APP.activeDrumVariant=data.activeDrumVariant||null;APP.arrangementEffects=cloneRhythmData(data.effects||{breakBars:[]});APP.bars=Math.min(32,Math.max(5,Number(data.bars)||APP.bars));document.getElementById('step-bars').value=APP.bars;renderArrangementEffects();
   APP.activeSectionId=APP.sections[0].id;APP.pattern=cloneRhythmData(APP.sections[0].pattern);renderArrangementControls();return true;
 }
 function renderStepGrid(){
@@ -1119,6 +1194,7 @@ function stopPlay(){
   document.querySelectorAll('#play-btn,#play-btn-ex').forEach(b=>{b.textContent='▶';b.classList.remove('active')});
   document.querySelectorAll('.playing-step').forEach(e=>e.classList.remove('playing-step'));
   if(bassSynth)bassSynth.triggerRelease();
+  if(drumOnlyMixSnapshot){document.getElementById('melody-enabled').checked=drumOnlyMixSnapshot.melody;document.getElementById('bass-enabled').checked=drumOnlyMixSnapshot.bass;drumOnlyMixSnapshot=null;const mix=document.getElementById('mix-status');if(mix)mix.textContent='メロディ・ベース・ドラムを同時に試聴できます';}
   const playhead=document.getElementById('arrangement-playhead');if(playhead)playhead.textContent='停止中';
 }
 function PROJ_BPM(){ return parseInt(document.getElementById('bpm-sl').value); }
@@ -1682,6 +1758,8 @@ function _buildExportData(){
     melody: base.melody||{notes:[]},
     drums: { notes },
     arrangement: sections.length?{version:1,bars:APP.bars,effects:cloneRhythmData(ensureArrangementEffects()),sections:sections.map(x=>({id:x.id,label:x.label,startBar:x.startBar,endBar:x.endBar,pattern:cloneRhythmData(x.pattern),effects:cloneRhythmData(x.effects||{})}))}:base.arrangement||null,
+    drumVariants:APP.drumVariants?cloneRhythmData(APP.drumVariants):base.drumVariants||null,
+    activeDrumVariant:APP.activeDrumVariant||base.activeDrumVariant||null,
     chords: base.chords||base.generatedMusic?.chords||null,
     exported: new Date().toISOString(),
     rhythmVariations: readRhythmVariations()
