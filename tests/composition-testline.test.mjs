@@ -814,3 +814,44 @@ test("TL-60 BEAT//LAB adds phrase-aware fills and controllable bar variation", a
   assert.match(apply,/drum-variation-level/);
   assert.match(apply,/buildSectionDrumIdea\(base,section,selected,variation\)/);
 });
+
+
+test("TL-61 BEAT//LAB keeps three independently playable drum candidates with distinct groove identities", async () => {
+  const html=await readFile(beatLabPath,"utf8");
+  for(const id of ["A","B","C"])assert.match(html,new RegExp('id="drum-candidate-'+id+'"'));
+  assert.match(html,/onclick="playDrumCandidateOnly\(\)"/);
+  assert.match(html,/function createDrumCandidates\(\)/);
+  assert.match(html,/function selectDrumCandidate\(id\)/);
+  assert.match(html,/drumVariants:APP\.drumVariants\?cloneRhythmData\(APP\.drumVariants\)/);
+  assert.match(html,/APP\.drumVariants=data\.drumVariants/);
+  const start=html.indexOf("function applyCandidateCoreGroove(pattern,section,variant)");
+  const end=html.indexOf("\nfunction createDrumCandidates()",start);
+  assert.ok(start>=0&&end>start,"candidate groove generator must exist");
+  const APP={div:16,timeSig:4};
+  const pk=(row,step)=>row+":"+step;
+  const cloneRhythmData=value=>JSON.parse(JSON.stringify(value||{}));
+  const build=new Function("APP","pk","cloneRhythmData",html.slice(start,end)+";return applyCandidateCoreGroove;")(APP,pk,cloneRhythmData);
+  const section={id:"verse",startBar:1,endBar:2};
+  const seed={"kick:0":.6,"snare:4":.6,"hat:0":.5};
+  const a=build(seed,section,"A"),b=build(seed,section,"B"),c=build(seed,section,"C");
+  const signature=p=>Object.keys(p).sort().join("|");
+  assert.notEqual(signature(a),signature(b),"A and B must use different kick/snare/hat placement");
+  assert.notEqual(signature(a),signature(c),"A and C must use different rhythmic placement");
+  assert.notEqual(signature(b),signature(c),"B and C must use different rhythmic placement");
+  assert.ok(Object.keys(a).filter(k=>k.startsWith("hat:")).length>Object.keys(b).filter(k=>k.startsWith("hat:")).length,"B must leave more rhythmic space");
+  assert.ok(Object.keys(c).some(k=>k.startsWith("snare:")),"C must retain syncopated snare accents");
+  const selectStart=html.indexOf("function selectDrumCandidate(id)");
+  const selectEnd=html.indexOf("\nlet drumOnlyMixSnapshot",selectStart);
+  const select=html.slice(selectStart,selectEnd);
+  assert.match(select,/APP\.drumVariants\[APP\.activeDrumVariant\]\.sections=cloneRhythmData\(APP\.sections\)/,"edits must be saved back to the active candidate before switching");
+  const soloStart=html.indexOf("function playDrumCandidateOnly()");
+  const soloEnd=html.indexOf("\nfunction sectionAtStep",soloStart);
+  assert.ok(soloStart>=0&&soloEnd>soloStart);
+  const solo=html.slice(soloStart,soloEnd);
+  assert.match(solo,/melody-enabled/);
+  assert.match(solo,/bass-enabled/);
+  assert.match(solo,/togglePlay\(\)/);
+  const stopStart=html.indexOf("function stopPlay()");
+  const stopEnd=html.indexOf("\nfunction PROJ_BPM",stopStart);
+  assert.match(html.slice(stopStart,stopEnd),/drumOnlyMixSnapshot/,"stop must restore the user's melody and bass mix toggles");
+});
