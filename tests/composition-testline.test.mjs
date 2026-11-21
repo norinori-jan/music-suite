@@ -1367,11 +1367,11 @@ test("TL-90 all inline JavaScript in composition, BEAT//LAB and score editor pag
   ];
   for (const [pageName, pagePath] of pages) {
     const html = await readFile(pagePath, "utf8");
-    const scripts = [...html.matchAll(/<script\\b([^>]*)>([\\s\\S]*?)<\\/script\\s*>/gi)];
-    const inlineScripts = scripts.filter((match) => !/\\bsrc\\s*=/i.test(match[1]));
+    const scripts = [...html.matchAll(/<script\b([^>]*)>([\s\S]*?)<\/script\s*>/gi)];
+    const inlineScripts = scripts.filter((match) => !/\bsrc\s*=/i.test(match[1]));
     assert.ok(inlineScripts.length > 0, pageName + " must contain at least one inline script to validate");
     inlineScripts.forEach((match, index) => {
-      const type = match[1].match(/\\btype\\s*=\\s*["']([^"']+)["']/i)?.[1];
+      const type = match[1].match(/\btype\s*=\s*["']([^"']+)["']/i)?.[1];
       assert.ok(!type || type === "text/javascript" || type === "application/javascript",
         pageName + " inline script " + (index + 1) + " uses unsupported non-classic script type: " + type);
       new Script(match[2], { filename: pageName + "#inline-script-" + (index + 1) });
