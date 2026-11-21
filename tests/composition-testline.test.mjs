@@ -1270,3 +1270,35 @@ test("TL-85 selected A/B/C mix profile follows candidate selection, playback and
   assert.match(html,/masterCompressor\.threshold,profile\.master\.threshold/);
   assert.match(html,/id="arrangement-mix-status"/);
 });
+
+
+test("TL-86 A/B/C own independent canonical snapshots for every instrument track", async () => {
+  const html=await readFile(beatLabPath,"utf8");
+  assert.match(html,/arrangements:null/,"application state must own the canonical arrangement collection");
+  assert.match(html,/function buildArrangementTrackSnapshot\(project,variant,sections\)/);
+  for(const track of ["melody","piano","guitar","bass","drums"]){
+    assert.match(html,new RegExp(track+":\\{notes:"),track+" must be represented as an independent note track");
+  }
+  assert.match(html,/APP\.arrangements\[id\]=buildArrangementTrackSnapshot/);
+  assert.match(html,/APP\.arrangements=\{\}/,"regenerating candidates must start clean snapshots");
+  assert.match(html,/const activeArrangement=syncActiveArrangementTrackSnapshot\(\)/,"playback must read the selected canonical snapshot");
+  assert.match(html,/const melody=activeTracks\.melody\?\.notes\|\|\[\]/,"melody playback must use the selected arrangement's melody track");
+  assert.match(html,/bass: \{\.\.\.\(base\.bass\|\|\{\}\),notes:cloneRhythmData\(bassForExport\)\}/);
+  assert.match(html,/arrangements:cloneRhythmData\(APP\.arrangements\|\|\{\}\)/,"export must persist all candidate snapshots");
+  assert.match(html,/projectData\?\.arrangements/,"arrangement restore must restore the canonical snapshots");
+});
+
+test("TL-87 JSON roundtrip baseline includes all A/B/C track snapshots", async () => {
+  const html=await readFile(beatLabPath,"utf8");
+  const start=html.indexOf("function normalizeJSONRoundTripValue");
+  const end=html.indexOf("function exportJSON",start);
+  assert.ok(start>=0&&end>start);
+  const helpers=new Function(html.slice(start,end)+"\\nreturn {createJSONRoundTripSnapshot,compareJSONRoundTripSnapshot};")();
+  const tracks={melody:{notes:[{pitch:60,startBeat:0,durationBeats:1,vel:90}]},piano:{notes:[]},guitar:{notes:[]},bass:{notes:[]},drums:{notes:[]}};
+  const project={bpm:100,timeSig:4,bars:4,div:16,lyrics:"",sections:[],melody:tracks.melody,drums:tracks.drums,piano:tracks.piano,guitar:tracks.guitar,bass:tracks.bass,arrangements:{A:{id:"A",tracks},B:{id:"B",tracks:structuredClone(tracks)},C:{id:"C",tracks:structuredClone(tracks)}},activeArrangement:"B"};
+  const baseline=helpers.createJSONRoundTripSnapshot(project);
+  assert.equal(helpers.compareJSONRoundTripSnapshot(baseline,structuredClone(project)).ok,true);
+  const edited=structuredClone(project);
+  edited.arrangements.C.tracks.guitar.notes.push({pitch:67,startBeat:1,durationBeats:.5,vel:70});
+  assert.ok(helpers.compareJSONRoundTripSnapshot(baseline,edited).errors.includes("arrangements がJSON保存前と一致しません"));
+});
