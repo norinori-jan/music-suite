@@ -918,10 +918,26 @@ function playDrumCandidateOnly(){
 }
 function sectionAtStep(step){if(!Array.isArray(APP.sections)||!APP.sections.length)return null;const spb=APP.timeSig*(APP.div/4),bar=Math.floor(step/spb)+1;return APP.sections.find(x=>bar>=x.startBar&&bar<=x.endBar)||null;}
 function sectionPatternStep(section,step){const spb=APP.timeSig*(APP.div/4),start=(section.startBar-1)*spb,len=(section.endBar-section.startBar+1)*spb;return (step-start)%Math.max(1,len);}
-function restoreSongArrangement(data){
+function restoreSongArrangement(data,projectData=null){
   if(!data||!Array.isArray(data.sections)||!data.sections.length)return false;
-  APP.sections=cloneRhythmData(data.sections).map(x=>{if(!x.effects){x.effects={fillBeforeChorus:x.id==='chorus',fillBars:1,fillDensity:'normal',finalVariation:x.id==='final',finalStyle:'accent'};}return x;});APP.drumVariants=data.drumVariants&&typeof data.drumVariants==='object'?cloneRhythmData(data.drumVariants):null;APP.activeDrumVariant=data.activeDrumVariant||null;APP.arrangementEffects=cloneRhythmData(data.effects||{breakBars:[]});APP.bars=Math.min(32,Math.max(5,Number(data.bars)||APP.bars));document.getElementById('step-bars').value=APP.bars;renderArrangementEffects();
-  APP.activeSectionId=APP.sections[0].id;APP.pattern=cloneRhythmData(APP.sections[0].pattern);renderArrangementControls();return true;
+  APP.sections=cloneRhythmData(data.sections).map(x=>{if(!x.effects){x.effects={fillBeforeChorus:x.id==='chorus',fillBars:1,fillDensity:'normal',finalVariation:x.id==='final',finalStyle:'accent'};}return x;});
+  const savedVariants=projectData?.drumVariants||data.drumVariants;
+  APP.drumVariants=savedVariants&&typeof savedVariants==='object'?cloneRhythmData(savedVariants):null;
+  APP.activeDrumVariant=projectData?.activeDrumVariant||data.activeDrumVariant||null;
+  // The active arrangement is authoritative: retain any last-minute edits made
+  // after the candidate was selected, rather than restoring a stale candidate copy.
+  if(APP.drumVariants&&APP.activeDrumVariant&&APP.drumVariants[APP.activeDrumVariant]){
+    APP.drumVariants[APP.activeDrumVariant].sections=cloneRhythmData(APP.sections);
+  }
+  APP.arrangementEffects=cloneRhythmData(data.effects||{breakBars:[]});
+  APP.bars=Math.min(32,Math.max(5,Number(data.bars)||APP.bars));
+  document.getElementById('step-bars').value=APP.bars;
+  APP.activeSectionId=APP.sections[0].id;APP.pattern=cloneRhythmData(APP.sections[0].pattern);
+  renderArrangementEffects();renderArrangementControls();
+  ['A','B','C'].forEach(key=>document.getElementById('drum-candidate-'+key)?.classList.toggle('on',key===APP.activeDrumVariant));
+  const status=document.getElementById('drum-candidate-status');
+  if(status)status.textContent=APP.drumVariants?(APP.activeDrumVariant||'A')+'案を復元しました。A/B/Cを切り替えて比較できます':'A/B/C候補は未生成です';
+  return true;
 }
 function renderStepGrid(){
   APP.bars=parseInt(document.getElementById('step-bars').value);
@@ -1875,7 +1891,7 @@ function importJSON(input){
         APP.pattern[pk(row.id,step)]=vel;
       });
       if(data.name)document.getElementById('project-name').value=data.name;
-      if(data.arrangement)restoreSongArrangement(data.arrangement);
+      if(data.arrangement)restoreSongArrangement(data.arrangement,data);
       else{APP.sections=null;APP.activeSectionId=null;APP.arrangementEffects={fillBeforeChorus:true,breakBars:[],finalVariation:true};}
       renderArrangementEffects();
       switchView('step');
