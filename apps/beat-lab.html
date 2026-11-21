@@ -1154,7 +1154,7 @@ function createInstrumentSampler(folder,urls,output,ready){
   try{return new Tone.Sampler({urls,baseUrl:TONEJS_SAMPLE_ROOT+folder+'/',release:.7,onload:()=>ready(true)}).connect(output);}
   catch(error){ready(false);return null;}
 }
-function getBassSampler(){if(!bassSampler)bassSampler=createInstrumentSampler('bass-electric',{Cs1:'Cs1.mp3',E1:'E1.mp3',G1:'G1.mp3',As1:'As1.mp3',Cs2:'Cs2.mp3',E2:'E2.mp3',G2:'G2.mp3',As2:'As2.mp3',Cs3:'Cs3.mp3',E3:'E3.mp3',G3:'G3.mp3',As3:'As3.mp3',Cs4:'Cs4.mp3'},getBassBus(),v=>bassSamplerReady=v);return bassSampler;}
+function getBassSampler(){if(!bassSampler)bassSampler=createInstrumentSampler('bass-electric',{Cs1:'Cs1.mp3',E1:'E1.mp3',G1:'G1.mp3',As1:'As1.mp3',Cs2:'Cs2.mp3',E2:'E2.mp3',G2:'G2.mp3',As2:'As2.mp3',Cs3:'Cs3.mp3',E3:'E3.mp3',G3:'G3.mp3',As3:'As3.mp3',Cs4:'Cs4.mp3'},getBassSamplerFilter(),v=>bassSamplerReady=v);return bassSampler;}
 function getGuitarSynth(){if(!guitarSynth){guitarSynth=new Tone.PluckSynth({attackNoise:.72,dampening:5200,resonance:.92}).connect(getGuitarBus());guitarSynth.volume.value=-9;}return guitarSynth;}
 function getGuitarSampler(){if(!guitarSampler)guitarSampler=createInstrumentSampler('guitar-acoustic',{D2:'D2.mp3',G2:'G2.mp3',A2:'A2.mp3',C3:'C3.mp3',E3:'E3.mp3',G3:'G3.mp3',A3:'A3.mp3',C4:'C4.mp3',E4:'E4.mp3',G4:'G4.mp3',A4:'A4.mp3',C5:'C5.mp3'},getGuitarBus(),v=>guitarSamplerReady=v);return guitarSampler;}
 function getElectricGuitarSampler(){if(!electricGuitarSampler)electricGuitarSampler=createInstrumentSampler('guitar-electric',{Cs2:'Cs2.mp3',E2:'E2.mp3',Fs2:'Fs2.mp3',A2:'A2.mp3',C3:'C3.mp3',C4:'C4.mp3',Ds4:'Ds4.mp3',Fs4:'Fs4.mp3',A5:'A5.mp3',C6:'C6.mp3'},getGuitarBus(),v=>electricGuitarSamplerReady=v);return electricGuitarSampler;}
