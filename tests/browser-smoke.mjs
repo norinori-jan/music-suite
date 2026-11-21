@@ -79,7 +79,7 @@ try {
   await page.locator("#play-btn").click();
   await page.waitForFunction(() => APP.playing === true, null, { timeout: 5000 });
   await page.waitForTimeout(1200);
-  await page.locator('button[onclick="stopPlay()"]').click();
+  await page.locator("#play-btn").click();
   await page.waitForFunction(() => APP.playing === false, null, { timeout: 5000 });
 
   assert.deepEqual(runtimeErrors, [], "Browser runtime errors detected:\n" + runtimeErrors.join("\n\n"));
