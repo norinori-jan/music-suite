@@ -286,10 +286,12 @@ body{padding-bottom:env(safe-area-inset-bottom)}
 </div>
 
 <div id="mixbar" style="display:flex;align-items:center;gap:12px;flex-wrap:wrap;padding:7px 12px;background:var(--s1);border-bottom:1px solid var(--bd);font-size:10px">
-  <label style="display:flex;align-items:center;gap:5px"><input type="checkbox" id="melody-enabled" checked> 🎹 メロディも再生</label>
-  <label style="display:flex;align-items:center;gap:5px">メロディ音量 <input id="melody-volume" type="range" min="0" max="100" value="65" style="width:82px"></label>
-  <label style="display:flex;align-items:center;gap:5px">ドラム音量 <input id="drum-volume" type="range" min="0" max="100" value="80" style="width:82px"></label>
-  <span id="mix-status" style="color:var(--mu)">メロディとドラムを同時に試聴できます</span>
+  <label style="display:flex;align-items:center;gap:5px"><input type="checkbox" id="melody-enabled" checked> 🎹 メロディ</label>
+  <label style="display:flex;align-items:center;gap:5px">音量 <input id="melody-volume" type="range" min="0" max="100" value="65" style="width:70px"></label>
+  <label style="display:flex;align-items:center;gap:5px"><input type="checkbox" id="bass-enabled" checked> 🎸 ベース</label>
+  <label style="display:flex;align-items:center;gap:5px">音量 <input id="bass-volume" type="range" min="0" max="100" value="72" style="width:70px"></label>
+  <label style="display:flex;align-items:center;gap:5px">🥁 ドラム音量 <input id="drum-volume" type="range" min="0" max="100" value="80" style="width:70px"></label>
+  <span id="mix-status" style="color:var(--mu)">メロディ・ベース・ドラムを同時に試聴できます</span>
   <button class="btn pri" id="ai-mix-preview-btn" onclick="playMelodyDrumPreview()" style="display:none">▶ AI伴奏をメロディと同時試聴</button>
 </div>
 <div id="variationbar" style="display:flex;align-items:center;gap:7px;flex-wrap:wrap;padding:7px 12px;background:var(--s2);border-bottom:1px solid var(--bd);font-size:10px">
@@ -918,13 +920,16 @@ function toggleSwing(){
 // ════════════════════════════════════════════════════════
 // PLAYBACK
 // ════════════════════════════════════════════════════════
-let synthKick=null,synthSnare=null,synthMetal=null,synthPerc=null,melodySynth=null,drumBus=null,melodyBus=null;
-function getDrumBus(){if(!drumBus)drumBus=new Tone.Gain(Number(document.getElementById('drum-volume')?.value||80)/100).toDestination();return drumBus;}
-function getMelodyBus(){if(!melodyBus)melodyBus=new Tone.Gain(Number(document.getElementById('melody-volume')?.value||65)/100).toDestination();return melodyBus;}
+let synthKick=null,synthSnare=null,synthMetal=null,synthPerc=null,melodySynth=null,bassSynth=null,drumBus=null,melodyBus=null,bassBus=null;
+function getDrumBus(){if(!drumBus)drumBus=new Tone.Gain(Number(document.getElementById('drum-volume')?.value??80)/100).toDestination();return drumBus;}
+function getMelodyBus(){if(!melodyBus)melodyBus=new Tone.Gain(Number(document.getElementById('melody-volume')?.value??65)/100).toDestination();return melodyBus;}
+function getBassBus(){if(!bassBus)bassBus=new Tone.Gain(Number(document.getElementById('bass-volume')?.value??72)/100).toDestination();return bassBus;}
 function getMelodySynth(){if(!melodySynth){melodySynth=new Tone.PolySynth(Tone.Synth,{oscillator:{type:'triangle'},envelope:{attack:.015,decay:.12,sustain:.55,release:.22}}).connect(getMelodyBus());melodySynth.volume.value=-5;}return melodySynth;}
-function updateMixVolumes(){if(drumBus)drumBus.gain.rampTo(Number(document.getElementById('drum-volume').value)/100,.05);if(melodyBus)melodyBus.gain.rampTo(Number(document.getElementById('melody-volume').value)/100,.05);}
+function getBassSynth(){if(!bassSynth){bassSynth=new Tone.MonoSynth({oscillator:{type:'fatsawtooth',count:2,spread:8},filter:{Q:1,type:'lowpass',rolloff:-24},envelope:{attack:.006,decay:.16,sustain:.58,release:.12},filterEnvelope:{attack:.001,decay:.22,sustain:.18,release:.12,baseFrequency:65,octaves:2.4}}).connect(getBassBus());bassSynth.volume.value=-7;}return bassSynth;}
+function updateMixVolumes(){if(drumBus)drumBus.gain.rampTo(Number(document.getElementById('drum-volume').value)/100,.05);if(melodyBus)melodyBus.gain.rampTo(Number(document.getElementById('melody-volume').value)/100,.05);if(bassBus)bassBus.gain.rampTo(Number(document.getElementById('bass-volume').value)/100,.05);}
 document.getElementById('drum-volume').addEventListener('input',updateMixVolumes);
 document.getElementById('melody-volume').addEventListener('input',updateMixVolumes);
+document.getElementById('bass-volume').addEventListener('input',updateMixVolumes);
 function getKick(){ if(!synthKick){synthKick=new Tone.MembraneSynth({pitchDecay:.05,octaves:6,envelope:{attack:.001,decay:.25,sustain:0,release:.1}}).connect(getDrumBus());synthKick.volume.value=-4;} return synthKick; }
 function getSnare(){ if(!synthSnare){synthSnare=new Tone.NoiseSynth({noise:{type:'white'},envelope:{attack:.001,decay:.15,sustain:0,release:.03}}).connect(getDrumBus());synthSnare.volume.value=-9;} return synthSnare; }
 function getMetal(){ if(!synthMetal){synthMetal=new Tone.MetalSynth({frequency:400,envelope:{attack:.001,decay:.25,release:.01},harmonicity:5.1,modulationIndex:32,resonance:4000,octaves:1.5}).connect(getDrumBus());synthMetal.volume.value=-16;} return synthMetal; }
@@ -943,6 +948,20 @@ async function playHit(pitch, vel=1){
 }
 
 let playTimer=null;
+function getPlayableBassNotes(project,bars,timeSig=4){
+  const source=Array.isArray(project?.bass?.notes)?project.bass.notes:[];
+  const limit=Math.max(1,Number(bars)||1)*Math.max(1,Number(timeSig)||4);
+  return source.map((note,index)=>({
+    id:note.id||'bass-'+index,
+    pitch:Number(note.pitch),
+    startBeat:Number(note.startBeat),
+    durationBeats:Number(note.durationBeats),
+    velocity:Number.isFinite(Number(note.vel))?(Number(note.vel)>1?Number(note.vel)/127:Number(note.vel)):.74
+  })).filter(note=>Number.isInteger(note.pitch)&&note.pitch>=24&&note.pitch<=60&&Number.isFinite(note.startBeat)&&note.startBeat>=0&&note.startBeat<limit&&Number.isFinite(note.durationBeats)&&note.durationBeats>0)
+    .map(note=>({...note,velocity:Math.max(.05,Math.min(1,note.velocity))}))
+    .sort((a,b)=>a.startBeat-b.startBeat);
+}
+
 async function togglePlay(){
   await Tone.start();
   if(APP.playing){ stopPlay(); return; }
@@ -952,6 +971,10 @@ async function togglePlay(){
   const steps=totalSteps();
   const stepsPerBeat=APP.div/4;
   const baseMs=(60/PROJ_BPM())*(4/APP.div)*1000;
+  const bpm=PROJ_BPM();
+  const bassNotes=getPlayableBassNotes(window.__compositionBaseProject,APP.bars,APP.timeSig);
+  const bassEnabled=document.getElementById('bass-enabled').checked;
+  const bassTolerance=0.0001+1/(stepsPerBeat*2);
   APP.playStep=0;
   function tick(){
     if(!APP.playing)return;
@@ -970,6 +993,14 @@ async function togglePlay(){
     });
     const currentBeat=APP.playStep/stepsPerBeat;
     const melody=window.__compositionBaseProject?.melody?.notes||[];
+    if(bassEnabled){
+      bassNotes.forEach(note=>{
+        if(Math.abs(note.startBeat-currentBeat)<bassTolerance){
+          const duration=Math.max(.055,note.durationBeats*60/bpm*.9);
+          getBassSynth().triggerAttackRelease(Tone.Frequency(note.pitch,'midi').toNote(),duration,undefined,note.velocity);
+        }
+      });
+    }
     if(document.getElementById('melody-enabled').checked){
       const bpm=PROJ_BPM();
       melody.forEach(n=>{
@@ -996,6 +1027,7 @@ function stopPlay(){
   clearTimeout(playTimer); playTimer=null;
   document.querySelectorAll('#play-btn,#play-btn-ex').forEach(b=>{b.textContent='▶';b.classList.remove('active')});
   document.querySelectorAll('.playing-step').forEach(e=>e.classList.remove('playing-step'));
+  if(bassSynth)bassSynth.triggerRelease();
   const playhead=document.getElementById('arrangement-playhead');if(playhead)playhead.textContent='停止中';
 }
 function PROJ_BPM(){ return parseInt(document.getElementById('bpm-sl').value); }
