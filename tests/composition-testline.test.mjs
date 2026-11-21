@@ -1117,11 +1117,13 @@ test("TL-75 Composition Canvas preserves selected bass piano and guitar accompan
   assert.match(canvas,/project\.bass=window\.__lastDrumProject\?\.bass\|\|incoming\.bass/,"Canvas → Beat Lab must restore bass timeline");
   assert.match(canvas,/project\.piano=window\.__lastDrumProject\?\.piano\|\|incoming\.piano/,"Canvas → Beat Lab must restore piano timeline");
   assert.match(canvas,/project\.guitar=window\.__lastDrumProject\?\.guitar\|\|incoming\.guitar/,"Canvas → Beat Lab must restore guitar timeline");
+  assert.match(canvas,/project\.arrangements=window\.__lastDrumProject\?\.arrangements\|\|incoming\.arrangements\|\|null/,"Canvas → Beat Lab must restore all independent A/B/C snapshots");
   assert.match(canvas,/project\.chords=project\.generatedMusic\?\.chords\|\|window\.__lastDrumProject\?\.chords/,"Canvas → Beat Lab must restore saved chord progression");
   assert.match(canvas,/bass:project\.bass\|\|\{notes:\[\]\},piano:project\.piano\|\|\{notes:\[\]\},guitar:project\.guitar\|\|\{notes:\[\]\}/,"Beat Lab → Canvas must save accompaniment timelines");
   assert.match(canvas,/project\.bass=saved\.bass\|\|\{notes:\[\]\}/,"resuming Beat Lab must restore bass");
   assert.match(canvas,/project\.piano=saved\.piano\|\|\{notes:\[\]\}/,"resuming Beat Lab must restore piano");
   assert.match(canvas,/project\.guitar=saved\.guitar\|\|\{notes:\[\]\}/,"resuming Beat Lab must restore guitar");
+  assert.match(canvas,/project\.arrangements=saved\.arrangements\|\|null/,"resuming Beat Lab must restore candidate snapshots");
   assert.match(canvas,/project\.accompanimentMode=saved\.accompanimentMode\|\|\'generated\'/,"resuming Beat Lab must preserve accompaniment provenance");
 });
 
@@ -1292,6 +1294,8 @@ test("TL-86 A/B/C own independent canonical snapshots for every instrument track
   assert.match(html,/bass: \{\.\.\.\(base\.bass\|\|\{\}\),notes:cloneRhythmData\(bassForExport\)\}/);
   assert.match(html,/arrangements:cloneRhythmData\(APP\.arrangements\|\|\{\}\)/,"export must persist all candidate snapshots");
   assert.match(html,/projectData\?\.arrangements/,"arrangement restore must restore the canonical snapshots");
+  assert.match(html,/current\.tracks\.drums=refreshed\.tracks\.drums/,"editing a drum candidate must not overwrite its piano/guitar/bass/melody snapshots");
+  assert.match(html,/restoreSongArrangement\(window\.__compositionBaseProject\.arrangement,window\.__compositionBaseProject\)/,"boot must retain the selected candidate while restoring");
 });
 
 test("TL-87 JSON roundtrip baseline includes all A/B/C track snapshots", async () => {
