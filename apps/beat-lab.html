@@ -947,6 +947,8 @@ function playDrumCandidateOnly(){
 function sectionAtStep(step){if(!Array.isArray(APP.sections)||!APP.sections.length)return null;const spb=APP.timeSig*(APP.div/4),bar=Math.floor(step/spb)+1;return APP.sections.find(x=>bar>=x.startBar&&bar<=x.endBar)||null;}
 function sectionPatternStep(section,step){const spb=APP.timeSig*(APP.div/4),start=(section.startBar-1)*spb,len=(section.endBar-section.startBar+1)*spb;return (step-start)%Math.max(1,len);}
 function restoreSongArrangement(data,projectData=null){
+  if(projectData?.arrangements&&typeof projectData.arrangements==='object')APP.arrangements=cloneRhythmData(projectData.arrangements);
+  else if(data?.arrangements&&typeof data.arrangements==='object')APP.arrangements=cloneRhythmData(data.arrangements);
   if(!data||!Array.isArray(data.sections)||!data.sections.length)return false;
   APP.sections=cloneRhythmData(data.sections).map(x=>{if(!x.effects){x.effects={fillBeforeChorus:x.id==='chorus',fillBars:1,fillDensity:'normal',finalVariation:x.id==='final',finalStyle:'accent'};}return x;});
   const savedVariants=projectData?.drumVariants||data.drumVariants;
@@ -1462,10 +1464,10 @@ async function togglePlay(){
   const baseProject=window.__compositionBaseProject;
   const chordVariant=APP.activeDrumVariant||'A';
   applyArrangementMix(chordVariant,{ensure:true,immediate:true});
-  const importedBass=getPlayableBassNotes(baseProject,APP.bars,APP.timeSig);
-  const bassSeed=importedBass.length?importedBass:buildBassNotesFromChords(baseProject,APP.bars,APP.timeSig);
-  const bassNotes=buildBassVariantNotes(bassSeed,APP.bars,APP.timeSig,chordVariant);
-  const chordEvents=getPlayableChordEvents(baseProject,APP.bars,APP.timeSig,chordVariant);
+  const activeArrangement=syncActiveArrangementTrackSnapshot();
+  const activeTracks=activeArrangement.tracks;
+  const bassNotes=getPlayableBassNotes({bass:activeTracks.bass},APP.bars,APP.timeSig);
+  const chordEvents={piano:(activeTracks.piano?.notes||[]).map(note=>({startBeat:Number(note.startBeat),pitches:[Number(note.pitch)],durationBeats:Number(note.durationBeats),velocity:Number(note.vel)/127})),guitar:(activeTracks.guitar?.notes||[]).map(note=>({startBeat:Number(note.startBeat),pitches:[Number(note.pitch)],durationBeats:Number(note.durationBeats),velocity:Number(note.vel)/127}))};
   const bassEnabled=document.getElementById('bass-enabled').checked;
   const pianoEnabled=document.getElementById('piano-enabled').checked;
   const guitarEnabled=document.getElementById('guitar-enabled').checked;
@@ -1492,7 +1494,7 @@ async function togglePlay(){
       if(playhead){const bar=Math.floor(stepIndex/(APP.timeSig*stepsPerBeat))+1;playhead.textContent=(activeSection?.label||'通常')+' · '+bar+'/'+APP.bars+'小節';}
     },uiDelay);
     const currentBeat=stepIndex/stepsPerBeat;
-    const melody=window.__compositionBaseProject?.melody?.notes||[];
+    const melody=activeTracks.melody?.notes||[];
     if(bassEnabled){
       bassNotes.forEach(note=>{
         if(Math.abs(note.startBeat-currentBeat)<bassTolerance){
@@ -2095,11 +2097,11 @@ function _buildExportData(){
   const stepsPerBeat=APP.div/4,beatPerStep=1/stepsPerBeat,notes=[];
   const sections=Array.isArray(APP.sections)?APP.sections:[];
   const activeVariant=APP.activeDrumVariant||'A';
-  const importedBass=getPlayableBassNotes(base,APP.bars,APP.timeSig);
-  const bassSeed=importedBass.length?importedBass:buildBassNotesFromChords(base,APP.bars,APP.timeSig);
-  const bassForExport=buildBassVariantNotes(bassSeed,APP.bars,APP.timeSig,activeVariant);
-  const chordEventsForExport=getPlayableChordEvents(base,APP.bars,APP.timeSig,activeVariant);
-  const exportTimeline=events=>events.flatMap(event=>event.pitches.map(pitch=>({pitch,startBeat:+event.startBeat.toFixed(4),durationBeats:+event.durationBeats.toFixed(4),vel:Math.round(event.velocity*127)})));
+  ensureArrangementTrackSnapshots(false);
+  const activeTracks=syncActiveArrangementTrackSnapshot().tracks;
+  const bassForExport=activeTracks.bass?.notes||[];
+  const pianoForExport=activeTracks.piano?.notes||[];
+  const guitarForExport=activeTracks.guitar?.notes||[];
   // Keep the exact imported drum timeline on a no-edit round trip.
   // Once the user edits the sequencer, the section grooves become the new source.
   if(!drumPatternEdited&&Array.isArray(base.drums?.notes)){
@@ -2122,14 +2124,16 @@ function _buildExportData(){
     timeSig: APP.timeSig,
     bars: APP.bars,
     div: APP.div,
-    bass: {...(base.bass||{}),notes:bassForExport.map(note=>({pitch:note.pitch,startBeat:+note.startBeat.toFixed(4),durationBeats:+note.durationBeats.toFixed(4),vel:Math.round(note.velocity*127)}))},
-    piano: {notes:exportTimeline(chordEventsForExport.piano)},
-    guitar: {notes:exportTimeline(chordEventsForExport.guitar)},
+    bass: {...(base.bass||{}),notes:cloneRhythmData(bassForExport)},
+    piano: {notes:cloneRhythmData(pianoForExport)},
+    guitar: {notes:cloneRhythmData(guitarForExport)},
     melody: base.melody||{notes:[]},
     drums: { notes },
     arrangement: sections.length?{version:1,bars:APP.bars,effects:cloneRhythmData(ensureArrangementEffects()),sections:sections.map(x=>({id:x.id,label:x.label,startBar:x.startBar,endBar:x.endBar,pattern:cloneRhythmData(x.pattern),effects:cloneRhythmData(x.effects||{})}))}:base.arrangement||null,
     drumVariants:APP.drumVariants?cloneRhythmData(APP.drumVariants):base.drumVariants||null,
     activeDrumVariant:APP.activeDrumVariant||base.activeDrumVariant||null,
+    activeArrangement:activeVariant,
+    arrangements:cloneRhythmData(APP.arrangements||{}),
     chords: base.chords||base.generatedMusic?.chords||null,
     exported: new Date().toISOString(),
     rhythmVariations: readRhythmVariations()
@@ -2176,6 +2180,8 @@ function createJSONRoundTripSnapshot(project){
     piano:project.piano||{notes:[]},
     guitar:project.guitar||{notes:[]},
     arrangement:project.arrangement||null,
+    activeArrangement:project.activeArrangement||project.activeDrumVariant||'A',
+    arrangements:project.arrangements||{},
     chords:project.chords||project.generatedMusic?.chords||null,
     bass:project.bass||{notes:[]},
     rhythmVariations:project.rhythmVariations||[]
@@ -2246,8 +2252,9 @@ function importJSON(input){
         APP.pattern[pk(row.id,step)]=vel;
       });
       if(data.name)document.getElementById('project-name').value=data.name;
+      if(data.arrangements&&typeof data.arrangements==='object')APP.arrangements=cloneRhythmData(data.arrangements);else APP.arrangements=null;
       if(data.arrangement)restoreSongArrangement(data.arrangement,data);
-      else{APP.sections=null;APP.activeSectionId=null;APP.drumVariants=null;APP.activeDrumVariant=null;APP.arrangementEffects={fillBeforeChorus:true,breakBars:[],finalVariation:true};}
+      else{APP.sections=null;APP.activeSectionId=null;APP.drumVariants=null;APP.activeDrumVariant=data.activeArrangement||data.activeDrumVariant||null;APP.arrangementEffects={fillBeforeChorus:true,breakBars:[],finalVariation:true};}
       renderArrangementEffects();
       switchView('step');
       renderStepGrid();
