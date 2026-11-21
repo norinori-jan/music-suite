@@ -902,7 +902,10 @@ test("TL-64 A/B/C drum candidates have different section arcs and audio-clock hi
   assert.match(html,/getKick\(\)\.triggerAttackRelease\('C1','8n',at,safeVel)/,"kick velocity must be per-hit, not shared gain mutation");
   assert.match(html,/getSnare\(\)\.triggerAttackRelease\('16n',at,safeVel)/,"snare must receive the common audio timestamp");
   assert.match(html,/getRide\(\)\.triggerAttackRelease\('8n',at,safeVel)/,"ride must receive the common audio timestamp");
-  assert.match(html,/const audioAt=Tone\.now\(\)\+0\.012/,"each sequencer tick must use one shared audio-clock timestamp");
+  assert.match(html,/function tick\(audioAt\)/,"sequencer tick must receive an audio-clock timestamp from the scheduler");
+  assert.match(html,/const horizon=Tone\.now\(\)\+0\.12/,"scheduler must maintain a look-ahead window");
+  assert.match(html,/playTimer=setInterval\(scheduleAhead,25\)/,"scheduler must refill audio events independently of UI timer cadence");
+  assert.match(html,/nextStepTime\+=stepMs\/1000/,"next steps must advance on the audio clock");
   assert.match(html,/playHit\(row\.pitch,vel,audioAt,false\)/,"drums must use the shared audio-clock timestamp");
   assert.match(html,/triggerAttackRelease\(Tone\.Frequency\(note\.pitch/,"bass trigger must exist");
   assert.match(html,/duration,audioAt,note\.velocity\)/,"bass must use the shared audio-clock timestamp");
@@ -943,4 +946,14 @@ test("TL-65 drum voices use layered snare body, dedicated rim and filtered close
   assert.match(html,/synthHat=new Tone\.NoiseSynth[\s\S]*?\.connect\(synthHatFilter\)/,"closed hat noise must pass through its filter");
   assert.match(html,/getSnare\(\)\.triggerAttackRelease\('16n',at,safeVel\);getSnareBody\(\)\.triggerAttackRelease\('D2','16n',at,safeVel\*\.58\)/,"snare hit must combine noise and body at the same audio time");
   assert.match(html,/getRim\(\)\.triggerAttackRelease\('D5','32n',at,safeVel\)/,"rim hit must use its dedicated short voice");
+});
+
+
+test("TL-66 sequencer uses a look-ahead audio scheduler instead of chained UI timeouts", async () => {
+  const html=await readFile(beatLabPath,"utf8");
+  assert.match(html,/function scheduleAhead\(\)[\s\S]*?while\(APP\.playing&&nextStepTime<horizon\)/,"scheduler must queue events ahead of playback time");
+  assert.match(html,/const stepMs=tick\(nextStepTime\)/,"every instrument event in a step must share its scheduled audio time");
+  assert.match(html,/playTimer=setInterval\(scheduleAhead,25\)/,"short UI polling interval must only refill the audio queue");
+  assert.doesNotMatch(html,/playTimer=setTimeout\(tick/,"audio timing must not depend on chained setTimeout callbacks");
+  assert.match(html,/clearInterval\(playTimer\)/,"stop must cancel the scheduler interval");
 });
