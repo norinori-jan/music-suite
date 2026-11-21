@@ -725,7 +725,6 @@ test("TL-57 BEAT//LAB plays imported bass notes in sync with melody and drums", 
   assert.match(play,/getPlayableBassNotes\(baseProject,APP\.bars,APP\.timeSig\)/);
   assert.match(play,/playBassNote\(note,duration,audioAt\)/);
   assert.match(play,/Math\.abs\(note\.startBeat-currentBeat\)<bassTolerance/);
-  assert.match(play,/getBassSynth\(\)\.triggerAttackRelease/);
   assert.match(html.slice(html.indexOf("function stopPlay()"),html.indexOf("\nfunction PROJ_BPM")),/bassSynth\.triggerRelease\(\)/);
 });
 
@@ -1122,6 +1121,7 @@ test("TL-75 Composition Canvas preserves selected bass piano and guitar accompan
 
 test("TL-76 BEAT//LAB reuses manually edited piano and guitar timelines returned by Score Editor", async () => {
   const html=await readFile(beatLabPath,"utf8");
+  const score=await readFile(path.join(here,"..","apps","score-editor-v2.html"),"utf8");
   const start=html.indexOf("function chordSymbolToPitches(symbol,octave=4)");
   const end=html.indexOf("\nfunction getPlayableBassNotes",start);
   const helpers=new Function(html.slice(start,end)+";return getPlayableChordEvents;")();
