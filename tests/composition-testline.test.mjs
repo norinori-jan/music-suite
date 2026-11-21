@@ -803,7 +803,7 @@ test("TL-60 BEAT//LAB adds phrase-aware fills and controllable bar variation", a
   const normal=build(base,verse,"balanced","normal");
   const bold=build(base,verse,"balanced","bold");
   assert.equal(light["snare:60"],undefined,"light mode does not force a final-bar fill");
-  assert.ok(normal["snare:60"]>0||normal["tom1:61"]>0,"normal mode adds a short phrase-ending fill");
+  assert.ok(normal["snare:62"]>0&&normal["tom1:63"]>0,"normal mode adds a short phrase-ending fill");
   assert.ok(Object.keys(bold).some(k=>k.startsWith("perc:")),"bold verse variation adds an extra accent");
   const chorusNormal=build(base,chorus,"balanced","normal");
   assert.ok(chorusNormal["ohat:31"]>0,"chorus gets a cymbal opening on alternating repeated bars");
