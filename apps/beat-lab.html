@@ -1322,7 +1322,7 @@ function getPlayableChordEvents(project,bars,timeSig=4,variant='A'){
     }else if(variant==='C'){
       add(piano,start,pitches.map(p=>p+12),Math.min(.48,duration*.24),.78);
       if(duration>=2)add(piano,start+Math.min(2.5,duration*.625),[pitches[0]+12,pitches[2%pitches.length]+12],.32,.62);
-      for(let offset=.25,step=0;offset<duration;offset+=.5,step++)add(guitar,start+offset,[pitches[(step+1)%pitches.length]+12],.28,step%2===0?.64:.46);
+      for(let offset=.25,step=0;offset<duration;offset+=.5,step++){add(guitar,start+offset,[pitches[(step+1)%pitches.length]+12],.28,step%2===0?.64:.46);guitar[guitar.length-1].instrument='electric';}
     }else{
       add(piano,start,pitches,Math.max(.35,duration*.82),.68);
       if(duration>1.5)add(guitar,start+Math.min(2,duration*.5),[pitches[0]+12,pitches[2%pitches.length]+12],.42,.48);
@@ -1437,7 +1437,8 @@ function buildArrangementTrackSnapshot(project,variant,sections){
   const toNotes=events=>events.flatMap(event=>event.pitches.map(pitch=>({
     pitch:Number(pitch),startBeat:+Number(event.startBeat).toFixed(4),
     durationBeats:+Number(event.durationBeats).toFixed(4),
-    vel:Math.round(Math.max(.05,Math.min(1,Number(event.velocity)||.6))*127)
+    vel:Math.round(Math.max(.05,Math.min(1,Number(event.velocity)||.6))*127),
+    ...(event.instrument?{instrument:event.instrument}:{})
   })));
   const drumSections=Array.isArray(sections)?cloneRhythmData(sections):null;
   return {version:1,id,label:({A:'BALANCED',B:'SPACIOUS',C:'DRIVING'})[id],
@@ -1495,7 +1496,7 @@ async function togglePlay(){
   const activeArrangement=syncActiveArrangementTrackSnapshot();
   const activeTracks=activeArrangement.tracks;
   const bassNotes=getPlayableBassNotes({bass:activeTracks.bass},APP.bars,APP.timeSig);
-  const chordEvents={piano:(activeTracks.piano?.notes||[]).map(note=>({startBeat:Number(note.startBeat),pitches:[Number(note.pitch)],durationBeats:Number(note.durationBeats),velocity:Number(note.vel)/127})),guitar:(activeTracks.guitar?.notes||[]).map(note=>({startBeat:Number(note.startBeat),pitches:[Number(note.pitch)],durationBeats:Number(note.durationBeats),velocity:Number(note.vel)/127}))};
+  const chordEvents={piano:(activeTracks.piano?.notes||[]).map(note=>({startBeat:Number(note.startBeat),pitches:[Number(note.pitch)],durationBeats:Number(note.durationBeats),velocity:Number(note.vel)/127})),guitar:(activeTracks.guitar?.notes||[]).map(note=>({startBeat:Number(note.startBeat),pitches:[Number(note.pitch)],durationBeats:Number(note.durationBeats),velocity:Number(note.vel)/127,instrument:note.instrument||'acoustic'}))};
   const bassEnabled=document.getElementById('bass-enabled').checked;
   const pianoEnabled=document.getElementById('piano-enabled').checked;
   const guitarEnabled=document.getElementById('guitar-enabled').checked;
