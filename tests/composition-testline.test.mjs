@@ -722,7 +722,8 @@ test("TL-57 BEAT//LAB plays imported bass notes in sync with melody and drums", 
   const playStart=html.indexOf("async function togglePlay()");
   const playEnd=html.indexOf("\nfunction stopPlay()",playStart);
   const play=html.slice(playStart,playEnd);
-  assert.match(play,/getPlayableBassNotes\(window\.__compositionBaseProject,APP\.bars,APP\.timeSig\)/);
+  assert.match(play,/getPlayableBassNotes\(baseProject,APP\.bars,APP\.timeSig\)/);
+  assert.match(play,/playBassNote\(note,duration,audioAt\)/);
   assert.match(play,/Math\.abs\(note\.startBeat-currentBeat\)<bassTolerance/);
   assert.match(play,/getBassSynth\(\)\.triggerAttackRelease/);
   assert.match(html.slice(html.indexOf("function stopPlay()"),html.indexOf("\nfunction PROJ_BPM")),/bassSynth\.triggerRelease\(\)/);
@@ -734,7 +735,8 @@ test("TL-58 BEAT//LAB preserves bass timeline data when exporting a rhythm edit"
   const end=html.indexOf("\nfunction decodeImportedDrumVelocity",start);
   assert.ok(start>=0&&end>start);
   const body=html.slice(start,end);
-  assert.match(body,/bass: base\.bass\|\|\{notes:\[\]\}/);
+  assert.match(body,/bass: \{\.\.\.\(base\.bass\|\|\{\}\),notes:bassForExport\.map/);
+  assert.match(body,/bassForExport=buildBassVariantNotes/);
 });
 
 
@@ -907,7 +909,7 @@ test("TL-64 A/B/C drum candidates have different section arcs and audio-clock hi
   assert.match(html,/playTimer=setInterval\(scheduleAhead,25\)/,"scheduler must refill audio events independently of UI timer cadence");
   assert.match(html,/nextStepTime\+=stepMs\/1000/,"next steps must advance on the audio clock");
   assert.match(html,/playHit\(row\.pitch,vel,audioAt,false\)/,"drums must use the shared audio-clock timestamp");
-  assert.match(html,/triggerAttackRelease\(Tone\.Frequency\(note\.pitch/,"bass trigger must exist");
+  assert.match(html,/playBassNote\(note,duration,audioAt\)/,"bass trigger must schedule the layered bass voice");
   assert.match(html,/duration,audioAt,note\.velocity\)/,"bass must use the shared audio-clock timestamp");
   assert.match(html,/triggerAttackRelease\(Tone\.Frequency\(pitch/,"melody trigger must exist");
   assert.match(html,/duration,audioAt,velocity\)/,"melody must use the shared audio-clock timestamp");
@@ -990,7 +992,7 @@ test("TL-69 bass playback layers sub foundation and transient articulation on on
   assert.match(play,/getBassSubSynth\(\)\.triggerAttackRelease\(frequency,duration,when,velocity\*\.72\)/,"sub foundation must be phase-aligned to the main note");
   assert.match(play,/getBassAttackSynth\(\)\.triggerAttackRelease\(Tone\.Frequency\(pitch\+12,'midi'\)\.toNote\(\),'32n',when/,"transient must use an octave harmonic at the same start time");
   assert.match(html,/playBassNote\(note,duration,audioAt\)/,"sequencer must schedule all bass layers from the same audio timestamp");
-  assert.match(html,/bass: base\.bass\|\|\{notes:\[\]\}/,"layering must not alter the saved bass note data format");
+  assert.match(html,/bass: \{\.\.\.\(base\.bass\|\|\{\}\),notes:bassForExport\.map/,"layering must export a normal bass note timeline");
 });
 
 
@@ -1005,7 +1007,7 @@ test("TL-70 piano and guitar accompaniment creates genuinely different A B C cho
   assert.ok(start>=0&&end>start,"chord voicing and arrangement helpers must exist");
   const helpers=new Function(html.slice(start,end)+";return {chordSymbolToPitches,getPlayableChordEvents};")();
   assert.deepEqual(helpers.chordSymbolToPitches("C"),[60,64,67],"major chord tones must parse");
-  assert.deepEqual(helpers.chordSymbolToPitches("Am7"),[60,63,67,70],"minor seventh chord tones must parse");
+  assert.deepEqual(helpers.chordSymbolToPitches("Am7"),[69,72,76,79],"minor seventh chord tones must parse in octave four");
   const project={chords:[{chord:"C",beats:4},{chord:"Am7",beats:4},{chord:"F",beats:4},{chord:"G",beats:4}]};
   const a=helpers.getPlayableChordEvents(project,4,4,"A");
   const b=helpers.getPlayableChordEvents(project,4,4,"B");
@@ -1045,7 +1047,7 @@ test("TL-71 bass line has independent A B C groove identities without changing s
   assert.ok(c.some(n=>n.id.endsWith("-oct")),"C must add octave accents");
   assert.ok(c.some(n=>n.id.endsWith("-pickup")),"C must add passing pickups");
   assert.deepEqual(source.map(n=>n.id),["n1","n2","n3","n4","n5","n6"],"candidate generation must not mutate source notes");
-  assert.match(html,/buildBassVariantNotes\(getPlayableBassNotes\(baseProject,APP\.bars,APP\.timeSig\),APP\.bars,APP\.timeSig,chordVariant\)/,"active A/B/C selection must drive bass arrangement");
+  assert.match(html,/const bassNotes=buildBassVariantNotes\(bassSeed,APP\.bars,APP\.timeSig,chordVariant\)/,"active A/B/C selection must drive bass arrangement");
 });
 
 
