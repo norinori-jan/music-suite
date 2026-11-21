@@ -1156,7 +1156,7 @@ function playHit(pitch, vel=1, when, ensureAudio=true){
   else getPerc().triggerAttackRelease(pitch>50?'C2':'G1','16n',at,safeVel);
 }
 
-let playTimer=null;
+let playTimer=null,nextStepTime=0;
 function getPlayableBassNotes(project,bars,timeSig=4){
   const source=Array.isArray(project?.bass?.notes)?project.bass.notes:[];
   const limit=Math.max(1,Number(bars)||1)*Math.max(1,Number(timeSig)||4);
@@ -1185,11 +1185,10 @@ async function togglePlay(){
   const bassEnabled=document.getElementById('bass-enabled').checked;
   const bassTolerance=0.0001+1/(stepsPerBeat*2);
   APP.playStep=0;
-  function tick(){
-    if(!APP.playing)return;
+  function tick(audioAt){
+    if(!APP.playing)return 0;
     // highlight column
     document.querySelectorAll('.playing-step').forEach(e=>e.classList.remove('playing-step'));
-    const audioAt=Tone.now()+0.012;
     const activeSection=sectionAtStep(APP.playStep);
     const sectionStep=activeSection?sectionPatternStep(activeSection,APP.playStep):APP.playStep;
     const playhead=document.getElementById('arrangement-playhead');
@@ -1228,13 +1227,25 @@ async function togglePlay(){
     if(APP.swing && APP.playStep%2===0) ms*=1.66;
     else if(APP.swing && APP.playStep%2===1) ms*=0.34;
     APP.playStep=(APP.playStep+1)%steps;
-    playTimer=setTimeout(tick,ms);
+    return ms;
   }
-  tick();
+  // Look-ahead scheduling keeps audio events on the Web Audio clock even if
+  // the browser's UI thread briefly stalls.
+  function scheduleAhead(){
+    const horizon=Tone.now()+0.12;
+    while(APP.playing&&nextStepTime<horizon){
+      const stepMs=tick(nextStepTime);
+      if(!stepMs)break;
+      nextStepTime+=stepMs/1000;
+    }
+  }
+  nextStepTime=Tone.now()+0.05;
+  scheduleAhead();
+  playTimer=setInterval(scheduleAhead,25);
 }
 function stopPlay(){
   APP.playing=false;
-  clearTimeout(playTimer); playTimer=null;
+  clearInterval(playTimer); playTimer=null;
   document.querySelectorAll('#play-btn,#play-btn-ex').forEach(b=>{b.textContent='▶';b.classList.remove('active')});
   document.querySelectorAll('.playing-step').forEach(e=>e.classList.remove('playing-step'));
   if(bassSynth)bassSynth.triggerRelease();
