@@ -334,6 +334,13 @@ body{padding-bottom:env(safe-area-inset-bottom)}
       <option value="dance">ダンス／推進力</option>
     </select>
   </label>
+  <label>小節ごとの変化
+    <select id="drum-variation-level" class="inp" style="min-width:92px">
+      <option value="light">控えめ</option>
+      <option value="normal" selected>標準</option>
+      <option value="bold">大胆</option>
+    </select>
+  </label>
   <button class="btn pri" onclick="applyDrumArrangementIdea()">✨ セクション別に提案</button>
   <span id="drum-idea-status" style="color:var(--mu)">イントロは控えめ、サビは広げる、つなぎはフィルで変化を付けます。</span>
 </div>
@@ -766,34 +773,52 @@ function saveCurrentSectionGroove(){
   const x=APP.sections?.find(v=>v.id===APP.activeSectionId);if(!x){arrangementStatus('先に「曲の展開を作る」を押してください',true);return;}
   x.pattern=cloneRhythmData(APP.pattern);try{msRegister(buildExportData());}catch(e){console.warn('arrangement register skipped',e);}arrangementStatus(x.label+'のリズムを保存しました');
 }
-function buildSectionDrumIdea(basePattern,section,style){
+function buildSectionDrumIdea(basePattern,section,style,variation='normal'){
   const out=sectionPatternFrom(basePattern,section.id),stepsPerBeat=APP.div/4,stepsPerBar=APP.timeSig*stepsPerBeat;
   const bars=Math.max(1,section.endBar-section.startBar+1),total=bars*stepsPerBar;
   const put=(row,step,vel)=>{if(step>=0&&step<total)out[pk(row,step)]=Math.max(.18,Math.min(1,vel));};
-  const clearRows=['crash','ride','ohat','tom1','tom2'];
-  clearRows.forEach(row=>Object.keys(out).forEach(key=>{if(key.startsWith(row+':'))delete out[key];}));
+  ['crash','ride','ohat','tom1','tom2'].forEach(row=>Object.keys(out).forEach(key=>{if(key.startsWith(row+':'))delete out[key];}));
   if(style==='balanced'){
     if(section.id==='intro'){for(let s=0;s<total;s+=stepsPerBeat*2)put('hat',s,.48);}
     else if(section.id==='verse'){for(let s=0;s<total;s+=stepsPerBeat*2)put('hat',s,.62);for(let s=stepsPerBeat*2-1;s<total;s+=stepsPerBar)put('ohat',s,.52);}
-    else if(section.id==='chorus'||section.id==='final'){
-      put('crash',0,1);for(let s=0;s<total;s+=stepsPerBeat*2)put('ride',s,section.id==='final'?.82:.7);
-      for(let s=stepsPerBeat-1;s<total;s+=stepsPerBar)put('ohat',s,.62);
-    }else if(section.id==='bridge'){for(let s=0;s<total;s+=stepsPerBeat*2)put('hat',s,.42);}
+    else if(section.id==='chorus'||section.id==='final'){put('crash',0,1);for(let s=0;s<total;s+=stepsPerBeat*2)put('ride',s,section.id==='final'?.82:.7);for(let s=stepsPerBeat-1;s<total;s+=stepsPerBar)put('ohat',s,.62);}
+    else if(section.id==='bridge'){for(let s=0;s<total;s+=stepsPerBeat*2)put('hat',s,.42);}
   }else if(style==='rock'){
     if(section.id==='chorus'||section.id==='final'){put('crash',0,1);for(let s=0;s<total;s+=stepsPerBeat)put('ride',s,s%stepsPerBar===0?.9:.62);}
     else if(section.id==='verse'){for(let s=0;s<total;s+=stepsPerBeat*2)put('hat',s,.68);}
-    else if(section.id==='intro'){put('crash',0,.65);for(let s=0;s<total;s+=stepsPerBeat*2)put('hat',s,.42);}
+    else if(section.id==='intro'){for(let s=0;s<total;s+=stepsPerBeat*2)put('hat',s,.42);}
   }else if(style==='cinematic'){
-    if(section.id==='intro'){put('crash',0,.5);for(let s=stepsPerBar-stepsPerBeat;s<total;s+=stepsPerBar)put('tom2',s,.42);}
-    if(section.id==='chorus'||section.id==='final'){put('crash',0,1);if(section.id==='final')put('crash',Math.max(0,total-1),.9);for(let s=0;s<total;s+=stepsPerBeat*2)put('ride',s,.5);}
+    if(section.id==='intro'){for(let s=stepsPerBar-stepsPerBeat;s<total;s+=stepsPerBar)put('tom2',s,.42);}
+    if(section.id==='chorus'||section.id==='final'){put('crash',0,1);for(let s=0;s<total;s+=stepsPerBeat*2)put('ride',s,.5);}
     if(section.id==='bridge'){for(let s=stepsPerBar-stepsPerBeat;s<total;s+=stepsPerBar)put('tom1',s,.58);}
   }else if(style==='dance'){
     if(section.id==='chorus'||section.id==='final'){put('crash',0,.95);for(let s=0;s<total;s+=stepsPerBeat*2)put('ohat',s,.72);}
     else if(section.id==='verse'){for(let s=0;s<total;s+=stepsPerBeat*2)put('hat',s,.62);}
     else if(section.id==='intro'){for(let s=stepsPerBeat;s<total;s+=stepsPerBeat*2)put('hat',s,.38);}
   }
+  // Phrase-level variation: alternate repeated bars and prepare the next section.
+  for(let bar=0;bar<bars;bar++){
+    const offset=bar*stepsPerBar;
+    if((section.id==='chorus'||section.id==='final')&&bar>0&&bar%2===1){
+      if(style==='balanced'||style==='rock')put('ohat',offset+Math.max(0,stepsPerBar-1),variation==='bold'?.78:.58);
+      if(style==='cinematic'&&variation!=='light')put('crash',offset,.48);
+    }
+    if(section.id==='verse'&&bar>0&&bar%2===1&&variation!=='light'){
+      put('hat',offset+Math.max(0,stepsPerBeat*2-1),.42);
+      if(variation==='bold')put('perc',offset+Math.max(0,stepsPerBar-1),.48);
+    }
+  }
+  if(section.id!=='final'&&variation!=='light'){
+    const fillStart=(bars-1)*stepsPerBar+Math.max(0,stepsPerBar-stepsPerBeat);
+    if(variation==='normal'){
+      put('snare',fillStart+Math.max(0,stepsPerBeat-2),.68);
+      put('tom1',fillStart+Math.max(0,stepsPerBeat-1),.78);
+    }else{
+      for(let i=0;i<Math.max(1,stepsPerBeat);i++)put(i%2===0?'snare':(i<stepsPerBeat/2?'tom1':'tom2'),fillStart+i,.58+i*.09);
+    }
+  }
   if(section.id==='chorus'||section.id==='final')put('crash',0,1);
-  if(section.id==='final')put('crash',Math.max(0,total-1),.92);
+  if(section.id==='final'&&variation==='bold')put('crash',Math.max(0,total-1),.92);
   return out;
 }
 function applyDrumArrangementIdea(style){
@@ -802,12 +827,13 @@ function applyDrumArrangementIdea(style){
   if(!['balanced','rock','cinematic','dance'].includes(selected))return;
   const current=APP.sections.find(x=>x.id===APP.activeSectionId);if(current)current.pattern=cloneRhythmData(APP.pattern);
   const base=cloneRhythmData(APP.pattern);
-  APP.sections.forEach(section=>{section.pattern=buildSectionDrumIdea(base,section,selected);});
+  const variation=document.getElementById('drum-variation-level')?.value||'normal';
+  APP.sections.forEach(section=>{section.pattern=buildSectionDrumIdea(base,section,selected,variation);});
   const first=APP.sections.find(x=>x.id===APP.activeSectionId)||APP.sections[0];
   APP.activeSectionId=first.id;APP.pattern=cloneRhythmData(first.pattern);
   renderArrangementControls();renderStepGrid();
   const names={balanced:'自然なJ-POP（抑揚）',rock:'ロック／ライブ',cinematic:'映画的／ドラマチック',dance:'ダンス／推進力'};
-  const status=document.getElementById('drum-idea-status');if(status)status.textContent=names[selected]+'を各セクションへ提案しました。不要な音はSTEPで消し、強さを調整できます。';
+  const status=document.getElementById('drum-idea-status');if(status)status.textContent=names[selected]+'／小節変化：'+({light:'控えめ',normal:'標準',bold:'大胆'}[variation]||'標準')+'を提案しました。セクション終端にフィルを加え、繰り返し小節にも変化を付けています。';
   arrangementStatus(names[selected]+'の展開案を作成しました。各区間を試聴して調整してください');
   try{msRegister(buildExportData());}catch(e){console.warn('drum arrangement suggestion sync skipped',e);}
 }
