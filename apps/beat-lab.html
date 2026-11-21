@@ -1202,8 +1202,9 @@ function chordSymbolToPitches(symbol,octave=4){
 }
 function getPlayableChordEvents(project,bars,timeSig=4,variant='A'){
   const direct=Array.isArray(project?.chords)?project.chords:[];
+  const generated=Array.isArray(project?.generatedMusic?.chords)?project.generatedMusic.chords:[];
   const sections=Array.isArray(project?.generatedMusic?.chordSections)?project.generatedMusic.chordSections:[];
-  const source=direct.length?direct:sections.flatMap(section=>section.progression||[]);
+  const source=direct.length?direct:(generated.length?generated:sections.flatMap(section=>section.progression||[]));
   const limit=Math.max(1,Number(bars)||1)*Math.max(1,Number(timeSig)||4);
   const piano=[],guitar=[];let cursor=0;
   source.forEach((item,index)=>{
@@ -1211,7 +1212,7 @@ function getPlayableChordEvents(project,bars,timeSig=4,variant='A'){
     const start=Number.isFinite(Number(item?.startBeat))?Number(item.startBeat):cursor;
     cursor=Math.max(cursor,start+beats);
     if(start>=limit)return;
-    const pitches=chordSymbolToPitches(item?.chord||item?.name,4);
+    const pitches=chordSymbolToPitches(typeof item==='string'?item:(item?.chord||item?.name),4);
     if(!pitches.length)return;
     const duration=Math.min(beats,limit-start);
     if(variant==='B'){
@@ -1230,6 +1231,26 @@ function getPlayableChordEvents(project,bars,timeSig=4,variant='A'){
   return {piano:piano.filter(x=>x.startBeat<limit).sort(sort),guitar:guitar.filter(x=>x.startBeat<limit).sort(sort)};
 }
 
+
+
+function buildBassNotesFromChords(project,bars,timeSig=4){
+  const direct=Array.isArray(project?.chords)?project.chords:[];
+  const generated=Array.isArray(project?.generatedMusic?.chords)?project.generatedMusic.chords:[];
+  const sections=Array.isArray(project?.generatedMusic?.chordSections)?project.generatedMusic.chordSections:[];
+  const source=direct.length?direct:(generated.length?generated:sections.flatMap(section=>section.progression||[]));
+  const limit=Math.max(1,Number(bars)||1)*Math.max(1,Number(timeSig)||4),notes=[];let cursor=0;
+  source.forEach((item,index)=>{
+    const beats=Math.max(.5,Math.min(16,Number(item?.beats)||4));
+    const start=Number.isFinite(Number(item?.startBeat))?Number(item.startBeat):cursor;
+    cursor=Math.max(cursor,start+beats);
+    if(start>=limit)return;
+    const tones=chordSymbolToPitches(typeof item==='string'?item:(item?.chord||item?.name),2);
+    if(!tones.length)return;
+    notes.push({id:'chord-bass-'+index+'-root',pitch:tones[0],startBeat:start,durationBeats:Math.min(1.8,Math.max(.65,beats*.42)),velocity:.72});
+    if(beats>=3&&start+2<limit)notes.push({id:'chord-bass-'+index+'-fifth',pitch:tones[2]||tones[0]+7,startBeat:start+2,durationBeats:.72,velocity:.58});
+  });
+  return notes.sort((a,b)=>a.startBeat-b.startBeat);
+}
 
 function buildBassVariantNotes(notes,bars,timeSig=4,variant='A'){
   const source=(notes||[]).map(note=>({...note}));
@@ -1281,7 +1302,9 @@ async function togglePlay(){
   const bpm=PROJ_BPM();
   const baseProject=window.__compositionBaseProject;
   const chordVariant=APP.activeDrumVariant||'A';
-  const bassNotes=buildBassVariantNotes(getPlayableBassNotes(baseProject,APP.bars,APP.timeSig),APP.bars,APP.timeSig,chordVariant);
+  const importedBass=getPlayableBassNotes(baseProject,APP.bars,APP.timeSig);
+  const bassSeed=importedBass.length?importedBass:buildBassNotesFromChords(baseProject,APP.bars,APP.timeSig);
+  const bassNotes=buildBassVariantNotes(bassSeed,APP.bars,APP.timeSig,chordVariant);
   const chordEvents=getPlayableChordEvents(baseProject,APP.bars,APP.timeSig,chordVariant);
   const bassEnabled=document.getElementById('bass-enabled').checked;
   const pianoEnabled=document.getElementById('piano-enabled').checked;
