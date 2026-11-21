@@ -1041,7 +1041,7 @@ function checkIncomingImport() {
 function scoreExportData() {
   const tr = t => PROJ.tracks.filter(x => x.type === t).flatMap(x => x.notes.map(n => ({pitch:n.pitch,startBeat:n.startBeat,durationBeats:n.durationBeats,vel:n.vel||80})));
   const secs = (PROJ.sections||[]).filter(s => s.progression && s.progression.length).map(s => ({tag:s.name, progression:s.progression.map(c => ({chord:c.name, beats:c.beats||4}))}));
-  return { version:'1.0', source:'score-editor', name: PROJ.name || document.getElementById('project-name')?.value || 'score-editor', bpm:PROJ.bpm, key:PROJ.key||'C', timeSig:PROJ.timeSig||4,
+  return { version:'1.0', source:'score-editor', accompanimentMode:'manual', name: PROJ.name || document.getElementById('project-name')?.value || 'score-editor', bpm:PROJ.bpm, key:PROJ.key||'C', timeSig:PROJ.timeSig||4,
     melody:{notes:tr('melody')}, chords: secs.length ? {key:PROJ.key||'C', sections:secs} : null, bass:{notes:tr('bass')}, piano:{notes:tr('chord')}, guitar:{notes:tr('counter')}, drums:{notes:tr('drum')}, exported:new Date().toISOString() };
 }
 function sendToVocalLab() {
