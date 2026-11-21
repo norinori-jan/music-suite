@@ -1374,7 +1374,11 @@ test("TL-90 all inline JavaScript in composition, BEAT//LAB and score editor pag
       const type = match[1].match(/\btype\s*=\s*["']([^"']+)["']/i)?.[1];
       assert.ok(!type || type === "text/javascript" || type === "application/javascript",
         pageName + " inline script " + (index + 1) + " uses unsupported non-classic script type: " + type);
-      new Script(match[2], { filename: pageName + "#inline-script-" + (index + 1) });
+      try {
+        new Script(match[2], { filename: pageName + "#inline-script-" + (index + 1) });
+      } catch (error) {
+        throw new Error(pageName + " inline script " + (index + 1) + " failed syntax parsing: " + error.stack);
+      }
     });
   }
 });
