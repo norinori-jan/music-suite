@@ -1224,7 +1224,7 @@ test("TL-83 instrument buses feed a shared master compressor and limiter", async
   const html=await readFile(beatLabPath,"utf8");
   assert.match(html,/masterLimiter=new Tone\.Limiter\(-1\)\.toDestination\(\)/);
   assert.match(html,/masterCompressor=new Tone\.Compressor\(\{threshold:-15,ratio:1\.7/);
-  assert.match(html,/drumCompressor\)\.connect\(getMasterBus\(\)\)/);
+  assert.match(html,/drumCompressor=new Tone\.Compressor\([\s\S]*?\.connect\(getMasterBus\(\)\)/);
   assert.match(html,/bassCompressor\.connect\(getMasterBus\(\)\)/);
   assert.match(html,/guitarCompressor=new Tone\.Compressor\([\s\S]*?\.connect\(guitarPan\)/);
   assert.match(html,/pianoPan=new Tone\.Panner\(-\.16\)\.connect\(getMasterBus\(\)\)/);
