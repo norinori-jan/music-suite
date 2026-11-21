@@ -1120,7 +1120,7 @@ function toggleSwing(){
 // ════════════════════════════════════════════════════════
 // PLAYBACK
 // ════════════════════════════════════════════════════════
-let synthKick=null,synthSnare=null,synthHat=null,synthOpenHat=null,synthCrash=null,synthRide=null,synthPerc=null,melodySynth=null,bassSynth=null,drumBus=null,melodyBus=null,bassBus=null;
+let synthKick=null,synthSnare=null,synthSnareBody=null,synthRim=null,synthHat=null,synthHatFilter=null,synthOpenHat=null,synthCrash=null,synthRide=null,synthPerc=null,melodySynth=null,bassSynth=null,drumBus=null,melodyBus=null,bassBus=null;
 function getDrumBus(){if(!drumBus)drumBus=new Tone.Gain(Number(document.getElementById('drum-volume')?.value??80)/100).toDestination();return drumBus;}
 function getMelodyBus(){if(!melodyBus)melodyBus=new Tone.Gain(Number(document.getElementById('melody-volume')?.value??65)/100).toDestination();return melodyBus;}
 function getBassBus(){if(!bassBus)bassBus=new Tone.Gain(Number(document.getElementById('bass-volume')?.value??72)/100).toDestination();return bassBus;}
@@ -1131,8 +1131,10 @@ document.getElementById('drum-volume').addEventListener('input',updateMixVolumes
 document.getElementById('melody-volume').addEventListener('input',updateMixVolumes);
 document.getElementById('bass-volume').addEventListener('input',updateMixVolumes);
 function getKick(){ if(!synthKick){synthKick=new Tone.MembraneSynth({pitchDecay:.05,octaves:6,envelope:{attack:.001,decay:.25,sustain:0,release:.1}}).connect(getDrumBus());synthKick.volume.value=-4;} return synthKick; }
-function getSnare(){ if(!synthSnare){synthSnare=new Tone.NoiseSynth({noise:{type:'white'},envelope:{attack:.001,decay:.15,sustain:0,release:.03}}).connect(getDrumBus());synthSnare.volume.value=-9;} return synthSnare; }
-function getClosedHat(){if(!synthHat){synthHat=new Tone.NoiseSynth({noise:{type:'white'},envelope:{attack:.001,decay:.045,sustain:0,release:.015}}).connect(getDrumBus());synthHat.volume.value=-19;}return synthHat;}
+function getSnare(){ if(!synthSnare){synthSnare=new Tone.NoiseSynth({noise:{type:'white'},envelope:{attack:.001,decay:.19,sustain:0,release:.035}}).connect(getDrumBus());synthSnare.volume.value=-11;} return synthSnare; }
+function getSnareBody(){if(!synthSnareBody){synthSnareBody=new Tone.MembraneSynth({pitchDecay:.018,octaves:2.2,envelope:{attack:.001,decay:.12,sustain:0,release:.025}}).connect(getDrumBus());synthSnareBody.volume.value=-13;}return synthSnareBody;}
+function getRim(){if(!synthRim){synthRim=new Tone.Synth({oscillator:{type:'triangle'},envelope:{attack:.001,decay:.045,sustain:0,release:.012}}).connect(getDrumBus());synthRim.volume.value=-13;}return synthRim;}
+function getClosedHat(){if(!synthHat){synthHatFilter=new Tone.Filter(7200,'highpass').connect(getDrumBus());synthHat=new Tone.NoiseSynth({noise:{type:'white'},envelope:{attack:.001,decay:.038,sustain:0,release:.012}}).connect(synthHatFilter);synthHat.volume.value=-21;}return synthHat;}
 function getOpenHat(){if(!synthOpenHat){synthOpenHat=new Tone.MetalSynth({frequency:330,envelope:{attack:.001,decay:.48,release:.08},harmonicity:5.1,modulationIndex:24,resonance:3600,octaves:1.2}).connect(getDrumBus());synthOpenHat.volume.value=-20;}return synthOpenHat;}
 function getCrash(){if(!synthCrash){synthCrash=new Tone.MetalSynth({frequency:220,envelope:{attack:.001,decay:1.65,release:.18},harmonicity:3.5,modulationIndex:48,resonance:2600,octaves:2.2}).connect(getDrumBus());synthCrash.volume.value=-20;}return synthCrash;}
 function getRide(){if(!synthRide){synthRide=new Tone.MetalSynth({frequency:520,envelope:{attack:.002,decay:.34,release:.07},harmonicity:7.2,modulationIndex:18,resonance:5200,octaves:1.1}).connect(getDrumBus());synthRide.volume.value=-23;}return synthRide;}
@@ -1145,8 +1147,8 @@ function playHit(pitch, vel=1, when, ensureAudio=true){
   // Keep each instrument's base gain fixed. Per-hit velocity is passed to
   // Tone's voice, avoiding shared-volume races between simultaneous hits.
   if(pitch===36)getKick().triggerAttackRelease('C1','8n',at,safeVel);
-  else if(pitch===38)getSnare().triggerAttackRelease('16n',at,safeVel);
-  else if(pitch===39)getSnare().triggerAttackRelease('16n',at,safeVel*.72);
+  else if(pitch===38){getSnare().triggerAttackRelease('16n',at,safeVel);getSnareBody().triggerAttackRelease('D2','16n',at,safeVel*.58);}
+  else if(pitch===39)getRim().triggerAttackRelease('D5','32n',at,safeVel);
   else if(pitch===42)getClosedHat().triggerAttackRelease('32n',at,safeVel);
   else if(pitch===46)getOpenHat().triggerAttackRelease('8n',at,safeVel);
   else if(pitch===49)getCrash().triggerAttackRelease('2n',at,safeVel);
