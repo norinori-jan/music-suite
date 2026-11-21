@@ -1110,6 +1110,7 @@ test("TL-75 Composition Canvas preserves selected bass piano and guitar accompan
   assert.match(canvas,/project\.bass=window\.__lastDrumProject\?\.bass\|\|incoming\.bass/,"Canvas → Beat Lab must restore bass timeline");
   assert.match(canvas,/project\.piano=window\.__lastDrumProject\?\.piano\|\|incoming\.piano/,"Canvas → Beat Lab must restore piano timeline");
   assert.match(canvas,/project\.guitar=window\.__lastDrumProject\?\.guitar\|\|incoming\.guitar/,"Canvas → Beat Lab must restore guitar timeline");
+  assert.match(canvas,/project\.chords=project\.generatedMusic\?\.chords\|\|window\.__lastDrumProject\?\.chords/,"Canvas → Beat Lab must restore saved chord progression");
   assert.match(canvas,/bass:project\.bass\|\|\{notes:\[\]\},piano:project\.piano\|\|\{notes:\[\]\},guitar:project\.guitar\|\|\{notes:\[\]\}/,"Beat Lab → Canvas must save accompaniment timelines");
   assert.match(canvas,/project\.bass=saved\.bass\|\|\{notes:\[\]\}/,"resuming Beat Lab must restore bass");
   assert.match(canvas,/project\.piano=saved\.piano\|\|\{notes:\[\]\}/,"resuming Beat Lab must restore piano");
