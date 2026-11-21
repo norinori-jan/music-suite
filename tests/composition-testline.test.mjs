@@ -966,3 +966,13 @@ test("TL-67 drum bus has gentle compression after its independent mix gain", asy
   assert.match(html,/drumBus=new Tone\.Gain\([^;]*\)\.connect\(drumCompressor\)/,"drum level control must remain before the compressor");
   assert.match(html,/if\(drumBus\)drumBus\.gain\.rampTo/,"existing drum volume slider must continue to control pre-compressor gain");
 });
+
+
+test("TL-68 look-ahead scheduling keeps visual playhead aligned and rejects stale callbacks", async () => {
+  const html=await readFile(beatLabPath,"utf8");
+  assert.match(html,/const uiDelay=Math\.max\(0,\(audioAt-Tone\.now\(\)\)\*1000\)/,"playhead visuals must wait until the scheduled audio time");
+  assert.match(html,/setTimeout\(\(\)=>\{\s*if\(!APP\.playing\|\|generation!==playbackGeneration\)return/,"stale visual callbacks must be ignored after stop/restart");
+  assert.match(html,/const generation=\+\+playbackGeneration/,"each playback session must get a unique generation");
+  assert.match(html,/APP\.playing=false;playbackGeneration\+\+/,"stopping playback must invalidate queued visual callbacks");
+  assert.match(html,/const stepIndex=APP\.playStep/,"visual and audio scheduling must use the same captured step index");
+});
