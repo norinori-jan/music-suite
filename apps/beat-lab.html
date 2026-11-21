@@ -931,7 +931,7 @@ function selectDrumCandidate(id){
   if(APP.playing)stopPlay();
   drumPatternEdited=true;
   if(!APP.drumVariants){if(!createDrumCandidates())return;}
-  else if(APP.activeDrumVariant&&APP.sections){const active=APP.sections.find(x=>x.id===APP.activeSectionId);if(active)active.pattern=cloneRhythmData(APP.pattern);APP.drumVariants[APP.activeDrumVariant].sections=cloneRhythmData(APP.sections);captureArrangementTrackSnapshot(APP.activeDrumVariant,APP.sections,true);}
+  else if(APP.activeDrumVariant&&APP.sections){const active=APP.sections.find(x=>x.id===APP.activeSectionId);if(active)active.pattern=cloneRhythmData(APP.pattern);APP.drumVariants[APP.activeDrumVariant].sections=cloneRhythmData(APP.sections);syncActiveArrangementTrackSnapshot();}
   applyDrumCandidateState(id);
   applyArrangementMix(id,{immediate:true});
 }
@@ -1449,7 +1449,14 @@ function syncActiveArrangementTrackSnapshot(){
     if(active)active.pattern=cloneRhythmData(APP.pattern);
     if(APP.drumVariants?.[id])APP.drumVariants[id].sections=cloneRhythmData(sections);
   }
-  return captureArrangementTrackSnapshot(id,sections,true);
+  const current=APP.arrangements?.[id];
+  if(!current)return captureArrangementTrackSnapshot(id,sections,true);
+  const refreshed=buildArrangementTrackSnapshot(window.__compositionBaseProject||{},id,sections);
+  current.version=1;
+  current.sections=refreshed.sections;
+  current.tracks=current.tracks||{};
+  current.tracks.drums=refreshed.tracks.drums;
+  return current;
 }
 async function togglePlay(){
   await Tone.start();
@@ -2434,7 +2441,7 @@ document.addEventListener('keydown',e=>{
   setStatus('ok','BEAT//LAB 起動完了 — STEPでパターン編集、PATTERNSでプリセット選択');
   renderRhythmVariationSelect();
   renderArrangementEffects();
-  if(window.__compositionBaseProject?.arrangement)restoreSongArrangement(window.__compositionBaseProject.arrangement);
+  if(window.__compositionBaseProject?.arrangement)restoreSongArrangement(window.__compositionBaseProject.arrangement,window.__compositionBaseProject);
   renderArrangementControls();
 
 })();
