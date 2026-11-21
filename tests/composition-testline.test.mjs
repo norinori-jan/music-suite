@@ -1188,3 +1188,16 @@ test("TL-80 bass timbre follows song section, register and A/B/C role", async ()
   assert.ok(high.filterHz>low.filterHz,"higher bass notes should receive a clearer upper body");
   assert.match(html,/playBassNote\(note,duration,audioAt,activeSection,chordVariant\)/,"live bass playback must receive section and selected arrangement");
 });
+
+
+test("TL-81 section-specific bass timbre changes are scheduled at note audio timestamps", async () => {
+  const html=await readFile(beatLabPath,"utf8");
+  const start=html.indexOf("function playBassNote(note,duration,when,section=null,variant='A')");
+  const end=html.indexOf("\\nfunction updateMixVolumes",start);
+  assert.ok(start>=0&&end>start);
+  const play=html.slice(start,end);
+  for(const expression of ["body.filter.frequency.setValueAtTime(tone.filterHz,when)","body.volume.setValueAtTime(tone.bodyDb,when)","sub.volume.setValueAtTime(tone.subDb,when)","attack.volume.setValueAtTime(tone.attackDb,when)"]){
+    assert.ok(play.includes(expression),expression+" must follow the same Web Audio clock as the note");
+  }
+  assert.doesNotMatch(play,/\.rampTo\(tone\./,"look-ahead scheduling must not apply future section tone changes immediately");
+});
