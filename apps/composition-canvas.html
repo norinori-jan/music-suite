@@ -1444,6 +1444,7 @@ function sendToBeatLab(){
   project.bass=window.__lastDrumProject?.bass||incoming.bass||{notes:[]};
   project.piano=window.__lastDrumProject?.piano||incoming.piano||{notes:[]};
   project.guitar=window.__lastDrumProject?.guitar||incoming.guitar||{notes:[]};
+  project.accompanimentMode=window.__lastDrumProject?.accompanimentMode||incoming.accompanimentMode||'generated';
   project.arrangement=window.__lastDrumProject?.arrangement||null;
   project.drumVariants=window.__lastDrumProject?.drumVariants||null;
   project.activeDrumVariant=window.__lastDrumProject?.activeDrumVariant||null;
@@ -1535,7 +1536,7 @@ function restoreBeatLabProject(project){
       }
     });
   }
-  window.__lastDrumProject={bpm:project.bpm||120,timeSig:project.timeSig||4,bars:project.bars||2,div:project.div||16,drums:project.drums||{notes:[]},bass:project.bass||{notes:[]},piano:project.piano||{notes:[]},guitar:project.guitar||{notes:[]},chords:project.chords||project.generatedMusic?.chords||null,melody:project.melody||{notes:[]},rhythmVariations:project.rhythmVariations||[],arrangement:project.arrangement||null,drumVariants:project.drumVariants||null,activeDrumVariant:project.activeDrumVariant||null,testMode:project.testMode||null,roundTripBaseline:project.roundTripBaseline||null,roundTripChecks:project.roundTripChecks||null};
+  window.__lastDrumProject={bpm:project.bpm||120,timeSig:project.timeSig||4,bars:project.bars||2,div:project.div||16,drums:project.drums||{notes:[]},bass:project.bass||{notes:[]},piano:project.piano||{notes:[]},guitar:project.guitar||{notes:[]},accompanimentMode:project.accompanimentMode||'generated',chords:project.chords||project.generatedMusic?.chords||null,melody:project.melody||{notes:[]},rhythmVariations:project.rhythmVariations||[],arrangement:project.arrangement||null,drumVariants:project.drumVariants||null,activeDrumVariant:project.activeDrumVariant||null,testMode:project.testMode||null,roundTripBaseline:project.roundTripBaseline||null,roundTripChecks:project.roundTripChecks||null};
   const returnBanner=document.getElementById('beatlab-return-banner');
   if(returnBanner)returnBanner.style.display='block';
   const returnStatus=document.getElementById('beatlab-return-status');
@@ -1561,6 +1562,7 @@ function resumeBeatLabWork(){
   project.bass=saved.bass||{notes:[]};
   project.piano=saved.piano||{notes:[]};
   project.guitar=saved.guitar||{notes:[]};
+  project.accompanimentMode=saved.accompanimentMode||'generated';
   project.melody=saved.melody||project.melody;
   project.arrangement=saved.arrangement||null;
   project.drumVariants=saved.drumVariants||null;
