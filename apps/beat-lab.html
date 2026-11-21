@@ -873,6 +873,7 @@ function applyCandidateCoreGroove(pattern,section,variant){
   return out;
 }
 function createDrumCandidates(){
+  drumPatternEdited=true;
   if(!Array.isArray(APP.sections)||!APP.sections.length){arrangementStatus('先に「曲の展開を作る」を押してください',true);return false;}
   const current=APP.sections.find(x=>x.id===APP.activeSectionId);if(current)current.pattern=cloneRhythmData(APP.pattern);
   const variation=document.getElementById('drum-variation-level')?.value||'normal';
@@ -901,6 +902,7 @@ function applyDrumCandidateState(id){
 }
 function selectDrumCandidate(id){
   if(APP.playing)stopPlay();
+  drumPatternEdited=true;
   if(!APP.drumVariants){if(!createDrumCandidates())return;}
   else if(APP.activeDrumVariant&&APP.sections){const active=APP.sections.find(x=>x.id===APP.activeSectionId);if(active)active.pattern=cloneRhythmData(APP.pattern);APP.drumVariants[APP.activeDrumVariant].sections=cloneRhythmData(APP.sections);}
   applyDrumCandidateState(id);
