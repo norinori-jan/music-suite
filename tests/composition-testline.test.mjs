@@ -1312,3 +1312,15 @@ test("TL-87 JSON roundtrip baseline includes all A/B/C track snapshots", async (
   edited.arrangements.C.tracks.guitar.notes.push({pitch:67,startBeat:1,durationBeats:.5,vel:70});
   assert.ok(helpers.compareJSONRoundTripSnapshot(baseline,edited).errors.includes("arrangements がJSON保存前と一致しません"));
 });
+
+
+test("TL-88 Score Editor preserves inactive A/B/C snapshots and updates only the active track snapshot", async () => {
+  const score=await readFile(path.join(here,"..","apps","score-editor-v2.html"),"utf8");
+  assert.match(score,/PROJ\.arrangements=data\.arrangements\?JSON\.parse\(JSON\.stringify\(data\.arrangements\)\):null/);
+  assert.match(score,/const activeArrangement=PROJ\.activeArrangement\|\|PROJ\.activeDrumVariant\|\|'A'/);
+  assert.match(score,/arrangements\[activeArrangement\]\.tracks\.melody=\{notes:tr\('melody'\)\}/);
+  assert.match(score,/arrangements\[activeArrangement\]\.tracks\.piano=\{notes:tr\('chord'\)\}/);
+  assert.match(score,/arrangements\[activeArrangement\]\.tracks\.guitar=\{notes:tr\('counter'\)\}/);
+  assert.match(score,/arrangement:PROJ\.arrangement, drumVariants:PROJ\.drumVariants, activeDrumVariant:PROJ\.activeDrumVariant/);
+  assert.match(score,/activeArrangement, arrangements, exported:new Date\(\)\.toISOString\(\)/);
+});
