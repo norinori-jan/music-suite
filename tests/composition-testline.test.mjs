@@ -1115,3 +1115,16 @@ test("TL-75 Composition Canvas preserves selected bass piano and guitar accompan
   assert.match(canvas,/project\.piano=saved\.piano\|\|\{notes:\[\]\}/,"resuming Beat Lab must restore piano");
   assert.match(canvas,/project\.guitar=saved\.guitar\|\|\{notes:\[\]\}/,"resuming Beat Lab must restore guitar");
 });
+
+
+test("TL-76 BEAT//LAB reuses manually edited piano and guitar timelines returned by Score Editor", async () => {
+  const html=await readFile(beatLabPath,"utf8");
+  const start=html.indexOf("function chordSymbolToPitches(symbol,octave=4)");
+  const end=html.indexOf("\nfunction getPlayableBassNotes",start);
+  const helpers=new Function(html.slice(start,end)+";return getPlayableChordEvents;")();
+  const project={source:"score-editor",piano:{notes:[{pitch:60,startBeat:0,durationBeats:2,vel:96},{pitch:64,startBeat:0,durationBeats:2,vel:88}]},guitar:{notes:[{pitch:67,startBeat:1.5,durationBeats:.5,vel:72}]},chords:[{chord:"F",beats:4}]};
+  const events=helpers(project,4,4,"C");
+  assert.deepEqual(events.piano.map(e=>[e.startBeat,e.pitches[0]]),[[0,60],[0,64]],"score-edited piano pitches and timing must take precedence over regenerated chords");
+  assert.deepEqual(events.guitar.map(e=>[e.startBeat,e.pitches[0]]),[[1.5,67]],"score-edited guitar notes must be retained");
+  assert.equal(events.piano[0].velocity,96/127);
+});
