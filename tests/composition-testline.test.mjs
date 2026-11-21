@@ -807,7 +807,7 @@ test("TL-60 BEAT//LAB adds phrase-aware fills and controllable bar variation", a
   assert.ok(Object.keys(bold).some(k=>k.startsWith("perc:")),"bold verse variation adds an extra accent");
   const chorusNormal=build(base,chorus,"balanced","normal");
   assert.ok(chorusNormal["ohat:31"]>0,"chorus gets a cymbal opening on alternating repeated bars");
-  assert.ok(chorusNormal["snare:60"]>0,"chorus phrase ending receives a fill");
+  assert.ok(chorusNormal["snare:62"]>0&&chorusNormal["tom1:63"]>0,"chorus phrase ending receives a fill");
   const applyStart=html.indexOf("function applyDrumArrangementIdea(style)");
   const applyEnd=html.indexOf("\nfunction sectionAtStep(step)",applyStart);
   const apply=html.slice(applyStart,applyEnd);
