@@ -736,3 +736,45 @@ test("TL-58 BEAT//LAB preserves bass timeline data when exporting a rhythm edit"
   const body=html.slice(start,end);
   assert.match(body,/bass: base\.bass\|\|\{notes:\[\]\}/);
 });
+
+
+test("TL-59 BEAT//LAB offers section-aware drum ideas with intentional cymbal and transition placement", async () => {
+  const html=await readFile(beatLabPath,"utf8");
+  assert.match(html,/id="drum-idea-panel"/);
+  assert.match(html,/function applyDrumArrangementIdea\(style\)/);
+  assert.match(html,/セクション別に提案/);
+  for(const id of ["synthHat","synthOpenHat","synthCrash","synthRide"])assert.ok(html.includes(id),id+" must have its own voice");
+  assert.match(html,/function getClosedHat\(\)/);
+  assert.match(html,/function getOpenHat\(\)/);
+  assert.match(html,/function getCrash\(\)/);
+  assert.match(html,/function getRide\(\)/);
+  const sectionStart=html.indexOf("function sectionPatternFrom(base,id)");
+  const sectionEnd=html.indexOf("\nfunction ensureArrangementEffects()",sectionStart);
+  const ideaStart=html.indexOf("function buildSectionDrumIdea(basePattern,section,style)");
+  const ideaEnd=html.indexOf("\nfunction applyDrumArrangementIdea(style)",ideaStart);
+  assert.ok(sectionStart>=0&&sectionEnd>sectionStart);
+  assert.ok(ideaStart>=0&&ideaEnd>ideaStart);
+  const app={div:16,timeSig:4};
+  const pk=(row,step)=>row+":"+step;
+  const sectionPatternFrom=new Function("APP","pk",html.slice(sectionStart,sectionEnd)+";return sectionPatternFrom;")(app,pk);
+  const build=new Function("APP","pk","sectionPatternFrom",html.slice(ideaStart,ideaEnd)+";return buildSectionDrumIdea;")(app,pk,sectionPatternFrom);
+  const sections=[
+    {id:"intro",startBar:1,endBar:2},
+    {id:"verse",startBar:3,endBar:4},
+    {id:"chorus",startBar:5,endBar:6},
+    {id:"bridge",startBar:7,endBar:8},
+    {id:"final",startBar:9,endBar:10}
+  ];
+  const base={"kick:0":1,"snare:4":.8,"hat:0":.7};
+  const result=sections.map(section=>build(base,section,"balanced"));
+  assert.equal(result[0]["crash:0"],undefined,"intro should not automatically crash on every downbeat");
+  assert.equal(result[2]["crash:0"],1,"chorus entry should be marked by crash");
+  assert.equal(result[4]["crash:0"],1,"final section should have a crash entry");
+  assert.ok(Object.keys(result[2]).some(k=>k.startsWith("ride:")),"chorus should use ride for lift");
+  assert.ok(Object.keys(result[1]).some(k=>k.startsWith("hat:")),"verse should retain a restrained timekeeping part");
+  assert.notDeepEqual(result[0],result[2],"intro and chorus should have different orchestration");
+  const cinematic=sections.map(section=>build(base,section,"cinematic"));
+  assert.ok(Object.keys(cinematic[3]).some(k=>k.startsWith("tom")),"bridge should use tom color");
+  assert.ok(Object.keys(cinematic[2]).some(k=>k.startsWith("ride:")),"cinematic chorus should use ride");
+  assert.match(html,/try\{Tone\.start\(\);\}catch\(e\)\{\}/,"single-cell audition must still activate audio");
+});
