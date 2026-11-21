@@ -1187,20 +1187,25 @@ async function togglePlay(){
   APP.playStep=0;
   function tick(audioAt){
     if(!APP.playing)return 0;
-    // highlight column
-    document.querySelectorAll('.playing-step').forEach(e=>e.classList.remove('playing-step'));
-    const activeSection=sectionAtStep(APP.playStep);
-    const sectionStep=activeSection?sectionPatternStep(activeSection,APP.playStep):APP.playStep;
-    const playhead=document.getElementById('arrangement-playhead');
-    if(playhead){const bar=Math.floor(APP.playStep/(APP.timeSig*stepsPerBeat))+1;playhead.textContent=(activeSection?.label||'通常')+' · '+bar+'/'+APP.bars+'小節';}
+    const stepIndex=APP.playStep;
+    const activeSection=sectionAtStep(stepIndex);
+    const sectionStep=activeSection?sectionPatternStep(activeSection,stepIndex):stepIndex;
     const drumPattern=activeSection?.pattern||APP.pattern;
     ROWS.forEach(row=>{
-      const k=pk(row.id,sectionStep),baseVel=drumPattern[k],effectVel=drumEffectVelocity(row.id,APP.playStep,activeSection,sectionStep),vel=effectVel===null?baseVel:effectVel;
-      const el=document.getElementById(`sc-${row.id}-${sectionStep}`);
-      if(el)el.classList.add('playing-step');
+      const k=pk(row.id,sectionStep),baseVel=drumPattern[k],effectVel=drumEffectVelocity(row.id,stepIndex,activeSection,sectionStep),vel=effectVel===null?baseVel:effectVel;
       if(vel)playHit(row.pitch,vel,audioAt,false);
     });
-    const currentBeat=APP.playStep/stepsPerBeat;
+    // Visual playhead updates at the event's scheduled time, not while
+    // queuing future notes inside the look-ahead window.
+    const uiDelay=Math.max(0,(audioAt-Tone.now())*1000);
+    setTimeout(()=>{
+      if(!APP.playing)return;
+      document.querySelectorAll('.playing-step').forEach(e=>e.classList.remove('playing-step'));
+      ROWS.forEach(row=>{const el=document.getElementById(`sc-${row.id}-${sectionStep}`);if(el)el.classList.add('playing-step');});
+      const playhead=document.getElementById('arrangement-playhead');
+      if(playhead){const bar=Math.floor(stepIndex/(APP.timeSig*stepsPerBeat))+1;playhead.textContent=(activeSection?.label||'通常')+' · '+bar+'/'+APP.bars+'小節';}
+    },uiDelay);
+    const currentBeat=stepIndex/stepsPerBeat;
     const melody=window.__compositionBaseProject?.melody?.notes||[];
     if(bassEnabled){
       bassNotes.forEach(note=>{
@@ -1224,8 +1229,8 @@ async function togglePlay(){
       });
     }
     let ms=baseMs;
-    if(APP.swing && APP.playStep%2===0) ms*=1.66;
-    else if(APP.swing && APP.playStep%2===1) ms*=0.34;
+    if(APP.swing && stepIndex%2===0) ms*=1.66;
+    else if(APP.swing && stepIndex%2===1) ms*=0.34;
     APP.playStep=(APP.playStep+1)%steps;
     return ms;
   }
