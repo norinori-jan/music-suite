@@ -1230,6 +1230,30 @@ function getPlayableChordEvents(project,bars,timeSig=4,variant='A'){
   return {piano:piano.filter(x=>x.startBeat<limit).sort(sort),guitar:guitar.filter(x=>x.startBeat<limit).sort(sort)};
 }
 
+
+function buildBassVariantNotes(notes,bars,timeSig=4,variant='A'){
+  const source=(notes||[]).map(note=>({...note}));
+  if(variant==='A'||!source.length)return source;
+  const barBeats=Math.max(1,Number(timeSig)||4),limit=Math.max(1,Number(bars)||1)*barBeats;
+  if(variant==='B'){
+    const sparse=source.filter(note=>{const beat=((note.startBeat%barBeats)+barBeats)%barBeats;return beat<.26||Math.abs(beat-barBeats/2)<.26;})
+      .map(note=>({...note,durationBeats:Math.min(barBeats,Math.max(note.durationBeats*1.45,1.35)),velocity:note.velocity*.84}));
+    if(sparse.length)return sparse.sort((a,b)=>a.startBeat-b.startBeat);
+    const firstByBar=new Map();source.forEach(note=>{const bar=Math.floor(note.startBeat/barBeats);if(!firstByBar.has(bar))firstByBar.set(bar,note);});
+    return [...firstByBar.values()].map(note=>({...note,durationBeats:Math.max(note.durationBeats,1.5),velocity:note.velocity*.84}));
+  }
+  const driven=source.map(note=>({...note}));
+  source.forEach(note=>{
+    if(note.pitch<=48)driven.push({...note,id:note.id+'-oct',pitch:note.pitch+12,durationBeats:Math.min(.45,note.durationBeats),velocity:note.velocity*.48});
+    const pickup=note.startBeat+.5;
+    if(pickup<limit&&pickup<note.startBeat+note.durationBeats-.1){
+      const fifth=note.pitch<=53?note.pitch+7:note.pitch-5;
+      driven.push({...note,id:note.id+'-pickup',pitch:fifth,startBeat:pickup,durationBeats:.22,velocity:note.velocity*.52});
+    }
+  });
+  return driven.sort((a,b)=>a.startBeat-b.startBeat);
+}
+
 function getPlayableBassNotes(project,bars,timeSig=4){
   const source=Array.isArray(project?.bass?.notes)?project.bass.notes:[];
   const limit=Math.max(1,Number(bars)||1)*Math.max(1,Number(timeSig)||4);
@@ -1256,8 +1280,8 @@ async function togglePlay(){
   const baseMs=(60/PROJ_BPM())*(4/APP.div)*1000;
   const bpm=PROJ_BPM();
   const baseProject=window.__compositionBaseProject;
-  const bassNotes=getPlayableBassNotes(baseProject,APP.bars,APP.timeSig);
   const chordVariant=APP.activeDrumVariant||'A';
+  const bassNotes=buildBassVariantNotes(getPlayableBassNotes(baseProject,APP.bars,APP.timeSig),APP.bars,APP.timeSig,chordVariant);
   const chordEvents=getPlayableChordEvents(baseProject,APP.bars,APP.timeSig,chordVariant);
   const bassEnabled=document.getElementById('bass-enabled').checked;
   const pianoEnabled=document.getElementById('piano-enabled').checked;
