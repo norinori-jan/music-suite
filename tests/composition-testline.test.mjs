@@ -2,6 +2,7 @@ import test from "node:test";
 import assert from "node:assert/strict";
 import { readFile } from "node:fs/promises";
 import { fileURLToPath } from "node:url";
+import { Script } from "node:vm";
 import path from "node:path";
 
 const here = path.dirname(fileURLToPath(import.meta.url));
@@ -1355,4 +1356,25 @@ test("TL-89 arrangement grooves have distinct musical articulation rather than m
   assert.equal(bassB.length,2,"B bass should hold one low anchor per bar");
   assert.ok(bassB.every(n=>n.durationBeats>=3.9),"B bass should sustain long notes");
   assert.ok(bassC.some(n=>n.id.endsWith("-pickup"))&&bassC.some(n=>n.id.endsWith("-oct")),"C bass should add pickups and octave articulation");
+});
+
+
+test("TL-90 all inline JavaScript in composition, BEAT//LAB and score editor pages parses as browser scripts", async () => {
+  const pages = [
+    ["composition-canvas.html", canvasPath],
+    ["beat-lab.html", beatLabPath],
+    ["score-editor-v2.html", path.join(here, "..", "apps", "score-editor-v2.html")]
+  ];
+  for (const [pageName, pagePath] of pages) {
+    const html = await readFile(pagePath, "utf8");
+    const scripts = [...html.matchAll(/<script\\b([^>]*)>([\\s\\S]*?)<\\/script\\s*>/gi)];
+    const inlineScripts = scripts.filter((match) => !/\\bsrc\\s*=/i.test(match[1]));
+    assert.ok(inlineScripts.length > 0, pageName + " must contain at least one inline script to validate");
+    inlineScripts.forEach((match, index) => {
+      const type = match[1].match(/\\btype\\s*=\\s*["']([^"']+)["']/i)?.[1];
+      assert.ok(!type || type === "text/javascript" || type === "application/javascript",
+        pageName + " inline script " + (index + 1) + " uses unsupported non-classic script type: " + type);
+      new Script(match[2], { filename: pageName + "#inline-script-" + (index + 1) });
+    });
+  }
 });
