@@ -1136,8 +1136,8 @@ test("TL-76 BEAT//LAB reuses manually edited piano and guitar timelines returned
 
 test("TL-77 piano and guitar buses use separate high-pass filters to protect bass headroom", async () => {
   const html=await readFile(beatLabPath,"utf8");
-  assert.match(html,/pianoToneFilter=new Tone\.Filter\(105,'highpass'\)\.toDestination\(\)/,"piano bus must trim unnecessary sub-bass");
-  assert.match(html,/guitarToneFilter=new Tone\.Filter\(155,'highpass'\)\.toDestination\(\)/,"guitar bus must leave more low-frequency room for bass");
+  assert.match(html,/pianoToneFilter=new Tone\.Filter\(105,'highpass'\)\.connect\(pianoPan\)/,"piano bus must trim unnecessary sub-bass");
+  assert.match(html,/guitarToneFilter=new Tone\.Filter\(155,'highpass'\)\.connect\(guitarPan\)/,"guitar bus must leave more low-frequency room for bass");
   assert.match(html,/pianoBus=new Tone\.Gain\([^;]*\)\.connect\(pianoToneFilter\)/,"piano level must remain independently adjustable before filtering");
   assert.match(html,/guitarBus=new Tone\.Gain\([^;]*\)\.connect\(guitarToneFilter\)/,"guitar level must remain independently adjustable before filtering");
 });
