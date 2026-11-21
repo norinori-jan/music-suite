@@ -1026,7 +1026,7 @@ test("TL-70 piano and guitar accompaniment creates genuinely different A B C cho
 test("TL-71 bass line has independent A B C groove identities without changing source notes", async () => {
   const html=await readFile(beatLabPath,"utf8");
   const start=html.indexOf("function buildBassVariantNotes(notes,bars,timeSig=4,variant='A')");
-  const end=html.indexOf("\nfunction getPlayableBassNotes",start);
+  const end=html.indexOf("\nasync function togglePlay",start);
   assert.ok(start>=0&&end>start,"bass candidate generator must exist");
   const build=new Function(html.slice(start,end)+";return buildBassVariantNotes;")();
   const source=[
