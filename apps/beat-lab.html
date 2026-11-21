@@ -1218,7 +1218,7 @@ const ARRANGEMENT_MIX_PROFILES={
 function mixSliderValue(id,fallback){const el=document.getElementById(id);return Number(el?.value??fallback)/100;}
 function mixRamp(param,value,seconds=.08){if(!param)return;if(typeof param.rampTo==='function')param.rampTo(value,seconds);else if('value'in param)param.value=value;}
 function applyArrangementMix(variant=APP.activeDrumVariant||'A',options={}){
-  const key=ARRANGEMENT_MIX_PROFILES[variant]?variant:'A',profile=ARRANGEMENT_MIX_PROFILES[key],seconds=options.immediate?.015:.09;
+  const key=ARRANGEMENT_MIX_PROFILES[variant]?variant:'A',profile=ARRANGEMENT_MIX_PROFILES[key],seconds=options.immediate?0.015:0.09;
   if(options.ensure){getDrumBus();getMelodyBus();getBassBus();getPianoBus();getGuitarBus();}
   const gains={drum:drumBus,melody:melodyBus,bass:bassBus,piano:pianoBus,guitar:guitarBus};
   Object.entries(gains).forEach(([name,bus])=>{if(bus)mixRamp(bus.gain,mixSliderValue(name+'-volume',{drum:80,melody:65,bass:72,piano:52,guitar:42}[name])*profile.gain[name],seconds);});
