@@ -1569,7 +1569,7 @@ function resumeBeatLabWork(){
   project.activeDrumVariant=saved.activeDrumVariant||null;
   project.rhythmVariations=saved.rhythmVariations||[];
   project.generatedMusic=window.__lyricMusicSketch||incoming.generatedMusic||null;
-  project.chords=project.generatedMusic?.chords||incoming.chords||null;
+  project.chords=project.generatedMusic?.chords||saved.chords||incoming.chords||null;
   project.lyricProject=window.__savedLyricCanvasProject||null;
   project.lyrics=lyricTextRead();
   project.sections=lyricSectionsRead();
