@@ -896,7 +896,8 @@ test("TL-63 selected drum candidate exports to the score editor as a timeline-al
 
 test("TL-64 A/B/C drum candidates have different section arcs and audio-clock hit scheduling", async () => {
   const html=await readFile(beatLabPath,"utf8");
-  assert.match(html,/function playHit\(pitch, vel=1, when\)/,"drum hit playback must accept an audio-clock timestamp");
+  assert.match(html,/function playHit\(pitch, vel=1, when, ensureAudio=true\)/,"drum hit playback must accept an audio-clock timestamp and avoid redundant context starts");
+  assert.match(html,/playHit\(row\.pitch,vel,audioAt,false\)/,"sequencer must not restart the audio context for every hit");
   assert.match(html,/const v=-18\*\(1-safeVel\),at=Number\.isFinite\(when\)\?when:undefined/);
   assert.match(html,/const audioAt=Tone\.now\(\)\+0\.012/,"each sequencer tick must use one shared audio-clock timestamp");
   assert.match(html,/playHit\(row\.pitch,vel,audioAt\)/,"drums must use the shared audio-clock timestamp");
