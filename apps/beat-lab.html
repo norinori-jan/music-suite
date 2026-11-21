@@ -1137,9 +1137,9 @@ function getCrash(){if(!synthCrash){synthCrash=new Tone.MetalSynth({frequency:22
 function getRide(){if(!synthRide){synthRide=new Tone.MetalSynth({frequency:520,envelope:{attack:.002,decay:.34,release:.07},harmonicity:7.2,modulationIndex:18,resonance:5200,octaves:1.1}).connect(getDrumBus());synthRide.volume.value=-23;}return synthRide;}
 function getPerc(){ if(!synthPerc){synthPerc=new Tone.MembraneSynth({pitchDecay:.02,octaves:3,envelope:{attack:.001,decay:.1,sustain:0,release:.05}}).connect(getDrumBus());synthPerc.volume.value=-10;} return synthPerc; }
 
-function playHit(pitch, vel=1, when){
-  // STEPセルの単発試聴でもAudioContextを起動する（再生ループ側の開始処理にも依存しない）。
-  try{Tone.start();}catch(e){}
+function playHit(pitch, vel=1, when, ensureAudio=true){
+  // Direct cell audition starts audio; sequencer playback already started it once.
+  if(ensureAudio){try{Tone.start();}catch(e){}}
   const safeVel=Math.max(.05,Math.min(1,Number(vel)||.05));
   const v=-18*(1-safeVel),at=Number.isFinite(when)?when:undefined;
   if(pitch===36){const x=getKick();x.volume.value=-4+v;x.triggerAttackRelease('C1','8n',at);}
@@ -1195,7 +1195,7 @@ async function togglePlay(){
       const k=pk(row.id,sectionStep),baseVel=drumPattern[k],effectVel=drumEffectVelocity(row.id,APP.playStep,activeSection,sectionStep),vel=effectVel===null?baseVel:effectVel;
       const el=document.getElementById(`sc-${row.id}-${sectionStep}`);
       if(el)el.classList.add('playing-step');
-      if(vel)playHit(row.pitch,vel,audioAt);
+      if(vel)playHit(row.pitch,vel,audioAt,false);
     });
     const currentBeat=APP.playStep/stepsPerBeat;
     const melody=window.__compositionBaseProject?.melody?.notes||[];
