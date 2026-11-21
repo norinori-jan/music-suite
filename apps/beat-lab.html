@@ -1142,7 +1142,7 @@ function getPianoSampler(){
 }
 function playPianoEvent(event,when){
   const notes=event.pitches.map(p=>Tone.Frequency(p,'midi').toNote());
-  const duration=Math.max(.08,Number(event.durationBeats)||.5);
+  const duration=Math.max(.08,Number(event.durationSeconds)||.5);
   if(pianoSamplerReady&&pianoSampler)pianoSampler.triggerAttackRelease(notes,duration,when,event.velocity);
   else getPianoSynth().triggerAttackRelease(notes,duration,when,event.velocity);
 }
@@ -1274,7 +1274,7 @@ function getPlayableChordEvents(project,bars,timeSig=4,variant='A'){
     }else if(variant==='C'){
       piano.push({startBeat:start,pitches:pitches.map(p=>p+12),durationBeats:Math.min(.72,duration*.32),velocity:.76});
       if(duration>2)piano.push({startBeat:start+duration*.625,pitches:pitches.map(p=>p+12),durationBeats:.48,velocity:.62});
-      for(let beat=.25,step=0;beat<duration;beat+=.5,step++)guitar.push({startBeat:start+beat,pitches:[pitches[(step+1)%pitches.length]+12],durationBeats:.35,velocity:step%2===0?.62:.44});
+      for(let beat=.25,step=0;beat<duration;beat+=.5,step++)guitar.push({startBeat:start+beat,pitches:[pitches[(step+1)%pitches.length]+12],durationBeats:.35,velocity:step%2===0?.62:.44,instrument:'electric'});
     }else{
       piano.push({startBeat:start,pitches,durationBeats:Math.max(.35,duration*.82),velocity:.66});
       if(duration>1)guitar.push({startBeat:start+duration*.5,pitches:[pitches[0]+12,pitches[2%pitches.length]+12],durationBeats:.5,velocity:.48});
@@ -1395,7 +1395,7 @@ async function togglePlay(){
       });
     }
     if(pianoEnabled){
-      chordEvents.piano.forEach(event=>{if(Math.abs(event.startBeat-currentBeat)<bassTolerance){const seconds=Math.max(.08,event.durationBeats*60/bpm*.9);playPianoEvent({...event,durationBeats:seconds*bpm/60},audioAt);}});
+      chordEvents.piano.forEach(event=>{if(Math.abs(event.startBeat-currentBeat)<bassTolerance){const seconds=Math.max(.08,event.durationBeats*60/bpm*.9);playPianoEvent({...event,durationSeconds:seconds},audioAt);}});
     }
     if(guitarEnabled){
       chordEvents.guitar.forEach(event=>{if(Math.abs(event.startBeat-currentBeat)<bassTolerance){playGuitarEvent(event,audioAt,bpm);}});
