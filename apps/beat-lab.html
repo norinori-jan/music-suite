@@ -758,6 +758,7 @@ function drumEffectVelocity(rowId,step,section,localStep){const global=ensureArr
 }
 function createSongArrangement(){
   if(APP.playing)stopPlay();
+  APP.drumVariants=null;APP.activeDrumVariant=null;
   drumPatternEdited=true;
   const bars=Math.min(32,Math.max(5,APP.bars));APP.bars=bars;document.getElementById('step-bars').value=bars;
   const defs=[{id:'intro',label:'イントロ',weight:1},{id:'verse',label:'Aメロ',weight:2},{id:'chorus',label:'サビ',weight:2},{id:'bridge',label:'ブリッジ',weight:1},{id:'final',label:'ラスト',weight:2}];
@@ -831,6 +832,7 @@ function buildSectionDrumIdea(basePattern,section,style,variation='normal'){
   return out;
 }
 function applyDrumArrangementIdea(style){
+  APP.drumVariants=null;APP.activeDrumVariant=null;
   if(!Array.isArray(APP.sections)||!APP.sections.length){arrangementStatus('先に「曲の展開を作る」を押してください',true);return;}
   const selected=style||document.getElementById('drum-arrangement-style')?.value||'balanced';
   if(!['balanced','rock','cinematic','dance'].includes(selected))return;
