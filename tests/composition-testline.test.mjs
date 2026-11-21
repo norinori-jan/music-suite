@@ -1160,8 +1160,8 @@ test("TL-79 sampled piano loads lazily with synth fallback and distinct electric
   assert.match(html,/const sampler=getPianoSampler\(\);[\s\S]*?if\(pianoSamplerReady&&sampler\)sampler\.triggerAttackRelease[\s\S]*?else getPianoSynth\(\)\.triggerAttackRelease/,"piano playback must fall back to the synth while samples load or fail");
   assert.match(html,/new Tone\.PluckSynth\(\{attackNoise:[\s\S]*?\}\)\.connect\(getGuitarBus\(\)\)/,"acoustic guitar must retain a plucked-string voice");
   assert.match(html,/new Tone\.PolySynth\(Tone\.Synth,\{oscillator:\{type:'fatsawtooth',count:3,spread:9\}/,"electric guitar must use a separate sustained voice");
-  assert.match(html,/new Tone\.Distortion\(\.14\)/,"electric guitar must have its own mild drive stage");
-  assert.match(html,/new Tone\.Chorus\(2\.1,2\.4,\.18\)/,"electric guitar must have a separate modulation stage");
+  assert.match(html,/new Tone\.Distortion\(\.12\)/,"electric guitar must have its own mild drive stage");
+  assert.match(html,/new Tone\.Chorus\(1\.7,2\.1,\.12\)/,"electric guitar must have a separate modulation stage");
   assert.match(html,/instrument:'electric'/,"C arrangement must select the electric guitar voice");
   assert.match(html,/if\(pianoSampler\)pianoSampler\.releaseAll\(\)/,"stop must release sampled piano voices");
   assert.match(html,/if\(electricGuitarSynth\)electricGuitarSynth\.releaseAll\(\)/,"stop must release electric guitar voices");
@@ -1200,4 +1200,34 @@ test("TL-81 section-specific bass timbre changes are scheduled at note audio tim
     assert.ok(play.includes(expression),expression+" must follow the same Web Audio clock as the note");
   }
   assert.doesNotMatch(play,/\.rampTo\(tone\./,"look-ahead scheduling must not apply future section tone changes immediately");
+});
+
+
+test("TL-82 acoustic guitar, electric guitar and bass use real sample maps with synth fallback", async () => {
+  const html=await readFile(beatLabPath,"utf8");
+  assert.match(html,/TONEJS_SAMPLE_ROOT='https:\/\/raw\.githubusercontent\.com\/nbrosowsky\/tonejs-instruments\/master\/samples\/'/);
+  assert.match(html,/createInstrumentSampler\('guitar-acoustic'/);
+  assert.match(html,/createInstrumentSampler\('guitar-electric'/);
+  assert.match(html,/createInstrumentSampler\('bass-electric'/);
+  assert.match(html,/D2:'D2\.mp3'[\s\S]*?C5:'C5\.mp3'/,"acoustic guitar sampler should map notes across its playable range");
+  assert.match(html,/Cs2:'Cs2\.mp3'[\s\S]*?C6:'C6\.mp3'/,"electric guitar sampler should map notes across its playable range");
+  assert.match(html,/Cs1:'Cs1\.mp3'[\s\S]*?Cs4:'Cs4\.mp3'/,"bass sampler should map the low register");
+  assert.match(html,/if\(electricGuitarSamplerReady&&sampler\)sampler\.triggerAttackRelease[\s\S]*?else getElectricGuitarSynth\(\)\.triggerAttackRelease/);
+  assert.match(html,/if\(guitarSamplerReady&&sampler\)sampler\.triggerAttackRelease[\s\S]*?else getGuitarSynth\(\)\.triggerAttack/);
+  assert.match(html,/if\(bassSamplerReady&&sampler\)sampler\.triggerAttackRelease[\s\S]*?else body\.triggerAttackRelease/);
+  assert.match(html,/if\(bassSampler\)bassSampler\.releaseAll\(\)/);
+  assert.match(html,/if\(guitarSampler\)guitarSampler\.releaseAll\(\)/);
+  assert.match(html,/if\(electricGuitarSampler\)electricGuitarSampler\.releaseAll\(\)/);
+});
+
+test("TL-83 instrument buses feed a shared master compressor and limiter", async () => {
+  const html=await readFile(beatLabPath,"utf8");
+  assert.match(html,/masterLimiter=new Tone\.Limiter\(-1\)\.toDestination\(\)/);
+  assert.match(html,/masterCompressor=new Tone\.Compressor\(\{threshold:-15,ratio:1\.7/);
+  assert.match(html,/drumCompressor\)\.connect\(getMasterBus\(\)\)/);
+  assert.match(html,/bassCompressor\.connect\(getMasterBus\(\)\)/);
+  assert.match(html,/guitarCompressor=new Tone\.Compressor\([\s\S]*?\.connect\(guitarPan\)/);
+  assert.match(html,/pianoPan=new Tone\.Panner\(-\.16\)\.connect\(getMasterBus\(\)\)/);
+  assert.match(html,/guitarPan=new Tone\.Panner\(\.2\)\.connect\(getMasterBus\(\)\)/);
+  assert.match(html,/getBassSamplerFilter\(\),v=>bassSamplerReady=v/,"sampled bass must pass through its tone-shaping filter");
 });
