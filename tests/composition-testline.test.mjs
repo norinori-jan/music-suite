@@ -957,3 +957,12 @@ test("TL-66 sequencer uses a look-ahead audio scheduler instead of chained UI ti
   assert.doesNotMatch(html,/playTimer=setTimeout\(tick/,"audio timing must not depend on chained setTimeout callbacks");
   assert.match(html,/clearInterval\(playTimer\)/,"stop must cancel the scheduler interval");
 });
+
+
+test("TL-67 drum bus has gentle compression after its independent mix gain", async () => {
+  const html=await readFile(beatLabPath,"utf8");
+  assert.match(html,/drumBus=null,[^;]*drumCompressor=null/,"drum compressor must be independently managed");
+  assert.match(html,/drumCompressor=new Tone\.Compressor\(\{threshold:-18,ratio:2\.6,attack:\.004,release:\.13,knee:10\}\)\.toDestination\(\)/,"drum bus compressor must tame peaks without extreme limiting");
+  assert.match(html,/drumBus=new Tone\.Gain\([^;]*\)\.connect\(drumCompressor\)/,"drum level control must remain before the compressor");
+  assert.match(html,/if\(drumBus\)drumBus\.gain\.rampTo/,"existing drum volume slider must continue to control pre-compressor gain");
+});
