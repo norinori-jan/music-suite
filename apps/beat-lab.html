@@ -1140,16 +1140,17 @@ function getPerc(){ if(!synthPerc){synthPerc=new Tone.MembraneSynth({pitchDecay:
 function playHit(pitch, vel=1, when, ensureAudio=true){
   // Direct cell audition starts audio; sequencer playback already started it once.
   if(ensureAudio){try{Tone.start();}catch(e){}}
-  const safeVel=Math.max(.05,Math.min(1,Number(vel)||.05));
-  const v=-18*(1-safeVel),at=Number.isFinite(when)?when:undefined;
-  if(pitch===36){const x=getKick();x.volume.value=-4+v;x.triggerAttackRelease('C1','8n',at);}
-  else if(pitch===38){const x=getSnare();x.volume.value=-9+v;x.triggerAttackRelease('16n',at);}
-  else if(pitch===39){const x=getSnare();x.volume.value=-12+v;x.triggerAttackRelease('16n');}
-  else if(pitch===42){const x=getClosedHat();x.volume.value=-19+v;x.triggerAttackRelease('32n',at);}
-  else if(pitch===46){const x=getOpenHat();x.volume.value=-20+v;x.triggerAttackRelease('8n',at);}
-  else if(pitch===49){const x=getCrash();x.volume.value=-20+v;x.triggerAttackRelease('2n',at);}
-  else if(pitch===51){const x=getRide();x.volume.value=-23+v;x.triggerAttackRelease('8n');}
-  else {const x=getPerc();x.volume.value=-10+v;x.triggerAttackRelease(pitch>50?'C2':'G1','16n');}
+  const safeVel=Math.max(.05,Math.min(1,Number(vel)||.05)),at=Number.isFinite(when)?when:undefined;
+  // Keep each instrument's base gain fixed. Per-hit velocity is passed to
+  // Tone's voice, avoiding shared-volume races between simultaneous hits.
+  if(pitch===36)getKick().triggerAttackRelease('C1','8n',at,safeVel);
+  else if(pitch===38)getSnare().triggerAttackRelease('16n',at,safeVel);
+  else if(pitch===39)getSnare().triggerAttackRelease('16n',at,safeVel*.72);
+  else if(pitch===42)getClosedHat().triggerAttackRelease('32n',at,safeVel);
+  else if(pitch===46)getOpenHat().triggerAttackRelease('8n',at,safeVel);
+  else if(pitch===49)getCrash().triggerAttackRelease('2n',at,safeVel);
+  else if(pitch===51)getRide().triggerAttackRelease('8n',at,safeVel);
+  else getPerc().triggerAttackRelease(pitch>50?'C2':'G1','16n',at,safeVel);
 }
 
 let playTimer=null;
