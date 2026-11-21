@@ -1257,7 +1257,7 @@ function buildBassVariantNotes(notes,bars,timeSig=4,variant='A'){
   if(variant==='A'||!source.length)return source;
   const barBeats=Math.max(1,Number(timeSig)||4),limit=Math.max(1,Number(bars)||1)*barBeats;
   if(variant==='B'){
-    const sparse=source.filter(note=>{const beat=((note.startBeat%barBeats)+barBeats)%barBeats;return beat<.26||Math.abs(beat-barBeats/2)<.26;})
+    const sparse=source.filter(note=>{const beat=((note.startBeat%barBeats)+barBeats)%barBeats;return beat<.26;})
       .map(note=>({...note,durationBeats:Math.min(barBeats,Math.max(note.durationBeats*1.45,1.35)),velocity:note.velocity*.84}));
     if(sparse.length)return sparse.sort((a,b)=>a.startBeat-b.startBeat);
     const firstByBar=new Map();source.forEach(note=>{const bar=Math.floor(note.startBeat/barBeats);if(!firstByBar.has(bar))firstByBar.set(bar,note);});
