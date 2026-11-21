@@ -1047,3 +1047,20 @@ test("TL-71 bass line has independent A B C groove identities without changing s
   assert.deepEqual(source.map(n=>n.id),["n1","n2","n3","n4","n5","n6"],"candidate generation must not mutate source notes");
   assert.match(html,/buildBassVariantNotes\(getPlayableBassNotes\(baseProject,APP\.bars,APP\.timeSig\),APP\.bars,APP\.timeSig,chordVariant\)/,"active A/B/C selection must drive bass arrangement");
 });
+
+
+test("TL-72 drum-only audition mutes and restores piano and guitar along with melody and bass", async () => {
+  const html=await readFile(beatLabPath,"utf8");
+  const start=html.indexOf("function playDrumCandidateOnly()");
+  const end=html.indexOf("\nfunction sectionAtStep",start);
+  const solo=html.slice(start,end);
+  assert.match(solo,/piano:document\.getElementById\('piano-enabled'\)\.checked/,"solo snapshot must retain piano state");
+  assert.match(solo,/guitar:document\.getElementById\('guitar-enabled'\)\.checked/,"solo snapshot must retain guitar state");
+  for(const id of ["melody-enabled","bass-enabled","piano-enabled","guitar-enabled"])assert.ok(solo.includes(id),id+" must be muted for drum-only audition");
+  const stopStart=html.indexOf("function stopPlay()");
+  const stopEnd=html.indexOf("\nfunction PROJ_BPM",stopStart);
+  const stop=html.slice(stopStart,stopEnd);
+  assert.match(stop,/\['melody-enabled','melody'\],\['bass-enabled','bass'\],\['piano-enabled','piano'\],\['guitar-enabled','guitar'\]/,"stop must restore all previous accompaniment toggles");
+  assert.match(stop,/if\(pianoSynth\)pianoSynth\.releaseAll\(\)/,"piano voices must release on stop");
+  assert.match(stop,/if\(bassSubSynth\)bassSubSynth\.triggerRelease\(\)/,"sub-bass voice must release on stop");
+});
