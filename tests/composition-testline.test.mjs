@@ -899,9 +899,9 @@ test("TL-64 A/B/C drum candidates have different section arcs and audio-clock hi
   assert.match(html,/function playHit\(pitch, vel=1, when, ensureAudio=true\)/,"drum hit playback must accept an audio-clock timestamp and avoid redundant context starts");
   assert.match(html,/playHit\(row\.pitch,vel,audioAt,false\)/,"sequencer must not restart the audio context for every hit");
   assert.match(html,/const safeVel=Math\.max\(\.05,Math\.min\(1,Number\(vel\)\|\|\.05\)\),at=Number\.isFinite\(when\)\?when:undefined/);
-  assert.match(html,/getKick\(\)\.triggerAttackRelease\('C1','8n',at,safeVel)/,"kick velocity must be per-hit, not shared gain mutation");
-  assert.match(html,/getSnare\(\)\.triggerAttackRelease\('16n',at,safeVel)/,"snare must receive the common audio timestamp");
-  assert.match(html,/getRide\(\)\.triggerAttackRelease\('8n',at,safeVel)/,"ride must receive the common audio timestamp");
+  assert.match(html,/getKick\(\)\.triggerAttackRelease\('C1','8n',at,safeVel\)/,"kick velocity must be per-hit, not shared gain mutation");
+  assert.match(html,/getSnare\(\)\.triggerAttackRelease\('16n',at,safeVel\)/,"snare must receive the common audio timestamp");
+  assert.match(html,/getRide\(\)\.triggerAttackRelease\('8n',at,safeVel\)/,"ride must receive the common audio timestamp");
   assert.match(html,/function tick\(audioAt\)/,"sequencer tick must receive an audio-clock timestamp from the scheduler");
   assert.match(html,/const horizon=Tone\.now\(\)\+0\.12/,"scheduler must maintain a look-ahead window");
   assert.match(html,/playTimer=setInterval\(scheduleAhead,25\)/,"scheduler must refill audio events independently of UI timer cadence");
