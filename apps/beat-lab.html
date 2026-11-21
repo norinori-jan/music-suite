@@ -324,6 +324,20 @@ body{padding-bottom:env(safe-area-inset-bottom)}
   <span id="arrangement-status" style="color:var(--mu)">イントロ→Aメロ→サビ→ブリッジ→ラストを設定します</span>
 </div>
 
+<div id="drum-idea-panel" style="display:flex;align-items:center;gap:8px;flex-wrap:wrap;padding:10px 12px;background:var(--s2);border-bottom:1px solid var(--bd);font-size:11px">
+  <strong style="color:var(--acc)">🥁 DRUM ARRANGER</strong>
+  <label>展開アイデア
+    <select id="drum-arrangement-style" class="inp" style="min-width:155px">
+      <option value="balanced">自然なJ-POP（抑揚）</option>
+      <option value="rock">ロック／ライブ</option>
+      <option value="cinematic">映画的／ドラマチック</option>
+      <option value="dance">ダンス／推進力</option>
+    </select>
+  </label>
+  <button class="btn pri" onclick="applyDrumArrangementIdea()">✨ セクション別に提案</button>
+  <span id="drum-idea-status" style="color:var(--mu)">イントロは控えめ、サビは広げる、つなぎはフィルで変化を付けます。</span>
+</div>
+
 <!-- TABS -->
 <div id="tabs">
   <button class="tab active" id="tab-step"   onclick="switchView('step')">⊞ STEP</button>
@@ -752,6 +766,51 @@ function saveCurrentSectionGroove(){
   const x=APP.sections?.find(v=>v.id===APP.activeSectionId);if(!x){arrangementStatus('先に「曲の展開を作る」を押してください',true);return;}
   x.pattern=cloneRhythmData(APP.pattern);try{msRegister(buildExportData());}catch(e){console.warn('arrangement register skipped',e);}arrangementStatus(x.label+'のリズムを保存しました');
 }
+function buildSectionDrumIdea(basePattern,section,style){
+  const out=sectionPatternFrom(basePattern,section.id),stepsPerBeat=APP.div/4,stepsPerBar=APP.timeSig*stepsPerBeat;
+  const bars=Math.max(1,section.endBar-section.startBar+1),total=bars*stepsPerBar;
+  const put=(row,step,vel)=>{if(step>=0&&step<total)out[pk(row,step)]=Math.max(.18,Math.min(1,vel));};
+  const clearRows=['crash','ride','ohat','tom1','tom2'];
+  clearRows.forEach(row=>Object.keys(out).forEach(key=>{if(key.startsWith(row+':'))delete out[key];}));
+  if(style==='balanced'){
+    if(section.id==='intro'){for(let s=0;s<total;s+=stepsPerBeat*2)put('hat',s,.48);}
+    else if(section.id==='verse'){for(let s=0;s<total;s+=stepsPerBeat*2)put('hat',s,.62);for(let s=stepsPerBeat*2-1;s<total;s+=stepsPerBar)put('ohat',s,.52);}
+    else if(section.id==='chorus'||section.id==='final'){
+      put('crash',0,1);for(let s=0;s<total;s+=stepsPerBeat*2)put('ride',s,section.id==='final'?.82:.7);
+      for(let s=stepsPerBeat-1;s<total;s+=stepsPerBar)put('ohat',s,.62);
+    }else if(section.id==='bridge'){for(let s=0;s<total;s+=stepsPerBeat*2)put('hat',s,.42);}
+  }else if(style==='rock'){
+    if(section.id==='chorus'||section.id==='final'){put('crash',0,1);for(let s=0;s<total;s+=stepsPerBeat)put('ride',s,s%stepsPerBar===0?.9:.62);}
+    else if(section.id==='verse'){for(let s=0;s<total;s+=stepsPerBeat*2)put('hat',s,.68);}
+    else if(section.id==='intro'){put('crash',0,.65);for(let s=0;s<total;s+=stepsPerBeat*2)put('hat',s,.42);}
+  }else if(style==='cinematic'){
+    if(section.id==='intro'){put('crash',0,.5);for(let s=stepsPerBar-stepsPerBeat;s<total;s+=stepsPerBar)put('tom2',s,.42);}
+    if(section.id==='chorus'||section.id==='final'){put('crash',0,1);if(section.id==='final')put('crash',Math.max(0,total-1),.9);for(let s=0;s<total;s+=stepsPerBeat*2)put('ride',s,.5);}
+    if(section.id==='bridge'){for(let s=stepsPerBar-stepsPerBeat;s<total;s+=stepsPerBar)put('tom1',s,.58);}
+  }else if(style==='dance'){
+    if(section.id==='chorus'||section.id==='final'){put('crash',0,.95);for(let s=0;s<total;s+=stepsPerBeat*2)put('ohat',s,.72);}
+    else if(section.id==='verse'){for(let s=0;s<total;s+=stepsPerBeat*2)put('hat',s,.62);}
+    else if(section.id==='intro'){for(let s=stepsPerBeat;s<total;s+=stepsPerBeat*2)put('hat',s,.38);}
+  }
+  if(section.id==='chorus'||section.id==='final')put('crash',0,1);
+  if(section.id==='final')put('crash',Math.max(0,total-1),.92);
+  return out;
+}
+function applyDrumArrangementIdea(style){
+  if(!Array.isArray(APP.sections)||!APP.sections.length){arrangementStatus('先に「曲の展開を作る」を押してください',true);return;}
+  const selected=style||document.getElementById('drum-arrangement-style')?.value||'balanced';
+  if(!['balanced','rock','cinematic','dance'].includes(selected))return;
+  const current=APP.sections.find(x=>x.id===APP.activeSectionId);if(current)current.pattern=cloneRhythmData(APP.pattern);
+  const base=cloneRhythmData(APP.pattern);
+  APP.sections.forEach(section=>{section.pattern=buildSectionDrumIdea(base,section,selected);});
+  const first=APP.sections.find(x=>x.id===APP.activeSectionId)||APP.sections[0];
+  APP.activeSectionId=first.id;APP.pattern=cloneRhythmData(first.pattern);
+  renderArrangementControls();renderStepGrid();
+  const names={balanced:'自然なJ-POP（抑揚）',rock:'ロック／ライブ',cinematic:'映画的／ドラマチック',dance:'ダンス／推進力'};
+  const status=document.getElementById('drum-idea-status');if(status)status.textContent=names[selected]+'を各セクションへ提案しました。不要な音はSTEPで消し、強さを調整できます。';
+  arrangementStatus(names[selected]+'の展開案を作成しました。各区間を試聴して調整してください');
+  try{msRegister(buildExportData());}catch(e){console.warn('drum arrangement suggestion sync skipped',e);}
+}
 function sectionAtStep(step){if(!Array.isArray(APP.sections)||!APP.sections.length)return null;const spb=APP.timeSig*(APP.div/4),bar=Math.floor(step/spb)+1;return APP.sections.find(x=>bar>=x.startBar&&bar<=x.endBar)||null;}
 function sectionPatternStep(section,step){const spb=APP.timeSig*(APP.div/4),start=(section.startBar-1)*spb,len=(section.endBar-section.startBar+1)*spb;return (step-start)%Math.max(1,len);}
 function restoreSongArrangement(data){
@@ -920,7 +979,7 @@ function toggleSwing(){
 // ════════════════════════════════════════════════════════
 // PLAYBACK
 // ════════════════════════════════════════════════════════
-let synthKick=null,synthSnare=null,synthMetal=null,synthPerc=null,melodySynth=null,bassSynth=null,drumBus=null,melodyBus=null,bassBus=null;
+let synthKick=null,synthSnare=null,synthHat=null,synthOpenHat=null,synthCrash=null,synthRide=null,synthPerc=null,melodySynth=null,bassSynth=null,drumBus=null,melodyBus=null,bassBus=null;
 function getDrumBus(){if(!drumBus)drumBus=new Tone.Gain(Number(document.getElementById('drum-volume')?.value??80)/100).toDestination();return drumBus;}
 function getMelodyBus(){if(!melodyBus)melodyBus=new Tone.Gain(Number(document.getElementById('melody-volume')?.value??65)/100).toDestination();return melodyBus;}
 function getBassBus(){if(!bassBus)bassBus=new Tone.Gain(Number(document.getElementById('bass-volume')?.value??72)/100).toDestination();return bassBus;}
@@ -932,19 +991,23 @@ document.getElementById('melody-volume').addEventListener('input',updateMixVolum
 document.getElementById('bass-volume').addEventListener('input',updateMixVolumes);
 function getKick(){ if(!synthKick){synthKick=new Tone.MembraneSynth({pitchDecay:.05,octaves:6,envelope:{attack:.001,decay:.25,sustain:0,release:.1}}).connect(getDrumBus());synthKick.volume.value=-4;} return synthKick; }
 function getSnare(){ if(!synthSnare){synthSnare=new Tone.NoiseSynth({noise:{type:'white'},envelope:{attack:.001,decay:.15,sustain:0,release:.03}}).connect(getDrumBus());synthSnare.volume.value=-9;} return synthSnare; }
-function getMetal(){ if(!synthMetal){synthMetal=new Tone.MetalSynth({frequency:400,envelope:{attack:.001,decay:.25,release:.01},harmonicity:5.1,modulationIndex:32,resonance:4000,octaves:1.5}).connect(getDrumBus());synthMetal.volume.value=-16;} return synthMetal; }
+function getClosedHat(){if(!synthHat){synthHat=new Tone.NoiseSynth({noise:{type:'white'},envelope:{attack:.001,decay:.045,sustain:0,release:.015}}).connect(getDrumBus());synthHat.volume.value=-19;}return synthHat;}
+function getOpenHat(){if(!synthOpenHat){synthOpenHat=new Tone.MetalSynth({frequency:330,envelope:{attack:.001,decay:.48,release:.08},harmonicity:5.1,modulationIndex:24,resonance:3600,octaves:1.2}).connect(getDrumBus());synthOpenHat.volume.value=-20;}return synthOpenHat;}
+function getCrash(){if(!synthCrash){synthCrash=new Tone.MetalSynth({frequency:220,envelope:{attack:.001,decay:1.65,release:.18},harmonicity:3.5,modulationIndex:48,resonance:2600,octaves:2.2}).connect(getDrumBus());synthCrash.volume.value=-20;}return synthCrash;}
+function getRide(){if(!synthRide){synthRide=new Tone.MetalSynth({frequency:520,envelope:{attack:.002,decay:.34,release:.07},harmonicity:7.2,modulationIndex:18,resonance:5200,octaves:1.1}).connect(getDrumBus());synthRide.volume.value=-23;}return synthRide;}
 function getPerc(){ if(!synthPerc){synthPerc=new Tone.MembraneSynth({pitchDecay:.02,octaves:3,envelope:{attack:.001,decay:.1,sustain:0,release:.05}}).connect(getDrumBus());synthPerc.volume.value=-10;} return synthPerc; }
 
-async function playHit(pitch, vel=1){
-  await Tone.start();
-  const v = -20*(1-vel); // velocity → volume offset (dB)
-  if(pitch===36){ getKick().volume.value=-4+v; getKick().triggerAttackRelease('C1','8n'); }
-  else if(pitch===38||pitch===39){ getSnare().volume.value=-9+v; getSnare().triggerAttackRelease('16n'); }
-  else if(pitch===42||pitch===46||pitch===49||pitch===51){
-    const m=getMetal(); m.volume.value=-16+v;
-    m.triggerAttackRelease(pitch===46?'4n':pitch===49?'2n':pitch===51?'8n':'16n');
-  }
-  else { const p=getPerc(); p.volume.value=-10+v; p.triggerAttackRelease(pitch>50?'C2':'G1','16n'); }
+function playHit(pitch, vel=1){
+  const safeVel=Math.max(.05,Math.min(1,Number(vel)||.05));
+  const v=-18*(1-safeVel);
+  if(pitch===36){const x=getKick();x.volume.value=-4+v;x.triggerAttackRelease('C1','8n');}
+  else if(pitch===38){const x=getSnare();x.volume.value=-9+v;x.triggerAttackRelease('16n');}
+  else if(pitch===39){const x=getSnare();x.volume.value=-12+v;x.triggerAttackRelease('16n');}
+  else if(pitch===42){const x=getClosedHat();x.volume.value=-19+v;x.triggerAttackRelease('32n');}
+  else if(pitch===46){const x=getOpenHat();x.volume.value=-20+v;x.triggerAttackRelease('8n');}
+  else if(pitch===49){const x=getCrash();x.volume.value=-20+v;x.triggerAttackRelease('2n');}
+  else if(pitch===51){const x=getRide();x.volume.value=-23+v;x.triggerAttackRelease('8n');}
+  else {const x=getPerc();x.volume.value=-10+v;x.triggerAttackRelease(pitch>50?'C2':'G1','16n');}
 }
 
 let playTimer=null;
