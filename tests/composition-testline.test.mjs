@@ -1064,3 +1064,27 @@ test("TL-72 drum-only audition mutes and restores piano and guitar along with me
   assert.match(stop,/if\(pianoSynth\)pianoSynth\.releaseAll\(\)/,"piano voices must release on stop");
   assert.match(stop,/if\(bassSubSynth\)bassSubSynth\.triggerRelease\(\)/,"sub-bass voice must release on stop");
 });
+
+
+test("TL-73 chord progression can supply a fallback bass line when no explicit bass track exists", async () => {
+  const html=await readFile(beatLabPath,"utf8");
+  const start=html.indexOf("function chordSymbolToPitches(symbol,octave=4)");
+  const end=html.indexOf("\nfunction getPlayableBassNotes",start);
+  assert.ok(start>=0&&end>start);
+  const helpers=new Function(html.slice(start,end)+";return {chordSymbolToPitches,getPlayableChordEvents};")();
+  const bassStart=html.indexOf("function buildBassNotesFromChords(project,bars,timeSig=4)");
+  const bassEnd=html.indexOf("\nfunction buildBassVariantNotes",bassStart);
+  assert.ok(bassStart>=0&&bassEnd>bassStart);
+  const buildBass=new Function("chordSymbolToPitches",html.slice(bassStart,bassEnd)+";return buildBassNotesFromChords;")(helpers.chordSymbolToPitches);
+  const project={generatedMusic:{chords:[{chord:"Am",beats:4},{chord:"F",beats:4},{chord:"C",beats:4},{chord:"G",beats:4}]}};
+  const notes=buildBass(project,4,4);
+  assert.equal(notes.length,8,"each four-beat chord should yield root and fifth bass notes");
+  assert.equal(notes[0].pitch,33,"A minor root should be in the bass register");
+  assert.equal(notes[0].startBeat,0);
+  assert.equal(notes[1].startBeat,2);
+  assert.ok(notes.every(n=>n.pitch>=24&&n.pitch<=60),"generated bass notes must remain in playable bass range");
+  const stringProject={chords:["C","Am","F","G"]};
+  const stringNotes=buildBass(stringProject,4,4);
+  assert.equal(stringNotes.length,8,"plain chord-name arrays must also generate bass notes");
+  assert.match(html,/importedBass\.length\?importedBass:buildBassNotesFromChords/,"explicit bass timeline must take precedence over generated fallback");
+});
