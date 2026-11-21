@@ -1929,6 +1929,12 @@ function _buildExportData(){
   const base=window.__compositionBaseProject||{};
   const stepsPerBeat=APP.div/4,beatPerStep=1/stepsPerBeat,notes=[];
   const sections=Array.isArray(APP.sections)?APP.sections:[];
+  const activeVariant=APP.activeDrumVariant||'A';
+  const importedBass=getPlayableBassNotes(base,APP.bars,APP.timeSig);
+  const bassSeed=importedBass.length?importedBass:buildBassNotesFromChords(base,APP.bars,APP.timeSig);
+  const bassForExport=buildBassVariantNotes(bassSeed,APP.bars,APP.timeSig,activeVariant);
+  const chordEventsForExport=getPlayableChordEvents(base,APP.bars,APP.timeSig,activeVariant);
+  const exportTimeline=events=>events.flatMap(event=>event.pitches.map(pitch=>({pitch,startBeat:+event.startBeat.toFixed(4),durationBeats:+event.durationBeats.toFixed(4),vel:Math.round(event.velocity*127)})));
   // Keep the exact imported drum timeline on a no-edit round trip.
   // Once the user edits the sequencer, the section grooves become the new source.
   if(!drumPatternEdited&&Array.isArray(base.drums?.notes)){
@@ -1950,7 +1956,9 @@ function _buildExportData(){
     timeSig: APP.timeSig,
     bars: APP.bars,
     div: APP.div,
-    bass: base.bass||{notes:[]},
+    bass: {...(base.bass||{}),notes:bassForExport.map(note=>({pitch:note.pitch,startBeat:+note.startBeat.toFixed(4),durationBeats:+note.durationBeats.toFixed(4),vel:Math.round(note.velocity*127)}))},
+    piano: {notes:exportTimeline(chordEventsForExport.piano)},
+    guitar: {notes:exportTimeline(chordEventsForExport.guitar)},
     melody: base.melody||{notes:[]},
     drums: { notes },
     arrangement: sections.length?{version:1,bars:APP.bars,effects:cloneRhythmData(ensureArrangementEffects()),sections:sections.map(x=>({id:x.id,label:x.label,startBar:x.startBar,endBar:x.endBar,pattern:cloneRhythmData(x.pattern),effects:cloneRhythmData(x.effects||{})}))}:base.arrangement||null,
