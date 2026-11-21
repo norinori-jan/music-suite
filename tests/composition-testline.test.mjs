@@ -892,3 +892,34 @@ test("TL-63 selected drum candidate exports to the score editor as a timeline-al
   assert.match(score,/switchView\('roll'\)/,"import must open the track/roll view for visual verification");
   assert.match(score,/const notes=data\.drums\.notes\.map\(n=>\(\{\.\.\.n,id:uid\(\),vel:n\.vel\|\|80\}\)\)/,"score editor must retain each drum note's pitch, startBeat and velocity");
 });
+
+
+test("TL-64 A/B/C drum candidates have different section arcs and audio-clock hit scheduling", async () => {
+  const html=await readFile(beatLabPath,"utf8");
+  assert.match(html,/function playHit\(pitch, vel=1, when\)/,"drum hit playback must accept an audio-clock timestamp");
+  assert.match(html,/const v=-18\*\(1-safeVel\),at=Number\.isFinite\(when\)\?when:undefined/);
+  assert.match(html,/playHit\(row\.pitch,vel,Tone\.now\(\)\)/,"sequencer hits must be scheduled against Tone's audio clock");
+  const start=html.indexOf("function applyCandidateCoreGroove(pattern,section,variant)");
+  const end=html.indexOf("\nfunction createDrumCandidates()",start);
+  const APP={div:16,timeSig:4},pk=(r,s)=>r+":"+s,cloneRhythmData=v=>JSON.parse(JSON.stringify(v||{}));
+  const build=new Function("APP","pk","cloneRhythmData",html.slice(start,end)+";return applyCandidateCoreGroove;")(APP,pk,cloneRhythmData);
+  const section=(id)=>({id,startBar:1,endBar:4});
+  const metrics=p=>({
+    kick:Object.keys(p).filter(k=>k.startsWith("kick:")).length,
+    snare:Object.keys(p).filter(k=>k.startsWith("snare:")).length,
+    hat:Object.keys(p).filter(k=>k.startsWith("hat:")).length,
+    crash:Object.keys(p).filter(k=>k.startsWith("crash:")).length,
+    ride:Object.keys(p).filter(k=>k.startsWith("ride:")).length,
+    tom:Object.keys(p).filter(k=>k.startsWith("tom")).length
+  });
+  for(const id of ["intro","verse","chorus","bridge","final"]){
+    const a=metrics(build({},section(id),"A")),b=metrics(build({},section(id),"B")),c=metrics(build({},section(id),"C"));
+    assert.notDeepEqual(a,b,id+" A/B should have distinct orchestration");
+    assert.notDeepEqual(a,c,id+" A/C should have distinct orchestration");
+    assert.notDeepEqual(b,c,id+" B/C should have distinct orchestration");
+  }
+  const verseB=metrics(build({},section("verse"),"B")),verseA=metrics(build({},section("verse"),"A"));
+  assert.ok(verseB.hat<verseA.hat,"B verse should leave more space than A");
+  const chorusC=metrics(build({},section("chorus"),"C"));
+  assert.ok(chorusC.ride>0&&chorusC.tom>0,"C chorus should combine ride drive with transition fills");
+});
