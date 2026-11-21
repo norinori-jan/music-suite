@@ -286,10 +286,16 @@ body{padding-bottom:env(safe-area-inset-bottom)}
 </div>
 
 <div id="mixbar" style="display:flex;align-items:center;gap:12px;flex-wrap:wrap;padding:7px 12px;background:var(--s1);border-bottom:1px solid var(--bd);font-size:10px">
-  <label style="display:flex;align-items:center;gap:5px"><input type="checkbox" id="melody-enabled" checked> 🎹 メロディも再生</label>
-  <label style="display:flex;align-items:center;gap:5px">メロディ音量 <input id="melody-volume" type="range" min="0" max="100" value="65" style="width:82px"></label>
-  <label style="display:flex;align-items:center;gap:5px">ドラム音量 <input id="drum-volume" type="range" min="0" max="100" value="80" style="width:82px"></label>
-  <span id="mix-status" style="color:var(--mu)">メロディとドラムを同時に試聴できます</span>
+  <label style="display:flex;align-items:center;gap:5px"><input type="checkbox" id="melody-enabled" checked> 🎹 メロディ</label>
+  <label style="display:flex;align-items:center;gap:5px">音量 <input id="melody-volume" type="range" min="0" max="100" value="65" style="width:70px"></label>
+  <label style="display:flex;align-items:center;gap:5px"><input type="checkbox" id="bass-enabled" checked> 🎸 ベース</label>
+  <label style="display:flex;align-items:center;gap:5px">音量 <input id="bass-volume" type="range" min="0" max="100" value="72" style="width:70px"></label>
+  <label style="display:flex;align-items:center;gap:5px"><input type="checkbox" id="piano-enabled" checked> 🎹 ピアノ</label>
+  <label style="display:flex;align-items:center;gap:5px">音量 <input id="piano-volume" type="range" min="0" max="100" value="52" style="width:70px"></label>
+  <label style="display:flex;align-items:center;gap:5px"><input type="checkbox" id="guitar-enabled" checked> 🎸 ギター</label>
+  <label style="display:flex;align-items:center;gap:5px">音量 <input id="guitar-volume" type="range" min="0" max="100" value="42" style="width:70px"></label>
+  <label style="display:flex;align-items:center;gap:5px">🥁 ドラム音量 <input id="drum-volume" type="range" min="0" max="100" value="80" style="width:70px"></label>
+  <span id="mix-status" style="color:var(--mu)">メロディ・ベース・ピアノ・ギター・ドラムを同時に試聴できます</span><span id="arrangement-mix-status" style="color:var(--acc);font-weight:700">A MIX · BALANCED</span>
   <button class="btn pri" id="ai-mix-preview-btn" onclick="playMelodyDrumPreview()" style="display:none">▶ AI伴奏をメロディと同時試聴</button>
 </div>
 <div id="variationbar" style="display:flex;align-items:center;gap:7px;flex-wrap:wrap;padding:7px 12px;background:var(--s2);border-bottom:1px solid var(--bd);font-size:10px">
@@ -320,6 +326,36 @@ body{padding-bottom:env(safe-area-inset-bottom)}
   <span id="effect-break-status" style="color:var(--mu)">ブレイクなし</span>
   <strong id="arrangement-playhead" style="color:var(--acc)">停止中</strong>
   <span id="arrangement-status" style="color:var(--mu)">イントロ→Aメロ→サビ→ブリッジ→ラストを設定します</span>
+</div>
+
+<div id="drum-idea-panel" style="display:flex;align-items:center;gap:8px;flex-wrap:wrap;padding:10px 12px;background:var(--s2);border-bottom:1px solid var(--bd);font-size:11px">
+  <strong style="color:var(--acc)">🥁 DRUM ARRANGER</strong>
+  <label>展開アイデア
+    <select id="drum-arrangement-style" class="inp" style="min-width:155px">
+      <option value="balanced">自然なJ-POP（抑揚）</option>
+      <option value="rock">ロック／ライブ</option>
+      <option value="cinematic">映画的／ドラマチック</option>
+      <option value="dance">ダンス／推進力</option>
+    </select>
+  </label>
+  <label>小節ごとの変化
+    <select id="drum-variation-level" class="inp" style="min-width:92px">
+      <option value="light">控えめ</option>
+      <option value="normal" selected>標準</option>
+      <option value="bold">大胆</option>
+    </select>
+  </label>
+  <button class="btn pri" onclick="applyDrumArrangementIdea()">✨ セクション別に提案</button>
+  <span id="drum-idea-status" style="color:var(--mu)">イントロは控えめ、サビは広げる、つなぎはフィルで変化を付けます。</span>
+</div>
+<div id="drum-candidate-panel" style="display:flex;align-items:center;gap:8px;flex-wrap:wrap;padding:8px 12px;background:var(--s1);border-bottom:1px solid var(--bd);font-size:10px">
+  <strong style="color:var(--acc)">🎧 A / B / C 比較</strong>
+  <button class="btn" id="drum-candidate-A" onclick="selectDrumCandidate('A')">A · 王道ポップ</button>
+  <button class="btn" id="drum-candidate-B" onclick="selectDrumCandidate('B')">B · ハーフタイム</button>
+  <button class="btn" id="drum-candidate-C" onclick="selectDrumCandidate('C')">C · シンコペーション</button>
+  <button class="btn pri" id="drum-only-preview-btn" onclick="playDrumCandidateOnly()">🥁 ドラムだけ試聴</button>
+  <span style="color:var(--mu)">① A/B/Cを選ぶ → ②ドラムだけ試聴 → ③上部の▶で全楽器を再生</span>
+  <span id="drum-candidate-status" style="color:var(--mu)">最初にA/B/Cを押すと3案を生成します</span>
 </div>
 
 <!-- TABS -->
@@ -560,6 +596,8 @@ const APP={
   undoStack:[], redoStack:[],
   sections:null, activeSectionId:null,
   arrangementEffects:{fillBeforeChorus:true,breakBars:[],finalVariation:true},
+  drumVariants:null, activeDrumVariant:null,
+  arrangements:null,
 };
 
 // Imported timeline drums remain authoritative until the user edits the sequencer.
@@ -726,6 +764,7 @@ function drumEffectVelocity(rowId,step,section,localStep){const global=ensureArr
 }
 function createSongArrangement(){
   if(APP.playing)stopPlay();
+  APP.drumVariants=null;APP.activeDrumVariant=null;
   drumPatternEdited=true;
   const bars=Math.min(32,Math.max(5,APP.bars));APP.bars=bars;document.getElementById('step-bars').value=bars;
   const defs=[{id:'intro',label:'イントロ',weight:1},{id:'verse',label:'Aメロ',weight:2},{id:'chorus',label:'サビ',weight:2},{id:'bridge',label:'ブリッジ',weight:1},{id:'final',label:'ラスト',weight:2}];
@@ -750,12 +789,187 @@ function saveCurrentSectionGroove(){
   const x=APP.sections?.find(v=>v.id===APP.activeSectionId);if(!x){arrangementStatus('先に「曲の展開を作る」を押してください',true);return;}
   x.pattern=cloneRhythmData(APP.pattern);try{msRegister(buildExportData());}catch(e){console.warn('arrangement register skipped',e);}arrangementStatus(x.label+'のリズムを保存しました');
 }
+function buildSectionDrumIdea(basePattern,section,style,variation='normal'){
+  const out=sectionPatternFrom(basePattern,section.id),stepsPerBeat=APP.div/4,stepsPerBar=APP.timeSig*stepsPerBeat;
+  const bars=Math.max(1,section.endBar-section.startBar+1),total=bars*stepsPerBar;
+  const put=(row,step,vel)=>{if(step>=0&&step<total)out[pk(row,step)]=Math.max(.18,Math.min(1,vel));};
+  ['crash','ride','ohat','tom1','tom2'].forEach(row=>Object.keys(out).forEach(key=>{if(key.startsWith(row+':'))delete out[key];}));
+  if(style==='balanced'){
+    if(section.id==='intro'){for(let s=0;s<total;s+=stepsPerBeat*2)put('hat',s,.48);}
+    else if(section.id==='verse'){for(let s=0;s<total;s+=stepsPerBeat*2)put('hat',s,.62);for(let s=stepsPerBeat*2-1;s<total;s+=stepsPerBar)put('ohat',s,.52);}
+    else if(section.id==='chorus'||section.id==='final'){put('crash',0,1);for(let s=0;s<total;s+=stepsPerBeat*2)put('ride',s,section.id==='final'?.82:.7);for(let s=stepsPerBeat-1;s<total;s+=stepsPerBar)put('ohat',s,.62);}
+    else if(section.id==='bridge'){for(let s=0;s<total;s+=stepsPerBeat*2)put('hat',s,.42);}
+  }else if(style==='rock'){
+    if(section.id==='chorus'||section.id==='final'){put('crash',0,1);for(let s=0;s<total;s+=stepsPerBeat)put('ride',s,s%stepsPerBar===0?.9:.62);}
+    else if(section.id==='verse'){for(let s=0;s<total;s+=stepsPerBeat*2)put('hat',s,.68);}
+    else if(section.id==='intro'){for(let s=0;s<total;s+=stepsPerBeat*2)put('hat',s,.42);}
+  }else if(style==='cinematic'){
+    if(section.id==='intro'){for(let s=stepsPerBar-stepsPerBeat;s<total;s+=stepsPerBar)put('tom2',s,.42);}
+    if(section.id==='chorus'||section.id==='final'){put('crash',0,1);for(let s=0;s<total;s+=stepsPerBeat*2)put('ride',s,.5);}
+    if(section.id==='bridge'){for(let s=stepsPerBar-stepsPerBeat;s<total;s+=stepsPerBar)put('tom1',s,.58);}
+  }else if(style==='dance'){
+    if(section.id==='chorus'||section.id==='final'){put('crash',0,.95);for(let s=0;s<total;s+=stepsPerBeat*2)put('ohat',s,.72);}
+    else if(section.id==='verse'){for(let s=0;s<total;s+=stepsPerBeat*2)put('hat',s,.62);}
+    else if(section.id==='intro'){for(let s=stepsPerBeat;s<total;s+=stepsPerBeat*2)put('hat',s,.38);}
+  }
+  // Phrase-level variation: alternate repeated bars and prepare the next section.
+  for(let bar=0;bar<bars;bar++){
+    const offset=bar*stepsPerBar;
+    if((section.id==='chorus'||section.id==='final')&&bar>0&&bar%2===1){
+      if(style==='balanced'||style==='rock')put('ohat',offset+Math.max(0,stepsPerBar-1),variation==='bold'?.78:.58);
+      if(style==='cinematic'&&variation!=='light')put('crash',offset,.48);
+    }
+    if(section.id==='verse'&&bar>0&&bar%2===1&&variation!=='light'){
+      put('hat',offset+Math.max(0,stepsPerBeat*2-1),.42);
+      if(variation==='bold')put('perc',offset+Math.max(0,stepsPerBar-1),.48);
+    }
+  }
+  if(section.id!=='final'&&variation!=='light'){
+    const fillStart=(bars-1)*stepsPerBar+Math.max(0,stepsPerBar-stepsPerBeat);
+    if(variation==='normal'){
+      put('snare',fillStart+Math.max(0,stepsPerBeat-2),.68);
+      put('tom1',fillStart+Math.max(0,stepsPerBeat-1),.78);
+    }else{
+      for(let i=0;i<Math.max(1,stepsPerBeat);i++)put(i%2===0?'snare':(i<stepsPerBeat/2?'tom1':'tom2'),fillStart+i,.58+i*.09);
+    }
+  }
+  if(section.id==='chorus'||section.id==='final')put('crash',0,1);
+  if(section.id==='final'&&variation==='bold')put('crash',Math.max(0,total-1),.92);
+  return out;
+}
+function applyDrumArrangementIdea(style){
+  APP.drumVariants=null;APP.activeDrumVariant=null;
+  if(!Array.isArray(APP.sections)||!APP.sections.length){arrangementStatus('先に「曲の展開を作る」を押してください',true);return;}
+  const selected=style||document.getElementById('drum-arrangement-style')?.value||'balanced';
+  if(!['balanced','rock','cinematic','dance'].includes(selected))return;
+  const current=APP.sections.find(x=>x.id===APP.activeSectionId);if(current)current.pattern=cloneRhythmData(APP.pattern);
+  const base=cloneRhythmData(APP.pattern);
+  const variation=document.getElementById('drum-variation-level')?.value||'normal';
+  APP.sections.forEach(section=>{section.pattern=buildSectionDrumIdea(base,section,selected,variation);});
+  const first=APP.sections.find(x=>x.id===APP.activeSectionId)||APP.sections[0];
+  APP.activeSectionId=first.id;APP.pattern=cloneRhythmData(first.pattern);
+  renderArrangementControls();renderStepGrid();
+  const names={balanced:'自然なJ-POP（抑揚）',rock:'ロック／ライブ',cinematic:'映画的／ドラマチック',dance:'ダンス／推進力'};
+  const status=document.getElementById('drum-idea-status');if(status)status.textContent=names[selected]+'／小節変化：'+({light:'控えめ',normal:'標準',bold:'大胆'}[variation]||'標準')+'を提案しました。セクション終端にフィルを加え、繰り返し小節にも変化を付けています。';
+  arrangementStatus(names[selected]+'の展開案を作成しました。各区間を試聴して調整してください');
+  try{msRegister(buildExportData());}catch(e){console.warn('drum arrangement suggestion sync skipped',e);}
+}
+function applyCandidateCoreGroove(pattern,section,variant){
+  const out=cloneRhythmData(pattern),spb=APP.div/4,spbar=APP.timeSig*spb,bars=Math.max(1,section.endBar-section.startBar+1),total=bars*spbar;
+  ['kick','snare','clap','hat','ohat','crash','ride','tom1','tom2','perc'].forEach(row=>Object.keys(out).forEach(key=>{if(key.startsWith(row+':'))delete out[key];}));
+  const put=(row,step,vel)=>{if(step>=0&&step<total)out[pk(row,step)]=Math.max(.12,Math.min(1,vel));};
+  const isIntro=section.id==='intro',isVerse=section.id==='verse',isChorus=section.id==='chorus',isBridge=section.id==='bridge',isFinal=section.id==='final';
+  for(let bar=0;bar<bars;bar++){
+    const base=bar*spbar,last=base+spbar-1,barAccent=bar%2===0?1:.92;
+    if(variant==='A'){
+      // A: familiar J-pop/pop-rock backbeat. The groove stays legible while
+      // the arrangement opens progressively from verse to chorus/final.
+      if(!isIntro&&!isBridge){put('kick',base,.96*barAccent);if(APP.timeSig>=4)put('kick',base+2*spb,isFinal?.86:.76);}
+      if(!isIntro&&!isBridge){put('snare',base+spb,.82);if(APP.timeSig>=4)put('snare',base+3*spb,isFinal?.98:.9);}
+      const interval=Math.max(1,Math.floor(spb/2));
+      if(isIntro||isBridge){for(let x=0;x<spbar;x+=spb)put('hat',base+x,.4);}
+      else for(let x=0;x<spbar;x+=interval)put('hat',base+x,x%spb===0?.64:.42);
+      if(isChorus||isFinal){if(bar===0)put('crash',base,1);for(let x=0;x<spbar;x+=spb*2)put('ride',base+x,isFinal?.78:.58);put('ohat',last,.54);}
+      if(isVerse&&bar%2===1)put('ohat',base+Math.max(0,spbar-1),.42);
+      if((isChorus||isFinal)&&bar===bars-1&&spbar>=4){put('snare',last-1,.36);put('tom1',last,.7);}
+    }else if(variant==='B'){
+      // B: spacious half-time. The snare anchors beat three; fewer hats and
+      // a deliberately open low-density pocket leave room for the vocal.
+      if(!isIntro){put('kick',base,.98);if(APP.timeSig>=4)put('kick',base+Math.round(2.5*spb),isChorus?.72:.56);}
+      if(!isIntro&&!isBridge)put('snare',base+Math.min(spbar-1,2*spb),isFinal?1:.94);
+      if(isIntro||isBridge){put('hat',base,.38);if(spbar>4)put('hat',base+2*spb,.3);}
+      else{put('hat',base,.5);if(APP.timeSig>=4)put('hat',base+2*spb,.36);put('hat',last,.4);}
+      if(isChorus||isFinal){if(bar===0)put('crash',base,.92);put('ohat',last,.72);}
+      if(isBridge&&bar===bars-1){put('tom2',last-1,.62);put('tom1',last,.72);}
+      if(isFinal&&bar===bars-1){put('tom2',last-2,.62);put('tom1',last-1,.78);put('crash',last,1);}
+    }else{
+      // C: driving syncopation. Off-beat kick accents, ghost snare pickups,
+      // tighter hat subdivisions and ride-led chorus create forward motion.
+      if(!isIntro&&!isBridge){put('kick',base,.96);if(spbar>2)put('kick',base+Math.max(1,spb+Math.floor(spb/2)),.7);if(APP.timeSig>=4)put('kick',base+3*spb,.84);}
+      if(!isIntro&&!isBridge){put('snare',base+spb,.86);if(APP.timeSig>=4)put('snare',base+3*spb,.9);if(spbar>=8)put('snare',base+spbar-2,.3);}
+      const interval=Math.max(1,Math.floor(spb/2));
+      for(let x=0;x<spbar;x+=interval)put('hat',base+x,x%spb===0?.58:(x%Math.max(1,spb)===Math.floor(spb/2)?.5:.34));
+      if(isIntro||isBridge){put('tom2',last,.48);if(isBridge&&bar===bars-1)put('tom1',last-1,.62);}
+      if(isChorus||isFinal){if(bar===0)put('crash',base,1);for(let x=0;x<spbar;x+=spb)put('ride',base+x,isFinal?.82:.68);if(spbar>=8)put('ohat',base+spbar-2,.64);}
+      if((isChorus||isFinal)&&bar===bars-1){put('tom1',last-2,.58);put('tom2',last-1,.72);put('crash',last,1);}
+      if(isVerse&&bar%2===1)put('perc',base+Math.max(0,spbar-2),.42);
+    }
+  }
+  return out;
+}
+function createDrumCandidates(){
+  drumPatternEdited=true;
+  if(!Array.isArray(APP.sections)||!APP.sections.length){arrangementStatus('先に「曲の展開を作る」を押してください',true);return false;}
+  const current=APP.sections.find(x=>x.id===APP.activeSectionId);if(current)current.pattern=cloneRhythmData(APP.pattern);
+  const variation=document.getElementById('drum-variation-level')?.value||'normal';
+  const definitions={A:{style:'balanced',label:'王道ポップ'},B:{style:'rock',label:'ハーフタイム'},C:{style:'cinematic',label:'シンコペーション'}};
+  const source=cloneRhythmData(APP.pattern),variants={};
+  Object.entries(definitions).forEach(([id,def])=>{
+    const sections=APP.sections.map(section=>{
+      const idea=buildSectionDrumIdea(source,section,def.style,variation);
+      return {...cloneRhythmData(section),pattern:applyCandidateCoreGroove(idea,section,id)};
+    });
+    variants[id]={label:def.label,sections};
+  });
+  APP.drumVariants=variants;APP.activeDrumVariant='A';APP.arrangements={};
+  applyDrumCandidateState('A');
+  ensureArrangementTrackSnapshots(true);
+  const status=document.getElementById('drum-candidate-status');if(status)status.textContent='A・B・Cを生成しました。ドラム単独／全体再生で比較できます';
+  return true;
+}
+function applyDrumCandidateState(id){
+  const variant=APP.drumVariants?.[id];if(!variant)return false;
+  const canonicalSections=APP.arrangements?.[id]?.sections;
+  APP.sections=cloneRhythmData(Array.isArray(canonicalSections)&&canonicalSections.length?canonicalSections:variant.sections);APP.activeDrumVariant=id;
+  const active=APP.sections.find(x=>x.id===APP.activeSectionId)||APP.sections[0];APP.activeSectionId=active.id;APP.pattern=cloneRhythmData(active.pattern);
+  renderArrangementControls();renderStepGrid();
+  captureArrangementTrackSnapshot(id,APP.sections,false);
+  ['A','B','C'].forEach(key=>document.getElementById('drum-candidate-'+key)?.classList.toggle('on',key===id));
+  const status=document.getElementById('drum-candidate-status');if(status)status.textContent=id+'案：'+variant.label+' — '+APP.sections.length+'区間を切替';
+  return true;
+}
+function selectDrumCandidate(id){
+  if(APP.playing)stopPlay();
+  drumPatternEdited=true;
+  if(!APP.drumVariants){if(!createDrumCandidates())return;}
+  else if(APP.activeDrumVariant&&APP.sections){const active=APP.sections.find(x=>x.id===APP.activeSectionId);if(active)active.pattern=cloneRhythmData(APP.pattern);APP.drumVariants[APP.activeDrumVariant].sections=cloneRhythmData(APP.sections);syncActiveArrangementTrackSnapshot();}
+  applyDrumCandidateState(id);
+  applyArrangementMix(id,{immediate:true});
+}
+let drumOnlyMixSnapshot=null;
+function playDrumCandidateOnly(){
+  if(!APP.drumVariants){if(!createDrumCandidates())return;}
+  if(APP.playing){stopPlay();return;}
+  drumOnlyMixSnapshot={melody:document.getElementById('melody-enabled').checked,bass:document.getElementById('bass-enabled').checked,piano:document.getElementById('piano-enabled').checked,guitar:document.getElementById('guitar-enabled').checked};
+  ['melody-enabled','bass-enabled','piano-enabled','guitar-enabled'].forEach(id=>{const control=document.getElementById(id);if(control)control.checked=false;});
+  const status=document.getElementById('mix-status');if(status)status.textContent='ドラム単独試聴中 — 停止するとミックス設定を元に戻します';
+  togglePlay();
+}
 function sectionAtStep(step){if(!Array.isArray(APP.sections)||!APP.sections.length)return null;const spb=APP.timeSig*(APP.div/4),bar=Math.floor(step/spb)+1;return APP.sections.find(x=>bar>=x.startBar&&bar<=x.endBar)||null;}
 function sectionPatternStep(section,step){const spb=APP.timeSig*(APP.div/4),start=(section.startBar-1)*spb,len=(section.endBar-section.startBar+1)*spb;return (step-start)%Math.max(1,len);}
-function restoreSongArrangement(data){
+function restoreSongArrangement(data,projectData=null){
+  if(projectData?.arrangements&&typeof projectData.arrangements==='object')APP.arrangements=cloneRhythmData(projectData.arrangements);
+  else if(data?.arrangements&&typeof data.arrangements==='object')APP.arrangements=cloneRhythmData(data.arrangements);
   if(!data||!Array.isArray(data.sections)||!data.sections.length)return false;
-  APP.sections=cloneRhythmData(data.sections).map(x=>{if(!x.effects){x.effects={fillBeforeChorus:x.id==='chorus',fillBars:1,fillDensity:'normal',finalVariation:x.id==='final',finalStyle:'accent'};}return x;});APP.arrangementEffects=cloneRhythmData(data.effects||{breakBars:[]});APP.bars=Math.min(32,Math.max(5,Number(data.bars)||APP.bars));document.getElementById('step-bars').value=APP.bars;renderArrangementEffects();
-  APP.activeSectionId=APP.sections[0].id;APP.pattern=cloneRhythmData(APP.sections[0].pattern);renderArrangementControls();return true;
+  APP.sections=cloneRhythmData(data.sections).map(x=>{if(!x.effects){x.effects={fillBeforeChorus:x.id==='chorus',fillBars:1,fillDensity:'normal',finalVariation:x.id==='final',finalStyle:'accent'};}return x;});
+  const savedVariants=projectData?.drumVariants||data.drumVariants;
+  APP.drumVariants=savedVariants&&typeof savedVariants==='object'?cloneRhythmData(savedVariants):null;
+  APP.activeDrumVariant=projectData?.activeDrumVariant||projectData?.activeArrangement||data.activeDrumVariant||data.activeArrangement||null;
+  // The active arrangement is authoritative: retain any last-minute edits made
+  // after the candidate was selected, rather than restoring a stale candidate copy.
+  if(APP.drumVariants&&APP.activeDrumVariant&&APP.drumVariants[APP.activeDrumVariant]){
+    APP.drumVariants[APP.activeDrumVariant].sections=cloneRhythmData(APP.sections);
+  }
+  APP.arrangementEffects=cloneRhythmData(data.effects||{breakBars:[]});
+  APP.bars=Math.min(32,Math.max(5,Number(data.bars)||APP.bars));
+  document.getElementById('step-bars').value=APP.bars;
+  APP.activeSectionId=APP.sections[0].id;APP.pattern=cloneRhythmData(APP.sections[0].pattern);
+  renderArrangementEffects();renderArrangementControls();
+  ['A','B','C'].forEach(key=>document.getElementById('drum-candidate-'+key)?.classList.toggle('on',key===APP.activeDrumVariant));
+  const status=document.getElementById('drum-candidate-status');
+  if(status)status.textContent=APP.drumVariants?(APP.activeDrumVariant||'A')+'案を復元しました。A/B/Cを切り替えて比較できます':'A/B/C候補は未生成です';
+  ensureArrangementTrackSnapshots(false);
+  return true;
 }
 function renderStepGrid(){
   APP.bars=parseInt(document.getElementById('step-bars').value);
@@ -918,58 +1132,412 @@ function toggleSwing(){
 // ════════════════════════════════════════════════════════
 // PLAYBACK
 // ════════════════════════════════════════════════════════
-let synthKick=null,synthSnare=null,synthMetal=null,synthPerc=null,melodySynth=null,drumBus=null,melodyBus=null;
-function getDrumBus(){if(!drumBus)drumBus=new Tone.Gain(Number(document.getElementById('drum-volume')?.value||80)/100).toDestination();return drumBus;}
-function getMelodyBus(){if(!melodyBus)melodyBus=new Tone.Gain(Number(document.getElementById('melody-volume')?.value||65)/100).toDestination();return melodyBus;}
-function getMelodySynth(){if(!melodySynth){melodySynth=new Tone.PolySynth(Tone.Synth,{oscillator:{type:'triangle'},envelope:{attack:.015,decay:.12,sustain:.55,release:.22}}).connect(getMelodyBus());melodySynth.volume.value=-5;}return melodySynth;}
-function updateMixVolumes(){if(drumBus)drumBus.gain.rampTo(Number(document.getElementById('drum-volume').value)/100,.05);if(melodyBus)melodyBus.gain.rampTo(Number(document.getElementById('melody-volume').value)/100,.05);}
-document.getElementById('drum-volume').addEventListener('input',updateMixVolumes);
-document.getElementById('melody-volume').addEventListener('input',updateMixVolumes);
-function getKick(){ if(!synthKick){synthKick=new Tone.MembraneSynth({pitchDecay:.05,octaves:6,envelope:{attack:.001,decay:.25,sustain:0,release:.1}}).connect(getDrumBus());synthKick.volume.value=-4;} return synthKick; }
-function getSnare(){ if(!synthSnare){synthSnare=new Tone.NoiseSynth({noise:{type:'white'},envelope:{attack:.001,decay:.15,sustain:0,release:.03}}).connect(getDrumBus());synthSnare.volume.value=-9;} return synthSnare; }
-function getMetal(){ if(!synthMetal){synthMetal=new Tone.MetalSynth({frequency:400,envelope:{attack:.001,decay:.25,release:.01},harmonicity:5.1,modulationIndex:32,resonance:4000,octaves:1.5}).connect(getDrumBus());synthMetal.volume.value=-16;} return synthMetal; }
-function getPerc(){ if(!synthPerc){synthPerc=new Tone.MembraneSynth({pitchDecay:.02,octaves:3,envelope:{attack:.001,decay:.1,sustain:0,release:.05}}).connect(getDrumBus());synthPerc.volume.value=-10;} return synthPerc; }
-
-async function playHit(pitch, vel=1){
-  await Tone.start();
-  const v = -20*(1-vel); // velocity → volume offset (dB)
-  if(pitch===36){ getKick().volume.value=-4+v; getKick().triggerAttackRelease('C1','8n'); }
-  else if(pitch===38||pitch===39){ getSnare().volume.value=-9+v; getSnare().triggerAttackRelease('16n'); }
-  else if(pitch===42||pitch===46||pitch===49||pitch===51){
-    const m=getMetal(); m.volume.value=-16+v;
-    m.triggerAttackRelease(pitch===46?'4n':pitch===49?'2n':pitch===51?'8n':'16n');
+let synthKick=null,synthSnare=null,synthSnareBody=null,synthRim=null,synthHat=null,synthHatFilter=null,synthOpenHat=null,synthCrash=null,synthRide=null,synthPerc=null,melodySynth=null,bassSynth=null,bassSampler=null,bassSamplerReady=false,bassSamplerFilter=null,bassSubSynth=null,bassAttackSynth=null,pianoSynth=null,pianoSampler=null,pianoSamplerReady=false,guitarSynth=null,guitarSampler=null,guitarSamplerReady=false,electricGuitarSynth=null,electricGuitarSampler=null,electricGuitarSamplerReady=false,electricGuitarFilter=null,electricGuitarChorus=null,electricGuitarDrive=null,drumBus=null,melodyBus=null,bassBus=null,pianoBus=null,guitarBus=null,pianoToneFilter=null,guitarToneFilter=null,pianoPan=null,guitarPan=null,drumCompressor=null,masterCompressor=null,masterLimiter=null,bassBusEQ=null,bassCompressor=null,guitarCompressor=null;
+function getMasterBus(){if(!masterCompressor){masterLimiter=new Tone.Limiter(-1).toDestination();masterCompressor=new Tone.Compressor({threshold:-15,ratio:1.7,attack:.012,release:.22,knee:10}).connect(masterLimiter);}return masterCompressor;}
+function getDrumBus(){if(!drumBus){drumCompressor=new Tone.Compressor({threshold:-19,ratio:2.2,attack:.006,release:.16,knee:10}).connect(getMasterBus());drumBus=new Tone.Gain(Number(document.getElementById('drum-volume')?.value??80)/100).connect(drumCompressor);}return drumBus;}
+function getMelodyBus(){if(!melodyBus)melodyBus=new Tone.Gain(Number(document.getElementById('melody-volume')?.value??65)/100).connect(getMasterBus());return melodyBus;}
+function getBassBus(){if(!bassBus){bassBus=new Tone.Gain(Number(document.getElementById('bass-volume')?.value??72)/100);bassBusEQ=new Tone.EQ3(-1,0,-1.5);bassCompressor=new Tone.Compressor({threshold:-22,ratio:2.3,attack:.012,release:.18,knee:9});bassBus.connect(bassBusEQ);bassBusEQ.connect(bassCompressor);bassCompressor.connect(getMasterBus());}return bassBus;}
+function getPianoBus(){if(!pianoBus){pianoPan=new Tone.Panner(-.16).connect(getMasterBus());pianoToneFilter=new Tone.Filter(105,'highpass').connect(pianoPan);pianoBus=new Tone.Gain(Number(document.getElementById('piano-volume')?.value??52)/100).connect(pianoToneFilter);}return pianoBus;}
+function getGuitarBus(){if(!guitarBus){guitarPan=new Tone.Panner(.2).connect(getMasterBus());guitarCompressor=new Tone.Compressor({threshold:-21,ratio:2.1,attack:.008,release:.16,knee:10}).connect(guitarPan);guitarToneFilter=new Tone.Filter(145,'highpass').connect(guitarCompressor);guitarBus=new Tone.Gain(Number(document.getElementById('guitar-volume')?.value??42)/100).connect(guitarToneFilter);}return guitarBus;}
+function getPianoSynth(){if(!pianoSynth){pianoSynth=new Tone.PolySynth(Tone.Synth,{oscillator:{type:'triangle8'},envelope:{attack:.006,decay:.34,sustain:.12,release:.78}}).connect(getPianoBus());pianoSynth.volume.value=-9;}return pianoSynth;}
+function getPianoSampler(){
+  if(!pianoSampler&&Tone.Sampler){
+    try{
+      pianoSampler=new Tone.Sampler({urls:{C2:'C2.mp3',C3:'C3.mp3',C4:'C4.mp3',C5:'C5.mp3',C6:'C6.mp3'},release:1.25,baseUrl:'https://tonejs.github.io/audio/salamander/',onload:()=>{pianoSamplerReady=true;}}).connect(getPianoBus());
+      pianoSampler.volume.value=-7;
+    }catch(error){pianoSampler=null;pianoSamplerReady=false;}
   }
-  else { const p=getPerc(); p.volume.value=-10+v; p.triggerAttackRelease(pitch>50?'C2':'G1','16n'); }
+  return pianoSampler;
+}
+function playPianoEvent(event,when){
+  const notes=event.pitches.map(p=>Tone.Frequency(p,'midi').toNote());
+  const duration=Math.max(.08,Number(event.durationSeconds)||.5);
+  const sampler=getPianoSampler();
+  if(pianoSamplerReady&&sampler)sampler.triggerAttackRelease(notes,duration,when,event.velocity);
+  else getPianoSynth().triggerAttackRelease(notes,duration,when,event.velocity);
+}
+const TONEJS_SAMPLE_ROOT='https://raw.githubusercontent.com/nbrosowsky/tonejs-instruments/master/samples/';
+function createInstrumentSampler(folder,urls,output,ready){
+  if(!Tone.Sampler)return null;
+  try{return new Tone.Sampler({urls,baseUrl:TONEJS_SAMPLE_ROOT+folder+'/',release:.7,onload:()=>ready(true)}).connect(output);}
+  catch(error){ready(false);return null;}
+}
+function getBassSampler(){if(!bassSampler)bassSampler=createInstrumentSampler('bass-electric',{Cs1:'Cs1.mp3',E1:'E1.mp3',G1:'G1.mp3',As1:'As1.mp3',Cs2:'Cs2.mp3',E2:'E2.mp3',G2:'G2.mp3',As2:'As2.mp3',Cs3:'Cs3.mp3',E3:'E3.mp3',G3:'G3.mp3',As3:'As3.mp3',Cs4:'Cs4.mp3'},getBassSamplerFilter(),v=>bassSamplerReady=v);return bassSampler;}
+function getGuitarSynth(){if(!guitarSynth){guitarSynth=new Tone.PluckSynth({attackNoise:.72,dampening:5200,resonance:.92}).connect(getGuitarBus());guitarSynth.volume.value=-9;}return guitarSynth;}
+function getGuitarSampler(){if(!guitarSampler)guitarSampler=createInstrumentSampler('guitar-acoustic',{D2:'D2.mp3',G2:'G2.mp3',A2:'A2.mp3',C3:'C3.mp3',E3:'E3.mp3',G3:'G3.mp3',A3:'A3.mp3',C4:'C4.mp3',E4:'E4.mp3',G4:'G4.mp3',A4:'A4.mp3',C5:'C5.mp3'},getGuitarBus(),v=>guitarSamplerReady=v);return guitarSampler;}
+function getElectricGuitarSampler(){if(!electricGuitarSampler)electricGuitarSampler=createInstrumentSampler('guitar-electric',{Cs2:'Cs2.mp3',E2:'E2.mp3',Fs2:'Fs2.mp3',A2:'A2.mp3',C3:'C3.mp3',C4:'C4.mp3',Ds4:'Ds4.mp3',Fs4:'Fs4.mp3',A5:'A5.mp3',C6:'C6.mp3'},getGuitarBus(),v=>electricGuitarSamplerReady=v);return electricGuitarSampler;}
+function getElectricGuitarSynth(){
+  if(!electricGuitarSynth){
+    electricGuitarFilter=new Tone.Filter(3600,'lowpass');
+    electricGuitarDrive=new Tone.Distortion(.12).connect(getGuitarBus());
+    electricGuitarChorus=new Tone.Chorus(1.7,2.1,.12).connect(electricGuitarDrive);electricGuitarChorus.start();
+    electricGuitarFilter.connect(electricGuitarChorus);
+    electricGuitarSynth=new Tone.PolySynth(Tone.Synth,{oscillator:{type:'fatsawtooth',count:3,spread:7},envelope:{attack:.004,decay:.2,sustain:.2,release:.22}}).connect(electricGuitarFilter);
+    electricGuitarSynth.volume.value=-18;
+  }
+  return electricGuitarSynth;
+}
+function playGuitarEvent(event,when,bpm){
+  const instrument=event.instrument||'acoustic',notes=event.pitches.map(p=>Tone.Frequency(p,'midi').toNote()),velocity=Math.max(.04,Math.min(1,Number(event.velocity)||.62));
+  const duration=Math.max(.09,(Number(event.durationBeats)||.35)*60/bpm*.82);
+  if(instrument==='electric'){
+    const sampler=getElectricGuitarSampler();
+    if(electricGuitarSamplerReady&&sampler)sampler.triggerAttackRelease(notes,duration,when,velocity);
+    else getElectricGuitarSynth().triggerAttackRelease(notes,duration,when,velocity);
+  }else{
+    const sampler=getGuitarSampler();
+    if(guitarSamplerReady&&sampler)sampler.triggerAttackRelease(notes,duration,when,velocity);
+    else getGuitarSynth().triggerAttack(notes,when,velocity);
+  }
 }
 
-let playTimer=null;
+function getMelodySynth(){if(!melodySynth){melodySynth=new Tone.PolySynth(Tone.Synth,{oscillator:{type:'triangle'},envelope:{attack:.015,decay:.12,sustain:.55,release:.22}}).connect(getMelodyBus());melodySynth.volume.value=-5;}return melodySynth;}
+function getBassSynth(){if(!bassSynth){bassSynth=new Tone.MonoSynth({oscillator:{type:'fatsawtooth',count:2,spread:8},filter:{Q:1,type:'lowpass',rolloff:-24},envelope:{attack:.006,decay:.16,sustain:.58,release:.12},filterEnvelope:{attack:.001,decay:.22,sustain:.18,release:.12,baseFrequency:65,octaves:2.4}}).connect(getBassBus());bassSynth.volume.value=-10;}return bassSynth;}
+function getBassSamplerFilter(){if(!bassSamplerFilter)bassSamplerFilter=new Tone.Filter(175,'lowpass').connect(getBassBus());return bassSamplerFilter;}
+function getBassSubSynth(){if(!bassSubSynth){bassSubSynth=new Tone.MonoSynth({oscillator:{type:'sine'},filter:{type:'lowpass',frequency:115,rolloff:-24},envelope:{attack:.012,decay:.2,sustain:.72,release:.16}}).connect(getBassBus());bassSubSynth.volume.value=-13;}return bassSubSynth;}
+function getBassAttackSynth(){if(!bassAttackSynth){bassAttackSynth=new Tone.Synth({oscillator:{type:'triangle'},envelope:{attack:.001,decay:.032,sustain:0,release:.018}}).connect(getBassBus());bassAttackSynth.volume.value=-19;}return bassAttackSynth;}
+function getBassSectionTone(section,variant='A',pitch=40){
+  const label=String(section?.label||section?.name||section?.type||'').toLowerCase();
+  const chorus=/chorus|サビ|hook|final|ラスサビ/.test(label),bridge=/bridge|ブリッジ|間奏|break/.test(label),intro=/intro|イントロ|verse|aメロ|bメロ|前奏/.test(label);
+  let filterHz=chorus?205:(bridge?112:(intro?132:158));
+  let bodyDb=chorus?-7.5:(bridge?-10.5:-9),subDb=pitch<=35?-10.5:-14.5,attackDb=chorus?-17:(bridge?-25:-21);
+  if(variant==='B'){filterHz*=.82;bodyDb-=1.2;subDb+=1.2;attackDb-=4;}
+  if(variant==='C'){filterHz*=1.16;bodyDb+=.6;attackDb+=3;}
+  if(pitch>=48){filterHz=Math.min(290,filterHz*1.12);subDb-=3;attackDb+=1.5;}
+  if(pitch<=30){filterHz=Math.max(95,filterHz*.88);subDb+=1.5;attackDb-=2;}
+  return {filterHz:Math.round(filterHz),bodyDb,subDb,attackDb};
+}
+function playBassNote(note,duration,when,section=null,variant='A'){
+  const pitch=Number(note.pitch),velocity=Math.max(.05,Math.min(1,Number(note.velocity)||.7));
+  if(!Number.isInteger(pitch)||pitch<24||pitch>60)return;
+  const tone=getBassSectionTone(section,variant,pitch),body=getBassSynth(),sampler=getBassSampler(),sub=getBassSubSynth(),attack=getBassAttackSynth();
+  body.filter.frequency.setValueAtTime(tone.filterHz,when);body.volume.setValueAtTime(tone.bodyDb-1,when);getBassSamplerFilter().frequency.setValueAtTime(tone.filterHz,when);if(sampler)sampler.volume.setValueAtTime(tone.bodyDb-1,when);sub.volume.setValueAtTime(tone.subDb,when);attack.volume.setValueAtTime(tone.attackDb,when);
+  const frequency=Tone.Frequency(pitch,'midi').toNote();
+  if(bassSamplerReady&&sampler)sampler.triggerAttackRelease(frequency,duration,when,velocity);else body.triggerAttackRelease(frequency,duration,when,velocity);
+  sub.triggerAttackRelease(frequency,duration,when,velocity*.72);
+  if(velocity>=.48)attack.triggerAttackRelease(Tone.Frequency(pitch+12,'midi').toNote(),'32n',when,Math.min(.55,velocity*.42));
+}
+const ARRANGEMENT_MIX_PROFILES={
+  A:{label:'BALANCED',description:'メロディ中心・自然な一体感',gain:{drum:.94,melody:1,bass:.94,piano:.96,guitar:.92},bassEQ:{low:-1,mid:-.5,high:-1.5},pianoHP:105,guitarHP:150,pianoPan:-.14,guitarPan:.18,drumComp:{threshold:-19,ratio:2.2,attack:.006,release:.16},master:{threshold:-15,ratio:1.7,attack:.012,release:.22}},
+  B:{label:'SPACIOUS',description:'余白・温かさ・広がり',gain:{drum:.82,melody:1.04,bass:.9,piano:1.04,guitar:.82},bassEQ:{low:.8,mid:-1.6,high:-2},pianoHP:88,guitarHP:175,pianoPan:-.24,guitarPan:.25,drumComp:{threshold:-17,ratio:1.8,attack:.012,release:.22},master:{threshold:-16,ratio:1.55,attack:.022,release:.28}},
+  C:{label:'DRIVING',description:'ドラム・ベース・ギターの推進力',gain:{drum:1.02,melody:.94,bass:1.04,piano:.82,guitar:1.08},bassEQ:{low:-.2,mid:.6,high:-.4},pianoHP:125,guitarHP:125,pianoPan:-.1,guitarPan:.22,drumComp:{threshold:-21,ratio:2.6,attack:.004,release:.13},master:{threshold:-14,ratio:1.9,attack:.009,release:.19}}
+};
+function mixSliderValue(id,fallback){const el=document.getElementById(id);return Number(el?.value??fallback)/100;}
+function mixRamp(param,value,seconds=.08){if(!param)return;if(typeof param.rampTo==='function')param.rampTo(value,seconds);else if('value'in param)param.value=value;}
+function applyArrangementMix(variant=APP.activeDrumVariant||'A',options={}){
+  const key=ARRANGEMENT_MIX_PROFILES[variant]?variant:'A',profile=ARRANGEMENT_MIX_PROFILES[key],seconds=options.immediate?0.015:0.09;
+  if(options.ensure){getDrumBus();getMelodyBus();getBassBus();getPianoBus();getGuitarBus();}
+  const gains={drum:drumBus,melody:melodyBus,bass:bassBus,piano:pianoBus,guitar:guitarBus};
+  Object.entries(gains).forEach(([name,bus])=>{if(bus)mixRamp(bus.gain,mixSliderValue(name+'-volume',{drum:80,melody:65,bass:72,piano:52,guitar:42}[name])*profile.gain[name],seconds);});
+  if(bassBusEQ){mixRamp(bassBusEQ.low,profile.bassEQ.low,seconds);mixRamp(bassBusEQ.mid,profile.bassEQ.mid,seconds);mixRamp(bassBusEQ.high,profile.bassEQ.high,seconds);}
+  if(pianoToneFilter)mixRamp(pianoToneFilter.frequency,profile.pianoHP,seconds);
+  if(guitarToneFilter)mixRamp(guitarToneFilter.frequency,profile.guitarHP,seconds);
+  if(pianoPan)mixRamp(pianoPan.pan,profile.pianoPan,seconds);
+  if(guitarPan)mixRamp(guitarPan.pan,profile.guitarPan,seconds);
+  if(drumCompressor){mixRamp(drumCompressor.threshold,profile.drumComp.threshold,seconds);mixRamp(drumCompressor.ratio,profile.drumComp.ratio,seconds);mixRamp(drumCompressor.attack,profile.drumComp.attack,seconds);mixRamp(drumCompressor.release,profile.drumComp.release,seconds);}
+  if(masterCompressor){mixRamp(masterCompressor.threshold,profile.master.threshold,seconds);mixRamp(masterCompressor.ratio,profile.master.ratio,seconds);mixRamp(masterCompressor.attack,profile.master.attack,seconds);mixRamp(masterCompressor.release,profile.master.release,seconds);}
+  const status=document.getElementById('arrangement-mix-status');
+  if(status)status.textContent=key+' MIX · '+profile.label+' — '+profile.description;
+  return profile;
+}
+function updateMixVolumes(){applyArrangementMix(APP.activeDrumVariant||'A');}
+document.getElementById('drum-volume').addEventListener('input',updateMixVolumes);
+document.getElementById('melody-volume').addEventListener('input',updateMixVolumes);
+document.getElementById('bass-volume').addEventListener('input',updateMixVolumes);
+document.getElementById('piano-volume').addEventListener('input',updateMixVolumes);
+document.getElementById('guitar-volume').addEventListener('input',updateMixVolumes);
+function getKick(){ if(!synthKick){synthKick=new Tone.MembraneSynth({pitchDecay:.05,octaves:6,envelope:{attack:.001,decay:.25,sustain:0,release:.1}}).connect(getDrumBus());synthKick.volume.value=-4;} return synthKick; }
+function getSnare(){ if(!synthSnare){synthSnare=new Tone.NoiseSynth({noise:{type:'white'},envelope:{attack:.001,decay:.19,sustain:0,release:.035}}).connect(getDrumBus());synthSnare.volume.value=-11;} return synthSnare; }
+function getSnareBody(){if(!synthSnareBody){synthSnareBody=new Tone.MembraneSynth({pitchDecay:.018,octaves:2.2,envelope:{attack:.001,decay:.12,sustain:0,release:.025}}).connect(getDrumBus());synthSnareBody.volume.value=-13;}return synthSnareBody;}
+function getRim(){if(!synthRim){synthRim=new Tone.Synth({oscillator:{type:'triangle'},envelope:{attack:.001,decay:.045,sustain:0,release:.012}}).connect(getDrumBus());synthRim.volume.value=-13;}return synthRim;}
+function getClosedHat(){if(!synthHat){synthHatFilter=new Tone.Filter(7200,'highpass').connect(getDrumBus());synthHat=new Tone.NoiseSynth({noise:{type:'white'},envelope:{attack:.001,decay:.038,sustain:0,release:.012}}).connect(synthHatFilter);synthHat.volume.value=-21;}return synthHat;}
+function getOpenHat(){if(!synthOpenHat){synthOpenHat=new Tone.MetalSynth({frequency:330,envelope:{attack:.001,decay:.48,release:.08},harmonicity:5.1,modulationIndex:24,resonance:3600,octaves:1.2}).connect(getDrumBus());synthOpenHat.volume.value=-20;}return synthOpenHat;}
+function getCrash(){if(!synthCrash){synthCrash=new Tone.MetalSynth({frequency:220,envelope:{attack:.001,decay:1.65,release:.18},harmonicity:3.5,modulationIndex:48,resonance:2600,octaves:2.2}).connect(getDrumBus());synthCrash.volume.value=-20;}return synthCrash;}
+function getRide(){if(!synthRide){synthRide=new Tone.MetalSynth({frequency:520,envelope:{attack:.002,decay:.34,release:.07},harmonicity:7.2,modulationIndex:18,resonance:5200,octaves:1.1}).connect(getDrumBus());synthRide.volume.value=-23;}return synthRide;}
+function getPerc(){ if(!synthPerc){synthPerc=new Tone.MembraneSynth({pitchDecay:.02,octaves:3,envelope:{attack:.001,decay:.1,sustain:0,release:.05}}).connect(getDrumBus());synthPerc.volume.value=-10;} return synthPerc; }
+
+function playHit(pitch, vel=1, when, ensureAudio=true){
+  // Direct cell audition starts audio; sequencer playback already started it once.
+  if(ensureAudio){try{Tone.start();}catch(e){}}
+  const safeVel=Math.max(.05,Math.min(1,Number(vel)||.05)),at=Number.isFinite(when)?when:undefined;
+  // Keep each instrument's base gain fixed. Per-hit velocity is passed to
+  // Tone's voice, avoiding shared-volume races between simultaneous hits.
+  if(pitch===36)getKick().triggerAttackRelease('C1','8n',at,safeVel);
+  else if(pitch===38){getSnare().triggerAttackRelease('16n',at,safeVel);getSnareBody().triggerAttackRelease('D2','16n',at,safeVel*.58);}
+  else if(pitch===39)getRim().triggerAttackRelease('D5','32n',at,safeVel);
+  else if(pitch===42)getClosedHat().triggerAttackRelease('32n',at,safeVel);
+  else if(pitch===46)getOpenHat().triggerAttackRelease('8n',at,safeVel);
+  else if(pitch===49)getCrash().triggerAttackRelease('2n',at,safeVel);
+  else if(pitch===51)getRide().triggerAttackRelease('8n',at,safeVel);
+  else getPerc().triggerAttackRelease(pitch>50?'C2':'G1','16n',at,safeVel);
+}
+
+let playTimer=null,nextStepTime=0,playbackGeneration=0;
+
+function chordSymbolToPitches(symbol,octave=4){
+  const text=String(symbol||'').trim().replace(/\s+/g,'');
+  const match=text.match(/^([A-G])([#b]?)(.*)$/i);
+  if(!match)return [];
+  const roots={C:0,D:2,E:4,F:5,G:7,A:9,B:11};
+  let root=roots[match[1].toUpperCase()]+(match[2]==='#'?1:match[2]==='b'?-1:0);
+  const suffix=(match[3]||'').split('/')[0].toLowerCase();
+  let intervals=[0,4,7];
+  if(/m(?!aj)/.test(suffix))intervals=[0,3,7];
+  if(/dim|°/.test(suffix))intervals=[0,3,6];
+  if(/aug|\+/.test(suffix))intervals=[0,4,8];
+  if(/sus2/.test(suffix))intervals=[0,2,7];
+  else if(/sus4|sus/.test(suffix))intervals=[0,5,7];
+  if(/m7b5|ø/.test(suffix))intervals=[0,3,6,10];
+  else if(/maj9|maj7/.test(suffix))intervals=[0,4,7,11];
+  else if(/m9|m7/.test(suffix))intervals=[0,3,7,10];
+  else if(/(^|[^a-z])7|7$/.test(suffix))intervals=[0,4,7,10];
+  if(/add9|(^|[^a-z])9/.test(suffix))intervals=[...intervals,14];
+  if(/6/.test(suffix)&&!/16/.test(suffix))intervals=[...intervals,9];
+  return intervals.map(n=>60+(octave-4)*12+root+n);
+}
+function getPlayableChordEvents(project,bars,timeSig=4,variant='A'){
+  if((project?.accompanimentMode==='manual'||project?.source==='score-editor')&&(project?.piano?.notes?.length||project?.guitar?.notes?.length)){
+    const fromNotes=track=>(track?.notes||[]).map(note=>({startBeat:Number(note.startBeat),pitches:[Number(note.pitch)],durationBeats:Number(note.durationBeats)||.5,velocity:Math.max(.05,Math.min(1,(Number(note.vel)||80)/127))})).filter(event=>Number.isFinite(event.startBeat)&&Number.isInteger(event.pitches[0]));
+    return {piano:fromNotes(project.piano),guitar:fromNotes(project.guitar)};
+  }
+  const direct=Array.isArray(project?.chords)?project.chords:[];
+  const generated=Array.isArray(project?.generatedMusic?.chords)?project.generatedMusic.chords:[];
+  const sections=Array.isArray(project?.generatedMusic?.chordSections)?project.generatedMusic.chordSections:[];
+  const source=direct.length?direct:(generated.length?generated:sections.flatMap(section=>section.progression||[]));
+  const limit=Math.max(1,Number(bars)||1)*Math.max(1,Number(timeSig)||4);
+  const piano=[],guitar=[];let cursor=0;
+  const add=(target,startBeat,pitches,durationBeats,velocity)=>{if(startBeat<limit&&pitches.length)target.push({startBeat:+startBeat.toFixed(4),pitches,durationBeats:Math.max(.12,Math.min(durationBeats,limit-startBeat)),velocity});};
+  source.forEach((item,index)=>{
+    const beats=Math.max(.5,Math.min(16,Number(item?.beats)||4));
+    const start=Number.isFinite(Number(item?.startBeat))?Number(item.startBeat):cursor;
+    cursor=Math.max(cursor,start+beats);
+    if(start>=limit)return;
+    const pitches=chordSymbolToPitches(typeof item==='string'?item:(item?.chord||item?.name),4);
+    if(!pitches.length)return;
+    const duration=Math.min(beats,limit-start);
+    if(variant==='B'){
+      const count=Math.min(4,pitches.length),step=Math.min(.75,duration/Math.max(2,count));
+      for(let i=0;i<count;i++)add(piano,start+i*step,[pitches[i]+12],Math.min(.72,step*.92),i===0?.62:.48);
+      add(guitar,start+Math.min(1.5,duration*.55),[pitches[pitches.length-1]+12],Math.min(1.1,Math.max(.3,duration*.3)),.38);
+    }else if(variant==='C'){
+      add(piano,start,pitches.map(p=>p+12),Math.min(.48,duration*.24),.78);
+      if(duration>=2)add(piano,start+Math.min(2.5,duration*.625),[pitches[0]+12,pitches[2%pitches.length]+12],.32,.62);
+      for(let offset=.25,step=0;offset<duration;offset+=.5,step++){add(guitar,start+offset,[pitches[(step+1)%pitches.length]+12],.28,step%2===0?.64:.46);guitar[guitar.length-1]={...guitar[guitar.length-1],instrument:'electric'};}
+    }else{
+      add(piano,start,pitches,Math.max(.35,duration*.82),.68);
+      if(duration>1.5)add(guitar,start+Math.min(2,duration*.5),[pitches[0]+12,pitches[2%pitches.length]+12],.42,.48);
+    }
+  });
+  const sort=(a,b)=>a.startBeat-b.startBeat;
+  return {piano:piano.sort(sort),guitar:guitar.sort(sort)};
+}
+
+
+
+
+
+
+
+function buildBassNotesFromChords(project,bars,timeSig=4){
+  const direct=Array.isArray(project?.chords)?project.chords:[];
+  const generated=Array.isArray(project?.generatedMusic?.chords)?project.generatedMusic.chords:[];
+  const sections=Array.isArray(project?.generatedMusic?.chordSections)?project.generatedMusic.chordSections:[];
+  const source=direct.length?direct:(generated.length?generated:sections.flatMap(section=>section.progression||[]));
+  const limit=Math.max(1,Number(bars)||1)*Math.max(1,Number(timeSig)||4),notes=[];let cursor=0;
+  source.forEach((item,index)=>{
+    const beats=Math.max(.5,Math.min(16,Number(item?.beats)||4));
+    const start=Number.isFinite(Number(item?.startBeat))?Number(item.startBeat):cursor;
+    cursor=Math.max(cursor,start+beats);
+    if(start>=limit)return;
+    const tones=chordSymbolToPitches(typeof item==='string'?item:(item?.chord||item?.name),1);
+    if(!tones.length)return;
+    notes.push({id:'chord-bass-'+index+'-root',pitch:tones[0],startBeat:start,durationBeats:Math.min(1.8,Math.max(.65,beats*.42)),velocity:.72});
+    if(beats>=3&&start+2<limit)notes.push({id:'chord-bass-'+index+'-fifth',pitch:tones[2]||tones[0]+7,startBeat:start+2,durationBeats:.72,velocity:.58});
+  });
+  return notes.sort((a,b)=>a.startBeat-b.startBeat);
+}
+
+function buildBassVariantNotes(notes,bars,timeSig=4,variant='A'){
+  const source=(notes||[]).map(note=>({...note}));
+  if(variant==='A'||!source.length)return source;
+  const barBeats=Math.max(1,Number(timeSig)||4),limit=Math.max(1,Number(bars)||1)*barBeats;
+  if(variant==='B'){
+    const firstByBar=new Map();
+    source.slice().sort((a,b)=>a.startBeat-b.startBeat).forEach(note=>{
+      const bar=Math.floor(note.startBeat/barBeats);
+      if(!firstByBar.has(bar))firstByBar.set(bar,note);
+    });
+    return [...firstByBar.entries()].map(([bar,note],index)=>{
+      const next=firstByBar.get(bar+1);
+      const duration=Math.min(barBeats,next?Math.max(.75,next.startBeat-note.startBeat):barBeats,limit-note.startBeat);
+      return {...note,id:(note.id||'bass-'+index)+'-space',durationBeats:Math.max(1.25,duration),velocity:Math.max(.35,note.velocity*.82)};
+    }).sort((a,b)=>a.startBeat-b.startBeat);
+  }
+  const driven=source.map(note=>({...note}));
+  source.forEach((note,index)=>{
+    const duration=Math.max(.1,Number(note.durationBeats)||.5);
+    if(note.pitch<=48){
+      const octaveAt=note.startBeat+.5;
+      if(octaveAt<limit&&octaveAt<note.startBeat+duration-.08){
+        driven.push({...note,id:(note.id||'bass-'+index)+'-oct',pitch:note.pitch+12,startBeat:octaveAt,durationBeats:Math.min(.32,duration*.42),velocity:note.velocity*.46});
+      }
+    }
+    const pickup=note.startBeat+Math.min(.5,duration*.55);
+    if(pickup<limit&&pickup<note.startBeat+duration-.12){
+      const fifth=note.pitch<=53?note.pitch+7:note.pitch-5;
+      driven.push({...note,id:(note.id||'bass-'+index)+'-pickup',pitch:fifth,startBeat:pickup,durationBeats:Math.min(.2,duration*.28),velocity:note.velocity*.5});
+    }
+  });
+  return driven.sort((a,b)=>a.startBeat-b.startBeat);
+}
+
+
+
+function getPlayableBassNotes(project,bars,timeSig=4){
+  const source=Array.isArray(project?.bass?.notes)?project.bass.notes:[];
+  const limit=Math.max(1,Number(bars)||1)*Math.max(1,Number(timeSig)||4);
+  return source.map((note,index)=>({
+    id:note.id||'bass-'+index,
+    pitch:Number(note.pitch),
+    startBeat:Number(note.startBeat),
+    durationBeats:Number(note.durationBeats),
+    velocity:Number.isFinite(Number(note.vel))?(Number(note.vel)>1?Number(note.vel)/127:Number(note.vel)):.74
+  })).filter(note=>Number.isInteger(note.pitch)&&note.pitch>=24&&note.pitch<=60&&Number.isFinite(note.startBeat)&&note.startBeat>=0&&note.startBeat<limit&&Number.isFinite(note.durationBeats)&&note.durationBeats>0)
+    .map(note=>({...note,velocity:Math.max(.05,Math.min(1,note.velocity))}))
+    .sort((a,b)=>a.startBeat-b.startBeat);
+}
+
+
+/* Canonical independent A/B/C arrangement snapshots. */
+function arrangementDrumNotesFromSections(sections,project){
+  if(!Array.isArray(sections)||!sections.length)return cloneRhythmData(project?.drums?.notes||[]);
+  const timeSig=Math.max(1,Number(project?.timeSig)||APP.timeSig||4);
+  const div=[4,8,16,32].includes(Number(project?.div))?Number(project.div):APP.div;
+  const stepsPerBeat=div/4,beatPerStep=1/stepsPerBeat,notes=[];
+  sections.forEach(section=>{
+    const start=(Number(section.startBar)-1)*timeSig*stepsPerBeat;
+    const len=(Number(section.endBar)-Number(section.startBar)+1)*timeSig*stepsPerBeat;
+    for(let local=0;local<len;local++)ROWS.forEach(row=>{
+      const vel=section.pattern?.[pk(row.id,local)];
+      if(vel)notes.push({pitch:row.pitch,startBeat:+((start+local)*beatPerStep).toFixed(4),durationBeats:+(beatPerStep*.9).toFixed(4),vel:Math.round(40+vel*87),section:section.id});
+    });
+  });
+  return notes;
+}
+function buildArrangementTrackSnapshot(project,variant,sections){
+  const id=['A','B','C'].includes(variant)?variant:'A';
+  const importedBass=getPlayableBassNotes(project,APP.bars,APP.timeSig);
+  const bassSeed=importedBass.length?importedBass:buildBassNotesFromChords(project,APP.bars,APP.timeSig);
+  const bass=buildBassVariantNotes(bassSeed,APP.bars,APP.timeSig,id).map(note=>({
+    pitch:Number(note.pitch),startBeat:+Number(note.startBeat).toFixed(4),
+    durationBeats:+Number(note.durationBeats).toFixed(4),
+    vel:Math.round(Math.max(.05,Math.min(1,Number(note.velocity)||.7))*127)
+  }));
+  const chords=getPlayableChordEvents(project,APP.bars,APP.timeSig,id);
+  const toNotes=events=>events.flatMap(event=>event.pitches.map(pitch=>({
+    pitch:Number(pitch),startBeat:+Number(event.startBeat).toFixed(4),
+    durationBeats:+Number(event.durationBeats).toFixed(4),
+    vel:Math.round(Math.max(.05,Math.min(1,Number(event.velocity)||.6))*127),
+    ...(event.instrument?{instrument:event.instrument}:{})
+  })));
+  const drumSections=Array.isArray(sections)?cloneRhythmData(sections):null;
+  return {version:1,id,label:({A:'BALANCED',B:'SPACIOUS',C:'DRIVING'})[id],
+    tracks:{melody:{notes:cloneRhythmData(project?.melody?.notes||[])},
+      piano:{notes:toNotes(chords.piano)},guitar:{notes:toNotes(chords.guitar)},
+      bass:{notes:bass},drums:{notes:arrangementDrumNotesFromSections(drumSections,project)}},
+    sections:drumSections};
+}
+function captureArrangementTrackSnapshot(variant,sections=null,force=false){
+  const id=['A','B','C'].includes(variant)?variant:'A';
+  if(!APP.arrangements||typeof APP.arrangements!=='object')APP.arrangements={};
+  if(APP.arrangements[id]&&!force)return APP.arrangements[id];
+  const sourceSections=sections||APP.drumVariants?.[id]?.sections||(id===APP.activeDrumVariant?APP.sections:null);
+  APP.arrangements[id]=buildArrangementTrackSnapshot(window.__compositionBaseProject||{},id,sourceSections);
+  return APP.arrangements[id];
+}
+function ensureArrangementTrackSnapshots(force=false){
+  ['A','B','C'].forEach(id=>{
+    const sections=APP.drumVariants?.[id]?.sections||(id===APP.activeDrumVariant?APP.sections:null);
+    if(sections||!APP.arrangements?.[id])captureArrangementTrackSnapshot(id,sections,force);
+  });
+  return APP.arrangements||{};
+}
+function syncActiveArrangementTrackSnapshot(){
+  const id=APP.activeDrumVariant||'A';
+  const sections=Array.isArray(APP.sections)?cloneRhythmData(APP.sections):null;
+  if(sections){
+    const active=sections.find(section=>section.id===APP.activeSectionId);
+    if(active)active.pattern=cloneRhythmData(APP.pattern);
+    if(APP.drumVariants?.[id])APP.drumVariants[id].sections=cloneRhythmData(sections);
+  }
+  const current=APP.arrangements?.[id];
+  if(!current)return captureArrangementTrackSnapshot(id,sections,true);
+  const refreshed=buildArrangementTrackSnapshot(window.__compositionBaseProject||{},id,sections);
+  current.version=1;
+  current.sections=refreshed.sections;
+  current.tracks=current.tracks||{};
+  current.tracks.drums=refreshed.tracks.drums;
+  return current;
+}
 async function togglePlay(){
   await Tone.start();
   if(APP.playing){ stopPlay(); return; }
   APP.playing=true;
+  const generation=++playbackGeneration;
   if(aiWorkflowStage>=2){aiWorkflowStage=3;renderAiWorkflow();}
   document.querySelectorAll('#play-btn,#play-btn-ex').forEach(b=>{b.textContent='⏹';b.classList.add('active')});
   const steps=totalSteps();
   const stepsPerBeat=APP.div/4;
   const baseMs=(60/PROJ_BPM())*(4/APP.div)*1000;
+  const bpm=PROJ_BPM();
+  const baseProject=window.__compositionBaseProject;
+  const chordVariant=APP.activeDrumVariant||'A';
+  applyArrangementMix(chordVariant,{ensure:true,immediate:true});
+  const activeArrangement=syncActiveArrangementTrackSnapshot();
+  const activeTracks=activeArrangement.tracks;
+  const bassNotes=getPlayableBassNotes({bass:activeTracks.bass},APP.bars,APP.timeSig);
+  const chordEvents={piano:(activeTracks.piano?.notes||[]).map(note=>({startBeat:Number(note.startBeat),pitches:[Number(note.pitch)],durationBeats:Number(note.durationBeats),velocity:Number(note.vel)/127})),guitar:(activeTracks.guitar?.notes||[]).map(note=>({startBeat:Number(note.startBeat),pitches:[Number(note.pitch)],durationBeats:Number(note.durationBeats),velocity:Number(note.vel)/127,instrument:note.instrument||'acoustic'}))};
+  const bassEnabled=document.getElementById('bass-enabled').checked;
+  const pianoEnabled=document.getElementById('piano-enabled').checked;
+  const guitarEnabled=document.getElementById('guitar-enabled').checked;
+  const bassTolerance=0.0001+1/(stepsPerBeat*2);
   APP.playStep=0;
-  function tick(){
-    if(!APP.playing)return;
-    // highlight column
-    document.querySelectorAll('.playing-step').forEach(e=>e.classList.remove('playing-step'));
-    const activeSection=sectionAtStep(APP.playStep);
-    const sectionStep=activeSection?sectionPatternStep(activeSection,APP.playStep):APP.playStep;
-    const playhead=document.getElementById('arrangement-playhead');
-    if(playhead){const bar=Math.floor(APP.playStep/(APP.timeSig*stepsPerBeat))+1;playhead.textContent=(activeSection?.label||'通常')+' · '+bar+'/'+APP.bars+'小節';}
+  function tick(audioAt){
+    if(!APP.playing)return 0;
+    const stepIndex=APP.playStep;
+    const activeSection=sectionAtStep(stepIndex);
+    const sectionStep=activeSection?sectionPatternStep(activeSection,stepIndex):stepIndex;
     const drumPattern=activeSection?.pattern||APP.pattern;
     ROWS.forEach(row=>{
-      const k=pk(row.id,sectionStep),baseVel=drumPattern[k],effectVel=drumEffectVelocity(row.id,APP.playStep,activeSection,sectionStep),vel=effectVel===null?baseVel:effectVel;
-      const el=document.getElementById(`sc-${row.id}-${sectionStep}`);
-      if(el)el.classList.add('playing-step');
-      if(vel)playHit(row.pitch,vel);
+      const k=pk(row.id,sectionStep),baseVel=drumPattern[k],effectVel=drumEffectVelocity(row.id,stepIndex,activeSection,sectionStep),vel=effectVel===null?baseVel:effectVel;
+      if(vel)playHit(row.pitch,vel,audioAt,false);
     });
-    const currentBeat=APP.playStep/stepsPerBeat;
-    const melody=window.__compositionBaseProject?.melody?.notes||[];
+    // Visual playhead updates at the event's scheduled time, not while
+    // queuing future notes inside the look-ahead window.
+    const uiDelay=Math.max(0,(audioAt-Tone.now())*1000);
+    setTimeout(()=>{
+      if(!APP.playing||generation!==playbackGeneration)return;
+      document.querySelectorAll('.playing-step').forEach(e=>e.classList.remove('playing-step'));
+      ROWS.forEach(row=>{const el=document.getElementById(`sc-${row.id}-${sectionStep}`);if(el)el.classList.add('playing-step');});
+      const playhead=document.getElementById('arrangement-playhead');
+      if(playhead){const bar=Math.floor(stepIndex/(APP.timeSig*stepsPerBeat))+1;playhead.textContent=(activeSection?.label||'通常')+' · '+bar+'/'+APP.bars+'小節';}
+    },uiDelay);
+    const currentBeat=stepIndex/stepsPerBeat;
+    const melody=activeTracks.melody?.notes||[];
+    if(bassEnabled){
+      bassNotes.forEach(note=>{
+        if(Math.abs(note.startBeat-currentBeat)<bassTolerance){
+          const duration=Math.max(.055,note.durationBeats*60/bpm*.9);
+          playBassNote(note,duration,audioAt,activeSection,chordVariant);
+        }
+      });
+    }
+    if(pianoEnabled){
+      chordEvents.piano.forEach(event=>{if(Math.abs(event.startBeat-currentBeat)<bassTolerance){const seconds=Math.max(.08,event.durationBeats*60/bpm*.9);playPianoEvent({...event,durationSeconds:seconds},audioAt);}});
+    }
+    if(guitarEnabled){
+      chordEvents.guitar.forEach(event=>{if(Math.abs(event.startBeat-currentBeat)<bassTolerance){playGuitarEvent(event,audioAt,bpm);}});
+    }
     if(document.getElementById('melody-enabled').checked){
       const bpm=PROJ_BPM();
       melody.forEach(n=>{
@@ -978,24 +1546,46 @@ async function togglePlay(){
           if(Number.isFinite(pitch)){
             const duration=Math.max(.06,(Number(n.durationBeats)||.25)*60/bpm*.92);
             const velocity=Math.max(.05,Math.min(1,(Number(n.vel)||88)/127));
-            getMelodySynth().triggerAttackRelease(Tone.Frequency(pitch,'midi').toNote(),duration,undefined,velocity);
+            getMelodySynth().triggerAttackRelease(Tone.Frequency(pitch,'midi').toNote(),duration,audioAt,velocity);
           }
         }
       });
     }
     let ms=baseMs;
-    if(APP.swing && APP.playStep%2===0) ms*=1.66;
-    else if(APP.swing && APP.playStep%2===1) ms*=0.34;
+    if(APP.swing && stepIndex%2===0) ms*=1.66;
+    else if(APP.swing && stepIndex%2===1) ms*=0.34;
     APP.playStep=(APP.playStep+1)%steps;
-    playTimer=setTimeout(tick,ms);
+    return ms;
   }
-  tick();
+  // Look-ahead scheduling keeps audio events on the Web Audio clock even if
+  // the browser's UI thread briefly stalls.
+  function scheduleAhead(){
+    const horizon=Tone.now()+0.12;
+    while(APP.playing&&nextStepTime<horizon){
+      const stepMs=tick(nextStepTime);
+      if(!stepMs)break;
+      nextStepTime+=stepMs/1000;
+    }
+  }
+  nextStepTime=Tone.now()+0.05;
+  scheduleAhead();
+  playTimer=setInterval(scheduleAhead,25);
 }
 function stopPlay(){
-  APP.playing=false;
-  clearTimeout(playTimer); playTimer=null;
+  APP.playing=false;playbackGeneration++;
+  clearInterval(playTimer); playTimer=null;
   document.querySelectorAll('#play-btn,#play-btn-ex').forEach(b=>{b.textContent='▶';b.classList.remove('active')});
   document.querySelectorAll('.playing-step').forEach(e=>e.classList.remove('playing-step'));
+  if(bassSynth)bassSynth.triggerRelease();
+  if(bassSampler)bassSampler.releaseAll();
+  if(guitarSampler)guitarSampler.releaseAll();
+  if(electricGuitarSampler)electricGuitarSampler.releaseAll();
+  if(bassSubSynth)bassSubSynth.triggerRelease();
+  if(bassAttackSynth)bassAttackSynth.triggerRelease();
+  if(pianoSynth)pianoSynth.releaseAll();
+  if(pianoSampler)pianoSampler.releaseAll();
+  if(electricGuitarSynth)electricGuitarSynth.releaseAll();
+  if(drumOnlyMixSnapshot){[['melody-enabled','melody'],['bass-enabled','bass'],['piano-enabled','piano'],['guitar-enabled','guitar']].forEach(([id,key])=>{const control=document.getElementById(id);if(control)control.checked=!!drumOnlyMixSnapshot[key];});drumOnlyMixSnapshot=null;const mix=document.getElementById('mix-status');if(mix)mix.textContent='メロディ・ベース・ピアノ・ギター・ドラムを同時に試聴できます';}
   const playhead=document.getElementById('arrangement-playhead');if(playhead)playhead.textContent='停止中';
 }
 function PROJ_BPM(){ return parseInt(document.getElementById('bpm-sl').value); }
@@ -1535,6 +2125,12 @@ function _buildExportData(){
   const base=window.__compositionBaseProject||{};
   const stepsPerBeat=APP.div/4,beatPerStep=1/stepsPerBeat,notes=[];
   const sections=Array.isArray(APP.sections)?APP.sections:[];
+  const activeVariant=APP.activeDrumVariant||'A';
+  ensureArrangementTrackSnapshots(false);
+  const activeTracks=syncActiveArrangementTrackSnapshot().tracks;
+  const bassForExport=activeTracks.bass?.notes||[];
+  const pianoForExport=activeTracks.piano?.notes||[];
+  const guitarForExport=activeTracks.guitar?.notes||[];
   // Keep the exact imported drum timeline on a no-edit round trip.
   // Once the user edits the sequencer, the section grooves become the new source.
   if(!drumPatternEdited&&Array.isArray(base.drums?.notes)){
@@ -1542,6 +2138,7 @@ function _buildExportData(){
   }else if(sections.length){
     const active=sections.find(x=>x.id===APP.activeSectionId);
     if(active)active.pattern=cloneRhythmData(APP.pattern);
+    if(APP.drumVariants&&APP.activeDrumVariant&&APP.drumVariants[APP.activeDrumVariant])APP.drumVariants[APP.activeDrumVariant].sections=cloneRhythmData(sections);
     sections.forEach(section=>{const start=(section.startBar-1)*APP.timeSig*stepsPerBeat,len=(section.endBar-section.startBar+1)*APP.timeSig*stepsPerBeat;
       for(let local=0;local<len;local++)ROWS.forEach(row=>{const vel=section.pattern?.[pk(row.id,local)];if(vel)notes.push({pitch:row.pitch,startBeat:+((start+local)*beatPerStep).toFixed(4),durationBeats:+(beatPerStep*.9).toFixed(4),vel:Math.round(40+vel*87),section:section.id});});
     });
@@ -1550,15 +2147,22 @@ function _buildExportData(){
     version:'1.0',
     drumVelocityEncoding:drumPatternEdited?'beat-lab-40-127-v1':(base.drumVelocityEncoding||undefined),
     source:base.fromCompositionCanvas?'composition-canvas':'beat-lab',
+    accompanimentMode:base.accompanimentMode||(base.source==='score-editor'?'manual':'generated'),
     name: document.getElementById('project-name').value || base.name || 'Untitled Beat',
     bpm: PROJ_BPM(),
     timeSig: APP.timeSig,
     bars: APP.bars,
     div: APP.div,
-    bass: base.bass||{notes:[]},
+    bass: {...(base.bass||{}),notes:cloneRhythmData(bassForExport)},
+    piano: {notes:cloneRhythmData(pianoForExport)},
+    guitar: {notes:cloneRhythmData(guitarForExport)},
     melody: base.melody||{notes:[]},
     drums: { notes },
     arrangement: sections.length?{version:1,bars:APP.bars,effects:cloneRhythmData(ensureArrangementEffects()),sections:sections.map(x=>({id:x.id,label:x.label,startBar:x.startBar,endBar:x.endBar,pattern:cloneRhythmData(x.pattern),effects:cloneRhythmData(x.effects||{})}))}:base.arrangement||null,
+    drumVariants:APP.drumVariants?cloneRhythmData(APP.drumVariants):base.drumVariants||null,
+    activeDrumVariant:APP.activeDrumVariant||base.activeDrumVariant||null,
+    activeArrangement:activeVariant,
+    arrangements:cloneRhythmData(APP.arrangements||{}),
     chords: base.chords||base.generatedMusic?.chords||null,
     exported: new Date().toISOString(),
     rhythmVariations: readRhythmVariations()
@@ -1580,12 +2184,15 @@ function validateCompositionTimeline(data){
   const songBeats=Math.max(0,bars*timeSig);
   const melody=Array.isArray(data?.melody?.notes)?data.melody.notes:[];
   const drums=Array.isArray(data?.drums?.notes)?data.drums.notes:[];
+  const piano=Array.isArray(data?.piano?.notes)?data.piano.notes:[];
+  const guitar=Array.isArray(data?.guitar?.notes)?data.guitar.notes:[];
+  const bass=Array.isArray(data?.bass?.notes)?data.bass.notes:[];
   function inspect(notes,label){notes.forEach((n,i)=>{const start=Number(n.startBeat),duration=Number(n.durationBeats),pitch=Number(n.pitch);if(!Number.isFinite(start)||start<0)errors.push(label+'['+i+'] 開始位置が不正');if(!Number.isFinite(duration)||duration<=0)errors.push(label+'['+i+'] 長さが不正');if(!Number.isInteger(pitch)||pitch<0||pitch>127)errors.push(label+'['+i+'] 音程がMIDI範囲外');if(Number.isFinite(start)&&Number.isFinite(duration)&&start+duration>songBeats+1e-6)warnings.push(label+'['+i+'] が曲の小節数を超えています');});}
-  inspect(melody,'melody');inspect(drums,'drums');
+  inspect(melody,'melody');inspect(drums,'drums');inspect(bass,'bass');inspect(piano,'piano');inspect(guitar,'guitar');
   const sections=data?.arrangement?.sections;
   if(Array.isArray(sections)&&sections.length){const sorted=[...sections].sort((a,b)=>Number(a.startBar)-Number(b.startBar));let cursor=1;sorted.forEach((x,i)=>{const start=Number(x.startBar),end=Number(x.endBar);if(!Number.isInteger(start)||!Number.isInteger(end)||start!==cursor||end<start||end>bars)errors.push('区間'+(x.id||i)+'の小節範囲が連続していません');cursor=end+1;});if(cursor!==bars+1)errors.push('区間が曲全体の小節を覆っていません');}
   if(melody.length&&drums.length){const firstMelody=Math.min(...melody.map(n=>Number(n.startBeat)).filter(Number.isFinite)),firstDrum=Math.min(...drums.map(n=>Number(n.startBeat)).filter(Number.isFinite));if(Number.isFinite(firstMelody)&&Number.isFinite(firstDrum)&&Math.abs(firstMelody-firstDrum)>songBeats)warnings.push('メロディとドラムの開始位置に大きな差があります');}
-  return {ok:errors.length===0,errors,warnings,melodyCount:melody.length,drumCount:drums.length,bars,songBeats};
+  return {ok:errors.length===0,errors,warnings,melodyCount:melody.length,drumCount:drums.length,bassCount:bass.length,pianoCount:piano.length,guitarCount:guitar.length,bars,songBeats};
 }
 function normalizeJSONRoundTripValue(value){
   if(Array.isArray(value))return value.map(normalizeJSONRoundTripValue);
@@ -1599,7 +2206,11 @@ function createJSONRoundTripSnapshot(project){
     sections:project.sections||[],
     melody:project.melody||{notes:[]},
     drums:project.drums||{notes:[]},
+    piano:project.piano||{notes:[]},
+    guitar:project.guitar||{notes:[]},
     arrangement:project.arrangement||null,
+    activeArrangement:project.activeArrangement||project.activeDrumVariant||'A',
+    arrangements:project.arrangements||{},
     chords:project.chords||project.generatedMusic?.chords||null,
     bass:project.bass||{notes:[]},
     rhythmVariations:project.rhythmVariations||[]
@@ -1670,8 +2281,9 @@ function importJSON(input){
         APP.pattern[pk(row.id,step)]=vel;
       });
       if(data.name)document.getElementById('project-name').value=data.name;
-      if(data.arrangement)restoreSongArrangement(data.arrangement);
-      else{APP.sections=null;APP.activeSectionId=null;APP.arrangementEffects={fillBeforeChorus:true,breakBars:[],finalVariation:true};}
+      if(data.arrangements&&typeof data.arrangements==='object')APP.arrangements=cloneRhythmData(data.arrangements);else APP.arrangements=null;
+      if(data.arrangement)restoreSongArrangement(data.arrangement,data);
+      else{APP.sections=null;APP.activeSectionId=null;APP.drumVariants=null;APP.activeDrumVariant=data.activeArrangement||data.activeDrumVariant||null;APP.arrangementEffects={fillBeforeChorus:true,breakBars:[],finalVariation:true};}
       renderArrangementEffects();
       switchView('step');
       renderStepGrid();
@@ -1791,8 +2403,9 @@ function checkIncomingImport(){
       if(!Number.isFinite(step)||step<0||step>=APP.bars*APP.timeSig*stepsPerBeat)return;
       APP.pattern[pk(row.id,step)]=decodeImportedDrumVelocity(n,data);
     });
-    if(data.arrangement)restoreSongArrangement(data.arrangement);
-    else{APP.sections=null;APP.activeSectionId=null;APP.arrangementEffects={fillBeforeChorus:true,breakBars:[],finalVariation:true};}
+    if(data.arrangements&&typeof data.arrangements==='object')APP.arrangements=cloneRhythmData(data.arrangements);else APP.arrangements=null;
+    if(data.arrangement)restoreSongArrangement(data.arrangement,data);
+    else{APP.sections=null;APP.activeSectionId=null;APP.drumVariants=null;APP.activeDrumVariant=data.activeArrangement||data.activeDrumVariant||null;APP.arrangementEffects={fillBeforeChorus:true,breakBars:[],finalVariation:true};}
     history.replaceState(null,'',window.location.pathname);
     setStatus('ok','データを受信しました: '+(data.name||''));
     renderStepGrid();
@@ -1849,7 +2462,7 @@ document.addEventListener('keydown',e=>{
   setStatus('ok','BEAT//LAB 起動完了 — STEPでパターン編集、PATTERNSでプリセット選択');
   renderRhythmVariationSelect();
   renderArrangementEffects();
-  if(window.__compositionBaseProject?.arrangement)restoreSongArrangement(window.__compositionBaseProject.arrangement);
+  if(window.__compositionBaseProject?.arrangement)restoreSongArrangement(window.__compositionBaseProject.arrangement,window.__compositionBaseProject);
   renderArrangementControls();
 
 })();

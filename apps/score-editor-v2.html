@@ -361,7 +361,9 @@ const PROJ = {
     {id:'s3',name:'Bridge',bars:4,color:'rgba(255,107,107,.09)',progression:[]}
   ],
   arrangement:[{secId:'s1'},{secId:'s2'},{secId:'s1'},{secId:'s2'},{secId:'s3'},{secId:'s2'}],
-  drumPattern:{}
+  drumPattern:{},
+  arrangement:null, drumVariants:null, activeDrumVariant:null,
+  activeArrangement:'A', arrangements:null
 };
 const APP = {
   view:'compose', playPos:0, playing:false, zoom:60,
@@ -955,6 +957,11 @@ function importExternalData(data, sourceLabel) {
   }
 
   saveUndo();
+  PROJ.arrangement=data.arrangement||null;
+  PROJ.drumVariants=data.drumVariants||null;
+  PROJ.activeDrumVariant=data.activeDrumVariant||data.activeArrangement||null;
+  PROJ.activeArrangement=data.activeArrangement||data.activeDrumVariant||'A';
+  PROJ.arrangements=data.arrangements?JSON.parse(JSON.stringify(data.arrangements)):null;
   let added = 0;
   if(data.bpm) setBpm(data.bpm);
   if(data.timeSig) { PROJ.timeSig = data.timeSig; }
@@ -974,6 +981,16 @@ function importExternalData(data, sourceLabel) {
   if(data.bass?.notes?.length) {
     const notes=data.bass.notes.map(n=>({...n,id:uid()}));
     addTrack('bass',(data.name?data.name+' ':'')+'Bass',notes);
+    added+=notes.length;
+  }
+  if(data.piano?.notes?.length) {
+    const notes=data.piano.notes.map(n=>({...n,id:uid()}));
+    addTrack('chord',(data.name?data.name+' ':'')+'Piano',notes);
+    added+=notes.length;
+  }
+  if(data.guitar?.notes?.length) {
+    const notes=data.guitar.notes.map(n=>({...n,id:uid()}));
+    addTrack('counter',(data.name?data.name+' ':'')+'Guitar',notes);
     added+=notes.length;
   }
   if(data.drums?.notes?.length) {
@@ -1031,8 +1048,20 @@ function checkIncomingImport() {
 function scoreExportData() {
   const tr = t => PROJ.tracks.filter(x => x.type === t).flatMap(x => x.notes.map(n => ({pitch:n.pitch,startBeat:n.startBeat,durationBeats:n.durationBeats,vel:n.vel||80})));
   const secs = (PROJ.sections||[]).filter(s => s.progression && s.progression.length).map(s => ({tag:s.name, progression:s.progression.map(c => ({chord:c.name, beats:c.beats||4}))}));
-  return { version:'1.0', source:'score-editor', name: PROJ.name || document.getElementById('project-name')?.value || 'score-editor', bpm:PROJ.bpm, key:PROJ.key||'C', timeSig:PROJ.timeSig||4,
-    melody:{notes:tr('melody')}, chords: secs.length ? {key:PROJ.key||'C', sections:secs} : null, bass:{notes:tr('bass')}, drums:{notes:tr('drum')}, exported:new Date().toISOString() };
+  const activeArrangement=PROJ.activeArrangement||PROJ.activeDrumVariant||'A';
+  const arrangements=PROJ.arrangements?JSON.parse(JSON.stringify(PROJ.arrangements)):{};
+  if(arrangements[activeArrangement]){
+    arrangements[activeArrangement].tracks=arrangements[activeArrangement].tracks||{};
+    arrangements[activeArrangement].tracks.melody={notes:tr('melody')};
+    arrangements[activeArrangement].tracks.bass={notes:tr('bass')};
+    arrangements[activeArrangement].tracks.piano={notes:tr('chord')};
+    arrangements[activeArrangement].tracks.guitar={notes:tr('counter')};
+    arrangements[activeArrangement].tracks.drums={notes:tr('drum')};
+  }
+  return { version:'1.0', source:'score-editor', accompanimentMode:'manual', name: PROJ.name || document.getElementById('project-name')?.value || 'score-editor', bpm:PROJ.bpm, key:PROJ.key||'C', timeSig:PROJ.timeSig||4,
+    melody:{notes:tr('melody')}, chords: secs.length ? {key:PROJ.key||'C', sections:secs} : null, bass:{notes:tr('bass')}, piano:{notes:tr('chord')}, guitar:{notes:tr('counter')}, drums:{notes:tr('drum')},
+    arrangement:PROJ.arrangement, drumVariants:PROJ.drumVariants, activeDrumVariant:PROJ.activeDrumVariant,
+    activeArrangement, arrangements, exported:new Date().toISOString() };
 }
 function sendToVocalLab() {
   try{msRegister(scoreExportData())}catch(e){}

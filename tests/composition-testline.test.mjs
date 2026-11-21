@@ -693,3 +693,666 @@ test("TL-56 AI rhythm generation passes incoming melody context to the model and
   assert.match(body,/renderAiPreview\(result,bars,div,steps\)/);
   assert.match(body,/applyAiPattern/);
 });
+
+
+test("TL-57 BEAT//LAB plays imported bass notes in sync with melody and drums", async () => {
+  const html=await readFile(beatLabPath,"utf8");
+  assert.match(html,/id="bass-enabled"/);
+  assert.match(html,/id="bass-volume"/);
+  assert.match(html,/function getBassBus\(\)/);
+  assert.match(html,/function getBassSynth\(\)/);
+  assert.match(html,/new Tone\.MonoSynth/);
+  assert.match(html,/function getPlayableBassNotes\(project,bars,timeSig=4\)/);
+  const helperStart=html.indexOf("function getPlayableBassNotes(project,bars,timeSig=4)");
+  const helperEnd=html.indexOf("\nasync function togglePlay()",helperStart);
+  assert.ok(helperStart>=0&&helperEnd>helperStart);
+  const helper=new Function(html.slice(helperStart,helperEnd)+";return getPlayableBassNotes;")();
+  const notes=helper({bass:{notes:[
+    {pitch:36,startBeat:0,durationBeats:1,vel:100},
+    {pitch:43,startBeat:1.5,durationBeats:0.5,vel:0.5},
+    {pitch:72,startBeat:2,durationBeats:1,vel:90},
+    {pitch:40,startBeat:-1,durationBeats:1,vel:90},
+    {pitch:38,startBeat:3,durationBeats:0,vel:90}
+  ]}},2,4);
+  assert.equal(notes.length,2);
+  assert.equal(notes[0].pitch,36);
+  assert.equal(notes[0].velocity,100/127);
+  assert.equal(notes[1].pitch,43);
+  assert.equal(notes[1].velocity,0.5);
+  const playStart=html.indexOf("async function togglePlay()");
+  const playEnd=html.indexOf("\nfunction stopPlay()",playStart);
+  const play=html.slice(playStart,playEnd);
+  assert.match(play,/getPlayableBassNotes\(\{bass:activeTracks\.bass\},APP\.bars,APP\.timeSig\)/);
+  assert.match(play,/syncActiveArrangementTrackSnapshot\(\)/);
+  assert.match(play,/playBassNote\(note,duration,audioAt,activeSection,chordVariant\)/);
+  assert.match(play,/Math\.abs\(note\.startBeat-currentBeat\)<bassTolerance/);
+  assert.match(html.slice(html.indexOf("function stopPlay()"),html.indexOf("\nfunction PROJ_BPM")),/bassSynth\.triggerRelease\(\)/);
+});
+
+test("TL-58 BEAT//LAB preserves bass timeline data when exporting a rhythm edit", async () => {
+  const html=await readFile(beatLabPath,"utf8");
+  const start=html.indexOf("function _buildExportData()");
+  const end=html.indexOf("\nfunction decodeImportedDrumVelocity",start);
+  assert.ok(start>=0&&end>start);
+  const body=html.slice(start,end);
+  assert.match(body,/bass: \{\.\.\.\(base\.bass\|\|\{\}\),notes:cloneRhythmData\(bassForExport\)\}/);
+  assert.match(body,/activeTracks=syncActiveArrangementTrackSnapshot\(\)\.tracks/);
+  assert.match(body,/arrangements:cloneRhythmData\(APP\.arrangements\|\|\{\}\)/);
+});
+
+
+test("TL-59 BEAT//LAB offers section-aware drum ideas with intentional cymbal and transition placement", async () => {
+  const html=await readFile(beatLabPath,"utf8");
+  assert.match(html,/id="drum-idea-panel"/);
+  assert.match(html,/function applyDrumArrangementIdea\(style\)/);
+  assert.match(html,/セクション別に提案/);
+  for(const id of ["synthHat","synthOpenHat","synthCrash","synthRide"])assert.ok(html.includes(id),id+" must have its own voice");
+  assert.match(html,/function getClosedHat\(\)/);
+  assert.match(html,/function getOpenHat\(\)/);
+  assert.match(html,/function getCrash\(\)/);
+  assert.match(html,/function getRide\(\)/);
+  const sectionStart=html.indexOf("function sectionPatternFrom(base,id)");
+  const sectionEnd=html.indexOf("\nfunction ensureArrangementEffects()",sectionStart);
+  const ideaStart=html.indexOf("function buildSectionDrumIdea(basePattern,section,style,variation='normal')");
+  const ideaEnd=html.indexOf("\nfunction applyDrumArrangementIdea(style)",ideaStart);
+  assert.ok(sectionStart>=0&&sectionEnd>sectionStart);
+  assert.ok(ideaStart>=0&&ideaEnd>ideaStart);
+  const app={div:16,timeSig:4};
+  const pk=(row,step)=>row+":"+step;
+  const sectionPatternFrom=new Function("APP","pk",html.slice(sectionStart,sectionEnd)+";return sectionPatternFrom;")(app,pk);
+  const build=new Function("APP","pk","sectionPatternFrom",html.slice(ideaStart,ideaEnd)+";return buildSectionDrumIdea;")(app,pk,sectionPatternFrom);
+  const sections=[
+    {id:"intro",startBar:1,endBar:2},
+    {id:"verse",startBar:3,endBar:4},
+    {id:"chorus",startBar:5,endBar:6},
+    {id:"bridge",startBar:7,endBar:8},
+    {id:"final",startBar:9,endBar:10}
+  ];
+  const base={"kick:0":1,"snare:4":.8,"hat:0":.7};
+  const result=sections.map(section=>build(base,section,"balanced"));
+  assert.equal(result[0]["crash:0"],undefined,"intro should not automatically crash on every downbeat");
+  assert.equal(result[2]["crash:0"],1,"chorus entry should be marked by crash");
+  assert.equal(result[4]["crash:0"],1,"final section should have a crash entry");
+  assert.ok(Object.keys(result[2]).some(k=>k.startsWith("ride:")),"chorus should use ride for lift");
+  assert.ok(Object.keys(result[1]).some(k=>k.startsWith("hat:")),"verse should retain a restrained timekeeping part");
+  assert.notDeepEqual(result[0],result[2],"intro and chorus should have different orchestration");
+  const cinematic=sections.map(section=>build(base,section,"cinematic"));
+  assert.ok(Object.keys(cinematic[3]).some(k=>k.startsWith("tom")),"bridge should use tom color");
+  assert.ok(Object.keys(cinematic[2]).some(k=>k.startsWith("ride:")),"cinematic chorus should use ride");
+  assert.match(html,/try\{Tone\.start\(\);\}catch\(e\)\{\}/,"single-cell audition must still activate audio");
+});
+
+
+test("TL-60 BEAT//LAB adds phrase-aware fills and controllable bar variation", async () => {
+  const html=await readFile(beatLabPath,"utf8");
+  assert.match(html,/id="drum-variation-level"/);
+  assert.match(html,/value="light"/);
+  assert.match(html,/value="normal" selected/);
+  assert.match(html,/value="bold"/);
+  const sectionStart=html.indexOf("function sectionPatternFrom(base,id)");
+  const sectionEnd=html.indexOf("\nfunction ensureArrangementEffects()",sectionStart);
+  const ideaStart=html.indexOf("function buildSectionDrumIdea(basePattern,section,style,variation='normal')");
+  const ideaEnd=html.indexOf("\nfunction applyDrumArrangementIdea(style)",ideaStart);
+  assert.ok(sectionStart>=0&&sectionEnd>sectionStart);
+  assert.ok(ideaStart>=0&&ideaEnd>ideaStart);
+  const app={div:16,timeSig:4};
+  const pk=(row,step)=>row+":"+step;
+  const sectionPatternFrom=new Function("APP","pk",html.slice(sectionStart,sectionEnd)+";return sectionPatternFrom;")(app,pk);
+  const build=new Function("APP","pk","sectionPatternFrom",html.slice(ideaStart,ideaEnd)+";return buildSectionDrumIdea;")(app,pk,sectionPatternFrom);
+  const verse={id:"verse",startBar:1,endBar:4};
+  const chorus={id:"chorus",startBar:1,endBar:4};
+  const base={"kick:0":1,"snare:4":.8,"hat:0":.7};
+  const light=build(base,verse,"balanced","light");
+  const normal=build(base,verse,"balanced","normal");
+  const bold=build(base,verse,"balanced","bold");
+  assert.equal(light["snare:60"],undefined,"light mode does not force a final-bar fill");
+  assert.ok(normal["snare:62"]>0&&normal["tom1:63"]>0,"normal mode adds a short phrase-ending fill");
+  assert.ok(Object.keys(bold).some(k=>k.startsWith("perc:")),"bold verse variation adds an extra accent");
+  const chorusNormal=build(base,chorus,"balanced","normal");
+  assert.ok(chorusNormal["ohat:31"]>0,"chorus gets a cymbal opening on alternating repeated bars");
+  assert.ok(chorusNormal["snare:62"]>0&&chorusNormal["tom1:63"]>0,"chorus phrase ending receives a fill");
+  const applyStart=html.indexOf("function applyDrumArrangementIdea(style)");
+  const applyEnd=html.indexOf("\nfunction sectionAtStep(step)",applyStart);
+  const apply=html.slice(applyStart,applyEnd);
+  assert.match(apply,/drum-variation-level/);
+  assert.match(apply,/buildSectionDrumIdea\(base,section,selected,variation\)/);
+});
+
+
+test("TL-61 BEAT//LAB keeps three independently playable drum candidates with distinct groove identities", async () => {
+  const html=await readFile(beatLabPath,"utf8");
+  for(const id of ["A","B","C"])assert.match(html,new RegExp('id="drum-candidate-'+id+'"'));
+  assert.match(html,/onclick="playDrumCandidateOnly\(\)"/);
+  assert.match(html,/function createDrumCandidates\(\)/);
+  assert.match(html,/function selectDrumCandidate\(id\)/);
+  assert.match(html,/drumVariants:APP\.drumVariants\?cloneRhythmData\(APP\.drumVariants\)/);
+  assert.match(html,/const savedVariants=projectData\?\.drumVariants\|\|data\.drumVariants/);
+  const start=html.indexOf("function applyCandidateCoreGroove(pattern,section,variant)");
+  const end=html.indexOf("\nfunction createDrumCandidates()",start);
+  assert.ok(start>=0&&end>start,"candidate groove generator must exist");
+  const APP={div:16,timeSig:4};
+  const pk=(row,step)=>row+":"+step;
+  const cloneRhythmData=value=>JSON.parse(JSON.stringify(value||{}));
+  const build=new Function("APP","pk","cloneRhythmData",html.slice(start,end)+";return applyCandidateCoreGroove;")(APP,pk,cloneRhythmData);
+  const section={id:"verse",startBar:1,endBar:2};
+  const seed={"kick:0":.6,"snare:4":.6,"hat:0":.5};
+  const a=build(seed,section,"A"),b=build(seed,section,"B"),c=build(seed,section,"C");
+  const signature=p=>Object.keys(p).sort().join("|");
+  assert.notEqual(signature(a),signature(b),"A and B must use different kick/snare/hat placement");
+  assert.notEqual(signature(a),signature(c),"A and C must use different rhythmic placement");
+  assert.notEqual(signature(b),signature(c),"B and C must use different rhythmic placement");
+  assert.ok(Object.keys(a).filter(k=>k.startsWith("hat:")).length>Object.keys(b).filter(k=>k.startsWith("hat:")).length,"B must leave more rhythmic space");
+  assert.ok(Object.keys(c).some(k=>k.startsWith("snare:")),"C must retain syncopated snare accents");
+  const selectStart=html.indexOf("function selectDrumCandidate(id)");
+  const selectEnd=html.indexOf("\nlet drumOnlyMixSnapshot",selectStart);
+  const select=html.slice(selectStart,selectEnd);
+  assert.match(select,/APP\.drumVariants\[APP\.activeDrumVariant\]\.sections=cloneRhythmData\(APP\.sections\)/,"edits must be saved back to the active candidate before switching");
+  const soloStart=html.indexOf("function playDrumCandidateOnly()");
+  const soloEnd=html.indexOf("\nfunction sectionAtStep",soloStart);
+  assert.ok(soloStart>=0&&soloEnd>soloStart);
+  const solo=html.slice(soloStart,soloEnd);
+  assert.match(solo,/melody-enabled/);
+  assert.match(solo,/bass-enabled/);
+  assert.match(solo,/togglePlay\(\)/);
+  const stopStart=html.indexOf("function stopPlay()");
+  const stopEnd=html.indexOf("\nfunction PROJ_BPM",stopStart);
+  assert.match(html.slice(stopStart,stopEnd),/drumOnlyMixSnapshot/,"stop must restore the user's melody and bass mix toggles");
+});
+
+
+test("TL-62 A/B/C drum candidates survive JSON and Composition Canvas handoff", async () => {
+  const beat=await readFile(beatLabPath,"utf8");
+  const canvas=await readFile(canvasPath,"utf8");
+  assert.match(beat,/drumVariants:APP\.drumVariants\?cloneRhythmData\(APP\.drumVariants\)/,"JSON export must include all candidate patterns");
+  assert.match(beat,/const savedVariants=projectData\?\.drumVariants\|\|data\.drumVariants/,"JSON import must restore top-level candidate data");
+  assert.match(beat,/restoreSongArrangement\(data\.arrangement,data\)/,"import must pass the complete project to arrangement restoration");
+  assert.match(beat,/APP\.drumVariants\[APP\.activeDrumVariant\]\.sections=cloneRhythmData\(APP\.sections\)/,"restored active edits must become authoritative");
+  assert.match(beat,/function selectDrumCandidate\(id\)[\s\S]*?APP\.drumVariants\[APP\.activeDrumVariant\]\.sections=cloneRhythmData\(APP\.sections\)/,"candidate switching must retain edits");
+  assert.match(canvas,/project\.drumVariants=window\.__lastDrumProject\?\.drumVariants\|\|null/,"Canvas → Beat Lab must preserve candidates");
+  assert.match(canvas,/project\.activeDrumVariant=window\.__lastDrumProject\?\.activeDrumVariant\|\|null/,"Canvas → Beat Lab must preserve selection");
+  assert.match(canvas,/drumVariants:project\.drumVariants\|\|null/,"Beat Lab → Canvas must retain candidates in the handoff state");
+  assert.match(canvas,/project\.drumVariants=saved\.drumVariants\|\|null/,"Canvas resume must restore candidate patterns");
+  assert.match(canvas,/project\.activeDrumVariant=saved\.activeDrumVariant\|\|null/,"Canvas resume must restore selected candidate");
+  const clone=value=>JSON.parse(JSON.stringify(value));
+  const variants={A:{label:"pop",sections:[{id:"verse",startBar:1,endBar:4,pattern:{"kick:0":.9}}]},B:{label:"half",sections:[{id:"verse",startBar:1,endBar:4,pattern:{"snare:8":1}}]},C:{label:"sync",sections:[{id:"verse",startBar:1,endBar:4,pattern:{"kick:6":.8}}]}};
+  const project={drumVariants:variants,activeDrumVariant:"B"};
+  const restored=clone(project);
+  assert.deepEqual(restored,project);
+  restored.drumVariants.B.sections[0].pattern["snare:8"]=.4;
+  assert.equal(project.drumVariants.B.sections[0].pattern["snare:8"],1,"restored variants must not share mutable references with source data");
+  assert.equal(restored.drumVariants.A.sections[0].pattern["kick:0"],.9,"editing B must not alter A");
+  assert.equal(restored.drumVariants.C.sections[0].pattern["kick:6"],.8,"editing B must not alter C");
+});
+
+
+test("TL-63 selected drum candidate exports to the score editor as a timeline-aligned drum track", async () => {
+  const beat=await readFile(beatLabPath,"utf8");
+  const score=await readFile(path.join(here,"..","apps","score-editor-v2.html"),"utf8");
+  assert.match(beat,/sections\.forEach\(section=>\{const start=\(section\.startBar-1\)\*APP\.timeSig\*stepsPerBeat/,"section start bars must be converted to absolute beat positions");
+  assert.match(beat,/notes\.push\(\{pitch:row\.pitch,startBeat:\+\(\(start\+local\)\*beatPerStep\)/,"exported drum notes must use the same row pitch and absolute timeline");
+  assert.match(score,/if\(data\.drums\?\.notes\?\.length\)/,"score editor must receive the exported drum timeline");
+  assert.match(score,/addTrack\('drum',[\s\S]*?notes\)/,"score editor must create a dedicated drum track");
+  assert.match(score,/switchView\('roll'\)/,"import must open the track/roll view for visual verification");
+  assert.match(score,/const notes=data\.drums\.notes\.map\(n=>\(\{\.\.\.n,id:uid\(\),vel:n\.vel\|\|80\}\)\)/,"score editor must retain each drum note's pitch, startBeat and velocity");
+});
+
+
+test("TL-64 A/B/C drum candidates have different section arcs and audio-clock hit scheduling", async () => {
+  const html=await readFile(beatLabPath,"utf8");
+  assert.match(html,/function playHit\(pitch, vel=1, when, ensureAudio=true\)/,"drum hit playback must accept an audio-clock timestamp and avoid redundant context starts");
+  assert.match(html,/playHit\(row\.pitch,vel,audioAt,false\)/,"sequencer must not restart the audio context for every hit");
+  assert.match(html,/const safeVel=Math\.max\(\.05,Math\.min\(1,Number\(vel\)\|\|\.05\)\),at=Number\.isFinite\(when\)\?when:undefined/);
+  assert.match(html,/getKick\(\)\.triggerAttackRelease\('C1','8n',at,safeVel\)/,"kick velocity must be per-hit, not shared gain mutation");
+  assert.match(html,/getSnare\(\)\.triggerAttackRelease\('16n',at,safeVel\)/,"snare must receive the common audio timestamp");
+  assert.match(html,/getRide\(\)\.triggerAttackRelease\('8n',at,safeVel\)/,"ride must receive the common audio timestamp");
+  assert.match(html,/function tick\(audioAt\)/,"sequencer tick must receive an audio-clock timestamp from the scheduler");
+  assert.match(html,/const horizon=Tone\.now\(\)\+0\.12/,"scheduler must maintain a look-ahead window");
+  assert.match(html,/playTimer=setInterval\(scheduleAhead,25\)/,"scheduler must refill audio events independently of UI timer cadence");
+  assert.match(html,/nextStepTime\+=stepMs\/1000/,"next steps must advance on the audio clock");
+  assert.match(html,/playHit\(row\.pitch,vel,audioAt,false\)/,"drums must use the shared audio-clock timestamp");
+  assert.match(html,/playBassNote\(note,duration,audioAt,activeSection,chordVariant\)/,"bass trigger must schedule the layered bass voice");
+  assert.match(html,/triggerAttackRelease\(Tone\.Frequency\(pitch/,"melody trigger must exist");
+  assert.match(html,/duration,audioAt,velocity\)/,"melody must use the shared audio-clock timestamp");
+  const start=html.indexOf("function applyCandidateCoreGroove(pattern,section,variant)");
+  const end=html.indexOf("\nfunction createDrumCandidates()",start);
+  const APP={div:16,timeSig:4},pk=(r,s)=>r+":"+s,cloneRhythmData=v=>JSON.parse(JSON.stringify(v||{}));
+  const build=new Function("APP","pk","cloneRhythmData",html.slice(start,end)+";return applyCandidateCoreGroove;")(APP,pk,cloneRhythmData);
+  const section=(id)=>({id,startBar:1,endBar:4});
+  const metrics=p=>({
+    kick:Object.keys(p).filter(k=>k.startsWith("kick:")).length,
+    snare:Object.keys(p).filter(k=>k.startsWith("snare:")).length,
+    hat:Object.keys(p).filter(k=>k.startsWith("hat:")).length,
+    crash:Object.keys(p).filter(k=>k.startsWith("crash:")).length,
+    ride:Object.keys(p).filter(k=>k.startsWith("ride:")).length,
+    tom:Object.keys(p).filter(k=>k.startsWith("tom")).length
+  });
+  for(const id of ["intro","verse","chorus","bridge","final"]){
+    const a=metrics(build({},section(id),"A")),b=metrics(build({},section(id),"B")),c=metrics(build({},section(id),"C"));
+    assert.notDeepEqual(a,b,id+" A/B should have distinct orchestration");
+    assert.notDeepEqual(a,c,id+" A/C should have distinct orchestration");
+    assert.notDeepEqual(b,c,id+" B/C should have distinct orchestration");
+  }
+  const verseB=metrics(build({},section("verse"),"B")),verseA=metrics(build({},section("verse"),"A"));
+  assert.ok(verseB.hat<verseA.hat,"B verse should leave more space than A");
+  const chorusC=metrics(build({},section("chorus"),"C"));
+  assert.ok(chorusC.ride>0&&chorusC.tom>0,"C chorus should combine ride drive with transition fills");
+});
+
+
+test("TL-65 drum voices use layered snare body, dedicated rim and filtered closed-hat texture", async () => {
+  const html=await readFile(beatLabPath,"utf8");
+  assert.match(html,/let synthKick=null,synthSnare=null,synthSnareBody=null,synthRim=null/,"snare body and rim must have independent voice instances");
+  assert.match(html,/function getSnareBody\(\)[\s\S]*?new Tone\.MembraneSynth/,"snare body must add a tuned low-mid transient");
+  assert.match(html,/function getRim\(\)[\s\S]*?new Tone\.Synth/,"rim click must not reuse the broadband snare noise");
+  assert.match(html,/new Tone\.Filter\(7200,'highpass'\)/,"closed hat must have a high-pass stage");
+  assert.match(html,/synthHat=new Tone\.NoiseSynth[\s\S]*?\.connect\(synthHatFilter\)/,"closed hat noise must pass through its filter");
+  assert.match(html,/getSnare\(\)\.triggerAttackRelease\('16n',at,safeVel\);getSnareBody\(\)\.triggerAttackRelease\('D2','16n',at,safeVel\*\.58\)/,"snare hit must combine noise and body at the same audio time");
+  assert.match(html,/getRim\(\)\.triggerAttackRelease\('D5','32n',at,safeVel\)/,"rim hit must use its dedicated short voice");
+});
+
+
+test("TL-66 sequencer uses a look-ahead audio scheduler instead of chained UI timeouts", async () => {
+  const html=await readFile(beatLabPath,"utf8");
+  assert.match(html,/function scheduleAhead\(\)[\s\S]*?while\(APP\.playing&&nextStepTime<horizon\)/,"scheduler must queue events ahead of playback time");
+  assert.match(html,/const stepMs=tick\(nextStepTime\)/,"every instrument event in a step must share its scheduled audio time");
+  assert.match(html,/playTimer=setInterval\(scheduleAhead,25\)/,"short UI polling interval must only refill the audio queue");
+  assert.doesNotMatch(html,/playTimer=setTimeout\(tick/,"audio timing must not depend on chained setTimeout callbacks");
+  assert.match(html,/clearInterval\(playTimer\)/,"stop must cancel the scheduler interval");
+});
+
+
+test("TL-67 drum bus has gentle compression after its independent mix gain", async () => {
+  const html=await readFile(beatLabPath,"utf8");
+  assert.match(html,/drumBus=null,[^;]*drumCompressor=null/,"drum compressor must be independently managed");
+  assert.match(html,/drumCompressor=new Tone\.Compressor\(\{threshold:-19,ratio:2\.2,attack:\.006,release:\.16,knee:10\}\)\.connect\(getMasterBus\(\)\)/,"drum bus compressor must tame peaks without extreme limiting");
+  assert.match(html,/drumBus=new Tone\.Gain\([^;]*\)\.connect\(drumCompressor\)/,"drum level control must remain before the compressor");
+  assert.match(html,/function applyArrangementMix\([\s\S]*?mixRamp\(bus\.gain,[\s\S]*?profile\.gain\[name\]/,"existing drum volume slider must continue to control pre-compressor gain with its A/B/C multiplier");
+});
+
+
+test("TL-68 look-ahead scheduling keeps visual playhead aligned and rejects stale callbacks", async () => {
+  const html=await readFile(beatLabPath,"utf8");
+  assert.match(html,/const uiDelay=Math\.max\(0,\(audioAt-Tone\.now\(\)\)\*1000\)/,"playhead visuals must wait until the scheduled audio time");
+  assert.match(html,/setTimeout\(\(\)=>\{\s*if\(!APP\.playing\|\|generation!==playbackGeneration\)return/,"stale visual callbacks must be ignored after stop/restart");
+  assert.match(html,/const generation=\+\+playbackGeneration/,"each playback session must get a unique generation");
+  assert.match(html,/APP\.playing=false;playbackGeneration\+\+/,"stopping playback must invalidate queued visual callbacks");
+  assert.match(html,/const stepIndex=APP\.playStep/,"visual and audio scheduling must use the same captured step index");
+});
+
+
+test("TL-69 bass playback layers sub foundation and transient articulation on one shared pitch clock", async () => {
+  const html=await readFile(beatLabPath,"utf8");
+  assert.match(html,/bassSynth=null,bassSampler=null,bassSamplerReady=false,bassSamplerFilter=null,bassSubSynth=null,bassAttackSynth=null/,"bass voices must be independently managed");
+  assert.match(html,/function getBassSubSynth\(\)[\s\S]*?oscillator:\{type:'sine'\}[\s\S]*?frequency:115/,"sub layer must be a clean low-passed sine foundation");
+  assert.match(html,/function getBassAttackSynth\(\)[\s\S]*?oscillator:\{type:'triangle'\}[\s\S]*?decay:\.032/,"attack layer must be a short upper harmonic");
+  const start=html.indexOf("function playBassNote(note,duration,when,section=null,variant='A')");
+  const end=html.indexOf("\nfunction updateMixVolumes",start);
+  const play=html.slice(start,end);
+  assert.match(play,/else body\.triggerAttackRelease\(frequency,duration,when,velocity\)/,"main bass body must keep the original pitch and timing");
+  assert.match(play,/sub\.triggerAttackRelease\(frequency,duration,when,velocity\*\.72\)/,"sub foundation must be phase-aligned to the main note");
+  assert.match(play,/attack\.triggerAttackRelease\(Tone\.Frequency\(pitch\+12,'midi'\)\.toNote\(\),'32n',when/,"transient must use an octave harmonic at the same start time");
+  assert.match(html,/playBassNote\(note,duration,audioAt,activeSection,chordVariant\)/,"sequencer must schedule all bass layers from the same audio timestamp");
+  assert.match(html,/bass: \{\.\.\.\(base\.bass\|\|\{\}\),notes:cloneRhythmData\(bassForExport\)\}/,"layering must export a normal bass note timeline");
+});
+
+
+test("TL-70 piano and guitar accompaniment creates genuinely different A B C chord roles", async () => {
+  const html=await readFile(beatLabPath,"utf8");
+  for(const id of ["piano-enabled","piano-volume","guitar-enabled","guitar-volume"])assert.match(html,new RegExp('id="'+id+'"'),id+" control must exist");
+  assert.match(html,/function getPianoSynth\(\)[\s\S]*?new Tone\.PolySynth/,"piano must have its own polyphonic voice");
+  assert.match(html,/function getGuitarSynth\(\)[\s\S]*?new Tone\.PluckSynth/,"guitar must have a plucked voice");
+  assert.match(html,/const gains=\{drum:drumBus,melody:melodyBus,bass:bassBus,piano:pianoBus,guitar:guitarBus\}/,"piano and guitar must have independent mix controls");
+  assert.match(html,/Object\.entries\(gains\)\.forEach\(\(\[name,bus\]\)=>\{if\(bus\)mixRamp\(bus\.gain/,"each instrument bus must keep an independently adjustable gain");
+  const start=html.indexOf("function chordSymbolToPitches(symbol,octave=4)");
+  const end=html.indexOf("\nfunction getPlayableBassNotes",start);
+  assert.ok(start>=0&&end>start,"chord voicing and arrangement helpers must exist");
+  const helpers=new Function(html.slice(start,end)+";return {chordSymbolToPitches,getPlayableChordEvents};")();
+  assert.deepEqual(helpers.chordSymbolToPitches("C"),[60,64,67],"major chord tones must parse");
+  assert.deepEqual(helpers.chordSymbolToPitches("Am7"),[69,72,76,79],"minor seventh chord tones must parse in octave four");
+  const project={chords:[{chord:"C",beats:4},{chord:"Am7",beats:4},{chord:"F",beats:4},{chord:"G",beats:4}]};
+  const a=helpers.getPlayableChordEvents(project,4,4,"A");
+  const b=helpers.getPlayableChordEvents(project,4,4,"B");
+  const c=helpers.getPlayableChordEvents(project,4,4,"C");
+  const sig=x=>JSON.stringify({p:x.piano.map(e=>[e.startBeat,e.pitches,e.durationBeats]),g:x.guitar.map(e=>[e.startBeat,e.pitches])});
+  assert.notEqual(sig(a),sig(b),"A and B chord accompaniment must differ in voicing and density");
+  assert.notEqual(sig(a),sig(c),"A and C chord accompaniment must differ in rhythmic articulation");
+  assert.notEqual(sig(b),sig(c),"B and C chord accompaniment must differ in note placement");
+  assert.ok(a.piano.some(e=>e.pitches.length>=3),"A must use block-chord piano voicings");
+  assert.ok(b.piano.length>a.piano.length,"B must use broken-chord piano movement");
+  assert.ok(c.guitar.length>b.guitar.length,"C must use a busier plucked guitar figure");
+  assert.match(html,/const activeArrangement=syncActiveArrangementTrackSnapshot\(\)/,"active A/B/C selection must drive accompaniment");
+  assert.match(html,/activeTracks\.piano\?\.notes/);
+  assert.match(html,/activeTracks\.guitar\?\.notes/);
+  assert.match(html,/getPianoSynth\(\)\.triggerAttackRelease/,"piano chord events must be played");
+  assert.match(html,/getGuitarSynth\(\)\.triggerAttack/,"guitar plucks must be played");
+});
+
+
+test("TL-71 bass line has independent A B C groove identities without changing source notes", async () => {
+  const html=await readFile(beatLabPath,"utf8");
+  const start=html.indexOf("function buildBassVariantNotes(notes,bars,timeSig=4,variant='A')");
+  const end=html.indexOf("\nasync function togglePlay",start);
+  assert.ok(start>=0&&end>start,"bass candidate generator must exist");
+  const build=new Function(html.slice(start,end)+";return buildBassVariantNotes;")();
+  const source=[
+    {id:"n1",pitch:36,startBeat:0,durationBeats:1,velocity:.8},
+    {id:"n2",pitch:40,startBeat:1,durationBeats:.75,velocity:.7},
+    {id:"n3",pitch:43,startBeat:2,durationBeats:1,velocity:.8},
+    {id:"n4",pitch:38,startBeat:3,durationBeats:.75,velocity:.7},
+    {id:"n5",pitch:36,startBeat:4,durationBeats:1,velocity:.8},
+    {id:"n6",pitch:41,startBeat:6,durationBeats:1,velocity:.7}
+  ];
+  const a=build(source,2,4,"A"),b=build(source,2,4,"B"),c=build(source,2,4,"C");
+  const signature=notes=>notes.map(n=>[n.startBeat,n.pitch,n.durationBeats,Number(n.velocity.toFixed(3))]);
+  assert.deepEqual(signature(a),signature(source),"A must preserve the original bass line");
+  assert.ok(b.length<a.length,"B must create a more spacious half-time bass role");
+  assert.ok(c.length>a.length,"C must add octave and pickup articulation");
+  assert.ok(c.some(n=>n.id.endsWith("-oct")),"C must add octave accents");
+  assert.ok(c.some(n=>n.id.endsWith("-pickup")),"C must add passing pickups");
+  assert.deepEqual(source.map(n=>n.id),["n1","n2","n3","n4","n5","n6"],"candidate generation must not mutate source notes");
+  assert.match(html,/buildBassVariantNotes\(bassSeed,APP\.bars,APP\.timeSig,id\)/,"each independent arrangement snapshot must own its bass variation");
+  assert.match(html,/const bassNotes=getPlayableBassNotes\(\{bass:activeTracks\.bass\},APP\.bars,APP\.timeSig\)/,"active A/B/C selection must drive bass playback");
+});
+
+
+test("TL-72 drum-only audition mutes and restores piano and guitar along with melody and bass", async () => {
+  const html=await readFile(beatLabPath,"utf8");
+  const start=html.indexOf("function playDrumCandidateOnly()");
+  const end=html.indexOf("\nfunction sectionAtStep",start);
+  const solo=html.slice(start,end);
+  assert.match(solo,/piano:document\.getElementById\('piano-enabled'\)\.checked/,"solo snapshot must retain piano state");
+  assert.match(solo,/guitar:document\.getElementById\('guitar-enabled'\)\.checked/,"solo snapshot must retain guitar state");
+  for(const id of ["melody-enabled","bass-enabled","piano-enabled","guitar-enabled"])assert.ok(solo.includes(id),id+" must be muted for drum-only audition");
+  const stopStart=html.indexOf("function stopPlay()");
+  const stopEnd=html.indexOf("\nfunction PROJ_BPM",stopStart);
+  const stop=html.slice(stopStart,stopEnd);
+  assert.match(stop,/\['melody-enabled','melody'\],\['bass-enabled','bass'\],\['piano-enabled','piano'\],\['guitar-enabled','guitar'\]/,"stop must restore all previous accompaniment toggles");
+  assert.match(stop,/if\(pianoSynth\)pianoSynth\.releaseAll\(\)/,"piano voices must release on stop");
+  assert.match(stop,/if\(bassSubSynth\)bassSubSynth\.triggerRelease\(\)/,"sub-bass voice must release on stop");
+});
+
+
+test("TL-73 chord progression can supply a fallback bass line when no explicit bass track exists", async () => {
+  const html=await readFile(beatLabPath,"utf8");
+  const start=html.indexOf("function chordSymbolToPitches(symbol,octave=4)");
+  const end=html.indexOf("\nfunction getPlayableBassNotes",start);
+  assert.ok(start>=0&&end>start);
+  const helpers=new Function(html.slice(start,end)+";return {chordSymbolToPitches,getPlayableChordEvents};")();
+  const bassStart=html.indexOf("function buildBassNotesFromChords(project,bars,timeSig=4)");
+  const bassEnd=html.indexOf("\nfunction buildBassVariantNotes",bassStart);
+  assert.ok(bassStart>=0&&bassEnd>bassStart);
+  const buildBass=new Function("chordSymbolToPitches",html.slice(bassStart,bassEnd)+";return buildBassNotesFromChords;")(helpers.chordSymbolToPitches);
+  const project={generatedMusic:{chords:[{chord:"Am",beats:4},{chord:"F",beats:4},{chord:"C",beats:4},{chord:"G",beats:4}]}};
+  const notes=buildBass(project,4,4);
+  assert.equal(notes.length,8,"each four-beat chord should yield root and fifth bass notes");
+  assert.equal(notes[0].pitch,33,"A minor root should be in the bass register");
+  assert.equal(notes[0].startBeat,0);
+  assert.equal(notes[1].startBeat,2);
+  assert.ok(notes.every(n=>n.pitch>=24&&n.pitch<=60),"generated bass notes must remain in playable bass range");
+  const stringProject={chords:["C","Am","F","G"]};
+  const stringNotes=buildBass(stringProject,4,4);
+  assert.equal(stringNotes.length,8,"plain chord-name arrays must also generate bass notes");
+  assert.match(html,/importedBass\.length\?importedBass:buildBassNotesFromChords/,"explicit bass timeline must take precedence over generated fallback");
+});
+
+
+test("TL-74 selected A B C accompaniment timelines round-trip into score-editor piano and guitar tracks", async () => {
+  const beat=await readFile(beatLabPath,"utf8");
+  const score=await readFile(path.join(here,"..","apps","score-editor-v2.html"),"utf8");
+  assert.match(beat,/bass: \{\.\.\.\(base\.bass\|\|\{\}\),notes:cloneRhythmData\(bassForExport\)\}/,"selected bass candidate must be exported as an explicit timeline");
+  assert.match(beat,/piano: \{notes:cloneRhythmData\(pianoForExport\)\}/,"piano arrangement must export note events");
+  assert.match(beat,/guitar: \{notes:cloneRhythmData\(guitarForExport\)\}/,"guitar arrangement must export note events");
+  assert.match(beat,/arrangements:cloneRhythmData\(APP\.arrangements\|\|\{\}\)/,"all candidate arrangements must be retained on export");
+  assert.match(beat,/inspect\(bass,'bass'\);inspect\(piano,'piano'\);inspect\(guitar,'guitar'\)/,"timeline validation must inspect every accompaniment track");
+  assert.match(beat,/piano:project\.piano\|\|\{notes:\[\]\}/,"JSON round-trip baseline must include piano");
+  assert.match(beat,/guitar:project\.guitar\|\|\{notes:\[\]\}/,"JSON round-trip baseline must include guitar");
+  assert.match(score,/if\(data\.piano\?\.notes\?\.length\)[\s\S]*?addTrack\('chord',[\s\S]*?Piano/,"score editor must create a dedicated piano track");
+  assert.match(score,/if\(data\.guitar\?\.notes\?\.length\)[\s\S]*?addTrack\('counter',[\s\S]*?Guitar/,"score editor must create a dedicated guitar track");
+  assert.match(score,/piano:\{notes:tr\('chord'\)\}, guitar:\{notes:tr\('counter'\)\}/,"score editor must export both accompaniment tracks on return");
+});
+
+
+test("TL-75 Composition Canvas preserves selected bass piano and guitar accompaniment across both handoff directions", async () => {
+  const canvas=await readFile(canvasPath,"utf8");
+  assert.match(canvas,/project\.bass=window\.__lastDrumProject\?\.bass\|\|incoming\.bass/,"Canvas → Beat Lab must restore bass timeline");
+  assert.match(canvas,/project\.piano=window\.__lastDrumProject\?\.piano\|\|incoming\.piano/,"Canvas → Beat Lab must restore piano timeline");
+  assert.match(canvas,/project\.guitar=window\.__lastDrumProject\?\.guitar\|\|incoming\.guitar/,"Canvas → Beat Lab must restore guitar timeline");
+  assert.match(canvas,/project\.arrangements=window\.__lastDrumProject\?\.arrangements\|\|incoming\.arrangements\|\|null/,"Canvas → Beat Lab must restore all independent A/B/C snapshots");
+  assert.match(canvas,/project\.chords=project\.generatedMusic\?\.chords\|\|window\.__lastDrumProject\?\.chords/,"Canvas → Beat Lab must restore saved chord progression");
+  assert.match(canvas,/bass:project\.bass\|\|\{notes:\[\]\},piano:project\.piano\|\|\{notes:\[\]\},guitar:project\.guitar\|\|\{notes:\[\]\}/,"Beat Lab → Canvas must save accompaniment timelines");
+  assert.match(canvas,/project\.bass=saved\.bass\|\|\{notes:\[\]\}/,"resuming Beat Lab must restore bass");
+  assert.match(canvas,/project\.piano=saved\.piano\|\|\{notes:\[\]\}/,"resuming Beat Lab must restore piano");
+  assert.match(canvas,/project\.guitar=saved\.guitar\|\|\{notes:\[\]\}/,"resuming Beat Lab must restore guitar");
+  assert.match(canvas,/project\.arrangements=saved\.arrangements\|\|null/,"resuming Beat Lab must restore candidate snapshots");
+  assert.match(canvas,/project\.accompanimentMode=saved\.accompanimentMode\|\|\'generated\'/,"resuming Beat Lab must preserve accompaniment provenance");
+});
+
+
+test("TL-76 BEAT//LAB reuses manually edited piano and guitar timelines returned by Score Editor", async () => {
+  const html=await readFile(beatLabPath,"utf8");
+  const score=await readFile(path.join(here,"..","apps","score-editor-v2.html"),"utf8");
+  const start=html.indexOf("function chordSymbolToPitches(symbol,octave=4)");
+  const end=html.indexOf("\nfunction getPlayableBassNotes",start);
+  const helpers=new Function(html.slice(start,end)+";return getPlayableChordEvents;")();
+  const project={source:"score-editor",piano:{notes:[{pitch:60,startBeat:0,durationBeats:2,vel:96},{pitch:64,startBeat:0,durationBeats:2,vel:88}]},guitar:{notes:[{pitch:67,startBeat:1.5,durationBeats:.5,vel:72}]},chords:[{chord:"F",beats:4}]};
+  const events=helpers(project,4,4,"C");
+  assert.deepEqual(events.piano.map(e=>[e.startBeat,e.pitches[0]]),[[0,60],[0,64]],"score-edited piano pitches and timing must take precedence over regenerated chords");
+  assert.deepEqual(events.guitar.map(e=>[e.startBeat,e.pitches[0]]),[[1.5,67]],"score-edited guitar notes must be retained");
+  assert.equal(events.piano[0].velocity,96/127);
+  assert.match(html,/accompanimentMode:base\.accompanimentMode\|\|\(base\.source===\'score-editor\'\?\'manual\':\'generated\'\)/,"manual accompaniment provenance must survive export");
+  assert.match(score,/accompanimentMode:\'manual\'/,"Score Editor must mark manually edited accompaniment");
+});
+
+
+test("TL-77 piano and guitar buses use separate high-pass filters to protect bass headroom", async () => {
+  const html=await readFile(beatLabPath,"utf8");
+  assert.match(html,/pianoToneFilter=new Tone\.Filter\(105,'highpass'\)\.connect\(pianoPan\)/,"piano bus must trim unnecessary sub-bass");
+  assert.match(html,/guitarToneFilter=new Tone\.Filter\(145,'highpass'\)\.connect\(guitarCompressor\)/,"guitar bus must leave more low-frequency room for bass");
+  assert.match(html,/pianoBus=new Tone\.Gain\([^;]*\)\.connect\(pianoToneFilter\)/,"piano level must remain independently adjustable before filtering");
+  assert.match(html,/guitarBus=new Tone\.Gain\([^;]*\)\.connect\(guitarToneFilter\)/,"guitar level must remain independently adjustable before filtering");
+});
+
+
+test("TL-78 piano and guitar occupy subtly separated stereo positions", async () => {
+  const html=await readFile(beatLabPath,"utf8");
+  assert.match(html,/pianoPan=new Tone\.Panner\(-\.16\)\.connect\(getMasterBus\(\)\)/,"piano should sit slightly left of center");
+  assert.match(html,/guitarPan=new Tone\.Panner\(\.2\)\.connect\(getMasterBus\(\)\)/,"guitar should sit slightly right of center");
+  assert.match(html,/pianoToneFilter=new Tone\.Filter\(105,'highpass'\)\.connect\(pianoPan\)/,"piano filter must feed its stereo position");
+  assert.match(html,/guitarToneFilter=new Tone\.Filter\(145,'highpass'\)\.connect\(guitarCompressor\)/,"guitar filter must feed its stereo position");
+});
+
+
+test("TL-79 sampled piano loads lazily with synth fallback and distinct electric guitar path", async () => {
+  const html=await readFile(beatLabPath,"utf8");
+  assert.match(html,/new Tone\.Sampler\(\{urls:\{C2:'C2\.mp3',C3:'C3\.mp3',C4:'C4\.mp3',C5:'C5\.mp3',C6:'C6\.mp3'\}/,"piano must load multi-register Salamander piano samples");
+  assert.match(html,/baseUrl:'https:\/\/tonejs\.github\.io\/audio\/salamander\//,"piano samples must use the public Salamander sample set");
+  assert.match(html,/const sampler=getPianoSampler\(\);[\s\S]*?if\(pianoSamplerReady&&sampler\)sampler\.triggerAttackRelease[\s\S]*?else getPianoSynth\(\)\.triggerAttackRelease/,"piano playback must fall back to the synth while samples load or fail");
+  assert.match(html,/new Tone\.PluckSynth\(\{attackNoise:[\s\S]*?\}\)\.connect\(getGuitarBus\(\)\)/,"acoustic guitar must retain a plucked-string voice");
+  assert.match(html,/new Tone\.PolySynth\(Tone\.Synth,\{oscillator:\{type:'fatsawtooth',count:3,spread:7\}/,"electric guitar must use a separate sustained voice");
+  assert.match(html,/new Tone\.Distortion\(\.12\)/,"electric guitar must have its own mild drive stage");
+  assert.match(html,/new Tone\.Chorus\(1\.7,2\.1,\.12\)/,"electric guitar must have a separate modulation stage");
+  assert.match(html,/instrument:'electric'/,"C arrangement must select the electric guitar voice");
+  assert.match(html,/if\(pianoSampler\)pianoSampler\.releaseAll\(\)/,"stop must release sampled piano voices");
+  assert.match(html,/if\(electricGuitarSynth\)electricGuitarSynth\.releaseAll\(\)/,"stop must release electric guitar voices");
+});
+
+test("TL-80 bass timbre follows song section, register and A/B/C role", async () => {
+  const html=await readFile(beatLabPath,"utf8");
+  const start=html.indexOf("function getBassSectionTone(section,variant='A',pitch=40)");
+  const end=html.indexOf("\nfunction playBassNote",start);
+  assert.ok(start>=0&&end>start,"section-aware bass tone helper must exist");
+  const getTone=new Function(html.slice(start,end)+";return getBassSectionTone;")();
+  const verse=getTone({label:"Verse"},"A",40);
+  const chorus=getTone({label:"Chorus"},"A",40);
+  const bridge=getTone({label:"Bridge"},"A",40);
+  const sparse=getTone({label:"Verse"},"B",40);
+  const driven=getTone({label:"Verse"},"C",40);
+  const low=getTone({label:"Verse"},"A",28);
+  const high=getTone({label:"Verse"},"A",52);
+  assert.ok(chorus.filterHz>verse.filterHz,"chorus bass should open its tone");
+  assert.ok(bridge.filterHz<verse.filterHz,"bridge bass should become darker");
+  assert.ok(sparse.attackDb<verse.attackDb,"B bass should be more restrained");
+  assert.ok(driven.attackDb>verse.attackDb,"C bass should have more attack");
+  assert.ok(low.subDb>high.subDb,"low-register notes should receive more sub support");
+  assert.ok(high.filterHz>low.filterHz,"higher bass notes should receive a clearer upper body");
+  assert.match(html,/playBassNote\(note,duration,audioAt,activeSection,chordVariant\)/,"live bass playback must receive section and selected arrangement");
+});
+
+
+test("TL-81 section-specific bass timbre changes are scheduled at note audio timestamps", async () => {
+  const html=await readFile(beatLabPath,"utf8");
+  const start=html.indexOf("function playBassNote(note,duration,when,section=null,variant='A')");
+  const end=html.indexOf("\nfunction updateMixVolumes",start);
+  assert.ok(start>=0&&end>start);
+  const play=html.slice(start,end);
+  for(const expression of ["body.filter.frequency.setValueAtTime(tone.filterHz,when)","body.volume.setValueAtTime(tone.bodyDb-1,when)","sub.volume.setValueAtTime(tone.subDb,when)","attack.volume.setValueAtTime(tone.attackDb,when)"]){
+    assert.ok(play.includes(expression),expression+" must follow the same Web Audio clock as the note");
+  }
+  assert.doesNotMatch(play,/\.rampTo\(tone\./,"look-ahead scheduling must not apply future section tone changes immediately");
+});
+
+
+test("TL-82 acoustic guitar, electric guitar and bass use real sample maps with synth fallback", async () => {
+  const html=await readFile(beatLabPath,"utf8");
+  assert.match(html,/TONEJS_SAMPLE_ROOT='https:\/\/raw\.githubusercontent\.com\/nbrosowsky\/tonejs-instruments\/master\/samples\/'/);
+  assert.match(html,/createInstrumentSampler\('guitar-acoustic'/);
+  assert.match(html,/createInstrumentSampler\('guitar-electric'/);
+  assert.match(html,/createInstrumentSampler\('bass-electric'/);
+  assert.match(html,/D2:'D2\.mp3'[\s\S]*?C5:'C5\.mp3'/,"acoustic guitar sampler should map notes across its playable range");
+  assert.match(html,/Cs2:'Cs2\.mp3'[\s\S]*?C6:'C6\.mp3'/,"electric guitar sampler should map notes across its playable range");
+  assert.match(html,/Cs1:'Cs1\.mp3'[\s\S]*?Cs4:'Cs4\.mp3'/,"bass sampler should map the low register");
+  assert.match(html,/if\(electricGuitarSamplerReady&&sampler\)sampler\.triggerAttackRelease[\s\S]*?else getElectricGuitarSynth\(\)\.triggerAttackRelease/);
+  assert.match(html,/if\(guitarSamplerReady&&sampler\)sampler\.triggerAttackRelease[\s\S]*?else getGuitarSynth\(\)\.triggerAttack/);
+  assert.match(html,/if\(bassSamplerReady&&sampler\)sampler\.triggerAttackRelease[\s\S]*?else body\.triggerAttackRelease/);
+  assert.match(html,/if\(bassSampler\)bassSampler\.releaseAll\(\)/);
+  assert.match(html,/if\(guitarSampler\)guitarSampler\.releaseAll\(\)/);
+  assert.match(html,/if\(electricGuitarSampler\)electricGuitarSampler\.releaseAll\(\)/);
+});
+
+test("TL-83 instrument buses feed a shared master compressor and limiter", async () => {
+  const html=await readFile(beatLabPath,"utf8");
+  assert.match(html,/masterLimiter=new Tone\.Limiter\(-1\)\.toDestination\(\)/);
+  assert.match(html,/masterCompressor=new Tone\.Compressor\(\{threshold:-15,ratio:1\.7/);
+  assert.match(html,/drumCompressor=new Tone\.Compressor\([\s\S]*?\.connect\(getMasterBus\(\)\)/);
+  assert.match(html,/bassCompressor\.connect\(getMasterBus\(\)\)/);
+  assert.match(html,/guitarCompressor=new Tone\.Compressor\([\s\S]*?\.connect\(guitarPan\)/);
+  assert.match(html,/pianoPan=new Tone\.Panner\(-\.16\)\.connect\(getMasterBus\(\)\)/);
+  assert.match(html,/guitarPan=new Tone\.Panner\(\.2\)\.connect\(getMasterBus\(\)\)/);
+  assert.match(html,/getBassSamplerFilter\(\),v=>bassSamplerReady=v/,"sampled bass must pass through its tone-shaping filter");
+});
+
+
+test("TL-84 A/B/C mix profiles create distinct musical balances and spatial roles", async () => {
+  const html=await readFile(beatLabPath,"utf8");
+  const start=html.indexOf("const ARRANGEMENT_MIX_PROFILES=");
+  const end=html.indexOf("\nfunction mixSliderValue",start);
+  assert.ok(start>=0&&end>start,"A/B/C mix profile table must exist");
+  const profiles=new Function(html.slice(start,end)+";return ARRANGEMENT_MIX_PROFILES;")();
+  assert.deepEqual(Object.keys(profiles),["A","B","C"]);
+  for(const id of ["A","B","C"]){
+    const p=profiles[id];
+    for(const instrument of ["drum","melody","bass","piano","guitar"])assert.ok(Number.isFinite(p.gain[instrument])&&p.gain[instrument]>0, id+" gain "+instrument);
+    assert.ok(p.master.threshold<0&&p.master.ratio>1);
+    assert.ok(p.drumComp.threshold<0&&p.drumComp.ratio>1);
+  }
+  assert.ok(profiles.B.gain.drum<profiles.A.gain.drum,"B should leave more space around the drums");
+  assert.ok(profiles.B.gain.piano>profiles.A.gain.piano,"B should bring piano forward");
+  assert.ok(profiles.B.pianoPan<profiles.A.pianoPan&&profiles.B.guitarPan>profiles.A.guitarPan,"B should widen the chord instruments");
+  assert.ok(profiles.C.gain.drum>profiles.A.gain.drum&&profiles.C.gain.bass>profiles.A.gain.bass&&profiles.C.gain.guitar>profiles.A.gain.guitar,"C should emphasize rhythm section and guitar");
+  assert.ok(profiles.C.gain.piano<profiles.A.gain.piano&&profiles.C.gain.melody<profiles.A.gain.melody,"C should make room for the driving rhythm section");
+  assert.notDeepEqual(profiles.A.bassEQ,profiles.B.bassEQ);
+  assert.notEqual(profiles.A.drumComp.attack,profiles.C.drumComp.attack);
+});
+
+test("TL-85 selected A/B/C mix profile follows candidate selection, playback and live fader changes", async () => {
+  const html=await readFile(beatLabPath,"utf8");
+  assert.match(html,/function applyArrangementMix\(variant=APP\.activeDrumVariant\|\|'A',options=\{\}\)/);
+  assert.match(html,/applyArrangementMix\(id,\{immediate:true\}\)/,"candidate selection must switch its mix profile");
+  assert.match(html,/applyArrangementMix\(chordVariant,\{ensure:true,immediate:true\}\)/,"playback must initialize the matching profile before notes are scheduled");
+  assert.match(html,/function updateMixVolumes\(\)\{applyArrangementMix\(APP\.activeDrumVariant\|\|'A'\);\}/,"manual faders must preserve the selected profile's relative balance");
+  assert.match(html,/mixSliderValue\(name\+'-volume',[\s\S]*?\*profile\.gain\[name\]/,"profile gain multipliers must retain each user's slider setting");
+  assert.match(html,/bassBusEQ\.low,profile\.bassEQ\.low[\s\S]*?bassBusEQ\.mid,profile\.bassEQ\.mid[\s\S]*?bassBusEQ\.high,profile\.bassEQ\.high/);
+  assert.match(html,/pianoToneFilter\.frequency,profile\.pianoHP/);
+  assert.match(html,/guitarToneFilter\.frequency,profile\.guitarHP/);
+  assert.match(html,/drumCompressor\.threshold,profile\.drumComp\.threshold/);
+  assert.match(html,/masterCompressor\.threshold,profile\.master\.threshold/);
+  assert.match(html,/id="arrangement-mix-status"/);
+});
+
+
+test("TL-86 A/B/C own independent canonical snapshots for every instrument track", async () => {
+  const html=await readFile(beatLabPath,"utf8");
+  assert.match(html,/arrangements:null/,"application state must own the canonical arrangement collection");
+  assert.match(html,/function buildArrangementTrackSnapshot\(project,variant,sections\)/);
+  for(const track of ["melody","piano","guitar","bass","drums"]){
+    assert.match(html,new RegExp(track+":\\{notes:"),track+" must be represented as an independent note track");
+  }
+  assert.match(html,/APP\.arrangements\[id\]=buildArrangementTrackSnapshot/);
+  assert.match(html,/APP\.arrangements=\{\}/,"regenerating candidates must start clean snapshots");
+  assert.match(html,/const activeArrangement=syncActiveArrangementTrackSnapshot\(\)/,"playback must read the selected canonical snapshot");
+  assert.match(html,/const melody=activeTracks\.melody\?\.notes\|\|\[\]/,"melody playback must use the selected arrangement's melody track");
+  assert.match(html,/bass: \{\.\.\.\(base\.bass\|\|\{\}\),notes:cloneRhythmData\(bassForExport\)\}/);
+  assert.match(html,/arrangements:cloneRhythmData\(APP\.arrangements\|\|\{\}\)/,"export must persist all candidate snapshots");
+  assert.match(html,/projectData\?\.arrangements/,"arrangement restore must restore the canonical snapshots");
+  assert.match(html,/current\.tracks\.drums=refreshed\.tracks\.drums/,"editing a drum candidate must not overwrite its piano/guitar/bass/melody snapshots");
+  assert.match(html,/const canonicalSections=APP\.arrangements\?\.\[id\]\?\.sections/,"drum candidate playback must prefer the canonical snapshot section data");
+  assert.match(html,/restoreSongArrangement\(window\.__compositionBaseProject\.arrangement,window\.__compositionBaseProject\)/,"boot must retain the selected candidate while restoring");
+});
+
+test("TL-87 JSON roundtrip baseline includes all A/B/C track snapshots", async () => {
+  const html=await readFile(beatLabPath,"utf8");
+  const start=html.indexOf("function normalizeJSONRoundTripValue");
+  const end=html.indexOf("function exportJSON",start);
+  assert.ok(start>=0&&end>start);
+  const helpers=new Function(html.slice(start,end)+"\nreturn {createJSONRoundTripSnapshot,compareJSONRoundTripSnapshot};")();
+  const tracks={melody:{notes:[{pitch:60,startBeat:0,durationBeats:1,vel:90}]},piano:{notes:[]},guitar:{notes:[]},bass:{notes:[]},drums:{notes:[]}};
+  const project={bpm:100,timeSig:4,bars:4,div:16,lyrics:"",sections:[],melody:tracks.melody,drums:tracks.drums,piano:tracks.piano,guitar:tracks.guitar,bass:tracks.bass,arrangements:{A:{id:"A",tracks},B:{id:"B",tracks:structuredClone(tracks)},C:{id:"C",tracks:structuredClone(tracks)}},activeArrangement:"B"};
+  const baseline=helpers.createJSONRoundTripSnapshot(project);
+  assert.equal(helpers.compareJSONRoundTripSnapshot(baseline,structuredClone(project)).ok,true);
+  const edited=structuredClone(project);
+  edited.arrangements.C.tracks.guitar.notes.push({pitch:67,startBeat:1,durationBeats:.5,vel:70});
+  assert.ok(helpers.compareJSONRoundTripSnapshot(baseline,edited).errors.includes("arrangements がJSON保存前と一致しません"));
+});
+
+
+test("TL-88 Score Editor preserves inactive A/B/C snapshots and updates only the active track snapshot", async () => {
+  const score=await readFile(path.join(here,"..","apps","score-editor-v2.html"),"utf8");
+  assert.match(score,/PROJ\.arrangements=data\.arrangements\?JSON\.parse\(JSON\.stringify\(data\.arrangements\)\):null/);
+  assert.match(score,/const activeArrangement=PROJ\.activeArrangement\|\|PROJ\.activeDrumVariant\|\|'A'/);
+  assert.match(score,/arrangements\[activeArrangement\]\.tracks\.melody=\{notes:tr\('melody'\)\}/);
+  assert.match(score,/arrangements\[activeArrangement\]\.tracks\.piano=\{notes:tr\('chord'\)\}/);
+  assert.match(score,/arrangements\[activeArrangement\]\.tracks\.guitar=\{notes:tr\('counter'\)\}/);
+  assert.match(score,/arrangement:PROJ\.arrangement, drumVariants:PROJ\.drumVariants, activeDrumVariant:PROJ\.activeDrumVariant/);
+  assert.match(score,/activeArrangement, arrangements, exported:new Date\(\)\.toISOString\(\)/);
+});
+
+
+test("TL-89 arrangement grooves have distinct musical articulation rather than mix-only changes", async () => {
+  const html=await readFile(beatLabPath,"utf8");
+  const chordStart=html.indexOf("function chordSymbolToPitches(symbol,octave=4)");
+  const chordEnd=html.indexOf("\n\n\n\nfunction buildBassNotesFromChords",chordStart);
+  assert.ok(chordStart>=0&&chordEnd>chordStart);
+  const chordHelpers=new Function(html.slice(chordStart,chordEnd)+"\nreturn {chordSymbolToPitches,getPlayableChordEvents};")();
+  const progression={chords:[{chord:"C",beats:4},{chord:"Am7",beats:4},{chord:"F",beats:4},{chord:"G",beats:4}]};
+  const A=chordHelpers.getPlayableChordEvents(progression,4,4,"A");
+  const B=chordHelpers.getPlayableChordEvents(progression,4,4,"B");
+  const C=chordHelpers.getPlayableChordEvents(progression,4,4,"C");
+  assert.ok(A.piano.some(e=>e.pitches.length>=3&&e.durationBeats>=2),"A piano should sustain block harmony");
+  assert.ok(B.piano.every(e=>e.pitches.length===1&&e.durationBeats<1),"B piano should use short, separated arpeggio tones");
+  assert.ok(C.piano.every(e=>e.durationBeats<=.48),"C piano should use short rhythmic stabs");
+  assert.ok(C.guitar.some(e=>Math.abs((e.startBeat%1)-.25)<.001),"C guitar should accent off-beat subdivisions");
+  assert.ok(C.guitar.every(e=>e.instrument==="electric"),"C ostinato must use the electric guitar voice");
+  assert.match(html,/instrument:note\.instrument\|\|'acoustic'/,"playback must retain each candidate guitar voice");
+  assert.ok(A.guitar.every(e=>e.pitches.length>=2),"A guitar should add restrained dyadic responses");
+  assert.ok(B.guitar.every(e=>e.pitches.length===1),"B guitar should leave sparse single-note responses");
+  assert.ok(B.guitar.length<C.guitar.length,"C guitar should carry the densest ostinato");
+  const bassStart=html.indexOf("function buildBassVariantNotes(notes,bars,timeSig=4,variant='A')");
+  const bassEnd=html.indexOf("\n\nfunction getPlayableBassNotes",bassStart);
+  const buildBass=new Function(html.slice(bassStart,bassEnd)+"\nreturn buildBassVariantNotes;")();
+  const bassSource=[{id:"root1",pitch:36,startBeat:0,durationBeats:1,velocity:.8},{id:"fifth1",pitch:43,startBeat:2,durationBeats:1,velocity:.7},{id:"root2",pitch:38,startBeat:4,durationBeats:1,velocity:.8},{id:"fifth2",pitch:45,startBeat:6,durationBeats:1,velocity:.7}];
+  const bassA=buildBass(bassSource,2,4,"A"),bassB=buildBass(bassSource,2,4,"B"),bassC=buildBass(bassSource,2,4,"C");
+  assert.equal(bassA.length,bassSource.length,"A bass should keep the steady foundation");
+  assert.equal(bassB.length,2,"B bass should hold one low anchor per bar");
+  assert.ok(bassB.every(n=>n.durationBeats>=3.9),"B bass should sustain long notes");
+  assert.ok(bassC.some(n=>n.id.endsWith("-pickup"))&&bassC.some(n=>n.id.endsWith("-oct")),"C bass should add pickups and octave articulation");
+});
