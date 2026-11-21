@@ -1143,7 +1143,8 @@ function getPianoSampler(){
 function playPianoEvent(event,when){
   const notes=event.pitches.map(p=>Tone.Frequency(p,'midi').toNote());
   const duration=Math.max(.08,Number(event.durationSeconds)||.5);
-  if(pianoSamplerReady&&pianoSampler)pianoSampler.triggerAttackRelease(notes,duration,when,event.velocity);
+  const sampler=getPianoSampler();
+  if(pianoSamplerReady&&sampler)sampler.triggerAttackRelease(notes,duration,when,event.velocity);
   else getPianoSynth().triggerAttackRelease(notes,duration,when,event.velocity);
 }
 function getGuitarSynth(){if(!guitarSynth){guitarSynth=new Tone.PluckSynth({attackNoise:.72,dampening:5200,resonance:.92}).connect(getGuitarBus());guitarSynth.volume.value=-9;}return guitarSynth;}
@@ -1442,6 +1443,8 @@ function stopPlay(){
   if(bassSubSynth)bassSubSynth.triggerRelease();
   if(bassAttackSynth)bassAttackSynth.triggerRelease();
   if(pianoSynth)pianoSynth.releaseAll();
+  if(pianoSampler)pianoSampler.releaseAll();
+  if(electricGuitarSynth)electricGuitarSynth.releaseAll();
   if(drumOnlyMixSnapshot){[['melody-enabled','melody'],['bass-enabled','bass'],['piano-enabled','piano'],['guitar-enabled','guitar']].forEach(([id,key])=>{const control=document.getElementById(id);if(control)control.checked=!!drumOnlyMixSnapshot[key];});drumOnlyMixSnapshot=null;const mix=document.getElementById('mix-status');if(mix)mix.textContent='メロディ・ベース・ピアノ・ギター・ドラムを同時に試聴できます';}
   const playhead=document.getElementById('arrangement-playhead');if(playhead)playhead.textContent='停止中';
 }
