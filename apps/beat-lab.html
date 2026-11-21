@@ -850,24 +850,43 @@ function applyDrumArrangementIdea(style){
 }
 function applyCandidateCoreGroove(pattern,section,variant){
   const out=cloneRhythmData(pattern),spb=APP.div/4,spbar=APP.timeSig*spb,bars=Math.max(1,section.endBar-section.startBar+1),total=bars*spbar;
-  ['kick','snare','clap','hat'].forEach(row=>Object.keys(out).forEach(key=>{if(key.startsWith(row+':'))delete out[key];}));
-  const put=(row,step,vel)=>{if(step>=0&&step<total)out[pk(row,step)]=Math.max(.16,Math.min(1,vel));};
+  ['kick','snare','clap','hat','ohat','crash','ride','tom1','tom2','perc'].forEach(row=>Object.keys(out).forEach(key=>{if(key.startsWith(row+':'))delete out[key];}));
+  const put=(row,step,vel)=>{if(step>=0&&step<total)out[pk(row,step)]=Math.max(.12,Math.min(1,vel));};
+  const isIntro=section.id==='intro',isVerse=section.id==='verse',isChorus=section.id==='chorus',isBridge=section.id==='bridge',isFinal=section.id==='final';
   for(let bar=0;bar<bars;bar++){
-    const base=bar*spbar;
+    const base=bar*spbar,last=base+spbar-1,barAccent=bar%2===0?1:.92;
     if(variant==='A'){
-      put('kick',base,.96); if(APP.timeSig>=3)put('kick',base+2*spb,.78);
-      put('snare',base+spb,.82); if(APP.timeSig>=4)put('snare',base+3*spb,.88);
-      const interval=Math.max(1,Math.floor(spb/2));for(let x=0;x<spbar;x+=interval)put('hat',base+x,x%(spb)===0?.62:.43);
+      // A: familiar J-pop/pop-rock backbeat. The groove stays legible while
+      // the arrangement opens progressively from verse to chorus/final.
+      if(!isIntro&&!isBridge){put('kick',base,.96*barAccent);if(APP.timeSig>=4)put('kick',base+2*spb,isFinal?.86:.76);}
+      if(!isIntro&&!isBridge){put('snare',base+spb,.82);if(APP.timeSig>=4)put('snare',base+3*spb,isFinal?.98:.9);}
+      const interval=Math.max(1,Math.floor(spb/2));
+      if(isIntro||isBridge){for(let x=0;x<spbar;x+=spb)put('hat',base+x,.4);}
+      else for(let x=0;x<spbar;x+=interval)put('hat',base+x,x%spb===0?.64:.42);
+      if(isChorus||isFinal){if(bar===0)put('crash',base,1);for(let x=0;x<spbar;x+=spb*2)put('ride',base+x,isFinal?.78:.58);put('ohat',last,.54);}
+      if(isVerse&&bar%2===1)put('ohat',base+Math.max(0,spbar-1),.42);
+      if((isChorus||isFinal)&&bar===bars-1&&spbar>=4){put('snare',last-1,.36);put('tom1',last,.7);}
     }else if(variant==='B'){
-      put('kick',base,.98);if(APP.timeSig>=4)put('kick',base+Math.round(2.5*spb),.72);
-      put('snare',base+Math.min(spbar-1,2*spb),.96);
-      put('hat',base,.5);put('hat',base+Math.max(1,Math.round(1.5*spb)),.38);
-      if(APP.timeSig>=4)put('hat',base+3*spb,.48);
+      // B: spacious half-time. The snare anchors beat three; fewer hats and
+      // a deliberately open low-density pocket leave room for the vocal.
+      if(!isIntro){put('kick',base,.98);if(APP.timeSig>=4)put('kick',base+Math.round(2.5*spb),isChorus?.72:.56);}
+      if(!isIntro&&!isBridge)put('snare',base+Math.min(spbar-1,2*spb),isFinal?1:.94);
+      if(isIntro||isBridge){put('hat',base,.38);if(spbar>4)put('hat',base+2*spb,.3);}
+      else{put('hat',base,.5);if(APP.timeSig>=4)put('hat',base+2*spb,.36);put('hat',last,.4);}
+      if(isChorus||isFinal){if(bar===0)put('crash',base,.92);put('ohat',last,.72);}
+      if(isBridge&&bar===bars-1){put('tom2',last-1,.62);put('tom1',last,.72);}
+      if(isFinal&&bar===bars-1){put('tom2',last-2,.62);put('tom1',last-1,.78);put('crash',last,1);}
     }else{
-      put('kick',base,.98);if(APP.timeSig>=4){put('kick',base+Math.round(1.5*spb),.72);put('kick',base+3*spb,.86);}else if(APP.timeSig===3)put('kick',base+2*spb,.78);
-      put('snare',base+spb,.84);put('snare',base+Math.max(0,spbar-1),.9);
-      const interval=Math.max(1,Math.floor(spb/2));for(let x=0;x<spbar;x+=interval)put('hat',base+x,x%spb===0?.58:.5);
-      if(spbar>=8)put('snare',base+Math.max(0,spbar-2),.34);
+      // C: driving syncopation. Off-beat kick accents, ghost snare pickups,
+      // tighter hat subdivisions and ride-led chorus create forward motion.
+      if(!isIntro&&!isBridge){put('kick',base,.96);if(spbar>2)put('kick',base+Math.max(1,spb+Math.floor(spb/2)),.7);if(APP.timeSig>=4)put('kick',base+3*spb,.84);}
+      if(!isIntro&&!isBridge){put('snare',base+spb,.86);if(APP.timeSig>=4)put('snare',base+3*spb,.9);if(spbar>=8)put('snare',base+spbar-2,.3);}
+      const interval=Math.max(1,Math.floor(spb/2));
+      for(let x=0;x<spbar;x+=interval)put('hat',base+x,x%spb===0?.58:(x%Math.max(1,spb)===Math.floor(spb/2)?.5:.34));
+      if(isIntro||isBridge){put('tom2',last,.48);if(isBridge&&bar===bars-1)put('tom1',last-1,.62);}
+      if(isChorus||isFinal){if(bar===0)put('crash',base,1);for(let x=0;x<spbar;x+=spb)put('ride',base+x,isFinal?.82:.68);if(spbar>=8)put('ohat',base+spbar-2,.64);}
+      if((isChorus||isFinal)&&bar===bars-1){put('tom1',last-2,.58);put('tom2',last-1,.72);put('crash',last,1);}
+      if(isVerse&&bar%2===1)put('perc',base+Math.max(0,spbar-2),.42);
     }
   }
   return out;
@@ -1118,17 +1137,17 @@ function getCrash(){if(!synthCrash){synthCrash=new Tone.MetalSynth({frequency:22
 function getRide(){if(!synthRide){synthRide=new Tone.MetalSynth({frequency:520,envelope:{attack:.002,decay:.34,release:.07},harmonicity:7.2,modulationIndex:18,resonance:5200,octaves:1.1}).connect(getDrumBus());synthRide.volume.value=-23;}return synthRide;}
 function getPerc(){ if(!synthPerc){synthPerc=new Tone.MembraneSynth({pitchDecay:.02,octaves:3,envelope:{attack:.001,decay:.1,sustain:0,release:.05}}).connect(getDrumBus());synthPerc.volume.value=-10;} return synthPerc; }
 
-function playHit(pitch, vel=1){
+function playHit(pitch, vel=1, when){
   // STEPセルの単発試聴でもAudioContextを起動する（再生ループ側の開始処理にも依存しない）。
   try{Tone.start();}catch(e){}
   const safeVel=Math.max(.05,Math.min(1,Number(vel)||.05));
-  const v=-18*(1-safeVel);
-  if(pitch===36){const x=getKick();x.volume.value=-4+v;x.triggerAttackRelease('C1','8n');}
-  else if(pitch===38){const x=getSnare();x.volume.value=-9+v;x.triggerAttackRelease('16n');}
+  const v=-18*(1-safeVel),at=Number.isFinite(when)?when:undefined;
+  if(pitch===36){const x=getKick();x.volume.value=-4+v;x.triggerAttackRelease('C1','8n',at);}
+  else if(pitch===38){const x=getSnare();x.volume.value=-9+v;x.triggerAttackRelease('16n',at);}
   else if(pitch===39){const x=getSnare();x.volume.value=-12+v;x.triggerAttackRelease('16n');}
-  else if(pitch===42){const x=getClosedHat();x.volume.value=-19+v;x.triggerAttackRelease('32n');}
-  else if(pitch===46){const x=getOpenHat();x.volume.value=-20+v;x.triggerAttackRelease('8n');}
-  else if(pitch===49){const x=getCrash();x.volume.value=-20+v;x.triggerAttackRelease('2n');}
+  else if(pitch===42){const x=getClosedHat();x.volume.value=-19+v;x.triggerAttackRelease('32n',at);}
+  else if(pitch===46){const x=getOpenHat();x.volume.value=-20+v;x.triggerAttackRelease('8n',at);}
+  else if(pitch===49){const x=getCrash();x.volume.value=-20+v;x.triggerAttackRelease('2n',at);}
   else if(pitch===51){const x=getRide();x.volume.value=-23+v;x.triggerAttackRelease('8n');}
   else {const x=getPerc();x.volume.value=-10+v;x.triggerAttackRelease(pitch>50?'C2':'G1','16n');}
 }
@@ -1175,7 +1194,7 @@ async function togglePlay(){
       const k=pk(row.id,sectionStep),baseVel=drumPattern[k],effectVel=drumEffectVelocity(row.id,APP.playStep,activeSection,sectionStep),vel=effectVel===null?baseVel:effectVel;
       const el=document.getElementById(`sc-${row.id}-${sectionStep}`);
       if(el)el.classList.add('playing-step');
-      if(vel)playHit(row.pitch,vel);
+      if(vel)playHit(row.pitch,vel,Tone.now());
     });
     const currentBeat=APP.playStep/stepsPerBeat;
     const melody=window.__compositionBaseProject?.melody?.notes||[];
