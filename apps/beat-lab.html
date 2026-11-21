@@ -1322,7 +1322,7 @@ function getPlayableChordEvents(project,bars,timeSig=4,variant='A'){
     }else if(variant==='C'){
       add(piano,start,pitches.map(p=>p+12),Math.min(.48,duration*.24),.78);
       if(duration>=2)add(piano,start+Math.min(2.5,duration*.625),[pitches[0]+12,pitches[2%pitches.length]+12],.32,.62);
-      for(let offset=.25,step=0;offset<duration;offset+=.5,step++){add(guitar,start+offset,[pitches[(step+1)%pitches.length]+12],.28,step%2===0?.64:.46);guitar[guitar.length-1].instrument='electric';}
+      for(let offset=.25,step=0;offset<duration;offset+=.5,step++){add(guitar,start+offset,[pitches[(step+1)%pitches.length]+12],.28,step%2===0?.64:.46);guitar[guitar.length-1]={...guitar[guitar.length-1],instrument:'electric'};}
     }else{
       add(piano,start,pitches,Math.max(.35,duration*.82),.68);
       if(duration>1.5)add(guitar,start+Math.min(2,duration*.5),[pitches[0]+12,pitches[2%pitches.length]+12],.42,.48);
