@@ -1295,6 +1295,7 @@ test("TL-86 A/B/C own independent canonical snapshots for every instrument track
   assert.match(html,/arrangements:cloneRhythmData\(APP\.arrangements\|\|\{\}\)/,"export must persist all candidate snapshots");
   assert.match(html,/projectData\?\.arrangements/,"arrangement restore must restore the canonical snapshots");
   assert.match(html,/current\.tracks\.drums=refreshed\.tracks\.drums/,"editing a drum candidate must not overwrite its piano/guitar/bass/melody snapshots");
+  assert.match(html,/const canonicalSections=APP\.arrangements\?\.\[id\]\?\.sections/,"drum candidate playback must prefer the canonical snapshot section data");
   assert.match(html,/restoreSongArrangement\(window\.__compositionBaseProject\.arrangement,window\.__compositionBaseProject\)/,"boot must retain the selected candidate while restoring");
 });
 
