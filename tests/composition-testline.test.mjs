@@ -1141,3 +1141,12 @@ test("TL-77 piano and guitar buses use separate high-pass filters to protect bas
   assert.match(html,/pianoBus=new Tone\.Gain\([^;]*\)\.connect\(pianoToneFilter\)/,"piano level must remain independently adjustable before filtering");
   assert.match(html,/guitarBus=new Tone\.Gain\([^;]*\)\.connect\(guitarToneFilter\)/,"guitar level must remain independently adjustable before filtering");
 });
+
+
+test("TL-78 piano and guitar occupy subtly separated stereo positions", async () => {
+  const html=await readFile(beatLabPath,"utf8");
+  assert.match(html,/pianoPan=new Tone\.Panner\(-\.16\)\.toDestination\(\)/,"piano should sit slightly left of center");
+  assert.match(html,/guitarPan=new Tone\.Panner\(\.18\)\.toDestination\(\)/,"guitar should sit slightly right of center");
+  assert.match(html,/pianoToneFilter=new Tone\.Filter\(105,'highpass'\)\.connect\(pianoPan\)/,"piano filter must feed its stereo position");
+  assert.match(html,/guitarToneFilter=new Tone\.Filter\(155,'highpass'\)\.connect\(guitarPan\)/,"guitar filter must feed its stereo position");
+});
