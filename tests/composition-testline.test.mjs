@@ -1341,7 +1341,9 @@ test("TL-89 arrangement grooves have distinct musical articulation rather than m
   assert.ok(B.piano.every(e=>e.pitches.length===1&&e.durationBeats<1),"B piano should use short, separated arpeggio tones");
   assert.ok(C.piano.every(e=>e.durationBeats<=.48),"C piano should use short rhythmic stabs");
   assert.ok(C.guitar.some(e=>Math.abs((e.startBeat%1)-.25)<.001),"C guitar should accent off-beat subdivisions");
-  assert.ok(A.guitar.length<B.guitar.length&&B.guitar.length<C.guitar.length,"guitar density should progress from restrained to ostinato");
+  assert.ok(A.guitar.every(e=>e.pitches.length>=2),"A guitar should add restrained dyadic responses");
+  assert.ok(B.guitar.every(e=>e.pitches.length===1),"B guitar should leave sparse single-note responses");
+  assert.ok(B.guitar.length<C.guitar.length,"C guitar should carry the densest ostinato");
   const bassStart=html.indexOf("function buildBassVariantNotes(notes,bars,timeSig=4,variant='A')");
   const bassEnd=html.indexOf("\n\nfunction getPlayableBassNotes",bassStart);
   const buildBass=new Function(html.slice(bassStart,bassEnd)+"\nreturn buildBassVariantNotes;")();
