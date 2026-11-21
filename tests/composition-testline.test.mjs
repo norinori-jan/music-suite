@@ -693,3 +693,46 @@ test("TL-56 AI rhythm generation passes incoming melody context to the model and
   assert.match(body,/renderAiPreview\(result,bars,div,steps\)/);
   assert.match(body,/applyAiPattern/);
 });
+
+
+test("TL-57 BEAT//LAB plays imported bass notes in sync with melody and drums", async () => {
+  const html=await readFile(beatLabPath,"utf8");
+  assert.match(html,/id="bass-enabled"/);
+  assert.match(html,/id="bass-volume"/);
+  assert.match(html,/function getBassBus\(\)/);
+  assert.match(html,/function getBassSynth\(\)/);
+  assert.match(html,/new Tone\.MonoSynth/);
+  assert.match(html,/function getPlayableBassNotes\(project,bars,timeSig=4\)/);
+  const helperStart=html.indexOf("function getPlayableBassNotes(project,bars,timeSig=4)");
+  const helperEnd=html.indexOf("\nasync function togglePlay()",helperStart);
+  assert.ok(helperStart>=0&&helperEnd>helperStart);
+  const helper=new Function(html.slice(helperStart,helperEnd)+";return getPlayableBassNotes;")();
+  const notes=helper({bass:{notes:[
+    {pitch:36,startBeat:0,durationBeats:1,vel:100},
+    {pitch:43,startBeat:1.5,durationBeats:0.5,vel:0.5},
+    {pitch:72,startBeat:2,durationBeats:1,vel:90},
+    {pitch:40,startBeat:-1,durationBeats:1,vel:90},
+    {pitch:38,startBeat:3,durationBeats:0,vel:90}
+  ]}},2,4);
+  assert.equal(notes.length,2);
+  assert.equal(notes[0].pitch,36);
+  assert.equal(notes[0].velocity,100/127);
+  assert.equal(notes[1].pitch,43);
+  assert.equal(notes[1].velocity,0.5);
+  const playStart=html.indexOf("async function togglePlay()");
+  const playEnd=html.indexOf("\nfunction stopPlay()",playStart);
+  const play=html.slice(playStart,playEnd);
+  assert.match(play,/getPlayableBassNotes\(window\.__compositionBaseProject,APP\.bars,APP\.timeSig\)/);
+  assert.match(play,/Math\.abs\(note\.startBeat-currentBeat\)<bassTolerance/);
+  assert.match(play,/getBassSynth\(\)\.triggerAttackRelease/);
+  assert.match(html.slice(html.indexOf("function stopPlay()"),html.indexOf("\nfunction PROJ_BPM")),/bassSynth\.triggerRelease\(\)/);
+});
+
+test("TL-58 BEAT//LAB preserves bass timeline data when exporting a rhythm edit", async () => {
+  const html=await readFile(beatLabPath,"utf8");
+  const start=html.indexOf("function _buildExportData()");
+  const end=html.indexOf("\nfunction decodeImportedDrumVelocity",start);
+  assert.ok(start>=0&&end>start);
+  const body=html.slice(start,end);
+  assert.match(body,/bass: base\.bass\|\|\{notes:\[\]\}/);
+});
