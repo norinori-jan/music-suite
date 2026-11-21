@@ -295,7 +295,7 @@ body{padding-bottom:env(safe-area-inset-bottom)}
   <label style="display:flex;align-items:center;gap:5px"><input type="checkbox" id="guitar-enabled" checked> 🎸 ギター</label>
   <label style="display:flex;align-items:center;gap:5px">音量 <input id="guitar-volume" type="range" min="0" max="100" value="42" style="width:70px"></label>
   <label style="display:flex;align-items:center;gap:5px">🥁 ドラム音量 <input id="drum-volume" type="range" min="0" max="100" value="80" style="width:70px"></label>
-  <span id="mix-status" style="color:var(--mu)">メロディ・ベース・ピアノ・ギター・ドラムを同時に試聴できます</span>
+  <span id="mix-status" style="color:var(--mu)">メロディ・ベース・ピアノ・ギター・ドラムを同時に試聴できます</span><span id="arrangement-mix-status" style="color:var(--acc);font-weight:700">A MIX · BALANCED</span>
   <button class="btn pri" id="ai-mix-preview-btn" onclick="playMelodyDrumPreview()" style="display:none">▶ AI伴奏をメロディと同時試聴</button>
 </div>
 <div id="variationbar" style="display:flex;align-items:center;gap:7px;flex-wrap:wrap;padding:7px 12px;background:var(--s2);border-bottom:1px solid var(--bd);font-size:10px">
@@ -930,6 +930,7 @@ function selectDrumCandidate(id){
   if(!APP.drumVariants){if(!createDrumCandidates())return;}
   else if(APP.activeDrumVariant&&APP.sections){const active=APP.sections.find(x=>x.id===APP.activeSectionId);if(active)active.pattern=cloneRhythmData(APP.pattern);APP.drumVariants[APP.activeDrumVariant].sections=cloneRhythmData(APP.sections);}
   applyDrumCandidateState(id);
+  applyArrangementMix(id,{immediate:true});
 }
 let drumOnlyMixSnapshot=null;
 function playDrumCandidateOnly(){
@@ -1209,7 +1210,30 @@ function playBassNote(note,duration,when,section=null,variant='A'){
   sub.triggerAttackRelease(frequency,duration,when,velocity*.72);
   if(velocity>=.48)attack.triggerAttackRelease(Tone.Frequency(pitch+12,'midi').toNote(),'32n',when,Math.min(.55,velocity*.42));
 }
-function updateMixVolumes(){if(drumBus)drumBus.gain.rampTo(Number(document.getElementById('drum-volume').value)/100,.05);if(melodyBus)melodyBus.gain.rampTo(Number(document.getElementById('melody-volume').value)/100,.05);if(bassBus)bassBus.gain.rampTo(Number(document.getElementById('bass-volume').value)/100,.05);if(pianoBus)pianoBus.gain.rampTo(Number(document.getElementById('piano-volume').value)/100,.05);if(guitarBus)guitarBus.gain.rampTo(Number(document.getElementById('guitar-volume').value)/100,.05);}
+const ARRANGEMENT_MIX_PROFILES={
+  A:{label:'BALANCED',description:'メロディ中心・自然な一体感',gain:{drum:.94,melody:1,bass:.94,piano:.96,guitar:.92},bassEQ:{low:-1,mid:-.5,high:-1.5},pianoHP:105,guitarHP:150,pianoPan:-.14,guitarPan:.18,drumComp:{threshold:-19,ratio:2.2,attack:.006,release:.16},master:{threshold:-15,ratio:1.7,attack:.012,release:.22}},
+  B:{label:'SPACIOUS',description:'余白・温かさ・広がり',gain:{drum:.82,melody:1.04,bass:.9,piano:1.04,guitar:.82},bassEQ:{low:.8,mid:-1.6,high:-2},pianoHP:88,guitarHP:175,pianoPan:-.24,guitarPan:.25,drumComp:{threshold:-17,ratio:1.8,attack:.012,release:.22},master:{threshold:-16,ratio:1.55,attack:.022,release:.28}},
+  C:{label:'DRIVING',description:'ドラム・ベース・ギターの推進力',gain:{drum:1.02,melody:.94,bass:1.04,piano:.82,guitar:1.08},bassEQ:{low:-.2,mid:.6,high:-.4},pianoHP:125,guitarHP:125,pianoPan:-.1,guitarPan:.22,drumComp:{threshold:-21,ratio:2.6,attack:.004,release:.13},master:{threshold:-14,ratio:1.9,attack:.009,release:.19}}
+};
+function mixSliderValue(id,fallback){const el=document.getElementById(id);return Number(el?.value??fallback)/100;}
+function mixRamp(param,value,seconds=.08){if(!param)return;if(typeof param.rampTo==='function')param.rampTo(value,seconds);else if('value'in param)param.value=value;}
+function applyArrangementMix(variant=APP.activeDrumVariant||'A',options={}){
+  const key=ARRANGEMENT_MIX_PROFILES[variant]?variant:'A',profile=ARRANGEMENT_MIX_PROFILES[key],seconds=options.immediate?.015:.09;
+  if(options.ensure){getDrumBus();getMelodyBus();getBassBus();getPianoBus();getGuitarBus();}
+  const gains={drum:drumBus,melody:melodyBus,bass:bassBus,piano:pianoBus,guitar:guitarBus};
+  Object.entries(gains).forEach(([name,bus])=>{if(bus)mixRamp(bus.gain,mixSliderValue(name+'-volume',{drum:80,melody:65,bass:72,piano:52,guitar:42}[name])*profile.gain[name],seconds);});
+  if(bassBusEQ){mixRamp(bassBusEQ.low,profile.bassEQ.low,seconds);mixRamp(bassBusEQ.mid,profile.bassEQ.mid,seconds);mixRamp(bassBusEQ.high,profile.bassEQ.high,seconds);}
+  if(pianoToneFilter)mixRamp(pianoToneFilter.frequency,profile.pianoHP,seconds);
+  if(guitarToneFilter)mixRamp(guitarToneFilter.frequency,profile.guitarHP,seconds);
+  if(pianoPan)mixRamp(pianoPan.pan,profile.pianoPan,seconds);
+  if(guitarPan)mixRamp(guitarPan.pan,profile.guitarPan,seconds);
+  if(drumCompressor){mixRamp(drumCompressor.threshold,profile.drumComp.threshold,seconds);mixRamp(drumCompressor.ratio,profile.drumComp.ratio,seconds);mixRamp(drumCompressor.attack,profile.drumComp.attack,seconds);mixRamp(drumCompressor.release,profile.drumComp.release,seconds);}
+  if(masterCompressor){mixRamp(masterCompressor.threshold,profile.master.threshold,seconds);mixRamp(masterCompressor.ratio,profile.master.ratio,seconds);mixRamp(masterCompressor.attack,profile.master.attack,seconds);mixRamp(masterCompressor.release,profile.master.release,seconds);}
+  const status=document.getElementById('arrangement-mix-status');
+  if(status)status.textContent=key+' MIX · '+profile.label+' — '+profile.description;
+  return profile;
+}
+function updateMixVolumes(){applyArrangementMix(APP.activeDrumVariant||'A');}
 document.getElementById('drum-volume').addEventListener('input',updateMixVolumes);
 document.getElementById('melody-volume').addEventListener('input',updateMixVolumes);
 document.getElementById('bass-volume').addEventListener('input',updateMixVolumes);
@@ -1370,6 +1394,7 @@ async function togglePlay(){
   const bpm=PROJ_BPM();
   const baseProject=window.__compositionBaseProject;
   const chordVariant=APP.activeDrumVariant||'A';
+  applyArrangementMix(chordVariant,{ensure:true,immediate:true});
   const importedBass=getPlayableBassNotes(baseProject,APP.bars,APP.timeSig);
   const bassSeed=importedBass.length?importedBass:buildBassNotesFromChords(baseProject,APP.bars,APP.timeSig);
   const bassNotes=buildBassVariantNotes(bassSeed,APP.bars,APP.timeSig,chordVariant);
