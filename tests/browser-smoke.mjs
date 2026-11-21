@@ -49,15 +49,14 @@ try {
   });
 
   await page.goto("http://127.0.0.1:4173/apps/composition-canvas.html", { waitUntil: "domcontentloaded" });
-  await page.waitForFunction(() => typeof window.Tone === "function" || (window.Tone && typeof window.Tone.start === "function"), null, { timeout: 20000 }).catch(() => {});
-  const toneOnCanvas = await page.evaluate(() => typeof window.Tone !== "undefined");
-  assert.equal(toneOnCanvas, true, "Tone.js must load on Composition Canvas");
-
   await Promise.all([
     page.waitForURL(url => url.pathname.endsWith("/apps/beat-lab.html") && url.hash.includes("import="), { timeout: 15000 }),
     page.locator('button[onclick="openStandardTestSongInBeatLab()"]').click()
   ]);
   await page.waitForLoadState("domcontentloaded");
+  await page.waitForFunction(() => typeof window.Tone === "function" || (window.Tone && typeof window.Tone.start === "function"), null, { timeout: 20000 });
+  const toneOnBeatLab = await page.evaluate(() => typeof window.Tone !== "undefined");
+  assert.equal(toneOnBeatLab, true, "Tone.js must load on BEAT//LAB");
   await page.waitForFunction(() => document.getElementById("test-route-intro")?.textContent.includes("標準テスト曲を受信"), null, { timeout: 10000 });
 
   const trackReport = await page.evaluate(() => {
@@ -80,11 +79,11 @@ try {
   await page.locator("#play-btn").click();
   await page.waitForFunction(() => APP.playing === true, null, { timeout: 5000 });
   await page.waitForTimeout(1200);
-  await page.locator("#topbar button").nth(1).click();
+  await page.locator('button[onclick="stopPlay()"]').click();
   await page.waitForFunction(() => APP.playing === false, null, { timeout: 5000 });
 
   assert.deepEqual(runtimeErrors, [], "Browser runtime errors detected:\n" + runtimeErrors.join("\n\n"));
-  console.log("BROWSER_SMOKE_OK " + JSON.stringify({ toneOnCanvas, trackReport, playbackStartedAndStopped: true, runtimeErrors: runtimeErrors.length, consoleErrors }));
+  console.log("BROWSER_SMOKE_OK " + JSON.stringify({ toneOnBeatLab, trackReport, playbackStartedAndStopped: true, runtimeErrors: runtimeErrors.length, consoleErrors }));
 } finally {
   if (browser) await browser.close();
   if (serverListening) await new Promise(resolve => server.close(resolve));
