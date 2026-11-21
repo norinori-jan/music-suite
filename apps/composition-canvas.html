@@ -1448,6 +1448,8 @@ function sendToBeatLab(){
   project.arrangement=window.__lastDrumProject?.arrangement||null;
   project.drumVariants=window.__lastDrumProject?.drumVariants||null;
   project.activeDrumVariant=window.__lastDrumProject?.activeDrumVariant||null;
+  project.activeArrangement=window.__lastDrumProject?.activeArrangement||project.activeDrumVariant||'A';
+  project.arrangements=window.__lastDrumProject?.arrangements||incoming.arrangements||null;
   project.rhythmVariations=window.__lastDrumProject?.rhythmVariations||[];
   project.arrangement=window.__lastDrumProject?.arrangement||null;
   project.bars=window.__lastDrumProject?.bars||2;
@@ -1536,7 +1538,7 @@ function restoreBeatLabProject(project){
       }
     });
   }
-  window.__lastDrumProject={bpm:project.bpm||120,timeSig:project.timeSig||4,bars:project.bars||2,div:project.div||16,drums:project.drums||{notes:[]},bass:project.bass||{notes:[]},piano:project.piano||{notes:[]},guitar:project.guitar||{notes:[]},accompanimentMode:project.accompanimentMode||'generated',chords:project.chords||project.generatedMusic?.chords||null,melody:project.melody||{notes:[]},rhythmVariations:project.rhythmVariations||[],arrangement:project.arrangement||null,drumVariants:project.drumVariants||null,activeDrumVariant:project.activeDrumVariant||null,testMode:project.testMode||null,roundTripBaseline:project.roundTripBaseline||null,roundTripChecks:project.roundTripChecks||null};
+  window.__lastDrumProject={bpm:project.bpm||120,timeSig:project.timeSig||4,bars:project.bars||2,div:project.div||16,drums:project.drums||{notes:[]},bass:project.bass||{notes:[]},piano:project.piano||{notes:[]},guitar:project.guitar||{notes:[]},accompanimentMode:project.accompanimentMode||'generated',chords:project.chords||project.generatedMusic?.chords||null,melody:project.melody||{notes:[]},rhythmVariations:project.rhythmVariations||[],arrangement:project.arrangement||null,drumVariants:project.drumVariants||null,activeDrumVariant:project.activeDrumVariant||null,activeArrangement:project.activeArrangement||project.activeDrumVariant||'A',arrangements:project.arrangements||null,testMode:project.testMode||null,roundTripBaseline:project.roundTripBaseline||null,roundTripChecks:project.roundTripChecks||null};
   const returnBanner=document.getElementById('beatlab-return-banner');
   if(returnBanner)returnBanner.style.display='block';
   const returnStatus=document.getElementById('beatlab-return-status');
@@ -1567,6 +1569,8 @@ function resumeBeatLabWork(){
   project.arrangement=saved.arrangement||null;
   project.drumVariants=saved.drumVariants||null;
   project.activeDrumVariant=saved.activeDrumVariant||null;
+  project.activeArrangement=saved.activeArrangement||saved.activeDrumVariant||'A';
+  project.arrangements=saved.arrangements||null;
   project.rhythmVariations=saved.rhythmVariations||[];
   project.generatedMusic=window.__lyricMusicSketch||incoming.generatedMusic||null;
   project.chords=project.generatedMusic?.chords||saved.chords||incoming.chords||null;
