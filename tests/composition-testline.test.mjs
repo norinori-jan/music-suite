@@ -898,7 +898,12 @@ test("TL-64 A/B/C drum candidates have different section arcs and audio-clock hi
   const html=await readFile(beatLabPath,"utf8");
   assert.match(html,/function playHit\(pitch, vel=1, when\)/,"drum hit playback must accept an audio-clock timestamp");
   assert.match(html,/const v=-18\*\(1-safeVel\),at=Number\.isFinite\(when\)\?when:undefined/);
-  assert.match(html,/playHit\(row\.pitch,vel,Tone\.now\(\)\)/,"sequencer hits must be scheduled against Tone's audio clock");
+  assert.match(html,/const audioAt=Tone\.now\(\)\+0\.012/,"each sequencer tick must use one shared audio-clock timestamp");
+  assert.match(html,/playHit\(row\.pitch,vel,audioAt\)/,"drums must use the shared audio-clock timestamp");
+  assert.match(html,/triggerAttackRelease\(Tone\.Frequency\(note\.pitch/,"bass trigger must exist");
+  assert.match(html,/duration,audioAt,note\.velocity\)/,"bass must use the shared audio-clock timestamp");
+  assert.match(html,/triggerAttackRelease\(Tone\.Frequency\(pitch/,"melody trigger must exist");
+  assert.match(html,/duration,audioAt,velocity\)/,"melody must use the shared audio-clock timestamp");
   const start=html.indexOf("function applyCandidateCoreGroove(pattern,section,variant)");
   const end=html.indexOf("\nfunction createDrumCandidates()",start);
   const APP={div:16,timeSig:4},pk=(r,s)=>r+":"+s,cloneRhythmData=v=>JSON.parse(JSON.stringify(v||{}));
