@@ -723,7 +723,7 @@ test("TL-57 BEAT//LAB plays imported bass notes in sync with melody and drums", 
   const playEnd=html.indexOf("\nfunction stopPlay()",playStart);
   const play=html.slice(playStart,playEnd);
   assert.match(play,/getPlayableBassNotes\(baseProject,APP\.bars,APP\.timeSig\)/);
-  assert.match(play,/playBassNote\(note,duration,audioAt\)/);
+  assert.match(play,/playBassNote\(note,duration,audioAt,activeSection,chordVariant\)/);
   assert.match(play,/Math\.abs\(note\.startBeat-currentBeat\)<bassTolerance/);
   assert.match(html.slice(html.indexOf("function stopPlay()"),html.indexOf("\nfunction PROJ_BPM")),/bassSynth\.triggerRelease\(\)/);
 });
@@ -908,7 +908,7 @@ test("TL-64 A/B/C drum candidates have different section arcs and audio-clock hi
   assert.match(html,/playTimer=setInterval\(scheduleAhead,25\)/,"scheduler must refill audio events independently of UI timer cadence");
   assert.match(html,/nextStepTime\+=stepMs\/1000/,"next steps must advance on the audio clock");
   assert.match(html,/playHit\(row\.pitch,vel,audioAt,false\)/,"drums must use the shared audio-clock timestamp");
-  assert.match(html,/playBassNote\(note,duration,audioAt\)/,"bass trigger must schedule the layered bass voice");
+  assert.match(html,/playBassNote\(note,duration,audioAt,activeSection,chordVariant\)/,"bass trigger must schedule the layered bass voice");
   assert.match(html,/triggerAttackRelease\(Tone\.Frequency\(pitch/,"melody trigger must exist");
   assert.match(html,/duration,audioAt,velocity\)/,"melody must use the shared audio-clock timestamp");
   const start=html.indexOf("function applyCandidateCoreGroove(pattern,section,variant)");
@@ -983,13 +983,13 @@ test("TL-69 bass playback layers sub foundation and transient articulation on on
   assert.match(html,/bassSynth=null,bassSubSynth=null,bassAttackSynth=null/,"bass voices must be independently managed");
   assert.match(html,/function getBassSubSynth\(\)[\s\S]*?oscillator:\{type:'sine'\}[\s\S]*?frequency:115/,"sub layer must be a clean low-passed sine foundation");
   assert.match(html,/function getBassAttackSynth\(\)[\s\S]*?oscillator:\{type:'triangle'\}[\s\S]*?decay:\.032/,"attack layer must be a short upper harmonic");
-  const start=html.indexOf("function playBassNote(note,duration,when)");
+  const start=html.indexOf("function playBassNote(note,duration,when,section=null,variant='A')");
   const end=html.indexOf("\nfunction updateMixVolumes",start);
   const play=html.slice(start,end);
-  assert.match(play,/getBassSynth\(\)\.triggerAttackRelease\(frequency,duration,when,velocity\)/,"main bass body must keep the original pitch and timing");
-  assert.match(play,/getBassSubSynth\(\)\.triggerAttackRelease\(frequency,duration,when,velocity\*\.72\)/,"sub foundation must be phase-aligned to the main note");
-  assert.match(play,/getBassAttackSynth\(\)\.triggerAttackRelease\(Tone\.Frequency\(pitch\+12,'midi'\)\.toNote\(\),'32n',when/,"transient must use an octave harmonic at the same start time");
-  assert.match(html,/playBassNote\(note,duration,audioAt\)/,"sequencer must schedule all bass layers from the same audio timestamp");
+  assert.match(play,/body\.triggerAttackRelease\(frequency,duration,when,velocity\)/,"main bass body must keep the original pitch and timing");
+  assert.match(play,/sub\.triggerAttackRelease\(frequency,duration,when,velocity\*\.72\)/,"sub foundation must be phase-aligned to the main note");
+  assert.match(play,/attack\.triggerAttackRelease\(Tone\.Frequency\(pitch\+12,'midi'\)\.toNote\(\),'32n',when/,"transient must use an octave harmonic at the same start time");
+  assert.match(html,/playBassNote\(note,duration,audioAt,activeSection,chordVariant\)/,"sequencer must schedule all bass layers from the same audio timestamp");
   assert.match(html,/bass: \{\.\.\.\(base\.bass\|\|\{\}\),notes:bassForExport\.map/,"layering must export a normal bass note timeline");
 });
 
@@ -1170,7 +1170,7 @@ test("TL-79 sampled piano loads lazily with synth fallback and distinct electric
 test("TL-80 bass timbre follows song section, register and A/B/C role", async () => {
   const html=await readFile(beatLabPath,"utf8");
   const start=html.indexOf("function getBassSectionTone(section,variant='A',pitch=40)");
-  const end=html.indexOf("\\nfunction playBassNote",start);
+  const end=html.indexOf("\nfunction playBassNote",start);
   assert.ok(start>=0&&end>start,"section-aware bass tone helper must exist");
   const getTone=new Function(html.slice(start,end)+";return getBassSectionTone;")();
   const verse=getTone({label:"Verse"},"A",40);
