@@ -935,8 +935,8 @@ let drumOnlyMixSnapshot=null;
 function playDrumCandidateOnly(){
   if(!APP.drumVariants){if(!createDrumCandidates())return;}
   if(APP.playing){stopPlay();return;}
-  drumOnlyMixSnapshot={melody:document.getElementById('melody-enabled').checked,bass:document.getElementById('bass-enabled').checked};
-  document.getElementById('melody-enabled').checked=false;document.getElementById('bass-enabled').checked=false;
+  drumOnlyMixSnapshot={melody:document.getElementById('melody-enabled').checked,bass:document.getElementById('bass-enabled').checked,piano:document.getElementById('piano-enabled').checked,guitar:document.getElementById('guitar-enabled').checked};
+  ['melody-enabled','bass-enabled','piano-enabled','guitar-enabled'].forEach(id=>{const control=document.getElementById(id);if(control)control.checked=false;});
   const status=document.getElementById('mix-status');if(status)status.textContent='ドラム単独試聴中 — 停止するとミックス設定を元に戻します';
   togglePlay();
 }
@@ -1363,7 +1363,10 @@ function stopPlay(){
   document.querySelectorAll('#play-btn,#play-btn-ex').forEach(b=>{b.textContent='▶';b.classList.remove('active')});
   document.querySelectorAll('.playing-step').forEach(e=>e.classList.remove('playing-step'));
   if(bassSynth)bassSynth.triggerRelease();
-  if(drumOnlyMixSnapshot){document.getElementById('melody-enabled').checked=drumOnlyMixSnapshot.melody;document.getElementById('bass-enabled').checked=drumOnlyMixSnapshot.bass;drumOnlyMixSnapshot=null;const mix=document.getElementById('mix-status');if(mix)mix.textContent='メロディ・ベース・ドラムを同時に試聴できます';}
+  if(bassSubSynth)bassSubSynth.triggerRelease();
+  if(bassAttackSynth)bassAttackSynth.triggerRelease();
+  if(pianoSynth)pianoSynth.releaseAll();
+  if(drumOnlyMixSnapshot){[['melody-enabled','melody'],['bass-enabled','bass'],['piano-enabled','piano'],['guitar-enabled','guitar']].forEach(([id,key])=>{const control=document.getElementById(id);if(control)control.checked=!!drumOnlyMixSnapshot[key];});drumOnlyMixSnapshot=null;const mix=document.getElementById('mix-status');if(mix)mix.textContent='メロディ・ベース・ピアノ・ギター・ドラムを同時に試聴できます';}
   const playhead=document.getElementById('arrangement-playhead');if(playhead)playhead.textContent='停止中';
 }
 function PROJ_BPM(){ return parseInt(document.getElementById('bpm-sl').value); }
