@@ -1442,6 +1442,8 @@ function sendToBeatLab(){
   project.chords=project.generatedMusic?.chords||incoming.generatedMusic?.chords||null;
   project.drums=window.__lastDrumProject?.drums||{notes:[]};
   project.arrangement=window.__lastDrumProject?.arrangement||null;
+  project.drumVariants=window.__lastDrumProject?.drumVariants||null;
+  project.activeDrumVariant=window.__lastDrumProject?.activeDrumVariant||null;
   project.rhythmVariations=window.__lastDrumProject?.rhythmVariations||[];
   project.arrangement=window.__lastDrumProject?.arrangement||null;
   project.bars=window.__lastDrumProject?.bars||2;
@@ -1555,6 +1557,8 @@ function resumeBeatLabWork(){
   project.drums=saved.drums||{notes:[]};
   project.melody=saved.melody||project.melody;
   project.arrangement=saved.arrangement||null;
+  project.drumVariants=saved.drumVariants||null;
+  project.activeDrumVariant=saved.activeDrumVariant||null;
   project.rhythmVariations=saved.rhythmVariations||[];
   project.generatedMusic=window.__lyricMusicSketch||incoming.generatedMusic||null;
   project.chords=project.generatedMusic?.chords||incoming.chords||null;
