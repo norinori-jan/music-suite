@@ -1189,7 +1189,7 @@ function playBassNote(note,duration,when,section=null,variant='A'){
   const pitch=Number(note.pitch),velocity=Math.max(.05,Math.min(1,Number(note.velocity)||.7));
   if(!Number.isInteger(pitch)||pitch<24||pitch>60)return;
   const tone=getBassSectionTone(section,variant,pitch),body=getBassSynth(),sub=getBassSubSynth(),attack=getBassAttackSynth();
-  body.filter.frequency.rampTo(tone.filterHz,.035);body.volume.rampTo(tone.bodyDb,.035);sub.volume.rampTo(tone.subDb,.035);attack.volume.rampTo(tone.attackDb,.035);
+  body.filter.frequency.setValueAtTime(tone.filterHz,when);body.volume.setValueAtTime(tone.bodyDb,when);sub.volume.setValueAtTime(tone.subDb,when);attack.volume.setValueAtTime(tone.attackDb,when);
   const frequency=Tone.Frequency(pitch,'midi').toNote();
   body.triggerAttackRelease(frequency,duration,when,velocity);
   sub.triggerAttackRelease(frequency,duration,when,velocity*.72);
