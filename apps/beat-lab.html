@@ -1185,6 +1185,7 @@ async function togglePlay(){
     if(!APP.playing)return;
     // highlight column
     document.querySelectorAll('.playing-step').forEach(e=>e.classList.remove('playing-step'));
+    const audioAt=Tone.now()+0.012;
     const activeSection=sectionAtStep(APP.playStep);
     const sectionStep=activeSection?sectionPatternStep(activeSection,APP.playStep):APP.playStep;
     const playhead=document.getElementById('arrangement-playhead');
@@ -1194,7 +1195,7 @@ async function togglePlay(){
       const k=pk(row.id,sectionStep),baseVel=drumPattern[k],effectVel=drumEffectVelocity(row.id,APP.playStep,activeSection,sectionStep),vel=effectVel===null?baseVel:effectVel;
       const el=document.getElementById(`sc-${row.id}-${sectionStep}`);
       if(el)el.classList.add('playing-step');
-      if(vel)playHit(row.pitch,vel,Tone.now());
+      if(vel)playHit(row.pitch,vel,audioAt);
     });
     const currentBeat=APP.playStep/stepsPerBeat;
     const melody=window.__compositionBaseProject?.melody?.notes||[];
@@ -1202,7 +1203,7 @@ async function togglePlay(){
       bassNotes.forEach(note=>{
         if(Math.abs(note.startBeat-currentBeat)<bassTolerance){
           const duration=Math.max(.055,note.durationBeats*60/bpm*.9);
-          getBassSynth().triggerAttackRelease(Tone.Frequency(note.pitch,'midi').toNote(),duration,undefined,note.velocity);
+          getBassSynth().triggerAttackRelease(Tone.Frequency(note.pitch,'midi').toNote(),duration,audioAt,note.velocity);
         }
       });
     }
@@ -1214,7 +1215,7 @@ async function togglePlay(){
           if(Number.isFinite(pitch)){
             const duration=Math.max(.06,(Number(n.durationBeats)||.25)*60/bpm*.92);
             const velocity=Math.max(.05,Math.min(1,(Number(n.vel)||88)/127));
-            getMelodySynth().triggerAttackRelease(Tone.Frequency(pitch,'midi').toNote(),duration,undefined,velocity);
+            getMelodySynth().triggerAttackRelease(Tone.Frequency(pitch,'midi').toNote(),duration,audioAt,velocity);
           }
         }
       });
