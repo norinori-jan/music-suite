@@ -1103,3 +1103,15 @@ test("TL-74 selected A B C accompaniment timelines round-trip into score-editor 
   assert.match(score,/if\(data\.guitar\?\.notes\?\.length\)[\s\S]*?addTrack\('counter',[\s\S]*?Guitar/,"score editor must create a dedicated guitar track");
   assert.match(score,/piano:\{notes:tr\('chord'\)\}, guitar:\{notes:tr\('counter'\)\}/,"score editor must export both accompaniment tracks on return");
 });
+
+
+test("TL-75 Composition Canvas preserves selected bass piano and guitar accompaniment across both handoff directions", async () => {
+  const canvas=await readFile(canvasPath,"utf8");
+  assert.match(canvas,/project\.bass=window\.__lastDrumProject\?\.bass\|\|incoming\.bass/,"Canvas → Beat Lab must restore bass timeline");
+  assert.match(canvas,/project\.piano=window\.__lastDrumProject\?\.piano\|\|incoming\.piano/,"Canvas → Beat Lab must restore piano timeline");
+  assert.match(canvas,/project\.guitar=window\.__lastDrumProject\?\.guitar\|\|incoming\.guitar/,"Canvas → Beat Lab must restore guitar timeline");
+  assert.match(canvas,/bass:project\.bass\|\|\{notes:\[\]\},piano:project\.piano\|\|\{notes:\[\]\},guitar:project\.guitar\|\|\{notes:\[\]\}/,"Beat Lab → Canvas must save accompaniment timelines");
+  assert.match(canvas,/project\.bass=saved\.bass\|\|\{notes:\[\]\}/,"resuming Beat Lab must restore bass");
+  assert.match(canvas,/project\.piano=saved\.piano\|\|\{notes:\[\]\}/,"resuming Beat Lab must restore piano");
+  assert.match(canvas,/project\.guitar=saved\.guitar\|\|\{notes:\[\]\}/,"resuming Beat Lab must restore guitar");
+});
