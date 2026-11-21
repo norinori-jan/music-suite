@@ -1114,6 +1114,7 @@ test("TL-75 Composition Canvas preserves selected bass piano and guitar accompan
   assert.match(canvas,/project\.bass=saved\.bass\|\|\{notes:\[\]\}/,"resuming Beat Lab must restore bass");
   assert.match(canvas,/project\.piano=saved\.piano\|\|\{notes:\[\]\}/,"resuming Beat Lab must restore piano");
   assert.match(canvas,/project\.guitar=saved\.guitar\|\|\{notes:\[\]\}/,"resuming Beat Lab must restore guitar");
+  assert.match(canvas,/project\.accompanimentMode=saved\.accompanimentMode\|\|\'generated\'/,"resuming Beat Lab must preserve accompaniment provenance");
 });
 
 
@@ -1127,4 +1128,6 @@ test("TL-76 BEAT//LAB reuses manually edited piano and guitar timelines returned
   assert.deepEqual(events.piano.map(e=>[e.startBeat,e.pitches[0]]),[[0,60],[0,64]],"score-edited piano pitches and timing must take precedence over regenerated chords");
   assert.deepEqual(events.guitar.map(e=>[e.startBeat,e.pitches[0]]),[[1.5,67]],"score-edited guitar notes must be retained");
   assert.equal(events.piano[0].velocity,96/127);
+  assert.match(html,/accompanimentMode:base\.accompanimentMode\|\|\(base\.source===\'score-editor\'\?\'manual\':\'generated\'\)/,"manual accompaniment provenance must survive export");
+  assert.match(score,/accompanimentMode:\'manual\'/,"Score Editor must mark manually edited accompaniment");
 });
