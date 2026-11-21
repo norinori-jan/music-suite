@@ -1120,12 +1120,22 @@ function toggleSwing(){
 // ════════════════════════════════════════════════════════
 // PLAYBACK
 // ════════════════════════════════════════════════════════
-let synthKick=null,synthSnare=null,synthSnareBody=null,synthRim=null,synthHat=null,synthHatFilter=null,synthOpenHat=null,synthCrash=null,synthRide=null,synthPerc=null,melodySynth=null,bassSynth=null,drumBus=null,melodyBus=null,bassBus=null,drumCompressor=null;
+let synthKick=null,synthSnare=null,synthSnareBody=null,synthRim=null,synthHat=null,synthHatFilter=null,synthOpenHat=null,synthCrash=null,synthRide=null,synthPerc=null,melodySynth=null,bassSynth=null,bassSubSynth=null,bassAttackSynth=null,drumBus=null,melodyBus=null,bassBus=null,drumCompressor=null;
 function getDrumBus(){if(!drumBus){drumCompressor=new Tone.Compressor({threshold:-18,ratio:2.6,attack:.004,release:.13,knee:10}).toDestination();drumBus=new Tone.Gain(Number(document.getElementById('drum-volume')?.value??80)/100).connect(drumCompressor);}return drumBus;}
 function getMelodyBus(){if(!melodyBus)melodyBus=new Tone.Gain(Number(document.getElementById('melody-volume')?.value??65)/100).toDestination();return melodyBus;}
 function getBassBus(){if(!bassBus)bassBus=new Tone.Gain(Number(document.getElementById('bass-volume')?.value??72)/100).toDestination();return bassBus;}
 function getMelodySynth(){if(!melodySynth){melodySynth=new Tone.PolySynth(Tone.Synth,{oscillator:{type:'triangle'},envelope:{attack:.015,decay:.12,sustain:.55,release:.22}}).connect(getMelodyBus());melodySynth.volume.value=-5;}return melodySynth;}
 function getBassSynth(){if(!bassSynth){bassSynth=new Tone.MonoSynth({oscillator:{type:'fatsawtooth',count:2,spread:8},filter:{Q:1,type:'lowpass',rolloff:-24},envelope:{attack:.006,decay:.16,sustain:.58,release:.12},filterEnvelope:{attack:.001,decay:.22,sustain:.18,release:.12,baseFrequency:65,octaves:2.4}}).connect(getBassBus());bassSynth.volume.value=-7;}return bassSynth;}
+function getBassSubSynth(){if(!bassSubSynth){bassSubSynth=new Tone.MonoSynth({oscillator:{type:'sine'},filter:{type:'lowpass',frequency:115,rolloff:-24},envelope:{attack:.012,decay:.2,sustain:.72,release:.16}}).connect(getBassBus());bassSubSynth.volume.value=-13;}return bassSubSynth;}
+function getBassAttackSynth(){if(!bassAttackSynth){bassAttackSynth=new Tone.Synth({oscillator:{type:'triangle'},envelope:{attack:.001,decay:.032,sustain:0,release:.018}}).connect(getBassBus());bassAttackSynth.volume.value=-19;}return bassAttackSynth;}
+function playBassNote(note,duration,when){
+  const pitch=Number(note.pitch),velocity=Math.max(.05,Math.min(1,Number(note.velocity)||.7));
+  if(!Number.isInteger(pitch)||pitch<24||pitch>60)return;
+  const frequency=Tone.Frequency(pitch,'midi').toNote();
+  getBassSynth().triggerAttackRelease(frequency,duration,when,velocity);
+  getBassSubSynth().triggerAttackRelease(frequency,duration,when,velocity*.72);
+  if(velocity>=.48)getBassAttackSynth().triggerAttackRelease(Tone.Frequency(pitch+12,'midi').toNote(),'32n',when,Math.min(.55,velocity*.42));
+}
 function updateMixVolumes(){if(drumBus)drumBus.gain.rampTo(Number(document.getElementById('drum-volume').value)/100,.05);if(melodyBus)melodyBus.gain.rampTo(Number(document.getElementById('melody-volume').value)/100,.05);if(bassBus)bassBus.gain.rampTo(Number(document.getElementById('bass-volume').value)/100,.05);}
 document.getElementById('drum-volume').addEventListener('input',updateMixVolumes);
 document.getElementById('melody-volume').addEventListener('input',updateMixVolumes);
@@ -1212,7 +1222,7 @@ async function togglePlay(){
       bassNotes.forEach(note=>{
         if(Math.abs(note.startBeat-currentBeat)<bassTolerance){
           const duration=Math.max(.055,note.durationBeats*60/bpm*.9);
-          getBassSynth().triggerAttackRelease(Tone.Frequency(note.pitch,'midi').toNote(),duration,audioAt,note.velocity);
+          playBassNote(note,duration,audioAt);
         }
       });
     }
