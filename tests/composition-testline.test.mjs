@@ -750,7 +750,7 @@ test("TL-59 BEAT//LAB offers section-aware drum ideas with intentional cymbal an
   assert.match(html,/function getRide\(\)/);
   const sectionStart=html.indexOf("function sectionPatternFrom(base,id)");
   const sectionEnd=html.indexOf("\nfunction ensureArrangementEffects()",sectionStart);
-  const ideaStart=html.indexOf("function buildSectionDrumIdea(basePattern,section,style)");
+  const ideaStart=html.indexOf("function buildSectionDrumIdea(basePattern,section,style,variation='normal')");
   const ideaEnd=html.indexOf("\nfunction applyDrumArrangementIdea(style)",ideaStart);
   assert.ok(sectionStart>=0&&sectionEnd>sectionStart);
   assert.ok(ideaStart>=0&&ideaEnd>ideaStart);
@@ -787,9 +787,9 @@ test("TL-60 BEAT//LAB adds phrase-aware fills and controllable bar variation", a
   assert.match(html,/value="normal" selected/);
   assert.match(html,/value="bold"/);
   const sectionStart=html.indexOf("function sectionPatternFrom(base,id)");
-  const sectionEnd=html.indexOf("\\nfunction ensureArrangementEffects()",sectionStart);
+  const sectionEnd=html.indexOf("\nfunction ensureArrangementEffects()",sectionStart);
   const ideaStart=html.indexOf("function buildSectionDrumIdea(basePattern,section,style,variation='normal')");
-  const ideaEnd=html.indexOf("\\nfunction applyDrumArrangementIdea(style)",ideaStart);
+  const ideaEnd=html.indexOf("\nfunction applyDrumArrangementIdea(style)",ideaStart);
   assert.ok(sectionStart>=0&&sectionEnd>sectionStart);
   assert.ok(ideaStart>=0&&ideaEnd>ideaStart);
   const app={div:16,timeSig:4};
@@ -809,7 +809,7 @@ test("TL-60 BEAT//LAB adds phrase-aware fills and controllable bar variation", a
   assert.ok(chorusNormal["ohat:31"]>0,"chorus gets a cymbal opening on alternating repeated bars");
   assert.ok(chorusNormal["snare:60"]>0,"chorus phrase ending receives a fill");
   const applyStart=html.indexOf("function applyDrumArrangementIdea(style)");
-  const applyEnd=html.indexOf("\\nfunction sectionAtStep(step)",applyStart);
+  const applyEnd=html.indexOf("\nfunction sectionAtStep(step)",applyStart);
   const apply=html.slice(applyStart,applyEnd);
   assert.match(apply,/drum-variation-level/);
   assert.match(apply,/buildSectionDrumIdea\(base,section,selected,variation\)/);
