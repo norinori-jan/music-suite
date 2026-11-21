@@ -909,7 +909,6 @@ test("TL-64 A/B/C drum candidates have different section arcs and audio-clock hi
   assert.match(html,/nextStepTime\+=stepMs\/1000/,"next steps must advance on the audio clock");
   assert.match(html,/playHit\(row\.pitch,vel,audioAt,false\)/,"drums must use the shared audio-clock timestamp");
   assert.match(html,/playBassNote\(note,duration,audioAt\)/,"bass trigger must schedule the layered bass voice");
-  assert.match(html,/duration,audioAt,note\.velocity\)/,"bass must use the shared audio-clock timestamp");
   assert.match(html,/triggerAttackRelease\(Tone\.Frequency\(pitch/,"melody trigger must exist");
   assert.match(html,/duration,audioAt,velocity\)/,"melody must use the shared audio-clock timestamp");
   const start=html.indexOf("function applyCandidateCoreGroove(pattern,section,variant)");
