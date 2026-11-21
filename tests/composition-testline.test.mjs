@@ -962,7 +962,7 @@ test("TL-66 sequencer uses a look-ahead audio scheduler instead of chained UI ti
 test("TL-67 drum bus has gentle compression after its independent mix gain", async () => {
   const html=await readFile(beatLabPath,"utf8");
   assert.match(html,/drumBus=null,[^;]*drumCompressor=null/,"drum compressor must be independently managed");
-  assert.match(html,/drumCompressor=new Tone\.Compressor\(\{threshold:-18,ratio:2\.6,attack:\.004,release:\.13,knee:10\}\)\.toDestination\(\)/,"drum bus compressor must tame peaks without extreme limiting");
+  assert.match(html,/drumCompressor=new Tone\.Compressor\(\{threshold:-19,ratio:2\.2,attack:\.006,release:\.16,knee:10\}\)\.connect\(getMasterBus\(\)\)/,"drum bus compressor must tame peaks without extreme limiting");
   assert.match(html,/drumBus=new Tone\.Gain\([^;]*\)\.connect\(drumCompressor\)/,"drum level control must remain before the compressor");
   assert.match(html,/if\(drumBus\)drumBus\.gain\.rampTo/,"existing drum volume slider must continue to control pre-compressor gain");
 });
@@ -980,13 +980,13 @@ test("TL-68 look-ahead scheduling keeps visual playhead aligned and rejects stal
 
 test("TL-69 bass playback layers sub foundation and transient articulation on one shared pitch clock", async () => {
   const html=await readFile(beatLabPath,"utf8");
-  assert.match(html,/bassSynth=null,bassSubSynth=null,bassAttackSynth=null/,"bass voices must be independently managed");
+  assert.match(html,/bassSynth=null,bassSampler=null,bassSamplerReady=false,bassSamplerFilter=null,bassSubSynth=null,bassAttackSynth=null/,"bass voices must be independently managed");
   assert.match(html,/function getBassSubSynth\(\)[\s\S]*?oscillator:\{type:'sine'\}[\s\S]*?frequency:115/,"sub layer must be a clean low-passed sine foundation");
   assert.match(html,/function getBassAttackSynth\(\)[\s\S]*?oscillator:\{type:'triangle'\}[\s\S]*?decay:\.032/,"attack layer must be a short upper harmonic");
   const start=html.indexOf("function playBassNote(note,duration,when,section=null,variant='A')");
   const end=html.indexOf("\nfunction updateMixVolumes",start);
   const play=html.slice(start,end);
-  assert.match(play,/body\.triggerAttackRelease\(frequency,duration,when,velocity\)/,"main bass body must keep the original pitch and timing");
+  assert.match(play,/else body\.triggerAttackRelease\(frequency,duration,when,velocity\)/,"main bass body must keep the original pitch and timing");
   assert.match(play,/sub\.triggerAttackRelease\(frequency,duration,when,velocity\*\.72\)/,"sub foundation must be phase-aligned to the main note");
   assert.match(play,/attack\.triggerAttackRelease\(Tone\.Frequency\(pitch\+12,'midi'\)\.toNote\(\),'32n',when/,"transient must use an octave harmonic at the same start time");
   assert.match(html,/playBassNote\(note,duration,audioAt,activeSection,chordVariant\)/,"sequencer must schedule all bass layers from the same audio timestamp");
@@ -1138,7 +1138,7 @@ test("TL-76 BEAT//LAB reuses manually edited piano and guitar timelines returned
 test("TL-77 piano and guitar buses use separate high-pass filters to protect bass headroom", async () => {
   const html=await readFile(beatLabPath,"utf8");
   assert.match(html,/pianoToneFilter=new Tone\.Filter\(105,'highpass'\)\.connect\(pianoPan\)/,"piano bus must trim unnecessary sub-bass");
-  assert.match(html,/guitarToneFilter=new Tone\.Filter\(155,'highpass'\)\.connect\(guitarPan\)/,"guitar bus must leave more low-frequency room for bass");
+  assert.match(html,/guitarToneFilter=new Tone\.Filter\(145,'highpass'\)\.connect\(guitarCompressor\)/,"guitar bus must leave more low-frequency room for bass");
   assert.match(html,/pianoBus=new Tone\.Gain\([^;]*\)\.connect\(pianoToneFilter\)/,"piano level must remain independently adjustable before filtering");
   assert.match(html,/guitarBus=new Tone\.Gain\([^;]*\)\.connect\(guitarToneFilter\)/,"guitar level must remain independently adjustable before filtering");
 });
@@ -1146,10 +1146,10 @@ test("TL-77 piano and guitar buses use separate high-pass filters to protect bas
 
 test("TL-78 piano and guitar occupy subtly separated stereo positions", async () => {
   const html=await readFile(beatLabPath,"utf8");
-  assert.match(html,/pianoPan=new Tone\.Panner\(-\.16\)\.toDestination\(\)/,"piano should sit slightly left of center");
-  assert.match(html,/guitarPan=new Tone\.Panner\(\.18\)\.toDestination\(\)/,"guitar should sit slightly right of center");
+  assert.match(html,/pianoPan=new Tone\.Panner\(-\.16\)\.connect\(getMasterBus\(\)\)/,"piano should sit slightly left of center");
+  assert.match(html,/guitarPan=new Tone\.Panner\(\.2\)\.connect\(getMasterBus\(\)\)/,"guitar should sit slightly right of center");
   assert.match(html,/pianoToneFilter=new Tone\.Filter\(105,'highpass'\)\.connect\(pianoPan\)/,"piano filter must feed its stereo position");
-  assert.match(html,/guitarToneFilter=new Tone\.Filter\(155,'highpass'\)\.connect\(guitarPan\)/,"guitar filter must feed its stereo position");
+  assert.match(html,/guitarToneFilter=new Tone\.Filter\(145,'highpass'\)\.connect\(guitarCompressor\)/,"guitar filter must feed its stereo position");
 });
 
 
@@ -1159,7 +1159,7 @@ test("TL-79 sampled piano loads lazily with synth fallback and distinct electric
   assert.match(html,/baseUrl:'https:\/\/tonejs\.github\.io\/audio\/salamander\//,"piano samples must use the public Salamander sample set");
   assert.match(html,/const sampler=getPianoSampler\(\);[\s\S]*?if\(pianoSamplerReady&&sampler\)sampler\.triggerAttackRelease[\s\S]*?else getPianoSynth\(\)\.triggerAttackRelease/,"piano playback must fall back to the synth while samples load or fail");
   assert.match(html,/new Tone\.PluckSynth\(\{attackNoise:[\s\S]*?\}\)\.connect\(getGuitarBus\(\)\)/,"acoustic guitar must retain a plucked-string voice");
-  assert.match(html,/new Tone\.PolySynth\(Tone\.Synth,\{oscillator:\{type:'fatsawtooth',count:3,spread:9\}/,"electric guitar must use a separate sustained voice");
+  assert.match(html,/new Tone\.PolySynth\(Tone\.Synth,\{oscillator:\{type:'fatsawtooth',count:3,spread:7\}/,"electric guitar must use a separate sustained voice");
   assert.match(html,/new Tone\.Distortion\(\.12\)/,"electric guitar must have its own mild drive stage");
   assert.match(html,/new Tone\.Chorus\(1\.7,2\.1,\.12\)/,"electric guitar must have a separate modulation stage");
   assert.match(html,/instrument:'electric'/,"C arrangement must select the electric guitar voice");
@@ -1196,7 +1196,7 @@ test("TL-81 section-specific bass timbre changes are scheduled at note audio tim
   const end=html.indexOf("\nfunction updateMixVolumes",start);
   assert.ok(start>=0&&end>start);
   const play=html.slice(start,end);
-  for(const expression of ["body.filter.frequency.setValueAtTime(tone.filterHz,when)","body.volume.setValueAtTime(tone.bodyDb,when)","sub.volume.setValueAtTime(tone.subDb,when)","attack.volume.setValueAtTime(tone.attackDb,when)"]){
+  for(const expression of ["body.filter.frequency.setValueAtTime(tone.filterHz,when)","body.volume.setValueAtTime(tone.bodyDb-1,when)","sub.volume.setValueAtTime(tone.subDb,when)","attack.volume.setValueAtTime(tone.attackDb,when)"]){
     assert.ok(play.includes(expression),expression+" must follow the same Web Audio clock as the note");
   }
   assert.doesNotMatch(play,/\.rampTo\(tone\./,"look-ahead scheduling must not apply future section tone changes immediately");
