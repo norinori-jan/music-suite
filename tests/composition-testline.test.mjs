@@ -880,3 +880,15 @@ test("TL-62 A/B/C drum candidates survive JSON and Composition Canvas handoff", 
   assert.equal(restored.drumVariants.A.sections[0].pattern["kick:0"],.9,"editing B must not alter A");
   assert.equal(restored.drumVariants.C.sections[0].pattern["kick:6"],.8,"editing B must not alter C");
 });
+
+
+test("TL-63 selected drum candidate exports to the score editor as a timeline-aligned drum track", async () => {
+  const beat=await readFile(beatLabPath,"utf8");
+  const score=await readFile(path.join(here,"..","apps","score-editor-v2.html"),"utf8");
+  assert.match(beat,/sections\.forEach\(section=>\{const start=\(section\.startBar-1\)\*APP\.timeSig\*stepsPerBeat/,"section start bars must be converted to absolute beat positions");
+  assert.match(beat,/notes\.push\(\{pitch:row\.pitch,startBeat:\+\(\(start\+local\)\*beatPerStep\)/,"exported drum notes must use the same row pitch and absolute timeline");
+  assert.match(score,/if\(data\.drums\?\.notes\?\.length\)/,"score editor must receive the exported drum timeline");
+  assert.match(score,/addTrack\('drum',[\s\S]*?notes\)/,"score editor must create a dedicated drum track");
+  assert.match(score,/switchView\('roll'\)/,"import must open the track/roll view for visual verification");
+  assert.match(score,/const notes=data\.drums\.notes\.map\(n=>\(\{\.\.\.n,id:uid\(\),vel:n\.vel\|\|80\}\)\)/,"score editor must retain each drum note's pitch, startBeat and velocity");
+});
