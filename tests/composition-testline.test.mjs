@@ -1325,3 +1325,30 @@ test("TL-88 Score Editor preserves inactive A/B/C snapshots and updates only the
   assert.match(score,/arrangement:PROJ\.arrangement, drumVariants:PROJ\.drumVariants, activeDrumVariant:PROJ\.activeDrumVariant/);
   assert.match(score,/activeArrangement, arrangements, exported:new Date\(\)\.toISOString\(\)/);
 });
+
+
+test("TL-89 arrangement grooves have distinct musical articulation rather than mix-only changes", async () => {
+  const html=await readFile(beatLabPath,"utf8");
+  const chordStart=html.indexOf("function chordSymbolToPitches(symbol,octave=4)");
+  const chordEnd=html.indexOf("\n\n\n\nfunction buildBassNotesFromChords",chordStart);
+  assert.ok(chordStart>=0&&chordEnd>chordStart);
+  const chordHelpers=new Function(html.slice(chordStart,chordEnd)+"\nreturn {chordSymbolToPitches,getPlayableChordEvents};")();
+  const progression={chords:[{chord:"C",beats:4},{chord:"Am7",beats:4},{chord:"F",beats:4},{chord:"G",beats:4}]};
+  const A=chordHelpers.getPlayableChordEvents(progression,4,4,"A");
+  const B=chordHelpers.getPlayableChordEvents(progression,4,4,"B");
+  const C=chordHelpers.getPlayableChordEvents(progression,4,4,"C");
+  assert.ok(A.piano.some(e=>e.pitches.length>=3&&e.durationBeats>=2),"A piano should sustain block harmony");
+  assert.ok(B.piano.every(e=>e.pitches.length===1&&e.durationBeats<1),"B piano should use short, separated arpeggio tones");
+  assert.ok(C.piano.every(e=>e.durationBeats<=.48),"C piano should use short rhythmic stabs");
+  assert.ok(C.guitar.some(e=>Math.abs((e.startBeat%1)-.25)<.001),"C guitar should accent off-beat subdivisions");
+  assert.ok(A.guitar.length<B.guitar.length&&B.guitar.length<C.guitar.length,"guitar density should progress from restrained to ostinato");
+  const bassStart=html.indexOf("function buildBassVariantNotes(notes,bars,timeSig=4,variant='A')");
+  const bassEnd=html.indexOf("\n\nfunction getPlayableBassNotes",bassStart);
+  const buildBass=new Function(html.slice(bassStart,bassEnd)+"\nreturn buildBassVariantNotes;")();
+  const bassSource=[{id:"root1",pitch:36,startBeat:0,durationBeats:1,velocity:.8},{id:"fifth1",pitch:43,startBeat:2,durationBeats:1,velocity:.7},{id:"root2",pitch:38,startBeat:4,durationBeats:1,velocity:.8},{id:"fifth2",pitch:45,startBeat:6,durationBeats:1,velocity:.7}];
+  const bassA=buildBass(bassSource,2,4,"A"),bassB=buildBass(bassSource,2,4,"B"),bassC=buildBass(bassSource,2,4,"C");
+  assert.equal(bassA.length,bassSource.length,"A bass should keep the steady foundation");
+  assert.equal(bassB.length,2,"B bass should hold one low anchor per bar");
+  assert.ok(bassB.every(n=>n.durationBeats>=3.9),"B bass should sustain long notes");
+  assert.ok(bassC.some(n=>n.id.endsWith("-pickup"))&&bassC.some(n=>n.id.endsWith("-oct")),"C bass should add pickups and octave articulation");
+});
