@@ -778,3 +778,39 @@ test("TL-59 BEAT//LAB offers section-aware drum ideas with intentional cymbal an
   assert.ok(Object.keys(cinematic[2]).some(k=>k.startsWith("ride:")),"cinematic chorus should use ride");
   assert.match(html,/try\{Tone\.start\(\);\}catch\(e\)\{\}/,"single-cell audition must still activate audio");
 });
+
+
+test("TL-60 BEAT//LAB adds phrase-aware fills and controllable bar variation", async () => {
+  const html=await readFile(beatLabPath,"utf8");
+  assert.match(html,/id="drum-variation-level"/);
+  assert.match(html,/value="light"/);
+  assert.match(html,/value="normal" selected/);
+  assert.match(html,/value="bold"/);
+  const sectionStart=html.indexOf("function sectionPatternFrom(base,id)");
+  const sectionEnd=html.indexOf("\\nfunction ensureArrangementEffects()",sectionStart);
+  const ideaStart=html.indexOf("function buildSectionDrumIdea(basePattern,section,style,variation='normal')");
+  const ideaEnd=html.indexOf("\\nfunction applyDrumArrangementIdea(style)",ideaStart);
+  assert.ok(sectionStart>=0&&sectionEnd>sectionStart);
+  assert.ok(ideaStart>=0&&ideaEnd>ideaStart);
+  const app={div:16,timeSig:4};
+  const pk=(row,step)=>row+":"+step;
+  const sectionPatternFrom=new Function("APP","pk",html.slice(sectionStart,sectionEnd)+";return sectionPatternFrom;")(app,pk);
+  const build=new Function("APP","pk","sectionPatternFrom",html.slice(ideaStart,ideaEnd)+";return buildSectionDrumIdea;")(app,pk,sectionPatternFrom);
+  const verse={id:"verse",startBar:1,endBar:4};
+  const chorus={id:"chorus",startBar:1,endBar:4};
+  const base={"kick:0":1,"snare:4":.8,"hat:0":.7};
+  const light=build(base,verse,"balanced","light");
+  const normal=build(base,verse,"balanced","normal");
+  const bold=build(base,verse,"balanced","bold");
+  assert.equal(light["snare:60"],undefined,"light mode does not force a final-bar fill");
+  assert.ok(normal["snare:60"]>0||normal["tom1:61"]>0,"normal mode adds a short phrase-ending fill");
+  assert.ok(Object.keys(bold).some(k=>k.startsWith("perc:")),"bold verse variation adds an extra accent");
+  const chorusNormal=build(base,chorus,"balanced","normal");
+  assert.ok(chorusNormal["ohat:31"]>0,"chorus gets a cymbal opening on alternating repeated bars");
+  assert.ok(chorusNormal["snare:60"]>0,"chorus phrase ending receives a fill");
+  const applyStart=html.indexOf("function applyDrumArrangementIdea(style)");
+  const applyEnd=html.indexOf("\\nfunction sectionAtStep(step)",applyStart);
+  const apply=html.slice(applyStart,applyEnd);
+  assert.match(apply,/drum-variation-level/);
+  assert.match(apply,/buildSectionDrumIdea\(base,section,selected,variation\)/);
+});
