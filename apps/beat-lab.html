@@ -919,7 +919,8 @@ function createDrumCandidates(){
 }
 function applyDrumCandidateState(id){
   const variant=APP.drumVariants?.[id];if(!variant)return false;
-  APP.sections=cloneRhythmData(variant.sections);APP.activeDrumVariant=id;
+  const canonicalSections=APP.arrangements?.[id]?.sections;
+  APP.sections=cloneRhythmData(Array.isArray(canonicalSections)&&canonicalSections.length?canonicalSections:variant.sections);APP.activeDrumVariant=id;
   const active=APP.sections.find(x=>x.id===APP.activeSectionId)||APP.sections[0];APP.activeSectionId=active.id;APP.pattern=cloneRhythmData(active.pattern);
   renderArrangementControls();renderStepGrid();
   captureArrangementTrackSnapshot(id,APP.sections,false);
