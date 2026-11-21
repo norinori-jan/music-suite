@@ -964,7 +964,7 @@ test("TL-67 drum bus has gentle compression after its independent mix gain", asy
   assert.match(html,/drumBus=null,[^;]*drumCompressor=null/,"drum compressor must be independently managed");
   assert.match(html,/drumCompressor=new Tone\.Compressor\(\{threshold:-19,ratio:2\.2,attack:\.006,release:\.16,knee:10\}\)\.connect\(getMasterBus\(\)\)/,"drum bus compressor must tame peaks without extreme limiting");
   assert.match(html,/drumBus=new Tone\.Gain\([^;]*\)\.connect\(drumCompressor\)/,"drum level control must remain before the compressor");
-  assert.match(html,/if\(drumBus\)drumBus\.gain\.rampTo/,"existing drum volume slider must continue to control pre-compressor gain");
+  assert.match(html,/function applyArrangementMix\([\s\S]*?mixRamp\(bus\.gain,[\s\S]*?profile\.gain\[name\]/,"existing drum volume slider must continue to control pre-compressor gain with its A/B/C multiplier");
 });
 
 
@@ -999,7 +999,8 @@ test("TL-70 piano and guitar accompaniment creates genuinely different A B C cho
   for(const id of ["piano-enabled","piano-volume","guitar-enabled","guitar-volume"])assert.match(html,new RegExp('id="'+id+'"'),id+" control must exist");
   assert.match(html,/function getPianoSynth\(\)[\s\S]*?new Tone\.PolySynth/,"piano must have its own polyphonic voice");
   assert.match(html,/function getGuitarSynth\(\)[\s\S]*?new Tone\.PluckSynth/,"guitar must have a plucked voice");
-  assert.match(html,/function updateMixVolumes\(\)[\s\S]*?pianoBus\.gain\.rampTo[\s\S]*?guitarBus\.gain\.rampTo/,"piano and guitar must have independent mix controls");
+  assert.match(html,/const gains=\{drum:drumBus,melody:melodyBus,bass:bassBus,piano:pianoBus,guitar:guitarBus\}/,"piano and guitar must have independent mix controls");
+  assert.match(html,/Object\.entries\(gains\)\.forEach\(\(\[name,bus\]\)=>\{if\(bus\)mixRamp\(bus\.gain/,"each instrument bus must keep an independently adjustable gain");
   const start=html.indexOf("function chordSymbolToPitches(symbol,octave=4)");
   const end=html.indexOf("\nfunction getPlayableBassNotes",start);
   assert.ok(start>=0&&end>start,"chord voicing and arrangement helpers must exist");
