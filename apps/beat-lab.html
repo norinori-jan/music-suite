@@ -597,6 +597,7 @@ const APP={
   sections:null, activeSectionId:null,
   arrangementEffects:{fillBeforeChorus:true,breakBars:[],finalVariation:true},
   drumVariants:null, activeDrumVariant:null,
+  arrangements:null,
 };
 
 // Imported timeline drums remain authoritative until the user edits the sequencer.
@@ -910,8 +911,9 @@ function createDrumCandidates(){
     });
     variants[id]={label:def.label,sections};
   });
-  APP.drumVariants=variants;APP.activeDrumVariant='A';
+  APP.drumVariants=variants;APP.activeDrumVariant='A';APP.arrangements={};
   applyDrumCandidateState('A');
+  ensureArrangementTrackSnapshots(true);
   const status=document.getElementById('drum-candidate-status');if(status)status.textContent='A・B・Cを生成しました。ドラム単独／全体再生で比較できます';
   return true;
 }
@@ -920,6 +922,7 @@ function applyDrumCandidateState(id){
   APP.sections=cloneRhythmData(variant.sections);APP.activeDrumVariant=id;
   const active=APP.sections.find(x=>x.id===APP.activeSectionId)||APP.sections[0];APP.activeSectionId=active.id;APP.pattern=cloneRhythmData(active.pattern);
   renderArrangementControls();renderStepGrid();
+  captureArrangementTrackSnapshot(id,APP.sections,false);
   ['A','B','C'].forEach(key=>document.getElementById('drum-candidate-'+key)?.classList.toggle('on',key===id));
   const status=document.getElementById('drum-candidate-status');if(status)status.textContent=id+'案：'+variant.label+' — '+APP.sections.length+'区間を切替';
   return true;
@@ -928,7 +931,7 @@ function selectDrumCandidate(id){
   if(APP.playing)stopPlay();
   drumPatternEdited=true;
   if(!APP.drumVariants){if(!createDrumCandidates())return;}
-  else if(APP.activeDrumVariant&&APP.sections){const active=APP.sections.find(x=>x.id===APP.activeSectionId);if(active)active.pattern=cloneRhythmData(APP.pattern);APP.drumVariants[APP.activeDrumVariant].sections=cloneRhythmData(APP.sections);}
+  else if(APP.activeDrumVariant&&APP.sections){const active=APP.sections.find(x=>x.id===APP.activeSectionId);if(active)active.pattern=cloneRhythmData(APP.pattern);APP.drumVariants[APP.activeDrumVariant].sections=cloneRhythmData(APP.sections);captureArrangementTrackSnapshot(APP.activeDrumVariant,APP.sections,true);}
   applyDrumCandidateState(id);
   applyArrangementMix(id,{immediate:true});
 }
@@ -1381,6 +1384,70 @@ function getPlayableBassNotes(project,bars,timeSig=4){
     .sort((a,b)=>a.startBeat-b.startBeat);
 }
 
+
+/* Canonical independent A/B/C arrangement snapshots. */
+function arrangementDrumNotesFromSections(sections,project){
+  if(!Array.isArray(sections)||!sections.length)return cloneRhythmData(project?.drums?.notes||[]);
+  const timeSig=Math.max(1,Number(project?.timeSig)||APP.timeSig||4);
+  const div=[4,8,16,32].includes(Number(project?.div))?Number(project.div):APP.div;
+  const stepsPerBeat=div/4,beatPerStep=1/stepsPerBeat,notes=[];
+  sections.forEach(section=>{
+    const start=(Number(section.startBar)-1)*timeSig*stepsPerBeat;
+    const len=(Number(section.endBar)-Number(section.startBar)+1)*timeSig*stepsPerBeat;
+    for(let local=0;local<len;local++)ROWS.forEach(row=>{
+      const vel=section.pattern?.[pk(row.id,local)];
+      if(vel)notes.push({pitch:row.pitch,startBeat:+((start+local)*beatPerStep).toFixed(4),durationBeats:+(beatPerStep*.9).toFixed(4),vel:Math.round(40+vel*87),section:section.id});
+    });
+  });
+  return notes;
+}
+function buildArrangementTrackSnapshot(project,variant,sections){
+  const id=['A','B','C'].includes(variant)?variant:'A';
+  const importedBass=getPlayableBassNotes(project,APP.bars,APP.timeSig);
+  const bassSeed=importedBass.length?importedBass:buildBassNotesFromChords(project,APP.bars,APP.timeSig);
+  const bass=buildBassVariantNotes(bassSeed,APP.bars,APP.timeSig,id).map(note=>({
+    pitch:Number(note.pitch),startBeat:+Number(note.startBeat).toFixed(4),
+    durationBeats:+Number(note.durationBeats).toFixed(4),
+    vel:Math.round(Math.max(.05,Math.min(1,Number(note.velocity)||.7))*127)
+  }));
+  const chords=getPlayableChordEvents(project,APP.bars,APP.timeSig,id);
+  const toNotes=events=>events.flatMap(event=>event.pitches.map(pitch=>({
+    pitch:Number(pitch),startBeat:+Number(event.startBeat).toFixed(4),
+    durationBeats:+Number(event.durationBeats).toFixed(4),
+    vel:Math.round(Math.max(.05,Math.min(1,Number(event.velocity)||.6))*127)
+  })));
+  const drumSections=Array.isArray(sections)?cloneRhythmData(sections):null;
+  return {version:1,id,label:({A:'BALANCED',B:'SPACIOUS',C:'DRIVING'})[id],
+    tracks:{melody:{notes:cloneRhythmData(project?.melody?.notes||[])},
+      piano:{notes:toNotes(chords.piano)},guitar:{notes:toNotes(chords.guitar)},
+      bass:{notes:bass},drums:{notes:arrangementDrumNotesFromSections(drumSections,project)}},
+    sections:drumSections};
+}
+function captureArrangementTrackSnapshot(variant,sections=null,force=false){
+  const id=['A','B','C'].includes(variant)?variant:'A';
+  if(!APP.arrangements||typeof APP.arrangements!=='object')APP.arrangements={};
+  if(APP.arrangements[id]&&!force)return APP.arrangements[id];
+  const sourceSections=sections||APP.drumVariants?.[id]?.sections||(id===APP.activeDrumVariant?APP.sections:null);
+  APP.arrangements[id]=buildArrangementTrackSnapshot(window.__compositionBaseProject||{},id,sourceSections);
+  return APP.arrangements[id];
+}
+function ensureArrangementTrackSnapshots(force=false){
+  ['A','B','C'].forEach(id=>{
+    const sections=APP.drumVariants?.[id]?.sections||(id===APP.activeDrumVariant?APP.sections:null);
+    if(sections||!APP.arrangements?.[id])captureArrangementTrackSnapshot(id,sections,force);
+  });
+  return APP.arrangements||{};
+}
+function syncActiveArrangementTrackSnapshot(){
+  const id=APP.activeDrumVariant||'A';
+  const sections=Array.isArray(APP.sections)?cloneRhythmData(APP.sections):null;
+  if(sections){
+    const active=sections.find(section=>section.id===APP.activeSectionId);
+    if(active)active.pattern=cloneRhythmData(APP.pattern);
+    if(APP.drumVariants?.[id])APP.drumVariants[id].sections=cloneRhythmData(sections);
+  }
+  return captureArrangementTrackSnapshot(id,sections,true);
+}
 async function togglePlay(){
   await Tone.start();
   if(APP.playing){ stopPlay(); return; }
