@@ -998,6 +998,8 @@ function getRide(){if(!synthRide){synthRide=new Tone.MetalSynth({frequency:520,e
 function getPerc(){ if(!synthPerc){synthPerc=new Tone.MembraneSynth({pitchDecay:.02,octaves:3,envelope:{attack:.001,decay:.1,sustain:0,release:.05}}).connect(getDrumBus());synthPerc.volume.value=-10;} return synthPerc; }
 
 function playHit(pitch, vel=1){
+  // STEPセルの単発試聴でもAudioContextを起動する（再生ループ側の開始処理にも依存しない）。
+  try{Tone.start();}catch(e){}
   const safeVel=Math.max(.05,Math.min(1,Number(vel)||.05));
   const v=-18*(1-safeVel);
   if(pitch===36){const x=getKick();x.volume.value=-4+v;x.triggerAttackRelease('C1','8n');}
