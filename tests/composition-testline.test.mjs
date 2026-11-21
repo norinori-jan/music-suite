@@ -976,3 +976,19 @@ test("TL-68 look-ahead scheduling keeps visual playhead aligned and rejects stal
   assert.match(html,/APP\.playing=false;playbackGeneration\+\+/,"stopping playback must invalidate queued visual callbacks");
   assert.match(html,/const stepIndex=APP\.playStep/,"visual and audio scheduling must use the same captured step index");
 });
+
+
+test("TL-69 bass playback layers sub foundation and transient articulation on one shared pitch clock", async () => {
+  const html=await readFile(beatLabPath,"utf8");
+  assert.match(html,/bassSynth=null,bassSubSynth=null,bassAttackSynth=null/,"bass voices must be independently managed");
+  assert.match(html,/function getBassSubSynth\(\)[\s\S]*?oscillator:\{type:'sine'\}[\s\S]*?frequency:115/,"sub layer must be a clean low-passed sine foundation");
+  assert.match(html,/function getBassAttackSynth\(\)[\s\S]*?oscillator:\{type:'triangle'\}[\s\S]*?decay:\.032/,"attack layer must be a short upper harmonic");
+  const start=html.indexOf("function playBassNote(note,duration,when)");
+  const end=html.indexOf("\nfunction updateMixVolumes",start);
+  const play=html.slice(start,end);
+  assert.match(play,/getBassSynth\(\)\.triggerAttackRelease\(frequency,duration,when,velocity\)/,"main bass body must keep the original pitch and timing");
+  assert.match(play,/getBassSubSynth\(\)\.triggerAttackRelease\(frequency,duration,when,velocity\*\.72\)/,"sub foundation must be phase-aligned to the main note");
+  assert.match(play,/getBassAttackSynth\(\)\.triggerAttackRelease\(Tone\.Frequency\(pitch\+12,'midi'\)\.toNote\(\),'32n',when/,"transient must use an octave harmonic at the same start time");
+  assert.match(html,/playBassNote\(note,duration,audioAt\)/,"sequencer must schedule all bass layers from the same audio timestamp");
+  assert.match(html,/bass: base\.bass\|\|\{notes:\[\]\}/,"layering must not alter the saved bass note data format");
+});
