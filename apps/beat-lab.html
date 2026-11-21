@@ -953,7 +953,7 @@ function restoreSongArrangement(data,projectData=null){
   APP.sections=cloneRhythmData(data.sections).map(x=>{if(!x.effects){x.effects={fillBeforeChorus:x.id==='chorus',fillBars:1,fillDensity:'normal',finalVariation:x.id==='final',finalStyle:'accent'};}return x;});
   const savedVariants=projectData?.drumVariants||data.drumVariants;
   APP.drumVariants=savedVariants&&typeof savedVariants==='object'?cloneRhythmData(savedVariants):null;
-  APP.activeDrumVariant=projectData?.activeDrumVariant||data.activeDrumVariant||null;
+  APP.activeDrumVariant=projectData?.activeDrumVariant||projectData?.activeArrangement||data.activeDrumVariant||data.activeArrangement||null;
   // The active arrangement is authoritative: retain any last-minute edits made
   // after the candidate was selected, rather than restoring a stale candidate copy.
   if(APP.drumVariants&&APP.activeDrumVariant&&APP.drumVariants[APP.activeDrumVariant]){
@@ -967,6 +967,7 @@ function restoreSongArrangement(data,projectData=null){
   ['A','B','C'].forEach(key=>document.getElementById('drum-candidate-'+key)?.classList.toggle('on',key===APP.activeDrumVariant));
   const status=document.getElementById('drum-candidate-status');
   if(status)status.textContent=APP.drumVariants?(APP.activeDrumVariant||'A')+'案を復元しました。A/B/Cを切り替えて比較できます':'A/B/C候補は未生成です';
+  ensureArrangementTrackSnapshots(false);
   return true;
 }
 function renderStepGrid(){
@@ -2374,8 +2375,9 @@ function checkIncomingImport(){
       if(!Number.isFinite(step)||step<0||step>=APP.bars*APP.timeSig*stepsPerBeat)return;
       APP.pattern[pk(row.id,step)]=decodeImportedDrumVelocity(n,data);
     });
-    if(data.arrangement)restoreSongArrangement(data.arrangement);
-    else{APP.sections=null;APP.activeSectionId=null;APP.arrangementEffects={fillBeforeChorus:true,breakBars:[],finalVariation:true};}
+    if(data.arrangements&&typeof data.arrangements==='object')APP.arrangements=cloneRhythmData(data.arrangements);else APP.arrangements=null;
+    if(data.arrangement)restoreSongArrangement(data.arrangement,data);
+    else{APP.sections=null;APP.activeSectionId=null;APP.drumVariants=null;APP.activeDrumVariant=data.activeArrangement||data.activeDrumVariant||null;APP.arrangementEffects={fillBeforeChorus:true,breakBars:[],finalVariation:true};}
     history.replaceState(null,'',window.location.pathname);
     setStatus('ok','データを受信しました: '+(data.name||''));
     renderStepGrid();
