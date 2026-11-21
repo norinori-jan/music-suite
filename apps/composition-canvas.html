@@ -1439,7 +1439,7 @@ function sendToBeatLab(){
   project.bpm=Number(incoming.bpm)||Number(document.getElementById('note-sequence-bpm')?.value)||120;
   project.timeSig=4;
   project.generatedMusic=window.__lyricMusicSketch||incoming.generatedMusic||null;
-  project.chords=project.generatedMusic?.chords||incoming.generatedMusic?.chords||null;
+  project.chords=project.generatedMusic?.chords||window.__lastDrumProject?.chords||incoming.chords||incoming.generatedMusic?.chords||null;
   project.drums=window.__lastDrumProject?.drums||{notes:[]};
   project.bass=window.__lastDrumProject?.bass||incoming.bass||{notes:[]};
   project.piano=window.__lastDrumProject?.piano||incoming.piano||{notes:[]};
