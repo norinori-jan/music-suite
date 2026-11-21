@@ -992,3 +992,32 @@ test("TL-69 bass playback layers sub foundation and transient articulation on on
   assert.match(html,/playBassNote\(note,duration,audioAt\)/,"sequencer must schedule all bass layers from the same audio timestamp");
   assert.match(html,/bass: base\.bass\|\|\{notes:\[\]\}/,"layering must not alter the saved bass note data format");
 });
+
+
+test("TL-70 piano and guitar accompaniment creates genuinely different A B C chord roles", async () => {
+  const html=await readFile(beatLabPath,"utf8");
+  for(const id of ["piano-enabled","piano-volume","guitar-enabled","guitar-volume"])assert.match(html,new RegExp('id="'+id+'"'),id+" control must exist");
+  assert.match(html,/function getPianoSynth\(\)[\s\S]*?new Tone\.PolySynth/,"piano must have its own polyphonic voice");
+  assert.match(html,/function getGuitarSynth\(\)[\s\S]*?new Tone\.PluckSynth/,"guitar must have a plucked voice");
+  assert.match(html,/function updateMixVolumes\(\)[\s\S]*?pianoBus\.gain\.rampTo[\s\S]*?guitarBus\.gain\.rampTo/,"piano and guitar must have independent mix controls");
+  const start=html.indexOf("function chordSymbolToPitches(symbol,octave=4)");
+  const end=html.indexOf("\nfunction getPlayableBassNotes",start);
+  assert.ok(start>=0&&end>start,"chord voicing and arrangement helpers must exist");
+  const helpers=new Function(html.slice(start,end)+";return {chordSymbolToPitches,getPlayableChordEvents};")();
+  assert.deepEqual(helpers.chordSymbolToPitches("C"),[60,64,67],"major chord tones must parse");
+  assert.deepEqual(helpers.chordSymbolToPitches("Am7"),[60,63,67,70],"minor seventh chord tones must parse");
+  const project={chords:[{chord:"C",beats:4},{chord:"Am7",beats:4},{chord:"F",beats:4},{chord:"G",beats:4}]};
+  const a=helpers.getPlayableChordEvents(project,4,4,"A");
+  const b=helpers.getPlayableChordEvents(project,4,4,"B");
+  const c=helpers.getPlayableChordEvents(project,4,4,"C");
+  const sig=x=>JSON.stringify({p:x.piano.map(e=>[e.startBeat,e.pitches,e.durationBeats]),g:x.guitar.map(e=>[e.startBeat,e.pitches])});
+  assert.notEqual(sig(a),sig(b),"A and B chord accompaniment must differ in voicing and density");
+  assert.notEqual(sig(a),sig(c),"A and C chord accompaniment must differ in rhythmic articulation");
+  assert.notEqual(sig(b),sig(c),"B and C chord accompaniment must differ in note placement");
+  assert.ok(a.piano.some(e=>e.pitches.length>=3),"A must use block-chord piano voicings");
+  assert.ok(b.piano.length>a.piano.length,"B must use broken-chord piano movement");
+  assert.ok(c.guitar.length>b.guitar.length,"C must use a busier plucked guitar figure");
+  assert.match(html,/getPlayableChordEvents\(baseProject,APP\.bars,APP\.timeSig,chordVariant\)/,"active A/B/C selection must drive accompaniment");
+  assert.match(html,/getPianoSynth\(\)\.triggerAttackRelease/,"piano chord events must be played");
+  assert.match(html,/getGuitarSynth\(\)\.triggerAttack/,"guitar plucks must be played");
+});
