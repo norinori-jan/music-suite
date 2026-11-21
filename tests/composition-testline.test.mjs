@@ -1341,6 +1341,8 @@ test("TL-89 arrangement grooves have distinct musical articulation rather than m
   assert.ok(B.piano.every(e=>e.pitches.length===1&&e.durationBeats<1),"B piano should use short, separated arpeggio tones");
   assert.ok(C.piano.every(e=>e.durationBeats<=.48),"C piano should use short rhythmic stabs");
   assert.ok(C.guitar.some(e=>Math.abs((e.startBeat%1)-.25)<.001),"C guitar should accent off-beat subdivisions");
+  assert.ok(C.guitar.every(e=>e.instrument==="electric"),"C ostinato must use the electric guitar voice");
+  assert.match(html,/instrument:note\.instrument\|\|'acoustic'/,"playback must retain each candidate guitar voice");
   assert.ok(A.guitar.every(e=>e.pitches.length>=2),"A guitar should add restrained dyadic responses");
   assert.ok(B.guitar.every(e=>e.pitches.length===1),"B guitar should leave sparse single-note responses");
   assert.ok(B.guitar.length<C.guitar.length,"C guitar should carry the densest ostinato");
