@@ -1124,12 +1124,12 @@ function toggleSwing(){
 // ════════════════════════════════════════════════════════
 // PLAYBACK
 // ════════════════════════════════════════════════════════
-let synthKick=null,synthSnare=null,synthSnareBody=null,synthRim=null,synthHat=null,synthHatFilter=null,synthOpenHat=null,synthCrash=null,synthRide=null,synthPerc=null,melodySynth=null,bassSynth=null,bassSubSynth=null,bassAttackSynth=null,pianoSynth=null,guitarSynth=null,drumBus=null,melodyBus=null,bassBus=null,pianoBus=null,guitarBus=null,pianoToneFilter=null,guitarToneFilter=null,drumCompressor=null;
+let synthKick=null,synthSnare=null,synthSnareBody=null,synthRim=null,synthHat=null,synthHatFilter=null,synthOpenHat=null,synthCrash=null,synthRide=null,synthPerc=null,melodySynth=null,bassSynth=null,bassSubSynth=null,bassAttackSynth=null,pianoSynth=null,guitarSynth=null,drumBus=null,melodyBus=null,bassBus=null,pianoBus=null,guitarBus=null,pianoToneFilter=null,guitarToneFilter=null,pianoPan=null,guitarPan=null,drumCompressor=null;
 function getDrumBus(){if(!drumBus){drumCompressor=new Tone.Compressor({threshold:-18,ratio:2.6,attack:.004,release:.13,knee:10}).toDestination();drumBus=new Tone.Gain(Number(document.getElementById('drum-volume')?.value??80)/100).connect(drumCompressor);}return drumBus;}
 function getMelodyBus(){if(!melodyBus)melodyBus=new Tone.Gain(Number(document.getElementById('melody-volume')?.value??65)/100).toDestination();return melodyBus;}
 function getBassBus(){if(!bassBus)bassBus=new Tone.Gain(Number(document.getElementById('bass-volume')?.value??72)/100).toDestination();return bassBus;}
-function getPianoBus(){if(!pianoBus){pianoToneFilter=new Tone.Filter(105,'highpass').toDestination();pianoBus=new Tone.Gain(Number(document.getElementById('piano-volume')?.value??52)/100).connect(pianoToneFilter);}return pianoBus;}
-function getGuitarBus(){if(!guitarBus){guitarToneFilter=new Tone.Filter(155,'highpass').toDestination();guitarBus=new Tone.Gain(Number(document.getElementById('guitar-volume')?.value??42)/100).connect(guitarToneFilter);}return guitarBus;}
+function getPianoBus(){if(!pianoBus){pianoPan=new Tone.Panner(-.16).toDestination();pianoToneFilter=new Tone.Filter(105,'highpass').connect(pianoPan);pianoBus=new Tone.Gain(Number(document.getElementById('piano-volume')?.value??52)/100).connect(pianoToneFilter);}return pianoBus;}
+function getGuitarBus(){if(!guitarBus){guitarPan=new Tone.Panner(.18).toDestination();guitarToneFilter=new Tone.Filter(155,'highpass').connect(guitarPan);guitarBus=new Tone.Gain(Number(document.getElementById('guitar-volume')?.value??42)/100).connect(guitarToneFilter);}return guitarBus;}
 function getPianoSynth(){if(!pianoSynth){pianoSynth=new Tone.PolySynth(Tone.Synth,{oscillator:{type:'triangle8'},envelope:{attack:.008,decay:.28,sustain:.16,release:.62}}).connect(getPianoBus());pianoSynth.volume.value=-8;}return pianoSynth;}
 function getGuitarSynth(){if(!guitarSynth){guitarSynth=new Tone.PluckSynth({attackNoise:.8,dampening:4200, resonance:.88}).connect(getGuitarBus());guitarSynth.volume.value=-8;}return guitarSynth;}
 
