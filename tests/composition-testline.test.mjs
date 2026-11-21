@@ -1231,3 +1231,41 @@ test("TL-83 instrument buses feed a shared master compressor and limiter", async
   assert.match(html,/guitarPan=new Tone\.Panner\(\.2\)\.connect\(getMasterBus\(\)\)/);
   assert.match(html,/getBassSamplerFilter\(\),v=>bassSamplerReady=v/,"sampled bass must pass through its tone-shaping filter");
 });
+
+
+test("TL-84 A/B/C mix profiles create distinct musical balances and spatial roles", async () => {
+  const html=await readFile(beatLabPath,"utf8");
+  const start=html.indexOf("const ARRANGEMENT_MIX_PROFILES=");
+  const end=html.indexOf("\\nfunction mixSliderValue",start);
+  assert.ok(start>=0&&end>start,"A/B/C mix profile table must exist");
+  const profiles=new Function(html.slice(start,end)+";return ARRANGEMENT_MIX_PROFILES;")();
+  assert.deepEqual(Object.keys(profiles),["A","B","C"]);
+  for(const id of ["A","B","C"]){
+    const p=profiles[id];
+    for(const instrument of ["drum","melody","bass","piano","guitar"])assert.ok(Number.isFinite(p.gain[instrument])&&p.gain[instrument]>0, id+" gain "+instrument);
+    assert.ok(p.master.threshold<0&&p.master.ratio>1);
+    assert.ok(p.drumComp.threshold<0&&p.drumComp.ratio>1);
+  }
+  assert.ok(profiles.B.gain.drum<profiles.A.gain.drum,"B should leave more space around the drums");
+  assert.ok(profiles.B.gain.piano>profiles.A.gain.piano,"B should bring piano forward");
+  assert.ok(profiles.B.pianoPan<profiles.A.pianoPan&&profiles.B.guitarPan>profiles.A.guitarPan,"B should widen the chord instruments");
+  assert.ok(profiles.C.gain.drum>profiles.A.gain.drum&&profiles.C.gain.bass>profiles.A.gain.bass&&profiles.C.gain.guitar>profiles.A.gain.guitar,"C should emphasize rhythm section and guitar");
+  assert.ok(profiles.C.gain.piano<profiles.A.gain.piano&&profiles.C.gain.melody<profiles.A.gain.melody,"C should make room for the driving rhythm section");
+  assert.notDeepEqual(profiles.A.bassEQ,profiles.B.bassEQ);
+  assert.notEqual(profiles.A.drumComp.attack,profiles.C.drumComp.attack);
+});
+
+test("TL-85 selected A/B/C mix profile follows candidate selection, playback and live fader changes", async () => {
+  const html=await readFile(beatLabPath,"utf8");
+  assert.match(html,/function applyArrangementMix\(variant=APP\.activeDrumVariant\|\|'A',options=\{\}\)/);
+  assert.match(html,/applyArrangementMix\(id,\{immediate:true\}\)/,"candidate selection must switch its mix profile");
+  assert.match(html,/applyArrangementMix\(chordVariant,\{ensure:true,immediate:true\}\)/,"playback must initialize the matching profile before notes are scheduled");
+  assert.match(html,/function updateMixVolumes\(\)\{applyArrangementMix\(APP\.activeDrumVariant\|\|'A'\);\}/,"manual faders must preserve the selected profile's relative balance");
+  assert.match(html,/mixSliderValue\(name\+'-volume',[\s\S]*?\*profile\.gain\[name\]/,"profile gain multipliers must retain each user's slider setting");
+  assert.match(html,/bassBusEQ\.low,profile\.bassEQ\.low[\s\S]*?bassBusEQ\.mid,profile\.bassEQ\.mid[\s\S]*?bassBusEQ\.high,profile\.bassEQ\.high/);
+  assert.match(html,/pianoToneFilter\.frequency,profile\.pianoHP/);
+  assert.match(html,/guitarToneFilter\.frequency,profile\.guitarHP/);
+  assert.match(html,/drumCompressor\.threshold,profile\.drumComp\.threshold/);
+  assert.match(html,/masterCompressor\.threshold,profile\.master\.threshold/);
+  assert.match(html,/id="arrangement-mix-status"/);
+});
