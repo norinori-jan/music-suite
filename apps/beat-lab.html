@@ -1156,7 +1156,7 @@ function playHit(pitch, vel=1, when, ensureAudio=true){
   else getPerc().triggerAttackRelease(pitch>50?'C2':'G1','16n',at,safeVel);
 }
 
-let playTimer=null,nextStepTime=0;
+let playTimer=null,nextStepTime=0,playbackGeneration=0;
 function getPlayableBassNotes(project,bars,timeSig=4){
   const source=Array.isArray(project?.bass?.notes)?project.bass.notes:[];
   const limit=Math.max(1,Number(bars)||1)*Math.max(1,Number(timeSig)||4);
@@ -1175,6 +1175,7 @@ async function togglePlay(){
   await Tone.start();
   if(APP.playing){ stopPlay(); return; }
   APP.playing=true;
+  const generation=++playbackGeneration;
   if(aiWorkflowStage>=2){aiWorkflowStage=3;renderAiWorkflow();}
   document.querySelectorAll('#play-btn,#play-btn-ex').forEach(b=>{b.textContent='⏹';b.classList.add('active')});
   const steps=totalSteps();
@@ -1199,7 +1200,7 @@ async function togglePlay(){
     // queuing future notes inside the look-ahead window.
     const uiDelay=Math.max(0,(audioAt-Tone.now())*1000);
     setTimeout(()=>{
-      if(!APP.playing)return;
+      if(!APP.playing||generation!==playbackGeneration)return;
       document.querySelectorAll('.playing-step').forEach(e=>e.classList.remove('playing-step'));
       ROWS.forEach(row=>{const el=document.getElementById(`sc-${row.id}-${sectionStep}`);if(el)el.classList.add('playing-step');});
       const playhead=document.getElementById('arrangement-playhead');
@@ -1249,7 +1250,7 @@ async function togglePlay(){
   playTimer=setInterval(scheduleAhead,25);
 }
 function stopPlay(){
-  APP.playing=false;
+  APP.playing=false;playbackGeneration++;
   clearInterval(playTimer); playTimer=null;
   document.querySelectorAll('#play-btn,#play-btn-ex').forEach(b=>{b.textContent='▶';b.classList.remove('active')});
   document.querySelectorAll('.playing-step').forEach(e=>e.classList.remove('playing-step'));
