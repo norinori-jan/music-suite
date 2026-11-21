@@ -1193,7 +1193,7 @@ test("TL-80 bass timbre follows song section, register and A/B/C role", async ()
 test("TL-81 section-specific bass timbre changes are scheduled at note audio timestamps", async () => {
   const html=await readFile(beatLabPath,"utf8");
   const start=html.indexOf("function playBassNote(note,duration,when,section=null,variant='A')");
-  const end=html.indexOf("\\nfunction updateMixVolumes",start);
+  const end=html.indexOf("\nfunction updateMixVolumes",start);
   assert.ok(start>=0&&end>start);
   const play=html.slice(start,end);
   for(const expression of ["body.filter.frequency.setValueAtTime(tone.filterHz,when)","body.volume.setValueAtTime(tone.bodyDb,when)","sub.volume.setValueAtTime(tone.subDb,when)","attack.volume.setValueAtTime(tone.attackDb,when)"]){
