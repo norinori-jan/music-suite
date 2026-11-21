@@ -1201,6 +1201,10 @@ function chordSymbolToPitches(symbol,octave=4){
   return intervals.map(n=>60+(octave-4)*12+root+n);
 }
 function getPlayableChordEvents(project,bars,timeSig=4,variant='A'){
+  if(project?.source==='score-editor'&&(project?.piano?.notes?.length||project?.guitar?.notes?.length)){
+    const fromNotes=track=>(track?.notes||[]).map(note=>({startBeat:Number(note.startBeat),pitches:[Number(note.pitch)],durationBeats:Number(note.durationBeats)||.5,velocity:Math.max(.05,Math.min(1,(Number(note.vel)||80)/127))})).filter(event=>Number.isFinite(event.startBeat)&&Number.isInteger(event.pitches[0]));
+    return {piano:fromNotes(project.piano),guitar:fromNotes(project.guitar)};
+  }
   const direct=Array.isArray(project?.chords)?project.chords:[];
   const generated=Array.isArray(project?.generatedMusic?.chords)?project.generatedMusic.chords:[];
   const sections=Array.isArray(project?.generatedMusic?.chordSections)?project.generatedMusic.chordSections:[];
