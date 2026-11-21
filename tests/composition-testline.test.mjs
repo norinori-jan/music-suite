@@ -722,7 +722,8 @@ test("TL-57 BEAT//LAB plays imported bass notes in sync with melody and drums", 
   const playStart=html.indexOf("async function togglePlay()");
   const playEnd=html.indexOf("\nfunction stopPlay()",playStart);
   const play=html.slice(playStart,playEnd);
-  assert.match(play,/getPlayableBassNotes\(baseProject,APP\.bars,APP\.timeSig\)/);
+  assert.match(play,/getPlayableBassNotes\(\{bass:activeTracks\.bass\},APP\.bars,APP\.timeSig\)/);
+  assert.match(play,/syncActiveArrangementTrackSnapshot\(\)/);
   assert.match(play,/playBassNote\(note,duration,audioAt,activeSection,chordVariant\)/);
   assert.match(play,/Math\.abs\(note\.startBeat-currentBeat\)<bassTolerance/);
   assert.match(html.slice(html.indexOf("function stopPlay()"),html.indexOf("\nfunction PROJ_BPM")),/bassSynth\.triggerRelease\(\)/);
@@ -734,8 +735,9 @@ test("TL-58 BEAT//LAB preserves bass timeline data when exporting a rhythm edit"
   const end=html.indexOf("\nfunction decodeImportedDrumVelocity",start);
   assert.ok(start>=0&&end>start);
   const body=html.slice(start,end);
-  assert.match(body,/bass: \{\.\.\.\(base\.bass\|\|\{\}\),notes:bassForExport\.map/);
-  assert.match(body,/bassForExport=buildBassVariantNotes/);
+  assert.match(body,/bass: \{\.\.\.\(base\.bass\|\|\{\}\),notes:cloneRhythmData\(bassForExport\)\}/);
+  assert.match(body,/activeTracks=syncActiveArrangementTrackSnapshot\(\)\.tracks/);
+  assert.match(body,/arrangements:cloneRhythmData\(APP\.arrangements\|\|\{\}\)/);
 });
 
 
@@ -990,7 +992,7 @@ test("TL-69 bass playback layers sub foundation and transient articulation on on
   assert.match(play,/sub\.triggerAttackRelease\(frequency,duration,when,velocity\*\.72\)/,"sub foundation must be phase-aligned to the main note");
   assert.match(play,/attack\.triggerAttackRelease\(Tone\.Frequency\(pitch\+12,'midi'\)\.toNote\(\),'32n',when/,"transient must use an octave harmonic at the same start time");
   assert.match(html,/playBassNote\(note,duration,audioAt,activeSection,chordVariant\)/,"sequencer must schedule all bass layers from the same audio timestamp");
-  assert.match(html,/bass: \{\.\.\.\(base\.bass\|\|\{\}\),notes:bassForExport\.map/,"layering must export a normal bass note timeline");
+  assert.match(html,/bass: \{\.\.\.\(base\.bass\|\|\{\}\),notes:cloneRhythmData\(bassForExport\)\}/,"layering must export a normal bass note timeline");
 });
 
 
@@ -1018,7 +1020,9 @@ test("TL-70 piano and guitar accompaniment creates genuinely different A B C cho
   assert.ok(a.piano.some(e=>e.pitches.length>=3),"A must use block-chord piano voicings");
   assert.ok(b.piano.length>a.piano.length,"B must use broken-chord piano movement");
   assert.ok(c.guitar.length>b.guitar.length,"C must use a busier plucked guitar figure");
-  assert.match(html,/getPlayableChordEvents\(baseProject,APP\.bars,APP\.timeSig,chordVariant\)/,"active A/B/C selection must drive accompaniment");
+  assert.match(html,/const activeArrangement=syncActiveArrangementTrackSnapshot\(\)/,"active A/B/C selection must drive accompaniment");
+  assert.match(html,/activeTracks\.piano\?\.notes/);
+  assert.match(html,/activeTracks\.guitar\?\.notes/);
   assert.match(html,/getPianoSynth\(\)\.triggerAttackRelease/,"piano chord events must be played");
   assert.match(html,/getGuitarSynth\(\)\.triggerAttack/,"guitar plucks must be played");
 });
@@ -1046,7 +1050,8 @@ test("TL-71 bass line has independent A B C groove identities without changing s
   assert.ok(c.some(n=>n.id.endsWith("-oct")),"C must add octave accents");
   assert.ok(c.some(n=>n.id.endsWith("-pickup")),"C must add passing pickups");
   assert.deepEqual(source.map(n=>n.id),["n1","n2","n3","n4","n5","n6"],"candidate generation must not mutate source notes");
-  assert.match(html,/const bassNotes=buildBassVariantNotes\(bassSeed,APP\.bars,APP\.timeSig,chordVariant\)/,"active A/B/C selection must drive bass arrangement");
+  assert.match(html,/buildBassVariantNotes\(bassSeed,APP\.bars,APP\.timeSig,id\)/,"each independent arrangement snapshot must own its bass variation");
+  assert.match(html,/const bassNotes=getPlayableBassNotes\(\{bass:activeTracks\.bass\},APP\.bars,APP\.timeSig\)/,"active A/B/C selection must drive bass playback");
 });
 
 
@@ -1094,9 +1099,10 @@ test("TL-73 chord progression can supply a fallback bass line when no explicit b
 test("TL-74 selected A B C accompaniment timelines round-trip into score-editor piano and guitar tracks", async () => {
   const beat=await readFile(beatLabPath,"utf8");
   const score=await readFile(path.join(here,"..","apps","score-editor-v2.html"),"utf8");
-  assert.match(beat,/bass: \{\.\.\.\(base\.bass\|\|\{\}\),notes:bassForExport\.map/,"selected bass candidate must be exported as an explicit timeline");
-  assert.match(beat,/piano: \{notes:exportTimeline\(chordEventsForExport\.piano\)\}/,"piano arrangement must export note events");
-  assert.match(beat,/guitar: \{notes:exportTimeline\(chordEventsForExport\.guitar\)\}/,"guitar arrangement must export note events");
+  assert.match(beat,/bass: \{\.\.\.\(base\.bass\|\|\{\}\),notes:cloneRhythmData\(bassForExport\)\}/,"selected bass candidate must be exported as an explicit timeline");
+  assert.match(beat,/piano: \{notes:cloneRhythmData\(pianoForExport\)\}/,"piano arrangement must export note events");
+  assert.match(beat,/guitar: \{notes:cloneRhythmData\(guitarForExport\)\}/,"guitar arrangement must export note events");
+  assert.match(beat,/arrangements:cloneRhythmData\(APP\.arrangements\|\|\{\}\)/,"all candidate arrangements must be retained on export");
   assert.match(beat,/inspect\(bass,'bass'\);inspect\(piano,'piano'\);inspect\(guitar,'guitar'\)/,"timeline validation must inspect every accompaniment track");
   assert.match(beat,/piano:project\.piano\|\|\{notes:\[\]\}/,"JSON round-trip baseline must include piano");
   assert.match(beat,/guitar:project\.guitar\|\|\{notes:\[\]\}/,"JSON round-trip baseline must include guitar");
@@ -1293,7 +1299,7 @@ test("TL-87 JSON roundtrip baseline includes all A/B/C track snapshots", async (
   const start=html.indexOf("function normalizeJSONRoundTripValue");
   const end=html.indexOf("function exportJSON",start);
   assert.ok(start>=0&&end>start);
-  const helpers=new Function(html.slice(start,end)+"\\nreturn {createJSONRoundTripSnapshot,compareJSONRoundTripSnapshot};")();
+  const helpers=new Function(html.slice(start,end)+"\nreturn {createJSONRoundTripSnapshot,compareJSONRoundTripSnapshot};")();
   const tracks={melody:{notes:[{pitch:60,startBeat:0,durationBeats:1,vel:90}]},piano:{notes:[]},guitar:{notes:[]},bass:{notes:[]},drums:{notes:[]}};
   const project={bpm:100,timeSig:4,bars:4,div:16,lyrics:"",sections:[],melody:tracks.melody,drums:tracks.drums,piano:tracks.piano,guitar:tracks.guitar,bass:tracks.bass,arrangements:{A:{id:"A",tracks},B:{id:"B",tracks:structuredClone(tracks)},C:{id:"C",tracks:structuredClone(tracks)}},activeArrangement:"B"};
   const baseline=helpers.createJSONRoundTripSnapshot(project);
