@@ -1363,7 +1363,15 @@ test("TL-90 all inline JavaScript in composition, BEAT//LAB and score editor pag
   const pages = [
     ["composition-canvas.html", canvasPath],
     ["beat-lab.html", beatLabPath],
-    ["score-editor-v2.html", path.join(here, "..", "apps", "score-editor-v2.html")]
+    ...[
+      "canvas.html",
+      "chord-analyzer.html",
+      "chord-lab.html",
+      "compose-spark.html",
+      "score-editor-v2.html",
+      "suite-roadmap.html",
+      "vocal-lab-v3.html"
+    ].map((name) => [name, path.join(here, "..", "apps", name)])
   ];
   for (const [pageName, pagePath] of pages) {
     const html = await readFile(pagePath, "utf8");
