@@ -1151,3 +1151,40 @@ test("TL-78 piano and guitar occupy subtly separated stereo positions", async ()
   assert.match(html,/pianoToneFilter=new Tone\.Filter\(105,'highpass'\)\.connect\(pianoPan\)/,"piano filter must feed its stereo position");
   assert.match(html,/guitarToneFilter=new Tone\.Filter\(155,'highpass'\)\.connect\(guitarPan\)/,"guitar filter must feed its stereo position");
 });
+
+
+test("TL-79 sampled piano loads lazily with synth fallback and distinct electric guitar path", async () => {
+  const html=await readFile(beatLabPath,"utf8");
+  assert.match(html,/new Tone\.Sampler\(\{urls:\{C2:'C2\.mp3',C3:'C3\.mp3',C4:'C4\.mp3',C5:'C5\.mp3',C6:'C6\.mp3'\}/,"piano must load multi-register Salamander piano samples");
+  assert.match(html,/baseUrl:'https:\/\/tonejs\.github\.io\/audio\/salamander\//,"piano samples must use the public Salamander sample set");
+  assert.match(html,/const sampler=getPianoSampler\(\);[\s\S]*?if\(pianoSamplerReady&&sampler\)sampler\.triggerAttackRelease[\s\S]*?else getPianoSynth\(\)\.triggerAttackRelease/,"piano playback must fall back to the synth while samples load or fail");
+  assert.match(html,/new Tone\.PluckSynth\(\{attackNoise:[\s\S]*?\}\)\.connect\(getGuitarBus\(\)\)/,"acoustic guitar must retain a plucked-string voice");
+  assert.match(html,/new Tone\.PolySynth\(Tone\.Synth,\{oscillator:\{type:'fatsawtooth',count:3,spread:9\}/,"electric guitar must use a separate sustained voice");
+  assert.match(html,/new Tone\.Distortion\(\.14\)/,"electric guitar must have its own mild drive stage");
+  assert.match(html,/new Tone\.Chorus\(2\.1,2\.4,\.18\)/,"electric guitar must have a separate modulation stage");
+  assert.match(html,/instrument:'electric'/,"C arrangement must select the electric guitar voice");
+  assert.match(html,/if\(pianoSampler\)pianoSampler\.releaseAll\(\)/,"stop must release sampled piano voices");
+  assert.match(html,/if\(electricGuitarSynth\)electricGuitarSynth\.releaseAll\(\)/,"stop must release electric guitar voices");
+});
+
+test("TL-80 bass timbre follows song section, register and A/B/C role", async () => {
+  const html=await readFile(beatLabPath,"utf8");
+  const start=html.indexOf("function getBassSectionTone(section,variant='A',pitch=40)");
+  const end=html.indexOf("\\nfunction playBassNote",start);
+  assert.ok(start>=0&&end>start,"section-aware bass tone helper must exist");
+  const getTone=new Function(html.slice(start,end)+";return getBassSectionTone;")();
+  const verse=getTone({label:"Verse"},"A",40);
+  const chorus=getTone({label:"Chorus"},"A",40);
+  const bridge=getTone({label:"Bridge"},"A",40);
+  const sparse=getTone({label:"Verse"},"B",40);
+  const driven=getTone({label:"Verse"},"C",40);
+  const low=getTone({label:"Verse"},"A",28);
+  const high=getTone({label:"Verse"},"A",52);
+  assert.ok(chorus.filterHz>verse.filterHz,"chorus bass should open its tone");
+  assert.ok(bridge.filterHz<verse.filterHz,"bridge bass should become darker");
+  assert.ok(sparse.attackDb<verse.attackDb,"B bass should be more restrained");
+  assert.ok(driven.attackDb>verse.attackDb,"C bass should have more attack");
+  assert.ok(low.subDb>high.subDb,"low-register notes should receive more sub support");
+  assert.ok(high.filterHz>low.filterHz,"higher bass notes should receive a clearer upper body");
+  assert.match(html,/playBassNote\(note,duration,audioAt,activeSection,chordVariant\)/,"live bass playback must receive section and selected arrangement");
+});
