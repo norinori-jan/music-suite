@@ -60,13 +60,23 @@ try {
   await page.waitForFunction(() => document.getElementById("test-route-intro")?.textContent.includes("標準テスト曲を受信"), null, { timeout: 10000 });
 
   const trackReport = await page.evaluate(() => {
-    const tracks = APP.arrangements?.[APP.activeDrumVariant || "A"]?.tracks || APP.arrangements?.A?.tracks || {};
+    const arrangement = syncActiveArrangementTrackSnapshot();
+    const tracks = arrangement?.tracks || {};
+    const bassNotes = getPlayableBassNotes({ bass: tracks.bass }, APP.bars, APP.timeSig);
+    const bassStarts = new Map();
+    for (const note of bassNotes) {
+      const key = Number(note.startBeat).toFixed(5);
+      bassStarts.set(key, [...(bassStarts.get(key) || []), { id: note.id, pitch: note.pitch }]);
+    }
+    const duplicateBassStarts = [...bassStarts.entries()].filter(([, notes]) => notes.length > 1);
     return {
       melody: tracks.melody?.notes?.length || 0,
       piano: tracks.piano?.notes?.length || 0,
       guitar: tracks.guitar?.notes?.length || 0,
       bass: tracks.bass?.notes?.length || 0,
       drums: tracks.drums?.notes?.length || 0,
+      bassNotes,
+      duplicateBassStarts,
       bpm: document.getElementById("bpm-sl")?.value,
       imported: !!window.__compositionBaseProject
     };
