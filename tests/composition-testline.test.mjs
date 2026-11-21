@@ -823,7 +823,7 @@ test("TL-61 BEAT//LAB keeps three independently playable drum candidates with di
   assert.match(html,/function createDrumCandidates\(\)/);
   assert.match(html,/function selectDrumCandidate\(id\)/);
   assert.match(html,/drumVariants:APP\.drumVariants\?cloneRhythmData\(APP\.drumVariants\)/);
-  assert.match(html,/APP\.drumVariants=data\.drumVariants/);
+  assert.match(html,/const savedVariants=projectData\?\.drumVariants\|\|data\.drumVariants/);
   const start=html.indexOf("function applyCandidateCoreGroove(pattern,section,variant)");
   const end=html.indexOf("\nfunction createDrumCandidates()",start);
   assert.ok(start>=0&&end>start,"candidate groove generator must exist");
@@ -854,4 +854,29 @@ test("TL-61 BEAT//LAB keeps three independently playable drum candidates with di
   const stopStart=html.indexOf("function stopPlay()");
   const stopEnd=html.indexOf("\nfunction PROJ_BPM",stopStart);
   assert.match(html.slice(stopStart,stopEnd),/drumOnlyMixSnapshot/,"stop must restore the user's melody and bass mix toggles");
+});
+
+
+test("TL-62 A/B/C drum candidates survive JSON and Composition Canvas handoff", async () => {
+  const beat=await readFile(beatLabPath,"utf8");
+  const canvas=await readFile(canvasPath,"utf8");
+  assert.match(beat,/drumVariants:APP\.drumVariants\?cloneRhythmData\(APP\.drumVariants\)/,"JSON export must include all candidate patterns");
+  assert.match(beat,/const savedVariants=projectData\?\.drumVariants\|\|data\.drumVariants/,"JSON import must restore top-level candidate data");
+  assert.match(beat,/restoreSongArrangement\(data\.arrangement,data\)/,"import must pass the complete project to arrangement restoration");
+  assert.match(beat,/APP\.drumVariants\[APP\.activeDrumVariant\]\.sections=cloneRhythmData\(APP\.sections\)/,"restored active edits must become authoritative");
+  assert.match(beat,/function selectDrumCandidate\(id\)[\s\S]*?APP\.drumVariants\[APP\.activeDrumVariant\]\.sections=cloneRhythmData\(APP\.sections\)/,"candidate switching must retain edits");
+  assert.match(canvas,/project\.drumVariants=window\.__lastDrumProject\?\.drumVariants\|\|null/,"Canvas → Beat Lab must preserve candidates");
+  assert.match(canvas,/project\.activeDrumVariant=window\.__lastDrumProject\?\.activeDrumVariant\|\|null/,"Canvas → Beat Lab must preserve selection");
+  assert.match(canvas,/drumVariants:project\.drumVariants\|\|null/,"Beat Lab → Canvas must retain candidates in the handoff state");
+  assert.match(canvas,/project\.drumVariants=saved\.drumVariants\|\|null/,"Canvas resume must restore candidate patterns");
+  assert.match(canvas,/project\.activeDrumVariant=saved\.activeDrumVariant\|\|null/,"Canvas resume must restore selected candidate");
+  const clone=value=>JSON.parse(JSON.stringify(value));
+  const variants={A:{label:"pop",sections:[{id:"verse",startBar:1,endBar:4,pattern:{"kick:0":.9}}]},B:{label:"half",sections:[{id:"verse",startBar:1,endBar:4,pattern:{"snare:8":1}}]},C:{label:"sync",sections:[{id:"verse",startBar:1,endBar:4,pattern:{"kick:6":.8}}]}};
+  const project={drumVariants:variants,activeDrumVariant:"B"};
+  const restored=clone(project);
+  assert.deepEqual(restored,project);
+  restored.drumVariants.B.sections[0].pattern["snare:8"]=.4;
+  assert.equal(project.drumVariants.B.sections[0].pattern["snare:8"],1,"restored variants must not share mutable references with source data");
+  assert.equal(restored.drumVariants.A.sections[0].pattern["kick:0"],.9,"editing B must not alter A");
+  assert.equal(restored.drumVariants.C.sections[0].pattern["kick:6"],.8,"editing B must not alter C");
 });
