@@ -1088,3 +1088,18 @@ test("TL-73 chord progression can supply a fallback bass line when no explicit b
   assert.equal(stringNotes.length,8,"plain chord-name arrays must also generate bass notes");
   assert.match(html,/importedBass\.length\?importedBass:buildBassNotesFromChords/,"explicit bass timeline must take precedence over generated fallback");
 });
+
+
+test("TL-74 selected A B C accompaniment timelines round-trip into score-editor piano and guitar tracks", async () => {
+  const beat=await readFile(beatLabPath,"utf8");
+  const score=await readFile(path.join(here,"..","apps","score-editor-v2.html"),"utf8");
+  assert.match(beat,/bass: \{\.\.\.\(base\.bass\|\|\{\}\),notes:bassForExport\.map/,"selected bass candidate must be exported as an explicit timeline");
+  assert.match(beat,/piano: \{notes:exportTimeline\(chordEventsForExport\.piano\)\}/,"piano arrangement must export note events");
+  assert.match(beat,/guitar: \{notes:exportTimeline\(chordEventsForExport\.guitar\)\}/,"guitar arrangement must export note events");
+  assert.match(beat,/inspect\(bass,'bass'\);inspect\(piano,'piano'\);inspect\(guitar,'guitar'\)/,"timeline validation must inspect every accompaniment track");
+  assert.match(beat,/piano:project\.piano\|\|\{notes:\[\]\}/,"JSON round-trip baseline must include piano");
+  assert.match(beat,/guitar:project\.guitar\|\|\{notes:\[\]\}/,"JSON round-trip baseline must include guitar");
+  assert.match(score,/if\(data\.piano\?\.notes\?\.length\)[\s\S]*?addTrack\('chord',[\s\S]*?Piano/,"score editor must create a dedicated piano track");
+  assert.match(score,/if\(data\.guitar\?\.notes\?\.length\)[\s\S]*?addTrack\('counter',[\s\S]*?Guitar/,"score editor must create a dedicated guitar track");
+  assert.match(score,/piano:\{notes:tr\('chord'\)\}, guitar:\{notes:tr\('counter'\)\}/,"score editor must export both accompaniment tracks on return");
+});
