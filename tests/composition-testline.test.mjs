@@ -1021,3 +1021,29 @@ test("TL-70 piano and guitar accompaniment creates genuinely different A B C cho
   assert.match(html,/getPianoSynth\(\)\.triggerAttackRelease/,"piano chord events must be played");
   assert.match(html,/getGuitarSynth\(\)\.triggerAttack/,"guitar plucks must be played");
 });
+
+
+test("TL-71 bass line has independent A B C groove identities without changing source notes", async () => {
+  const html=await readFile(beatLabPath,"utf8");
+  const start=html.indexOf("function buildBassVariantNotes(notes,bars,timeSig=4,variant='A')");
+  const end=html.indexOf("\nfunction getPlayableBassNotes",start);
+  assert.ok(start>=0&&end>start,"bass candidate generator must exist");
+  const build=new Function(html.slice(start,end)+";return buildBassVariantNotes;")();
+  const source=[
+    {id:"n1",pitch:36,startBeat:0,durationBeats:1,velocity:.8},
+    {id:"n2",pitch:40,startBeat:1,durationBeats:.75,velocity:.7},
+    {id:"n3",pitch:43,startBeat:2,durationBeats:1,velocity:.8},
+    {id:"n4",pitch:38,startBeat:3,durationBeats:.75,velocity:.7},
+    {id:"n5",pitch:36,startBeat:4,durationBeats:1,velocity:.8},
+    {id:"n6",pitch:41,startBeat:6,durationBeats:1,velocity:.7}
+  ];
+  const a=build(source,2,4,"A"),b=build(source,2,4,"B"),c=build(source,2,4,"C");
+  const signature=notes=>notes.map(n=>[n.startBeat,n.pitch,n.durationBeats,Number(n.velocity.toFixed(3))]);
+  assert.deepEqual(signature(a),signature(source),"A must preserve the original bass line");
+  assert.ok(b.length<a.length,"B must create a more spacious half-time bass role");
+  assert.ok(c.length>a.length,"C must add octave and pickup articulation");
+  assert.ok(c.some(n=>n.id.endsWith("-oct")),"C must add octave accents");
+  assert.ok(c.some(n=>n.id.endsWith("-pickup")),"C must add passing pickups");
+  assert.deepEqual(source.map(n=>n.id),["n1","n2","n3","n4","n5","n6"],"candidate generation must not mutate source notes");
+  assert.match(html,/buildBassVariantNotes\(getPlayableBassNotes\(baseProject,APP\.bars,APP\.timeSig\),APP\.bars,APP\.timeSig,chordVariant\)/,"active A/B/C selection must drive bass arrangement");
+});
