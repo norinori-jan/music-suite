@@ -1306,6 +1306,7 @@ function getPlayableChordEvents(project,bars,timeSig=4,variant='A'){
   const source=direct.length?direct:(generated.length?generated:sections.flatMap(section=>section.progression||[]));
   const limit=Math.max(1,Number(bars)||1)*Math.max(1,Number(timeSig)||4);
   const piano=[],guitar=[];let cursor=0;
+  const add=(target,startBeat,pitches,durationBeats,velocity)=>{if(startBeat<limit&&pitches.length)target.push({startBeat:+startBeat.toFixed(4),pitches,durationBeats:Math.max(.12,Math.min(durationBeats,limit-startBeat)),velocity});};
   source.forEach((item,index)=>{
     const beats=Math.max(.5,Math.min(16,Number(item?.beats)||4));
     const start=Number.isFinite(Number(item?.startBeat))?Number(item.startBeat):cursor;
@@ -1315,20 +1316,25 @@ function getPlayableChordEvents(project,bars,timeSig=4,variant='A'){
     if(!pitches.length)return;
     const duration=Math.min(beats,limit-start);
     if(variant==='B'){
-      pitches.slice(0,Math.min(4,pitches.length)).forEach((pitch,i)=>piano.push({startBeat:start+i*Math.min(1,duration/Math.max(1,pitches.length)),pitches:[pitch+12],durationBeats:.82,velocity:.54}));
-      guitar.push({startBeat:start+duration*.5,pitches:[pitches[2%pitches.length]+12],durationBeats:.45,velocity:.42});
+      const count=Math.min(4,pitches.length),step=Math.min(.75,duration/Math.max(2,count));
+      for(let i=0;i<count;i++)add(piano,start+i*step,[pitches[i]+12],Math.min(.72,step*.92),i===0?.62:.48);
+      add(guitar,start+Math.min(1.5,duration*.55),[pitches[pitches.length-1]+12],Math.min(1.1,Math.max(.3,duration*.3)),.38);
     }else if(variant==='C'){
-      piano.push({startBeat:start,pitches:pitches.map(p=>p+12),durationBeats:Math.min(.72,duration*.32),velocity:.76});
-      if(duration>2)piano.push({startBeat:start+duration*.625,pitches:pitches.map(p=>p+12),durationBeats:.48,velocity:.62});
-      for(let beat=.25,step=0;beat<duration;beat+=.5,step++)guitar.push({startBeat:start+beat,pitches:[pitches[(step+1)%pitches.length]+12],durationBeats:.35,velocity:step%2===0?.62:.44,instrument:'electric'});
+      add(piano,start,pitches.map(p=>p+12),Math.min(.48,duration*.24),.78);
+      if(duration>=2)add(piano,start+Math.min(2.5,duration*.625),[pitches[0]+12,pitches[2%pitches.length]+12],.32,.62);
+      for(let offset=.25,step=0;offset<duration;offset+=.5,step++)add(guitar,start+offset,[pitches[(step+1)%pitches.length]+12],.28,step%2===0?.64:.46);
     }else{
-      piano.push({startBeat:start,pitches,durationBeats:Math.max(.35,duration*.82),velocity:.66});
-      if(duration>1)guitar.push({startBeat:start+duration*.5,pitches:[pitches[0]+12,pitches[2%pitches.length]+12],durationBeats:.5,velocity:.48});
+      add(piano,start,pitches,Math.max(.35,duration*.82),.68);
+      if(duration>1.5)add(guitar,start+Math.min(2,duration*.5),[pitches[0]+12,pitches[2%pitches.length]+12],.42,.48);
     }
   });
   const sort=(a,b)=>a.startBeat-b.startBeat;
-  return {piano:piano.filter(x=>x.startBeat<limit).sort(sort),guitar:guitar.filter(x=>x.startBeat<limit).sort(sort)};
+  return {piano:piano.sort(sort),guitar:guitar.sort(sort)};
 }
+
+
+
+
 
 
 
@@ -1356,23 +1362,36 @@ function buildBassVariantNotes(notes,bars,timeSig=4,variant='A'){
   if(variant==='A'||!source.length)return source;
   const barBeats=Math.max(1,Number(timeSig)||4),limit=Math.max(1,Number(bars)||1)*barBeats;
   if(variant==='B'){
-    const sparse=source.filter(note=>{const beat=((note.startBeat%barBeats)+barBeats)%barBeats;return beat<.26;})
-      .map(note=>({...note,durationBeats:Math.min(barBeats,Math.max(note.durationBeats*1.45,1.35)),velocity:note.velocity*.84}));
-    if(sparse.length)return sparse.sort((a,b)=>a.startBeat-b.startBeat);
-    const firstByBar=new Map();source.forEach(note=>{const bar=Math.floor(note.startBeat/barBeats);if(!firstByBar.has(bar))firstByBar.set(bar,note);});
-    return [...firstByBar.values()].map(note=>({...note,durationBeats:Math.max(note.durationBeats,1.5),velocity:note.velocity*.84}));
+    const firstByBar=new Map();
+    source.slice().sort((a,b)=>a.startBeat-b.startBeat).forEach(note=>{
+      const bar=Math.floor(note.startBeat/barBeats);
+      if(!firstByBar.has(bar))firstByBar.set(bar,note);
+    });
+    return [...firstByBar.entries()].map(([bar,note],index)=>{
+      const next=firstByBar.get(bar+1);
+      const duration=Math.min(barBeats,next?Math.max(.75,next.startBeat-note.startBeat):barBeats,limit-note.startBeat);
+      return {...note,id:(note.id||'bass-'+index)+'-space',durationBeats:Math.max(1.25,duration),velocity:Math.max(.35,note.velocity*.82)};
+    }).sort((a,b)=>a.startBeat-b.startBeat);
   }
   const driven=source.map(note=>({...note}));
-  source.forEach(note=>{
-    if(note.pitch<=48)driven.push({...note,id:note.id+'-oct',pitch:note.pitch+12,durationBeats:Math.min(.45,note.durationBeats),velocity:note.velocity*.48});
-    const pickup=note.startBeat+.5;
-    if(pickup<limit&&pickup<note.startBeat+note.durationBeats-.1){
+  source.forEach((note,index)=>{
+    const duration=Math.max(.1,Number(note.durationBeats)||.5);
+    if(note.pitch<=48){
+      const octaveAt=note.startBeat+.5;
+      if(octaveAt<limit&&octaveAt<note.startBeat+duration-.08){
+        driven.push({...note,id:(note.id||'bass-'+index)+'-oct',pitch:note.pitch+12,startBeat:octaveAt,durationBeats:Math.min(.32,duration*.42),velocity:note.velocity*.46});
+      }
+    }
+    const pickup=note.startBeat+Math.min(.5,duration*.55);
+    if(pickup<limit&&pickup<note.startBeat+duration-.12){
       const fifth=note.pitch<=53?note.pitch+7:note.pitch-5;
-      driven.push({...note,id:note.id+'-pickup',pitch:fifth,startBeat:pickup,durationBeats:.22,velocity:note.velocity*.52});
+      driven.push({...note,id:(note.id||'bass-'+index)+'-pickup',pitch:fifth,startBeat:pickup,durationBeats:Math.min(.2,duration*.28),velocity:note.velocity*.5});
     }
   });
   return driven.sort((a,b)=>a.startBeat-b.startBeat);
 }
+
+
 
 function getPlayableBassNotes(project,bars,timeSig=4){
   const source=Array.isArray(project?.bass?.notes)?project.bass.notes:[];
