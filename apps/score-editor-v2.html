@@ -976,6 +976,16 @@ function importExternalData(data, sourceLabel) {
     addTrack('bass',(data.name?data.name+' ':'')+'Bass',notes);
     added+=notes.length;
   }
+  if(data.piano?.notes?.length) {
+    const notes=data.piano.notes.map(n=>({...n,id:uid()}));
+    addTrack('chord',(data.name?data.name+' ':'')+'Piano',notes);
+    added+=notes.length;
+  }
+  if(data.guitar?.notes?.length) {
+    const notes=data.guitar.notes.map(n=>({...n,id:uid()}));
+    addTrack('counter',(data.name?data.name+' ':'')+'Guitar',notes);
+    added+=notes.length;
+  }
   if(data.drums?.notes?.length) {
     const notes=data.drums.notes.map(n=>({...n,id:uid(),vel:n.vel||80}));
     addTrack('drum',(data.name?data.name+' ':'')+'Drums',notes);
@@ -1032,7 +1042,7 @@ function scoreExportData() {
   const tr = t => PROJ.tracks.filter(x => x.type === t).flatMap(x => x.notes.map(n => ({pitch:n.pitch,startBeat:n.startBeat,durationBeats:n.durationBeats,vel:n.vel||80})));
   const secs = (PROJ.sections||[]).filter(s => s.progression && s.progression.length).map(s => ({tag:s.name, progression:s.progression.map(c => ({chord:c.name, beats:c.beats||4}))}));
   return { version:'1.0', source:'score-editor', name: PROJ.name || document.getElementById('project-name')?.value || 'score-editor', bpm:PROJ.bpm, key:PROJ.key||'C', timeSig:PROJ.timeSig||4,
-    melody:{notes:tr('melody')}, chords: secs.length ? {key:PROJ.key||'C', sections:secs} : null, bass:{notes:tr('bass')}, drums:{notes:tr('drum')}, exported:new Date().toISOString() };
+    melody:{notes:tr('melody')}, chords: secs.length ? {key:PROJ.key||'C', sections:secs} : null, bass:{notes:tr('bass')}, piano:{notes:tr('chord')}, guitar:{notes:tr('counter')}, drums:{notes:tr('drum')}, exported:new Date().toISOString() };
 }
 function sendToVocalLab() {
   try{msRegister(scoreExportData())}catch(e){}
