@@ -1237,7 +1237,7 @@ test("TL-83 instrument buses feed a shared master compressor and limiter", async
 test("TL-84 A/B/C mix profiles create distinct musical balances and spatial roles", async () => {
   const html=await readFile(beatLabPath,"utf8");
   const start=html.indexOf("const ARRANGEMENT_MIX_PROFILES=");
-  const end=html.indexOf("\\nfunction mixSliderValue",start);
+  const end=html.indexOf("\nfunction mixSliderValue",start);
   assert.ok(start>=0&&end>start,"A/B/C mix profile table must exist");
   const profiles=new Function(html.slice(start,end)+";return ARRANGEMENT_MIX_PROFILES;")();
   assert.deepEqual(Object.keys(profiles),["A","B","C"]);
