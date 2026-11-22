@@ -1584,6 +1584,15 @@ test("TL-102 lyric syllable and stress helpers expose phrase-level pronunciation
   assert.equal(helpers.lyricEstimateSyllables("beautiful"),3);
   assert.equal(helpers.lyricStressIndex("believe",2),1);
   assert.equal(helpers.lyricStressIndex("alone",2),1);
+  const pronunciationCases={
+    every:[2,0],different:[3,0],family:[3,0],remember:[3,1],
+    tomorrow:[3,1],together:[3,1],tonight:[2,1],beginning:[3,1],
+    understanding:[4,2],comfortable:[3,0],because:[2,1],fire:[2,0]
+  };
+  for(const [word,[count,stress]] of Object.entries(pronunciationCases)){
+    assert.equal(helpers.lyricEstimateSyllables(word),count,word+" syllable count");
+    assert.equal(helpers.lyricStressIndex(word,count),stress,word+" lexical stress");
+  }
   assert.equal(helpers.lyricIsFunctionWord("I"),true);
   assert.equal(helpers.lyricIsFunctionWord("walk"),false);
   const phrase=helpers.lyricBuildSyllables("I believe in you","A","Verse",0);
