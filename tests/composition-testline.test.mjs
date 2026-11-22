@@ -741,7 +741,7 @@ test("TL-57 BEAT//LAB plays imported bass notes in sync with melody and drums", 
   const play=html.slice(playStart,playEnd);
   assert.match(play,/getPlayableBassNotes\(\{bass:activeTracks\.bass\},APP\.bars,APP\.timeSig\)/);
   assert.match(play,/syncActiveArrangementTrackSnapshot\(\)/);
-  assert.match(play,/playBassNote\(note,duration,audioAt,activeSection,chordVariant\)/);
+  assert.match(play,/playBassNote\(\{\.\.\.note,velocity:[^}]+\},duration,audioAt,activeSection,chordVariant\)/);
   assert.match(play,/Math\.abs\(note\.startBeat-currentBeat\)<bassTolerance/);
   assert.match(html.slice(html.indexOf("function stopPlay()"),html.indexOf("\nfunction PROJ_BPM")),/bassSynth\.triggerRelease\(\)/);
 });
@@ -917,7 +917,7 @@ test("TL-63 selected drum candidate exports to the score editor as a timeline-al
 test("TL-64 A/B/C drum candidates have different section arcs and audio-clock hit scheduling", async () => {
   const html=await readFile(beatLabPath,"utf8");
   assert.match(html,/function playHit\(pitch, vel=1, when, ensureAudio=true\)/,"drum hit playback must accept an audio-clock timestamp and avoid redundant context starts");
-  assert.match(html,/playHit\(row\.pitch,vel,audioAt,false\)/,"sequencer must not restart the audio context for every hit");
+  assert.match(html,/playHit\(row\.pitch,Math\.max\(\.05,Math\.min\(1,vel\*sectionDynamics\.drums\)\),audioAt,false\)/,"sequencer must not restart the audio context for every hit");
   assert.match(html,/const safeVel=Math\.max\(\.05,Math\.min\(1,Number\(vel\)\|\|\.05\)\),at=Number\.isFinite\(when\)\?when:undefined/);
   assert.match(html,/getKick\(\)\.triggerAttackRelease\('C1','8n',at,safeVel\)/,"kick velocity must be per-hit, not shared gain mutation");
   assert.match(html,/getSnare\(\)\.triggerAttackRelease\('16n',at,safeVel\)/,"snare must receive the common audio timestamp");
@@ -926,8 +926,8 @@ test("TL-64 A/B/C drum candidates have different section arcs and audio-clock hi
   assert.match(html,/const horizon=Tone\.now\(\)\+0\.12/,"scheduler must maintain a look-ahead window");
   assert.match(html,/playTimer=setInterval\(scheduleAhead,25\)/,"scheduler must refill audio events independently of UI timer cadence");
   assert.match(html,/nextStepTime\+=stepMs\/1000/,"next steps must advance on the audio clock");
-  assert.match(html,/playHit\(row\.pitch,vel,audioAt,false\)/,"drums must use the shared audio-clock timestamp");
-  assert.match(html,/playBassNote\(note,duration,audioAt,activeSection,chordVariant\)/,"bass trigger must schedule the layered bass voice");
+  assert.match(html,/playHit\(row\.pitch,Math\.max\(\.05,Math\.min\(1,vel\*sectionDynamics\.drums\)\),audioAt,false\)/,"drums must use the shared audio-clock timestamp");
+  assert.match(html,/playBassNote\(\{\.\.\.note,velocity:[^}]+\},duration,audioAt,activeSection,chordVariant\)/,"bass trigger must schedule the layered bass voice");
   assert.match(html,/triggerAttackRelease\(Tone\.Frequency\(pitch/,"melody trigger must exist");
   assert.match(html,/duration,audioAt,velocity\)/,"melody must use the shared audio-clock timestamp");
   const start=html.indexOf("function applyCandidateCoreGroove(pattern,section,variant)");
@@ -1003,7 +1003,7 @@ test("TL-93 kick and snare add restrained transient definition without changing 
   assert.match(html,/function getKick\(\)[\s\S]*?new Tone\.MembraneSynth[\s\S]*?pitchDecay:\.055/,"kick body must retain a tuned low-frequency membrane voice");
   assert.match(html,/function getSnare\(\)[\s\S]*?new Tone\.Filter\(1750,'highpass'\)[\s\S]*?new Tone\.NoiseSynth/,"snare noise must be filtered to reduce low-mid buildup");
   assert.match(html,/getKick\(\)\.triggerAttackRelease\('C1','8n',at,safeVel\);getKickClick\(\)\.triggerAttackRelease\('32n',at,safeVel\*\.72\)/,"kick body and click must share one audio timestamp and per-hit velocity");
-  assert.match(html,/playHit\(row\.pitch,vel,audioAt,false\)/,"transient layers must remain on the existing audio-clock scheduler");
+  assert.match(html,/playHit\(row\.pitch,Math\.max\(\.05,Math\.min\(1,vel\*sectionDynamics\.drums\)\),audioAt,false\)/,"transient layers must remain on the existing audio-clock scheduler");
   assert.match(html,/masterLimiter=new Tone\.Limiter\(-1\)/,"master peak protection must remain enabled");
 });
 
@@ -1019,7 +1019,7 @@ test("TL-69 bass playback layers sub foundation and transient articulation on on
   assert.match(play,/else body\.triggerAttackRelease\(frequency,duration,when,velocity\)/,"main bass body must keep the original pitch and timing");
   assert.match(play,/sub\.triggerAttackRelease\(frequency,duration,when,velocity\*\.72\)/,"sub foundation must be phase-aligned to the main note");
   assert.match(play,/attack\.triggerAttackRelease\(Tone\.Frequency\(pitch\+12,'midi'\)\.toNote\(\),'32n',when/,"transient must use an octave harmonic at the same start time");
-  assert.match(html,/playBassNote\(note,duration,audioAt,activeSection,chordVariant\)/,"sequencer must schedule all bass layers from the same audio timestamp");
+  assert.match(html,/playBassNote\(\{\.\.\.note,velocity:[^}]+\},duration,audioAt,activeSection,chordVariant\)/,"sequencer must schedule all bass layers from the same audio timestamp");
   assert.match(html,/bass: \{\.\.\.\(base\.bass\|\|\{\}\),notes:cloneRhythmData\(bassForExport\)\}/,"layering must export a normal bass note timeline");
 });
 
@@ -1165,14 +1165,14 @@ test("TL-73 chord progression can supply a fallback bass line when no explicit b
   const buildBass=new Function("chordSymbolToPitches",html.slice(bassStart,bassEnd)+";return buildBassNotesFromChords;")(helpers.chordSymbolToPitches);
   const project={generatedMusic:{chords:[{chord:"Am",beats:4},{chord:"F",beats:4},{chord:"C",beats:4},{chord:"G",beats:4}]}};
   const notes=buildBass(project,4,4);
-  assert.equal(notes.length,8,"each four-beat chord should yield root and fifth bass notes");
+  assert.equal(notes.length,11,"four-beat chords should yield roots, fifths and three chromatic approach notes");
   assert.equal(notes[0].pitch,33,"A minor root should be in the bass register");
   assert.equal(notes[0].startBeat,0);
   assert.equal(notes[1].startBeat,2);
   assert.ok(notes.every(n=>n.pitch>=24&&n.pitch<=60),"generated bass notes must remain in playable bass range");
   const stringProject={chords:["C","Am","F","G"]};
   const stringNotes=buildBass(stringProject,4,4);
-  assert.equal(stringNotes.length,8,"plain chord-name arrays must also generate bass notes");
+  assert.equal(stringNotes.length,11,"plain chord-name arrays must also generate bass pickups");
   assert.match(html,/importedBass\.length\?importedBass:buildBassNotesFromChords/,"explicit bass timeline must take precedence over generated fallback");
 });
 
@@ -1276,7 +1276,7 @@ test("TL-80 bass timbre follows song section, register and A/B/C role", async ()
   assert.ok(driven.attackDb>verse.attackDb,"C bass should have more attack");
   assert.ok(low.subDb>high.subDb,"low-register notes should receive more sub support");
   assert.ok(high.filterHz>low.filterHz,"higher bass notes should receive a clearer upper body");
-  assert.match(html,/playBassNote\(note,duration,audioAt,activeSection,chordVariant\)/,"live bass playback must receive section and selected arrangement");
+  assert.match(html,/playBassNote\(\{\.\.\.note,velocity:[^}]+\},duration,audioAt,activeSection,chordVariant\)/,"live bass playback must receive section and selected arrangement");
 });
 
 
