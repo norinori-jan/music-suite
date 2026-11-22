@@ -1844,4 +1844,13 @@ test("TL-97 real lyric-to-melody workflow creates linked notes and section harmo
   assert.ok(cards.every(card=>card.dataset.lyricId&&card.dataset.lyricSection),"rendered cards must retain lyric links for later handoff");
 });
 
-
+test("TL-120 melody sample loading never blocks drum and accompaniment playback", async () => {
+  const beatLab = await readFile(beatLabPath, "utf8");
+  const toggle = beatLab.slice(beatLab.indexOf("async function togglePlay()"), beatLab.indexOf("function stopPlay()"));
+  assert.match(toggle, /getMelodySampler\(\)/);
+  assert.doesNotMatch(toggle, /await ensureMelodySamplerReady\(\)/);
+  assert.match(toggle, /内蔵シンセで再生します/);
+  assert.match(toggle, /Tone\.context\?\.state/);
+  assert.match(toggle, /setStatus\('err'/);
+  assert.match(toggle, /else getMelodySynth\(\)\.triggerAttackRelease/);
+});
