@@ -321,7 +321,7 @@ test("TL-28 generated melody degree follows its own lyric section chord progress
   const html=await readFile(canvasPath,"utf8");
   const start=html.indexOf("const LYRIC_NOTE_NAMES=");
   const end=html.indexOf("function parseChordProgressionText",start);
-  const helpers=new Function(html.slice(start,end)+";return {LYRIC_PROGRESSIONS,buildDiatonicTriad,buildSectionChordProgressions,resolveMelodyChordDegree};")();
+  const helpers=new Function(html.slice(start,end)+";return {LYRIC_PROGRESSIONS,buildDiatonicTriad,buildSectionChordProgressions,resolveMelodyChordDegree,resolveMelodyChordDegreeAtBeat};")();
   const sections=[
     {role:"A",label:"Mia / A verse",text:"A"},
     {role:"B",label:"Ken / B verse",text:"B"},
@@ -333,6 +333,8 @@ test("TL-28 generated melody degree follows its own lyric section chord progress
   assert.deepEqual([0,4,8,12].map(i=>helpers.resolveMelodyChordDegree(chords,"Mia / A verse",i)),[1,6,4,5]);
   assert.deepEqual([0,4,8,12].map(i=>helpers.resolveMelodyChordDegree(chords,"Ken / B verse",i)),[6,4,1,5]);
   assert.deepEqual([0,4,8,12].map(i=>helpers.resolveMelodyChordDegree(chords,"Chorus",i)),[1,4,6,5]);
+  assert.equal(helpers.resolveMelodyChordDegreeAtBeat(chords,"Ken / B verse",0),6);
+  assert.equal(helpers.resolveMelodyChordDegreeAtBeat(chords,"Ken / B verse",2),4);
 });
 
 test("TL-29 pasted melody accepts note-only and explicit-duration formats", async () => {
@@ -1630,7 +1632,7 @@ test("TL-99 Composition Canvas handoff carries the full 32-bar lyric and arrange
 
 test("TL-98 lyric edits preserve note identity and update lyric linkage without orphaning notes", async () => {
   const canvas=await readFile(canvasPath,"utf8");
-  const helperStart=canvas.indexOf("function lyricEstimateSyllables(");
+  const helperStart=canvas.indexOf("function lyricStressIndex(");
   const helperEnd=canvas.indexOf("function parseChordProgressionText",helperStart);
   const start=canvas.indexOf("function generateLyricMusicSketch()");
   const end=canvas.indexOf("\nfunction saveLyricCanvasProject()",start);
@@ -1674,7 +1676,7 @@ test("TL-98 lyric edits preserve note identity and update lyric linkage without 
 
 test("TL-97 real lyric-to-melody workflow creates linked notes and section harmony before arrangement", async () => {
   const canvas=await readFile(canvasPath,"utf8");
-  const helperStart=canvas.indexOf("function lyricEstimateSyllables(");
+  const helperStart=canvas.indexOf("function lyricStressIndex(");
   const helperEnd=canvas.indexOf("function parseChordProgressionText",helperStart);
   const generatorStart=canvas.indexOf("function generateLyricMusicSketch()");
   const generatorEnd=canvas.indexOf("\nfunction saveLyricCanvasProject()",generatorStart);
