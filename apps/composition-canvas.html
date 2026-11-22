@@ -1505,6 +1505,7 @@ function generateLyricMusicSketch(){
   window.__lyricMusicSketch.selectedHarmonyCandidate='A';
   renderHarmonyCandidates(harmonyCandidates,'A');
   renderHarmonyBarEditor();
+  updateGeneratedChordTimelineOutputs();
   goCompositionStage('compare');
   document.getElementById('lyric-music-result').innerHTML='<strong>生成した候補</strong><p>Key: '+escapeHtmlCanvas(key)+' / '+escapeHtmlCanvas(mood)+' / '+chordNames.map(escapeHtmlCanvas).join(' – ')+'</p><p>'+notes.length+'音のメロディ候補を配置しました。強勢音節・フレーズの呼吸・コード構成音への着地を反映しています。音符カードをクリックして調整できます。</p><small>英語の強勢は推定です。歌詞の発音・自然なアクセント・歌いやすさは実際に再生して確認してください。</small>';
   showToast('歌詞からメロディ・コードの初期案を生成しました');
