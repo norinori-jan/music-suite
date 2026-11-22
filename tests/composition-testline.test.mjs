@@ -1568,6 +1568,22 @@ test("TL-96 lyric-aware accompaniment, bass pickups and pre-chorus transition ar
 });
 
 
+test("TL-99 Composition Canvas handoff carries the full 32-bar lyric and arrangement source", async () => {
+  const canvas=await readFile(canvasPath,"utf8");
+  const beat=await readFile(beatLabPath,"utf8");
+  assert.match(canvas,/project\.bars=window\.__lastDrumProject\?\.bars\|\|incoming\.bars\|\|window\.__lyricMusicSketch\?\.bars\|\|32/,"handoff must retain the generated 32-bar target");
+  assert.match(canvas,/project\.lyrics=lyricTextRead\(\)/,"handoff must include current edited lyrics");
+  assert.match(canvas,/project\.sections=lyricSectionsRead\(\)/,"handoff must include current lyric sections");
+  assert.match(canvas,/project\.generatedMusic=window\.__lyricMusicSketch/,"handoff must include generated melody and harmony");
+  assert.match(beat,/const targetBars=Math\.min\(32,Math\.max\(1,Number\(data\.bars\)\|\|1,requiredBars,Number\(data\.arrangement\?\.bars\)\|\|0\)\)/,"BEAT//LAB must honor the incoming 32-bar timeline");
+  assert.match(beat,/melody:\{notes:cloneRhythmData\(project\?\.melody\?\.notes\|\|\[\]\)\}/,"A/B/C arrangement snapshots must retain lyric-generated melody");
+  assert.match(beat,/chords: base\.chords\|\|base\.generatedMusic\?\.chords\|\|null/,"export must retain generated chord events");
+  assert.match(beat,/lyrics:project\.lyrics\|\|' '/,"timeline export must retain lyrics");
+  assert.match(beat,/sections:project\.sections\|\|\[\]/,"timeline export must retain lyric sections");
+  assert.match(beat,/arrangements:cloneRhythmData\(APP\.arrangements\|\|\{\}\)/,"export must preserve all A/B/C snapshots");
+});
+
+
 test("TL-98 lyric edits preserve note identity and update lyric linkage without orphaning notes", async () => {
   const canvas=await readFile(canvasPath,"utf8");
   const start=canvas.indexOf("function generateLyricMusicSketch()");
@@ -1647,7 +1663,10 @@ test("TL-97 real lyric-to-melody workflow creates linked notes and section harmo
   const sketch=window.__lyricMusicSketch;
   assert.ok(sketch&&sketch.melody.length>0,"entering lyrics must create a melody candidate");
   assert.equal(sketch.chordSections.length,4,"each lyric section must receive its own chord progression");
-  assert.equal(sketch.chords.length,16,"four lyric sections must produce sixteen chord events");
+  assert.equal(sketch.bars,32,"lyric generation must target a complete 32-bar song");
+  assert.equal(sketch.chords.length,32,"four lyric sections must each expand their harmony across eight bars");
+  assert.ok(sketch.melody.some(note=>note.startBeat>=96),"the final lyric section must reach the last eight bars");
+  assert.ok(sketch.chords.some(chord=>chord.startBeat>=96),"the final section harmony must reach the last eight bars");
   assert.deepEqual(new Set(sketch.melody.map(note=>note.section)),new Set(sections.map(section=>section.label)));
   assert.ok(sketch.melody.every(note=>note.lyricId&&note.word&&note.lyric&&note.role&&note.section),"every generated note must retain its lyric, word, role and section");
   assert.equal(state.lastNotes.length,sketch.melody.length,"generated notes must be reflected in the editable note-card state");
