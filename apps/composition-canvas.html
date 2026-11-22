@@ -702,8 +702,17 @@ function applyLyricsToCanvas(){
   window.__lyricCardAssignments=cards.map((card,index)=>({noteId:card.dataset.noteId||makeMelodyNoteId(index),lyricId:card.dataset.lyricId||null,lyric:card.dataset.lyric||'',role:card.dataset.lyricRole||'',section:card.dataset.lyricSection||''}));
   showToast('歌詞をパート・フレーズ単位で音符カードに割り当てました');
 }
+const LYRIC_PRONUNCIATION_LEXICON={
+  again:[2,1],alive:[2,1],alone:[2,1],above:[2,1],awake:[2,1],away:[2,1],below:[2,1],because:[2,1],before:[2,1],beginning:[3,1],believe:[2,1],believing:[3,1],beautiful:[3,0],camera:[3,0],chocolate:[2,0],comfortable:[3,0],different:[3,0],dreaming:[2,0],every:[2,0],everybody:[4,0],everything:[3,0],falling:[2,0],family:[3,0],favorite:[2,0],fire:[2,0],forever:[3,1],growing:[2,0],heaven:[2,0],hour:[2,0],inside:[2,1],interesting:[3,0],listen:[2,0],memory:[3,0],nothing:[2,0],open:[2,0],outside:[2,1],people:[2,0],power:[2,0],remember:[3,1],return:[2,1],rising:[2,0],running:[2,0],silent:[2,0],someone:[2,0],something:[2,0],tomorrow:[3,1],together:[3,1],tonight:[2,1],understand:[3,1],understanding:[4,2],within:[2,1],without:[2,1]
+};
+function lyricPronunciationEntry(word){
+  const normalized=String(word||'').toLowerCase().replace(/[^a-z']/g,'').replace(/^'+|'+$/g,'');
+  return LYRIC_PRONUNCIATION_LEXICON[normalized]||null;
+}
 function lyricStressIndex(word,count){
   const w=String(word||'').toLowerCase().replace(/[^a-z']/g,'');
+  const pronunciation=lyricPronunciationEntry(w);
+  if(pronunciation)return Math.min(count-1,pronunciation[1]);
   if(count<=1)return 0;
   if(/(tion|sion|ic|ical|ity|graphy|logy|ious|eous)$/.test(w))return Math.max(0,count-2);
   if(/(ee|ese|ique|oon|eer|ieve|one)$/.test(w))return count-1;
@@ -716,6 +725,8 @@ function lyricIsFunctionWord(word){
 function lyricEstimateSyllables(word){
   const w=String(word||'').toLowerCase().replace(/[^a-z']/g,'');
   if(!w)return 1;
+  const pronunciation=lyricPronunciationEntry(w);
+  if(pronunciation)return pronunciation[0];
   if(w.length<=3)return 1;
   const groups=w.match(/[aeiouy]+/g)||[];
   let n=Math.max(1,groups.length);
