@@ -1163,7 +1163,7 @@ function createInstrumentSampler(folder,urls,output,ready){
   catch(error){ready(false);return null;}
 }
 function getBassSampler(){if(!bassSampler)bassSampler=createInstrumentSampler('bass-electric',{Cs1:'Cs1.mp3',E1:'E1.mp3',G1:'G1.mp3',As1:'As1.mp3',Cs2:'Cs2.mp3',E2:'E2.mp3',G2:'G2.mp3',As2:'As2.mp3',Cs3:'Cs3.mp3',E3:'E3.mp3',G3:'G3.mp3',As3:'As3.mp3',Cs4:'Cs4.mp3'},getBassSamplerFilter(),v=>bassSamplerReady=v);return bassSampler;}
-function getGuitarSynth(){if(!guitarSynth){guitarSynth=new Tone.PluckSynth({attackNoise:.72,dampening:5200,resonance:.92}).connect(getGuitarBus());guitarSynth.volume.value=-9;}return guitarSynth;}
+function getGuitarSynth(){if(!guitarSynth){guitarSynth=new Tone.PolySynth(Tone.Synth,{oscillator:{type:'triangle'},envelope:{attack:.003,decay:.34,sustain:0,release:.12}}).connect(getGuitarBus());guitarSynth.volume.value=-11;}return guitarSynth;}
 function getGuitarSampler(){if(!guitarSampler)guitarSampler=createInstrumentSampler('guitar-acoustic',{D2:'D2.mp3',G2:'G2.mp3',A2:'A2.mp3',C3:'C3.mp3',E3:'E3.mp3',G3:'G3.mp3',A3:'A3.mp3',C4:'C4.mp3',E4:'E4.mp3',G4:'G4.mp3',A4:'A4.mp3',C5:'C5.mp3'},getGuitarBus(),v=>guitarSamplerReady=v);return guitarSampler;}
 function getElectricGuitarSampler(){if(!electricGuitarSampler)electricGuitarSampler=createInstrumentSampler('guitar-electric',{Cs2:'Cs2.mp3',E2:'E2.mp3',Fs2:'Fs2.mp3',A2:'A2.mp3',C3:'C3.mp3',C4:'C4.mp3',Ds4:'Ds4.mp3',Fs4:'Fs4.mp3',A5:'A5.mp3',C6:'C6.mp3'},getGuitarBus(),v=>electricGuitarSamplerReady=v);return electricGuitarSampler;}
 function getElectricGuitarSynth(){
@@ -1187,7 +1187,7 @@ function playGuitarEvent(event,when,bpm){
   }else{
     const sampler=getGuitarSampler();
     if(guitarSamplerReady&&sampler)sampler.triggerAttackRelease(notes,duration,when,velocity);
-    else getGuitarSynth().triggerAttack(notes,when,velocity);
+    else getGuitarSynth().triggerAttackRelease(notes,duration,when,velocity);
   }
 }
 
@@ -1396,7 +1396,7 @@ function buildBassVariantNotes(notes,bars,timeSig=4,variant='A'){
 function getPlayableBassNotes(project,bars,timeSig=4){
   const source=Array.isArray(project?.bass?.notes)?project.bass.notes:[];
   const limit=Math.max(1,Number(bars)||1)*Math.max(1,Number(timeSig)||4);
-  return source.map((note,index)=>({
+  const playable=source.map((note,index)=>({
     id:note.id||'bass-'+index,
     pitch:Number(note.pitch),
     startBeat:Number(note.startBeat),
@@ -1404,7 +1404,19 @@ function getPlayableBassNotes(project,bars,timeSig=4){
     velocity:Number.isFinite(Number(note.vel))?(Number(note.vel)>1?Number(note.vel)/127:Number(note.vel)):.74
   })).filter(note=>Number.isInteger(note.pitch)&&note.pitch>=24&&note.pitch<=60&&Number.isFinite(note.startBeat)&&note.startBeat>=0&&note.startBeat<limit&&Number.isFinite(note.durationBeats)&&note.durationBeats>0)
     .map(note=>({...note,velocity:Math.max(.05,Math.min(1,note.velocity))}))
-    .sort((a,b)=>a.startBeat-b.startBeat);
+    .sort((a,b)=>a.startBeat-b.startBeat||a.pitch-b.pitch);
+  // Bass is a monophonic role: simultaneous source notes collapse to the
+  // lowest pitch so MonoSynth receives only one attack per audio-clock time.
+  const monophonic=[];
+  playable.forEach(note=>{
+    const previous=monophonic[monophonic.length-1];
+    if(previous&&Math.abs(previous.startBeat-note.startBeat)<0.00001){
+      if(note.pitch<previous.pitch||(note.pitch===previous.pitch&&note.velocity>previous.velocity))monophonic[monophonic.length-1]=note;
+      return;
+    }
+    monophonic.push(note);
+  });
+  return monophonic;
 }
 
 
