@@ -1085,6 +1085,30 @@ test("TL-94 generated A B C chord accompaniment uses smooth voice leading withou
 });
 
 
+test("TL-95 section dynamics shape melody bass drums piano and guitar as one ensemble", async () => {
+  const html=await readFile(beatLabPath,"utf8");
+  const start=html.indexOf("function getSectionPerformanceDynamics(");
+  const end=html.indexOf("\nfunction buildArrangementTrackSnapshot",start);
+  assert.ok(start>=0&&end>start,"section performance dynamics helper must exist");
+  const dynamics=new Function(html.slice(start,end)+";return getSectionPerformanceDynamics;")();
+  const intro=dynamics({id:"intro",label:"Intro"},1,"A");
+  const verse=dynamics({id:"verse",label:"Verse"},2,"A");
+  const chorus=dynamics({id:"chorus",label:"Chorus"},8,"A");
+  const bridge=dynamics({id:"bridge",label:"Bridge"},12,"A");
+  assert.ok(chorus.drums>verse.drums&&chorus.bass>verse.bass,"chorus must lift rhythm section above verse");
+  assert.ok(chorus.guitar>verse.guitar&&chorus.melody>=verse.melody,"chorus must widen the arrangement without burying melody");
+  assert.ok(intro.drums<verse.drums&&intro.bass<verse.bass,"intro must leave space before the full groove");
+  assert.ok(bridge.drums<verse.drums&&bridge.bass<verse.bass,"bridge must create a lower-energy contrast");
+  for(const section of [intro,verse,chorus,bridge])for(const value of Object.values(section))assert.ok(value>=.55&&value<=1.3,"section dynamics must remain bounded");
+  assert.match(html,/const sectionDynamics=getSectionPerformanceDynamics\(activeSection,barNumber,chordVariant\)/);
+  assert.match(html,/vel\*sectionDynamics\.drums/);
+  assert.match(html,/note\.velocity\*sectionDynamics\.bass/);
+  assert.match(html,/event\.velocity\*sectionDynamics\.piano/);
+  assert.match(html,/event\.velocity\*sectionDynamics\.guitar/);
+  assert.match(html,/127\*sectionDynamics\.melody/);
+});
+
+
 test("TL-71 bass line has independent A B C groove identities without changing source notes", async () => {
   const html=await readFile(beatLabPath,"utf8");
   const start=html.indexOf("function buildBassVariantNotes(notes,bars,timeSig=4,variant='A')");
