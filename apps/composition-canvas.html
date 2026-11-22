@@ -67,7 +67,7 @@
 🎼 score-editorへ送る
 </button>
 
-<button class="btn primary" onclick="sendToBeatLab()">
+<button id="send-to-beatlab-button" class="btn primary" onclick="sendToBeatLab()">
 🥁 リズムを作る
 </button>
 <button class="btn" type="button" onclick="openStandardTestSongInBeatLab()">
@@ -100,6 +100,13 @@
   style="display:none">
 
 <section id="lyric-panel">
+  <nav id="composition-workflow-nav" aria-label="作曲の手順" style="position:sticky;top:0;z-index:8;display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:6px;padding:8px 0;background:#171525">
+    <button type="button" data-composition-stage="lyrics" onclick="goCompositionStage('lyrics')" aria-current="step">① 歌詞</button>
+    <button type="button" data-composition-stage="harmony" onclick="goCompositionStage('harmony')">② 和声</button>
+    <button type="button" data-composition-stage="melody" onclick="goCompositionStage('melody')">③ メロディ</button>
+    <button type="button" data-composition-stage="arrange" onclick="goCompositionStage('arrange')">④ 編曲</button>
+  </nav>
+  <p id="composition-stage-status" aria-live="polite" style="font-size:11px;opacity:.82;margin:2px 0 10px">歌詞を入力し、次に和声候補を比較します。</p>
   <h3>✍️ 英語歌詞 × メロディ</h3>
   <div id="lyric-meta" class="lyric-line"></div>
   <div id="duet-editors" style="display:none">
@@ -148,6 +155,11 @@
         <strong>🎼 メロディ適合で比較する3つの和声案</strong>
         <p style="font-size:12px;line-height:1.7;margin:6px 0">A・B・Cは同じメロディに対する別のコード進行です。強勢音節・フレーズ終端のコード構成音適合、和声の流れ、選択した雰囲気を理論評価します。AIによる歌詞意味の自動理解ではありません。</p>
         <div id="harmony-candidate-list" style="display:grid;grid-template-columns:repeat(auto-fit,minmax(min(100%,250px),1fr));gap:9px"></div>
+        <div style="margin-top:12px">
+          <strong>小節ごとのコード編集</strong>
+          <p style="font-size:11px;line-height:1.6;margin:5px 0">選んだ候補の各コードを小節単位で変更できます。変更した小節だけを伴奏データへ渡します。</p>
+          <div id="harmony-bar-editor" style="display:grid;grid-template-columns:repeat(auto-fit,minmax(min(100%,230px),1fr));gap:6px"></div>
+        </div>
         <div style="display:flex;gap:8px;align-items:center;margin-top:8px"><button type="button" onclick="stopHarmonyPreview()">■ 試聴停止</button><span id="harmony-preview-status" aria-live="polite" style="font-size:11px">A・B・Cを同じメロディで試聴して比較できます。</span></div>
       </section>
       <strong>生成されたコード進行（全件）</strong>
@@ -822,7 +834,7 @@ function expandHarmonySectionsToTimeline(chordSections,bars=32,beatsPerBar=4){
         const chordBeats=Math.max(.5,Number(item.beats)||4);
         const startBeat=sectionIndex*beatsPerSection+repeat*sectionBeats+repeatBeat;
         if(startBeat<(sectionIndex+1)*beatsPerSection-.001){
-          expanded.push({...item,id:(item.id||'chord')+'-r'+(repeat+1),section:section.label,role:section.role,startBeat:+startBeat.toFixed(4),beats:Math.min(chordBeats,(sectionIndex+1)*beatsPerSection-startBeat),bar:Math.floor(startBeat/beatsPerBar)+1});
+          expanded.push({...item,id:(item.id||'chord')+'-r'+(repeat+1),sourceId:item.id||'chord',section:section.label,role:section.role,startBeat:+startBeat.toFixed(4),beats:Math.min(chordBeats,(sectionIndex+1)*beatsPerSection-startBeat),bar:Math.floor(startBeat/beatsPerBar)+1});
         }
         repeatBeat+=chordBeats;
       });
@@ -936,6 +948,43 @@ function generateHarmonyCandidates({key,mood,sections,chordSections,melody,progr
     return {...profile,styles,sections:candidateSections,score:metrics.score,fitRate:fit,reasons,metrics};
   });
 }
+function renderHarmonyBarEditor(){
+  const host=document.getElementById('harmony-bar-editor');
+  if(!host)return;
+  host.innerHTML='';
+  const sketch=window.__lyricMusicSketch||{},timeline=Array.isArray(sketch.chords)?sketch.chords:[];
+  const key=sketch.key||'C';
+  timeline.forEach((item,index)=>{
+    const row=document.createElement('label');
+    row.style.cssText='display:flex;align-items:center;justify-content:space-between;gap:8px;min-width:0;padding:6px 8px;border:1px solid #365b58;border-radius:6px;background:#142d2b;font-size:11px';
+    const caption=document.createElement('span');
+    caption.style.cssText='min-width:70px;white-space:nowrap';
+    caption.textContent='小節 '+(item.bar||Math.floor((Number(item.startBeat)||0)/4)+1)+' · '+(item.chord||'コード');
+    const select=document.createElement('select');
+    select.style.cssText='min-width:82px;max-width:120px;padding:5px;background:#203e39;color:#fff;border:1px solid #5a887e;border-radius:5px';
+    for(let degree=1;degree<=7;degree++){
+      const chord=buildDiatonicTriad(key,degree),option=document.createElement('option');
+      option.value=String(degree);option.textContent=['I','ii','iii','IV','V','vi','vii°'][degree-1]+' · '+chord.chord;
+      option.selected=Number(item.degree)===degree;
+      select.appendChild(option);
+    }
+    select.addEventListener('change',()=>updateHarmonyBarChord(index,Number(select.value)));
+    row.appendChild(caption);row.appendChild(select);host.appendChild(row);
+  });
+}
+function updateHarmonyBarChord(index,degree){
+  const sketch=window.__lyricMusicSketch||{},timeline=Array.isArray(sketch.chords)?sketch.chords.map(item=>({...item})):[],item=timeline[index];
+  if(!item||!Number.isInteger(degree)||degree<1||degree>7)return false;
+  const chord=buildDiatonicTriad(sketch.key||'C',degree);
+  timeline[index]={...item,...chord,bar:item.bar,startBeat:item.startBeat,beats:item.beats,section:item.section,role:item.role,sourceId:item.sourceId,manualOverride:true};
+  window.__lyricMusicSketch={...sketch,chords:timeline,manualChordEdits:true};
+  const flat=timeline.map(chord=>chord.chord).join(', ');
+  const input=document.getElementById('chord-progression-input');if(input)input.value=flat;
+  const output=document.getElementById('lyric-generated-chord-output');if(output)output.value=flat;
+  const status=document.getElementById('chord-progression-status');if(status)status.textContent='小節 '+(item.bar||index+1)+' を '+chord.chord+' に変更しました。ほかの小節とメロディは維持しています。';
+  const stage=document.getElementById('composition-stage-status');if(stage)stage.textContent='小節単位のコード編集を反映しました。試聴で確認してください。';
+  return true;
+}
 let harmonyPreviewContext=null;
 let harmonyPreviewNodes=[];
 let harmonyPreviewGeneration=0;
@@ -960,7 +1009,7 @@ async function previewHarmonyCandidate(candidateId){
     const ctx=harmonyPreviewContext,generation=harmonyPreviewGeneration;
     const bpm=Math.max(40,Math.min(220,Number(window.__incomingLyricProject?.bpm)||Number(document.getElementById('note-sequence-bpm')?.value)||120));
     const secondsPerBeat=60/bpm,base=ctx.currentTime+.12;
-    const timeline=expandHarmonySectionsToTimeline(candidate.sections,Number(sketch.bars)||32,Number(sketch.timeSig)||4);
+    const timeline=candidateId===sketch.selectedHarmonyCandidate&&Array.isArray(sketch.chords)&&sketch.chords.length?sketch.chords:expandHarmonySectionsToTimeline(candidate.sections,Number(sketch.bars)||32,Number(sketch.timeSig)||4);
     const melody=Array.isArray(sketch.melody)?sketch.melody:[];
     const master=ctx.createGain();master.gain.value=.72;master.connect(ctx.destination);
     const createVoice=(midi,startBeat,durationBeats,type,volume)=>{
@@ -998,6 +1047,25 @@ async function previewHarmonyCandidate(candidateId){
     return false;
   }
 }
+function goCompositionStage(stage){
+  const targets={
+    lyrics:'single-lyric-editor',
+    harmony:'harmony-candidate-panel',
+    melody:'canvas',
+    arrange:'send-to-beatlab-button'
+  };
+  const names={lyrics:'歌詞を入力します',harmony:'A・B・Cの和声を比較します',melody:'音符と歌詞の対応を確認します',arrange:'伴奏トラックへ展開します'};
+  const targetId=targets[stage]||targets.lyrics;
+  let target=document.getElementById(targetId);
+  if(stage==='harmony'&&(!target||!window.__lyricMusicSketch?.harmonyCandidates?.length))target=document.getElementById('lyric-progression');
+  if(stage==='lyrics'&&document.getElementById('duet-editors')?.style.display!=='none')target=document.getElementById('duet-editors');
+  document.querySelectorAll('#composition-workflow-nav [data-composition-stage]').forEach(button=>{
+    const active=button.dataset.compositionStage===stage;
+    if(active)button.setAttribute('aria-current','step');else button.removeAttribute('aria-current');
+  });
+  const status=document.getElementById('composition-stage-status');if(status)status.textContent=names[stage]||names.lyrics;
+  target?.scrollIntoView({behavior:'smooth',block:'start'});
+}
 function renderHarmonyCandidates(candidates,selectedId){
   const host=document.getElementById('harmony-candidate-list');
   if(!host)return;
@@ -1030,6 +1098,7 @@ function selectHarmonyCandidate(candidateId){
   const input=document.getElementById('chord-progression-input');if(input)input.value=chords.map(item=>item.chord).join(', ');
   const panel=document.getElementById('lyric-generated-chord-panel');if(panel)panel.style.display='block';
   renderHarmonyCandidates(sketch.harmonyCandidates,candidateId);
+  renderHarmonyBarEditor();
   const status=document.getElementById('chord-progression-status');if(status)status.textContent=candidateId+'案「'+candidate.name+'」を採用しました。メロディは保持し、和声だけを切り替えました。';
   const result=document.getElementById('lyric-music-result');if(result)result.innerHTML='<strong>'+escapeHtmlCanvas(candidate.id+'案 · '+candidate.name)+'を採用しました</strong><p>メロディ音符と歌詞の対応は維持し、コード進行を切り替えました。BEAT//LABへ送ると、この和声が伴奏展開の基準になります。</p>';
   return true;
@@ -1280,6 +1349,7 @@ function refineGeneratedChordProgressions(){
   window.__lyricMusicSketch={...sketch,chordSections:selected.sections,chords,harmonyCandidates,selectedHarmonyCandidate:'A',refineCount:current+1,rhythmVariant:(current+1)%6,method:'melody-aware-harmony-candidates-v1'};
   renderGeneratedChordSections(selected.sections);
   renderHarmonyCandidates(harmonyCandidates,'A');
+  renderHarmonyBarEditor();
   const panel=document.getElementById('lyric-generated-chord-panel');if(panel)panel.style.display='block';
   const flat=document.getElementById('lyric-generated-chord-output');if(flat)flat.value=chords.map(x=>x.chord).join(', ');
   const input=document.getElementById('chord-progression-input');if(input)input.value=chords.map(x=>x.chord).join(', ');
@@ -1401,6 +1471,8 @@ function generateLyricMusicSketch(){
   window.__lyricMusicSketch.harmonyCandidates=harmonyCandidates;
   window.__lyricMusicSketch.selectedHarmonyCandidate='A';
   renderHarmonyCandidates(harmonyCandidates,'A');
+  renderHarmonyBarEditor();
+  goCompositionStage('harmony');
   document.getElementById('lyric-music-result').innerHTML='<strong>生成した候補</strong><p>Key: '+escapeHtmlCanvas(key)+' / '+escapeHtmlCanvas(mood)+' / '+chordNames.map(escapeHtmlCanvas).join(' – ')+'</p><p>'+notes.length+'音のメロディ候補を配置しました。強勢音節・フレーズの呼吸・コード構成音への着地を反映しています。音符カードをクリックして調整できます。</p><small>英語の強勢は推定です。歌詞の発音・自然なアクセント・歌いやすさは実際に再生して確認してください。</small>';
   showToast('歌詞からメロディ・コードの初期案を生成しました');
 }
