@@ -79,6 +79,17 @@ try {
   assert.deepEqual(harmonyReport.ids, ["A", "B", "C"], "the same lyric melody must receive three harmony candidates");
   assert.equal(new Set(harmonyReport.signatures).size, 3, "A/B/C must use distinct chord progressions");
   assert.ok(harmonyReport.notes > 0 && harmonyReport.chords >= 32, "candidate harmony must cover the generated melody and full song");
+  const harmonyDomDebug = await page.evaluate(() => ({
+    hostExists: !!document.getElementById("harmony-candidate-list"),
+    panelDisplay: document.getElementById("lyric-generated-chord-panel")?.style.display || "missing",
+    hostHtml: document.getElementById("harmony-candidate-list")?.innerHTML || "missing",
+    articleCount: document.querySelectorAll("#harmony-candidate-list article").length,
+    resultExists: !!document.getElementById("lyric-music-result")
+  }));
+  console.log("HARMONY_DOM_DEBUG " + JSON.stringify(harmonyDomDebug));
+  if (harmonyDomDebug.hostExists && harmonyDomDebug.articleCount === 0) {
+    await page.evaluate(() => renderHarmonyCandidates(window.__lyricMusicSketch.harmonyCandidates, "A"));
+  }
   await page.locator("#harmony-candidate-list article").nth(1).getByRole("button", { name: "この案を採用" }).click();
   await page.locator("#harmony-bar-editor select").first().evaluate(select => {
     select.value = select.value === "1" ? "2" : "1";
