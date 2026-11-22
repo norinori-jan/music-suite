@@ -283,6 +283,7 @@ body{padding-bottom:env(safe-area-inset-bottom)}
 <div id="statusbar">
   <div class="sdot" id="sdot"></div>
   <span id="smsg">BEAT//LAB 起動完了 — STEP からパターンを作成してください</span>
+  <button class="btn" id="audio-output-test" type="button" onclick="testAudioOutput()" style="margin-left:auto;padding:3px 8px">♪ 音声テスト</button>
 </div>
 
 <div id="mixbar" style="display:flex;align-items:center;gap:12px;flex-wrap:wrap;padding:7px 12px;background:var(--s1);border-bottom:1px solid var(--bd);font-size:10px">
@@ -722,6 +723,25 @@ function restoreRhythmVariations(items){
 // ════════════════════════════════════════════════════════
 function pk(rowId,step){return rowId+':'+step}
 function setStatus(t,m){document.getElementById('sdot').className='sdot'+(t?' '+t:'');document.getElementById('smsg').textContent=m}
+async function testAudioOutput(){
+  const button=document.getElementById('audio-output-test');
+  if(button){button.disabled=true;button.textContent='♪ 音声確認中';}
+  let testSynth=null;
+  try{
+    if(typeof Tone==='undefined'||!Tone.Synth)throw new Error('Tone.jsを読み込めていません。CDNへの接続を確認してください。');
+    await Tone.start();
+    const contextState=Tone.context?.state||'unknown';
+    if(contextState!=='running')throw new Error('AudioContextがrunningではありません（'+contextState+'）。ブラウザの音声出力を確認してください。');
+    testSynth=new Tone.Synth({oscillator:{type:'sine'},envelope:{attack:.012,decay:.08,sustain:.7,release:.12}}).toDestination();
+    testSynth.volume.value=-8;
+    testSynth.triggerAttackRelease('A4','4n');
+    setStatus('ok','音声テスト信号を出しました（A4 / 440Hz）。聞こえない場合はブラウザ・端末の出力経路を確認してください。');
+  }catch(error){
+    setStatus('err','音声テスト失敗：'+(error?.message||error));
+  }finally{
+    setTimeout(()=>{try{testSynth?.dispose();}catch(e){}if(button){button.disabled=false;button.textContent='♪ 音声テスト';}},900);
+  }
+}
 function totalSteps(){return APP.bars*APP.timeSig*(APP.div/4)}
 function esc(s){return String(s||'').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;')}
 
@@ -1638,6 +1658,12 @@ async function togglePlay(){
   const activeTracks=activeArrangement.tracks;
   const bassNotes=getPlayableBassNotes({bass:activeTracks.bass},APP.bars,APP.timeSig);
   const chordEvents={piano:(activeTracks.piano?.notes||[]).map(note=>({startBeat:Number(note.startBeat),pitches:[Number(note.pitch)],durationBeats:Number(note.durationBeats),velocity:Number(note.vel)/127})),guitar:(activeTracks.guitar?.notes||[]).map(note=>({startBeat:Number(note.startBeat),pitches:[Number(note.pitch)],durationBeats:Number(note.durationBeats),velocity:Number(note.vel)/127,instrument:note.instrument||'acoustic'}))};
+  const melodyEventCount=(activeTracks.melody?.notes||[]).length;
+  const bassEventCount=bassNotes.length;
+  const pianoEventCount=chordEvents.piano.length;
+  const guitarEventCount=chordEvents.guitar.length;
+  const drumEventCount=APP.sections?.reduce((sum,section)=>sum+Object.values(section.pattern||{}).filter(Boolean).length,0)||Object.values(APP.pattern||{}).filter(Boolean).length;
+  setStatus('gen','再生開始 · AudioContext='+Tone.context.state+' · 音符 M:'+melodyEventCount+' B:'+bassEventCount+' P:'+pianoEventCount+' G:'+guitarEventCount+' / ドラム:'+drumEventCount);
   const bassEnabled=document.getElementById('bass-enabled').checked;
   const pianoEnabled=document.getElementById('piano-enabled').checked;
   const guitarEnabled=document.getElementById('guitar-enabled').checked;
