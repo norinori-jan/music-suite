@@ -63,7 +63,7 @@ try {
   });
 
   await page.goto("http://127.0.0.1:4173/apps/composition-canvas.html", { waitUntil: "domcontentloaded" });
-  await page.locator("#canvas-lyrics").fill("We rise above the quiet night\\nYour light is calling me\\nWe find a brighter way");
+  await page.locator("#canvas-lyrics").fill(["We rise above the quiet night","Your light is calling me","We find a brighter way"].join("\\n"));
   await page.evaluate(() => {
     document.getElementById("lyric-key").value = "C";
     document.getElementById("lyric-mood").value = "bittersweet";
@@ -100,6 +100,7 @@ try {
   ]);
   await page.waitForLoadState("domcontentloaded");
   await page.waitForFunction(() => typeof window.Tone === "function" || (window.Tone && typeof window.Tone.start === "function"), null, { timeout: 20000 });
+  await page.waitForFunction(() => window.__compositionBaseProject?.generatedMusic?.selectedHarmonyCandidate === "B", null, { timeout: 10000 });
   const candidateArrangement = await page.evaluate(() => {
     const tracks = syncActiveArrangementTrackSnapshot()?.tracks || {};
     return {
