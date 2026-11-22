@@ -787,7 +787,13 @@ function buildSectionChordProgressions(key,sections,defaultStyle,sectionStyles={
     })};
   });
 }
-function resolveMelodyChordDegree(chordSections,label,localBeat){
+function resolveMelodyChordDegree(chordSections,label,localIndex){
+  const section=(chordSections||[]).find(item=>item.label===label)||(chordSections||[])[0];
+  if(!section||!Array.isArray(section.progression)||!section.progression.length)throw new Error('メロディに対応するコード進行がありません。');
+  const chordIndex=Math.floor(Math.max(0,localIndex)/4)%section.progression.length;
+  return section.progression[chordIndex].degree;
+}
+function resolveMelodyChordDegreeAtBeat(chordSections,label,localBeat){
   const section=(chordSections||[]).find(item=>item.label===label)||(chordSections||[])[0];
   if(!section||!Array.isArray(section.progression)||!section.progression.length)throw new Error('メロディに対応するコード進行がありません。');
   const progression=section.progression,total=progression.reduce((sum,item)=>sum+Math.max(.5,Number(item.beats)||4),0);
@@ -1109,7 +1115,7 @@ function generateLyricMusicSketch(){
       syllablesForPhrase.forEach((item,syllableIndex)=>{
         const slot=phraseSpan*weights[syllableIndex]/Math.max(.001,totalWeight);
         const localBeat=localCursor;
-        const degree=resolveMelodyChordDegree(chordSections,sectionKey,localBeat);
+        const degree=resolveMelodyChordDegreeAtBeat(chordSections,sectionKey,localBeat);
         let scaleIndex=lyricContourScaleIndex(degree,syllableIndex,item.stressed,syllableIndex===syllablesForPhrase.length-1);
         if(!item.stressed&&syllableIndex>0&&previousScaleIndex!==null){
           const delta=((scaleIndex-previousScaleIndex+3.5)%7)-3.5;
