@@ -130,6 +130,10 @@ try {
   }));
 
   assert.deepEqual(runtimeErrors, [], "Browser runtime errors detected:\n" + runtimeErrors.join("\n\n"));
+  assert.deepEqual(consoleWarnings, [], "Instrument sampler initialization warnings detected:\n" + consoleWarnings.join("\n\n"));
+  assert.deepEqual(sampleFailures, [], "Instrument sample requests failed:\n" + JSON.stringify(sampleFailures));
+  assert.deepEqual(sampleHttpErrors, [], "Instrument samples returned HTTP errors:\n" + JSON.stringify(sampleHttpErrors));
+  assert.deepEqual(samplerStatus, { piano: true, acousticGuitar: true, electricGuitar: true, bass: true }, "all four sample instruments must finish loading");
   console.log("BROWSER_SMOKE_OK " + JSON.stringify({ toneOnBeatLab, trackReport, playedVariants, volumeCheck, samplerStatus, sampleRequests: sampleRequests.length, sampleFailures, sampleHttpErrors, runtimeErrors: runtimeErrors.length, consoleErrors, consoleWarnings }));
 } finally {
   if (browser) await browser.close();
