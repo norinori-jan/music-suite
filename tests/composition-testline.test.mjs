@@ -1856,16 +1856,19 @@ test("TL-120 melody sample loading never blocks drum and accompaniment playback"
   assert.match(toggle, /else getMelodySynth\(\)\.triggerAttackRelease/);
 });
 
-test("TL-121 direct audio output test bypasses arrangement buses and reports browser audio state", async () => {
+test("TL-121 raw Web Audio and Tone.js output tests isolate browser output from the instrument library", async () => {
   const html = await readFile(beatLabPath, "utf8");
   assert.match(html, /id="audio-output-test"/);
   assert.match(html, /async function testAudioOutput\(\)/);
+  assert.match(html, /window\.AudioContext\|\|window\.webkitAudioContext/);
+  assert.match(html, /gain\.connect\(ctx\.destination\)/);
+  assert.match(html, /osc\.start\(start\)/);
+  assert.match(html, /Web Audio基礎テスト信号/);
+  assert.match(html, /id="tone-output-test"/);
+  assert.match(html, /async function testToneAudioOutput\(\)/);
   assert.match(html, /await Tone\.start\(\)/);
-  assert.match(html, /Tone\.context\?\.state/);
   assert.match(html, /new Tone\.Synth\([\s\S]*?\)\.toDestination\(\)/);
-  assert.match(html, /triggerAttackRelease\('A4','4n'\)/);
-  assert.match(html, /音声テスト失敗/);
-  assert.match(html, /再生開始 · AudioContext=/);
+  assert.match(html, /Tone\.jsテスト信号/);
 });
 
 test("TL-122 playback reports per-track scheduled events and catches voice scheduling errors", async () => {
