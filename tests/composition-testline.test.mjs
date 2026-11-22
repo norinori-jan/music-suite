@@ -997,6 +997,17 @@ test("TL-68 look-ahead scheduling keeps visual playhead aligned and rejects stal
 });
 
 
+test("TL-90 kick and snare add restrained transient definition without changing the sequencer clock", async () => {
+  const html=await readFile(beatLabPath,"utf8");
+  assert.match(html,/function getKickClick\(\)[\s\S]*?new Tone\.NoiseSynth[\s\S]*?decay:\.018[\s\S]*?volume\.value=-27/,"kick click must be a short, quiet high-frequency transient");
+  assert.match(html,/function getKick\(\)[\s\S]*?new Tone\.MembraneSynth[\s\S]*?pitchDecay:\.055/,"kick body must retain a tuned low-frequency membrane voice");
+  assert.match(html,/function getSnare\(\)[\s\S]*?new Tone\.Filter\(1750,'highpass'\)[\s\S]*?new Tone\.NoiseSynth/,"snare noise must be filtered to reduce low-mid buildup");
+  assert.match(html,/getKick\(\)\.triggerAttackRelease\('C1','8n',at,safeVel\);getKickClick\(\)\.triggerAttackRelease\('32n',at,safeVel\*\.72\)/,"kick body and click must share one audio timestamp and per-hit velocity");
+  assert.match(html,/playHit\(row\.pitch,vel,audioAt,false\)/,"transient layers must remain on the existing audio-clock scheduler");
+  assert.match(html,/masterLimiter=new Tone\.Limiter\(-1\)/,"master peak protection must remain enabled");
+});
+
+
 test("TL-69 bass playback layers sub foundation and transient articulation on one shared pitch clock", async () => {
   const html=await readFile(beatLabPath,"utf8");
   assert.match(html,/bassSynth=null,bassSampler=null,bassSamplerReady=false,bassSamplerFilter=null,bassSubSynth=null,bassAttackSynth=null/,"bass voices must be independently managed");
