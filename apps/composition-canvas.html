@@ -1068,7 +1068,7 @@ function goCompositionStage(stage){
     if(active)button.setAttribute?.('aria-current','step');else button.removeAttribute?.('aria-current');
   });
   const status=document.getElementById('composition-stage-status');if(status)status.textContent=names[stage]||names.lyrics;
-  target?.scrollIntoView({behavior:'smooth',block:'start'});
+  target?.scrollIntoView?.({behavior:'smooth',block:'start'});
 }
 function renderHarmonyCandidates(candidates,selectedId){
   const host=document.getElementById('harmony-candidate-list');
