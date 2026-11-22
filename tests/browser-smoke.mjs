@@ -43,6 +43,14 @@ try {
   const page = await browser.newPage({ viewport: { width: 1440, height: 1000 } });
   const runtimeErrors = [];
   const consoleErrors = [];
+  const sampleFailures = [];
+  const sampleHttpErrors = [];
+  page.on("requestfailed", request => {
+    if (/tonejs-instruments|salamander|Tone\.js/i.test(request.url())) sampleFailures.push({ url: request.url(), error: request.failure()?.errorText });
+  });
+  page.on("response", response => {
+    if (/tonejs-instruments|salamander/i.test(response.url()) && response.status() >= 400) sampleHttpErrors.push({ url: response.url(), status: response.status() });
+  });
   page.on("pageerror", error => runtimeErrors.push(error.stack || error.message));
   page.on("console", message => {
     if (message.type() === "error") consoleErrors.push(message.text());
@@ -87,14 +95,35 @@ try {
     assert.ok(trackReport[track] > 0, track + " track must contain playable notes; report=" + JSON.stringify(trackReport));
   }
 
-  await page.locator("#play-btn").click();
-  await page.waitForFunction(() => APP.playing === true, null, { timeout: 5000 });
-  await page.waitForTimeout(1200);
-  await page.locator("#play-btn").click();
-  await page.waitForFunction(() => APP.playing === false, null, { timeout: 5000 });
+  const playedVariants = [];
+  for (const variant of ["A", "B", "C"]) {
+    await page.locator("#drum-candidate-" + variant).click();
+    await page.waitForFunction(expected => APP.activeDrumVariant === expected, variant, { timeout: 5000 });
+    const variantTracks = await page.evaluate(() => {
+      const tracks = syncActiveArrangementTrackSnapshot()?.tracks || {};
+      return Object.fromEntries(["melody", "piano", "guitar", "bass", "drums"].map(name => [name, tracks[name]?.notes?.length || 0]));
+    });
+    for (const [name, count] of Object.entries(variantTracks)) assert.ok(count > 0, variant + " " + name + " track is empty");
+    await page.locator("#play-btn").click();
+    await page.waitForFunction(() => APP.playing === true, null, { timeout: 5000 });
+    await page.waitForTimeout(700);
+    await page.locator("#play-btn").click();
+    await page.waitForFunction(() => APP.playing === false, null, { timeout: 5000 });
+    playedVariants.push({ variant, tracks: variantTracks });
+  }
+  await page.locator("#guitar-volume").evaluate(el => { el.value = "55"; el.dispatchEvent(new Event("input", { bubbles: true })); });
+  const volumeCheck = await page.evaluate(() => ({ guitar: document.getElementById("guitar-volume").value, mixStatus: document.getElementById("arrangement-mix-status")?.textContent || "" }));
+  assert.equal(volumeCheck.guitar, "55", "guitar volume fader must accept live input");
+  await page.waitForTimeout(9000);
+  const samplerStatus = await page.evaluate(() => ({
+    piano: !!pianoSamplerReady,
+    acousticGuitar: !!guitarSamplerReady,
+    electricGuitar: !!electricGuitarSamplerReady,
+    bass: !!bassSamplerReady
+  }));
 
   assert.deepEqual(runtimeErrors, [], "Browser runtime errors detected:\n" + runtimeErrors.join("\n\n"));
-  console.log("BROWSER_SMOKE_OK " + JSON.stringify({ toneOnBeatLab, trackReport, playbackStartedAndStopped: true, runtimeErrors: runtimeErrors.length, consoleErrors }));
+  console.log("BROWSER_SMOKE_OK " + JSON.stringify({ toneOnBeatLab, trackReport, playedVariants, volumeCheck, samplerStatus, sampleFailures, sampleHttpErrors, runtimeErrors: runtimeErrors.length, consoleErrors }));
 } finally {
   if (browser) await browser.close();
   if (serverListening) await new Promise(resolve => server.close(resolve));
