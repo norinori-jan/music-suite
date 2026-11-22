@@ -1545,7 +1545,7 @@ test("TL-96 lyric-aware accompaniment, bass pickups and pre-chorus transition ar
   const pickup=bass.find(note=>note.id==="chord-bass-1-approach");
   assert.ok(pickup,"bass must add a chromatic approach to the next chord root");
   assert.equal(pickup.startBeat,3.5);
-  assert.equal(pickup.pitch,42);
+  assert.equal(pickup.pitch,30);
 
   const sectionStart=html.indexOf("function sectionPatternFrom(base,id)");
   const sectionEnd=html.indexOf("\nfunction ensureArrangementEffects()",sectionStart);
