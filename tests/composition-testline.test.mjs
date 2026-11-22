@@ -1673,6 +1673,21 @@ test("TL-103 varied English lyrics generate syllable-linked melodies with singab
     assert.ok(Math.min(...midi)>=55&&Math.max(...midi)<=84,"melody register must stay within G3-C6 for this vocal-range baseline");
     assert.ok(Math.max(...midi)-Math.min(...midi)<=24,"melody span must not exceed two octaves");
     assert.ok(melody.some(note=>note.stressed),"lexical stress must affect generated notes");
+    const syllableGroups=new Map();
+    melody.forEach(note=>{const key=note.phraseIndex+":"+note.word;const group=syllableGroups.get(key)||[];group.push(note);syllableGroups.set(key,group);});
+    for(const group of syllableGroups.values()){
+      const orderedWord=group.slice().sort((a,b)=>a.syllableIndex-b.syllableIndex);
+      assert.equal(orderedWord.length,orderedWord[0].wordSyllables,"each written word must map to its estimated syllable count");
+      assert.deepEqual(orderedWord.map(note=>note.syllableIndex),Array.from({length:orderedWord[0].wordSyllables},(_,index)=>index),"word syllables must be neither skipped nor duplicated");
+    }
+    const knownStress={remember:1,tonight:1,together:1,every:0};
+    for(const [word,stressIndex] of Object.entries(knownStress)){
+      const group=melody.filter(note=>note.word.toLowerCase()===word).sort((a,b)=>a.syllableIndex-b.syllableIndex);
+      if(group.length){
+        assert.equal(group[stressIndex].stressed,true,word+" primary stress position");
+        assert.ok(group[stressIndex].durationBeats>Math.max(...group.filter(note=>note.syllableIndex!==stressIndex).map(note=>note.durationBeats)),word+" stressed syllable should receive more time");
+      }
+    }
     const phrases=new Map();
     melody.forEach(note=>{const list=phrases.get(note.phraseIndex)||[];list.push(note);phrases.set(note.phraseIndex,list);});
     const ordered=[...phrases.values()].sort((a,b)=>a[0].startBeat-b[0].startBeat);
