@@ -375,7 +375,9 @@ test("TL-31 chord sketch is displayed separately for A, B, Chorus and Bridge", a
 });
 test("TL-32 generated lyric melody has non-overlapping one-beat note starts", async () => {
   const html=await readFile(canvasPath,"utf8");
-  assert.match(html,/return \{id:makeMelodyNoteId\(i\),note,length:1,[\s\S]*?startBeat:i,/);
+  assert.match(html,/return \{id:makeMelodyNoteId\(i\),note,length:Math\.min\(1,Math\.max\(\.5,sectionSpan\/sectionCount\*\.72\)\),[\s\S]*?startBeat:\+startBeat\.toFixed\(4\),/);
+  assert.match(html,/const bars=32/);
+  assert.match(html,/const startBeat=sectionIndex\*sectionSpan\+\(localIndex\/sectionCount\)\*sectionSpan/);
   assert.match(html,/const chordIndex=Math\.floor\(Math\.max\(0,localIndex\)\/4\)%section\.progression\.length/);
 });
 
@@ -1598,9 +1600,11 @@ test("TL-99 Composition Canvas handoff carries the full 32-bar lyric and arrange
 
 test("TL-98 lyric edits preserve note identity and update lyric linkage without orphaning notes", async () => {
   const canvas=await readFile(canvasPath,"utf8");
+  const helperStart=canvas.indexOf("function lyricEstimateSyllables(");
+  const helperEnd=canvas.indexOf("function parseChordProgressionText",helperStart);
   const start=canvas.indexOf("function generateLyricMusicSketch()");
   const end=canvas.indexOf("\nfunction saveLyricCanvasProject()",start);
-  assert.ok(start>=0&&end>start);
+  assert.ok(helperStart>=0&&helperEnd>helperStart&&start>=0&&end>start);
   const sections=[
     {role:"A",label:"Verse",text:"I walk alone"},
     {role:"DUET",label:"Chorus",text:"We reach the sky"}
@@ -1619,7 +1623,7 @@ test("TL-98 lyric edits preserve note identity and update lyric linkage without 
   };
   const state={lastNotes:[]},window={__musicProjectId:"lyric-edit-test"};
   const render=notes=>cards.splice(0,cards.length,...notes.map(n=>({dataset:{noteId:n.id,startBeat:String(n.startBeat),lyricId:n.lyricId,lyric:n.lyric,lyricRole:n.role,lyricSection:n.section,word:n.word},classList:{add(){}},appendChild(){}})));
-  const code=canvas.slice(start,end)+";return generateLyricMusicSketch;";
+  const code=canvas.slice(helperStart,helperEnd)+"\n"+canvas.slice(start,end)+";return generateLyricMusicSketch;";
   const generate=new Function("document","window","state","lyricTextRead","lyricSectionsRead","renderGeneratedChordSections","renderNoteCards","makeMelodyNoteId","showToast","escapeHtmlCanvas",code)(document,window,state,()=>sections.map(x=>x.text).join("\n"),()=>sections,()=>{},render,i=>"edit-note-"+i,()=>{},x=>x);
   generate();
   const first=window.__lyricMusicSketch.melody.map(n=>({...n}));
