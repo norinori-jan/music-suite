@@ -148,6 +148,7 @@
         <strong>🎼 メロディ適合で比較する3つの和声案</strong>
         <p style="font-size:12px;line-height:1.7;margin:6px 0">A・B・Cは同じメロディに対する別のコード進行です。強勢音節・フレーズ終端のコード構成音適合、和声の流れ、選択した雰囲気を理論評価します。AIによる歌詞意味の自動理解ではありません。</p>
         <div id="harmony-candidate-list" style="display:grid;grid-template-columns:repeat(auto-fit,minmax(min(100%,250px),1fr));gap:9px"></div>
+        <div style="display:flex;gap:8px;align-items:center;margin-top:8px"><button type="button" onclick="stopHarmonyPreview()">■ 試聴停止</button><span id="harmony-preview-status" aria-live="polite" style="font-size:11px">A・B・Cを同じメロディで試聴して比較できます。</span></div>
       </section>
       <strong>生成されたコード進行（全件）</strong>
       <p style="font-size:12px;margin:5px 0 8px">ここに出たコードがコピー対象です。欄外に出さず、この枠内で全文を確認できます。</p>
@@ -935,6 +936,68 @@ function generateHarmonyCandidates({key,mood,sections,chordSections,melody,progr
     return {...profile,styles,sections:candidateSections,score:metrics.score,fitRate:fit,reasons,metrics};
   });
 }
+let harmonyPreviewContext=null;
+let harmonyPreviewNodes=[];
+let harmonyPreviewGeneration=0;
+function stopHarmonyPreview(){
+  harmonyPreviewGeneration++;
+  harmonyPreviewNodes.forEach(node=>{try{node.stop();}catch(error){}try{node.disconnect();}catch(error){}});
+  harmonyPreviewNodes=[];
+  const status=document.getElementById('harmony-preview-status');
+  if(status)status.textContent='試聴を停止しました。';
+}
+async function previewHarmonyCandidate(candidateId){
+  const sketch=window.__lyricMusicSketch||{};
+  const candidate=(sketch.harmonyCandidates||[]).find(item=>item.id===candidateId);
+  if(!candidate){showToast('先に和声候補を生成してください');return false;}
+  const AudioContextClass=window.AudioContext||window.webkitAudioContext;
+  if(!AudioContextClass){showToast('このブラウザはWeb Audioに対応していません');return false;}
+  stopHarmonyPreview();
+  try{
+    if(!harmonyPreviewContext||harmonyPreviewContext.state==='closed')harmonyPreviewContext=new AudioContextClass();
+    await harmonyPreviewContext.resume();
+    if(harmonyPreviewContext.state!=='running')throw new Error('音声出力を開始できません');
+    const ctx=harmonyPreviewContext,generation=harmonyPreviewGeneration;
+    const bpm=Math.max(40,Math.min(220,Number(window.__incomingLyricProject?.bpm)||Number(document.getElementById('note-sequence-bpm')?.value)||120));
+    const secondsPerBeat=60/bpm,base=ctx.currentTime+.12;
+    const timeline=expandHarmonySectionsToTimeline(candidate.sections,Number(sketch.bars)||32,Number(sketch.timeSig)||4);
+    const melody=Array.isArray(sketch.melody)?sketch.melody:[];
+    const master=ctx.createGain();master.gain.value=.72;master.connect(ctx.destination);
+    const createVoice=(midi,startBeat,durationBeats,type,volume)=>{
+      const start=base+startBeat*secondsPerBeat,duration=Math.max(.09,durationBeats*secondsPerBeat);
+      const osc=ctx.createOscillator(),gain=ctx.createGain();
+      osc.type=type;osc.frequency.setValueAtTime(440*Math.pow(2,(midi-69)/12),start);
+      gain.gain.setValueAtTime(.0001,start);gain.gain.linearRampToValueAtTime(volume,start+.025);
+      gain.gain.setValueAtTime(volume,Math.max(start+.03,start+duration-.06));
+      gain.gain.linearRampToValueAtTime(.0001,start+duration);
+      osc.connect(gain);gain.connect(master);osc.start(start);osc.stop(start+duration+.02);harmonyPreviewNodes.push(osc);
+    };
+    timeline.forEach(chord=>{
+      (chord.tones||[]).forEach((pc,index)=>{
+        const midi=48+((Number(pc)%12)+12)%12+(index===0?0:0);
+        createVoice(midi,Number(chord.startBeat)||0,Math.max(.5,Number(chord.beats)||4)*.94,'sine',.055);
+      });
+    });
+    melody.forEach(note=>{
+      const midi=harmonyNoteMidi(note);
+      if(midi===null)return;
+      createVoice(midi,Number(note.startBeat)||0,Math.max(.2,Number(note.durationBeats)||1)*.92,'triangle',note.stressed?.15:.105);
+    });
+    const totalBeats=(Number(sketch.bars)||32)*(Number(sketch.timeSig)||4);
+    const totalMs=(totalBeats*secondsPerBeat+.3)*1000;
+    const status=document.getElementById('harmony-preview-status');
+    if(status)status.textContent=candidateId+'案を試聴中：同じメロディ＋和音の簡易プレビュー（'+bpm+' BPM）。ベース・ドラム等の本編編曲はBEAT//LABで確認します。';
+    window.setTimeout(()=>{
+      if(generation!==harmonyPreviewGeneration)return;
+      harmonyPreviewNodes=[];if(status)status.textContent=candidateId+'案の簡易プレビューが終了しました。';
+    },totalMs);
+    return true;
+  }catch(error){
+    stopHarmonyPreview();
+    const status=document.getElementById('harmony-preview-status');if(status)status.textContent='試聴できません：'+(error?.message||error);
+    return false;
+  }
+}
 function renderHarmonyCandidates(candidates,selectedId){
   const host=document.getElementById('harmony-candidate-list');
   if(!host)return;
@@ -946,7 +1009,10 @@ function renderHarmonyCandidates(candidates,selectedId){
     const score=document.createElement('div');score.style.cssText='font-size:13px;margin:5px 0;color:#9fe3d1';score.textContent='理論評価 '+candidate.score+'/100 · メロディ適合 '+candidate.fitRate+'%';card.appendChild(score);
     const progression=document.createElement('div');progression.style.cssText='font-size:14px;font-weight:700;line-height:1.7;overflow-wrap:anywhere';progression.textContent=candidate.sections.map(section=>(section.label||'区間')+': '+section.progression.map(item=>item.chord).join(' – ')).join(' ／ ');card.appendChild(progression);
     const reasons=document.createElement('ul');reasons.style.cssText='font-size:11px;line-height:1.7;padding-left:18px;margin:7px 0';candidate.reasons.forEach(reason=>{const li=document.createElement('li');li.textContent=reason;reasons.appendChild(li);});card.appendChild(reasons);
-    const button=document.createElement('button');button.type='button';button.className='primary';button.textContent=candidate.id===selectedId?'選択中':'この案を採用';button.disabled=candidate.id===selectedId;button.addEventListener('click',()=>selectHarmonyCandidate(candidate.id));card.appendChild(button);
+    const actions=document.createElement('div');actions.style.cssText='display:flex;gap:7px;flex-wrap:wrap;margin-top:8px';
+    const preview=document.createElement('button');preview.type='button';preview.textContent='▶ 同じメロディで試聴';preview.addEventListener('click',()=>previewHarmonyCandidate(candidate.id));actions.appendChild(preview);
+    const button=document.createElement('button');button.type='button';button.className='primary';button.textContent=candidate.id===selectedId?'選択中':'この案を採用';button.disabled=candidate.id===selectedId;button.addEventListener('click',()=>selectHarmonyCandidate(candidate.id));actions.appendChild(button);
+    card.appendChild(actions);
     host.appendChild(card);
   });
 }
