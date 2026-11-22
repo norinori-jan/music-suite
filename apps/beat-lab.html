@@ -1597,13 +1597,31 @@ function syncActiveArrangementTrackSnapshot(){
   return current;
 }
 async function togglePlay(){
-  await Tone.start();
+  try{
+    await Tone.start();
+    if(Tone.context?.state&&Tone.context.state!=='running'){
+      setStatus('err','音声出力を開始できません。ブラウザの音声設定を確認して、もう一度再生してください。');
+      return;
+    }
+  }catch(error){
+    setStatus('err','音声出力を開始できません：'+(error?.message||error));
+    return;
+  }
   if(APP.playing){ stopPlay(); return; }
   const melodyControl=document.getElementById('melody-enabled');
   if(melodyControl?.checked){
-    setStatus('gen','メロディ用バイオリン音源を読み込んでいます…');
-    try{await ensureMelodySamplerReady();}
-    catch(error){setStatus('err','メロディ音源を読み込めません。電子音へ代替せず再生を停止しました：'+error.message);return;}
+    // Violin samples are optional: never block the entire arrangement while a
+    // remote sample host is slow or unavailable. The built-in synth is the
+    // immediate fallback and the sampler takes over automatically when ready.
+    try{
+      getMelodySampler();
+      setStatus('gen',melodySamplerReady?'メロディ音源準備完了':'メロディ音源を読込中 — 読込中は内蔵シンセで再生します');
+      melodySamplerLoadPromise?.catch(error=>{
+        if(APP.playing)setStatus('ok','バイオリン音源を読み込めないため、内蔵シンセでメロディを再生しています：'+(error?.message||error));
+      });
+    }catch(error){
+      setStatus('ok','バイオリン音源を初期化できないため、内蔵シンセでメロディを再生します：'+(error?.message||error));
+    }
   }
   APP.playing=true;
   const generation=++playbackGeneration;
@@ -1671,7 +1689,9 @@ async function togglePlay(){
           if(Number.isFinite(pitch)){
             const duration=Math.max(.06,(Number(n.durationBeats)||.25)*60/bpm*.92);
             const velocity=Math.max(.05,Math.min(1,(Number(n.vel)||88)/127*sectionDynamics.melody));
-            if(melodySamplerReady&&melodySampler)melodySampler.triggerAttackRelease(Tone.Frequency(pitch,'midi').toNote(),duration,audioAt,velocity);
+            const noteName=Tone.Frequency(pitch,'midi').toNote();
+            if(melodySamplerReady&&melodySampler)melodySampler.triggerAttackRelease(noteName,duration,audioAt,velocity);
+            else getMelodySynth().triggerAttackRelease(noteName,duration,audioAt,velocity);
           }
         }
       });
