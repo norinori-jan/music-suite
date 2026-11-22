@@ -1636,7 +1636,7 @@ test("TL-103 varied English lyrics generate syllable-linked melodies with singab
     ]
   ];
   const pitchToMidi=pitch=>{
-    const match=String(pitch).match(/^([A-G])([#b]?)(-?\\d+)$/);
+    const match=String(pitch).match(/^([A-G])([#b]?)(-?\d+)$/);
     assert.ok(match,"generated pitch must be a named note: "+pitch);
     const semitones={C:0,D:2,E:4,F:5,G:7,A:9,B:11};
     const accidental=match[2]==="#"?1:match[2]==="b"?-1:0;
