@@ -1568,3 +1568,49 @@ test("TL-96 lyric-aware accompaniment, bass pickups and pre-chorus transition ar
 });
 
 
+test("TL-97 real lyric-to-melody workflow creates linked notes and section harmony before arrangement", async () => {
+  const canvas=await readFile(canvasPath,"utf8");
+  const helperStart=canvas.indexOf("function lyricEstimateSyllables(");
+  const helperEnd=canvas.indexOf("function parseChordProgressionText",helperStart);
+  const generatorStart=canvas.indexOf("function generateLyricMusicSketch()");
+  const generatorEnd=canvas.indexOf("\nfunction saveLyricCanvasProject()",generatorStart);
+  assert.ok(helperStart>=0&&helperEnd>helperStart&&generatorStart>=0&&generatorEnd>generatorStart);
+  const sections=[
+    {role:"A",label:"Mia / A verse",text:"夜明け前\nI walk alone"},
+    {role:"B",label:"Ken / B verse",text:"胸の奥で\nA spark is growing"},
+    {role:"DUET",label:"Chorus",text:"明日を照らして\nWe can reach the sky"},
+    {role:"DUET",label:"Bridge",text:"遠くへ\nWe rise again"}
+  ];
+  const cards=[],elements=new Map();
+  const document={
+    getElementById(id){
+      if(!elements.has(id)){
+        const values={"lyric-key":"C","lyric-mood":"hope","lyric-progression":"pop","lyric-progression-a":"warm","lyric-progression-b":"sad","lyric-progression-chorus":"pop","lyric-progression-bridge":"surprise"};
+        elements.set(id,{value:values[id]||"",style:{},innerHTML:""});
+      }
+      return elements.get(id);
+    },
+    querySelectorAll(){return cards;},
+    createElement(){return {dataset:{},classList:{add(){}},appendChild(){},textContent:""};}
+  };
+  const state={lastNotes:[]},window={__musicProjectId:"lyric-workflow-test"};
+  const renderNoteCards=notes=>{
+    cards.splice(0,cards.length,...notes.map(note=>({dataset:{noteId:note.id,startBeat:String(note.startBeat),lyricId:note.lyricId,lyric:note.lyric,lyricRole:note.role,lyricSection:note.section,word:note.word},classList:{add(){}},appendChild(){}})));
+  };
+  const code=canvas.slice(helperStart,helperEnd)+"\n"+canvas.slice(generatorStart,generatorEnd)+";return generateLyricMusicSketch;";
+  const generate=new Function("document","window","state","lyricTextRead","lyricSectionsRead","renderGeneratedChordSections","renderNoteCards","makeMelodyNoteId","showToast","escapeHtmlCanvas",code)(
+    document,window,state,()=>sections.map(section=>section.text).join("\n"),()=>sections,()=>{},renderNoteCards,index=>"lyric-note-"+index,()=>{},value=>value
+  );
+  generate();
+  const sketch=window.__lyricMusicSketch;
+  assert.ok(sketch&&sketch.melody.length>0,"entering lyrics must create a melody candidate");
+  assert.equal(sketch.chordSections.length,4,"each lyric section must receive its own chord progression");
+  assert.equal(sketch.chords.length,16,"four lyric sections must produce sixteen chord events");
+  assert.deepEqual(new Set(sketch.melody.map(note=>note.section)),new Set(sections.map(section=>section.label)));
+  assert.ok(sketch.melody.every(note=>note.lyricId&&note.word&&note.lyric&&note.role&&note.section),"every generated note must retain its lyric, word, role and section");
+  assert.equal(state.lastNotes.length,sketch.melody.length,"generated notes must be reflected in the editable note-card state");
+  assert.equal(cards.length,sketch.melody.length,"generated notes must render as editable cards");
+  assert.ok(cards.every(card=>card.dataset.lyricId&&card.dataset.lyricSection),"rendered cards must retain lyric links for later handoff");
+});
+
+
