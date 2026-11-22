@@ -1001,7 +1001,8 @@ async function previewHarmonyCandidate(candidateId){
 function renderHarmonyCandidates(candidates,selectedId){
   const host=document.getElementById('harmony-candidate-list');
   if(!host)return;
-  host.replaceChildren();
+  host.innerHTML='';
+  if(typeof host.appendChild!=='function')return;
   (candidates||[]).forEach(candidate=>{
     const card=document.createElement('article');
     card.style.cssText='min-width:0;padding:12px;border:1px solid '+(candidate.id===selectedId?'#70d6b0':'#47727a')+';border-radius:9px;background:'+(candidate.id===selectedId?'#173b37':'#142b31')+';color:#e8fbff';
