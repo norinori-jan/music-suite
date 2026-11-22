@@ -488,33 +488,27 @@ test("TL-40 refined chord progressions use varied chord durations rather than fo
 });
 
 
-test("TL-41 all-section chord copy serializes the current source data, including every section and beat count", async () => {
+test("TL-41 section chord copy serializes the currently selected full-song timeline", async () => {
   const html=await readFile(canvasPath,"utf8");
   const start=html.indexOf("async function copyAllGeneratedChordSections()");
-  const end=html.indexOf("\nfunction buildCompositionSketchPackage()",start);
+  const end=html.indexOf("\\nfunction buildCompositionSketchPackage()",start);
   const body=html.slice(start,end);
-  assert.match(body,/window\.__lyricMusicSketch\?\.chordSections/);
-  assert.match(body,/sections\.map\(section=>/);
-  assert.match(body,/section\.label/);
-  assert.match(body,/item\.chord/);
-  assert.match(body,/item\.beats/);
-  assert.match(body,/await copyChordText\(value/);
-  assert.match(body,/output\.select\(\)/);
-  assert.match(body,/全区間を選択済み/);
+  assert.match(body,/getCurrentChordTimeline\\(sketch\\)/);
+  assert.match(body,/formatChordTimelineSections\\(sketch\\)/);
+  assert.match(body,/await copyChordText\\(value/);
+  assert.match(body,/output\\.select\\(\\)/);
+  assert.match(html,/function formatChordTimelineSections\\(sketch=/);
 });
-
-test("TL-42 flat chord copy is rebuilt from current section source data, not a potentially stale textarea", async () => {
+test("TL-42 flat chord copy is rebuilt from the selected full-song timeline, not a stale textarea", async () => {
   const html=await readFile(canvasPath,"utf8");
   const start=html.indexOf("async function copyAllGeneratedChords()");
-  const end=html.indexOf("\nfunction selectAllGeneratedChordSections()",start);
+  const end=html.indexOf("\\nfunction selectAllGeneratedChordSections()",start);
   const body=html.slice(start,end);
-  assert.match(body,/window\.__lyricMusicSketch\?\.chordSections/);
-  assert.match(body,/sections\.flatMap\(section=>section\.progression\|\|\[\]\)/);
-  assert.match(body,/await copyChordText\(value/);
-  assert.match(body,/output\.select\(\)/);
+  assert.match(body,/getCurrentChordTimeline\\(sketch\\)/);
+  assert.match(body,/timeline\\.map\\(item=>item\\.chord\\)/);
+  assert.match(body,/await copyChordText\\(value/);
+  assert.match(html,/function updateGeneratedChordTimelineOutputs\\(\\)/);
 });
-
-
 test("TL-43 all melody cards copy note, role, lyric, and section in displayed order", async () => {
   const html=await readFile(canvasPath,"utf8");
   assert.match(html,/id="melody-card-copy-output"/);
