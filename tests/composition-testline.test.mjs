@@ -442,17 +442,17 @@ test("TL-36 imported composition sketch restores section labels, chord section d
 });
 
 
-test("TL-37 all generated chord sections are visible inside the panel and have two complete copy formats", async () => {
+test("TL-37 generated chord sections are visible and copy controls use the active full-song timeline", async () => {
   const html=await readFile(canvasPath,"utf8");
   assert.match(html,/id="lyric-generated-chord-sections-output"/);
   assert.match(html,/onclick="copyAllGeneratedChordSections\(\)"/);
   assert.match(html,/区間名付き・全コード進行/);
-  assert.match(html,/const labeled=\(chordSections\|\|\[\]\)\.map\(section=>/);
+  assert.match(html,/function formatChordTimelineSections\(sketch=/);
+  assert.match(html,/function updateGeneratedChordTimelineOutputs\(\)/);
   assert.match(html,/function copyAllGeneratedChordSections\(\)/);
   assert.match(html,/function renderGeneratedChordSections\(chordSections\)/);
   assert.match(html,/card\.style\.cssText='min-width:0;width:100%/);
 });
-
 test("TL-38 melody sketch export reads authoritative note card datasets", async () => {
   const html=await readFile(canvasPath,"utf8");
   const start=html.indexOf("function buildCompositionSketchPackage()");
