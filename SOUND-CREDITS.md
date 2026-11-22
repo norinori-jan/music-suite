@@ -8,6 +8,14 @@ BEAT//LAB uses third-party instrument recordings streamed from the repositories 
 - License: Creative Commons Attribution 3.0 (CC BY 3.0)
 - License text: https://creativecommons.org/licenses/by/3.0/
 
+## Melody (sampled violin)
+- Sample package: tonejs-instruments by Nicholaus P. Brosowsky
+- Sample folder: `violin` (VSO2 / Versilian Studios Chamber Orchestra Community Edition)
+- Source repository: https://github.com/nbrosowsky/tonejs-instruments
+- Sample source notes: https://github.com/nbrosowsky/tonejs-instruments/blob/master/sample-source-info.txt
+- Sample license as identified by tonejs-instruments: CC BY 3.0
+- Attribution/license: https://creativecommons.org/licenses/by/3.0/
+
 ## Electric bass, acoustic guitar and electric guitar
 - Sample package: tonejs-instruments by Nicholaus P. Brosowsky
 - Source repository: https://github.com/nbrosowsky/tonejs-instruments
