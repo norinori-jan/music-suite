@@ -1514,3 +1514,57 @@ test("TL-91 standard test song supplies harmony across all 32 bars for five-part
   assert.match(beatLab, /function buildArrangementTrackSnapshot\(project,variant,sections\)/);
   assert.match(beatLab, /const chords=getPlayableChordEvents\(project,APP\.bars,APP\.timeSig,id\)/);
 });
+test("TL-96 lyric-aware accompaniment, bass pickups and pre-chorus transition are grounded in the complete lyric song", async () => {
+  const html=await readFile(beatLabPath,"utf8");
+  const fixture=JSON.parse(await readFile(fixturePath,"utf8"));
+  assert.equal(fixture.bars,32);
+  assert.equal(fixture.lyrics.sections.length,5);
+  assert.ok(fixture.melody.notes.length>0);
+  assert.ok(fixture.melody.notes.every(note=>fixture.lyrics.sections.some(section=>section.id===note.lyricId)),"every melody note must remain linked to a lyric section");
+
+  const responseStart=html.indexOf("function applyMelodyResponsiveAccompaniment(");
+  const responseEnd=html.indexOf("\nfunction getPlayableChordEvents",responseStart);
+  assert.ok(responseStart>=0&&responseEnd>responseStart);
+  const respond=new Function(html.slice(responseStart,responseEnd)+";return applyMelodyResponsiveAccompaniment;")();
+  const events={piano:[{startBeat:0,pitches:[60,64,67],durationBeats:4,velocity:.6}],guitar:[{startBeat:0,pitches:[67],durationBeats:4,velocity:.5}]};
+  const melody=[{pitch:60,startBeat:0,durationBeats:1},{pitch:64,startBeat:2,durationBeats:.5}];
+  const result=respond(events,melody,2,4,"A");
+  assert.ok(result.piano.every(event=>!event.pitches.some(p=>[60,64].includes(p))),"piano must leave the melody's active pitches clear");
+  assert.ok(result.guitar.length===0,"guitar must avoid close unison/interval collisions while melody is active");
+  const responses=result.guitar.filter(event=>event.response);
+  assert.ok(responses.length>=1,"a sufficiently long lyric/melody rest must receive an instrumental response");
+  assert.ok(responses.every(event=>event.startBeat>=1&&event.startBeat<2),"response must sit inside a real melody rest");
+
+  const chordStart=html.indexOf("function chordSymbolToPitches(");
+  const chordEnd=html.indexOf("\nfunction chooseSmoothChordVoicing",chordStart);
+  const bassStart=html.indexOf("function buildBassNotesFromChords(",chordEnd);
+  const bassEnd=html.indexOf("\nfunction buildBassVariantNotes",bassStart);
+  assert.ok(chordStart>=0&&chordEnd>chordStart&&bassStart>chordEnd&&bassEnd>bassStart);
+  const bassHelpers=new Function(html.slice(chordStart,chordEnd)+"\n"+html.slice(bassStart,bassEnd)+";return buildBassNotesFromChords;")();
+  const bass=bassHelpers({chords:[{chord:"C",beats:4},{chord:"G",beats:4}]},2,4);
+  const pickup=bass.find(note=>note.id==="chord-bass-1-approach");
+  assert.ok(pickup,"bass must add a chromatic approach to the next chord root");
+  assert.equal(pickup.startBeat,3.5);
+  assert.equal(pickup.pitch,42);
+
+  const sectionStart=html.indexOf("function sectionPatternFrom(base,id)");
+  const sectionEnd=html.indexOf("\nfunction ensureArrangementEffects()",sectionStart);
+  const ideaStart=html.indexOf("function buildSectionDrumIdea(basePattern,section,style,variation='normal')");
+  const ideaEnd=html.indexOf("\nfunction applyDrumArrangementIdea(style)",ideaStart);
+  const app={div:16,timeSig:4},pk=(row,step)=>row+":"+step;
+  const sectionPatternFrom=new Function("APP","pk",html.slice(sectionStart,sectionEnd)+";return sectionPatternFrom;")(app,pk);
+  const build=new Function("APP","pk","sectionPatternFrom",html.slice(ideaStart,ideaEnd)+";return buildSectionDrumIdea;")(app,pk,sectionPatternFrom);
+  const pre=build({"kick:0":.8},{id:"pre",startBar:1,endBar:2},"balanced","normal");
+  assert.ok(Object.keys(pre).some(key=>key.startsWith("tom2:")),"pre-chorus must add a transition fill");
+  assert.ok(pre["snare:60"]>.0,"pre-chorus fill must lead into the chorus");
+
+  const arrangementStart=html.indexOf("function buildArrangementTrackSnapshot(");
+  const arrangementEnd=html.indexOf("\nfunction captureArrangementTrackSnapshot",arrangementStart);
+  assert.match(html,/function buildArrangementTrackSnapshot\(project,variant,sections\)/);
+  assert.ok(arrangementEnd>arrangementStart);
+  const snapshotBody=html.slice(arrangementStart,arrangementEnd);
+  assert.match(snapshotBody,/tracks:\{melody:\{notes:cloneRhythmData\(project\?\.melody\?\.notes\|\|\[\]\)\}/);
+  assert.match(html,/const chords=getPlayableChordEvents\(project,APP\.bars,APP\.timeSig,id\)/);
+});
+
+
