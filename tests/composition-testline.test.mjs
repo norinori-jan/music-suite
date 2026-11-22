@@ -1682,8 +1682,9 @@ test("TL-103 varied English lyrics generate syllable-linked melodies with singab
     }
     const knownStress={remember:1,tonight:1,together:1,every:0};
     for(const [word,stressIndex] of Object.entries(knownStress)){
-      const group=melody.filter(note=>note.word.toLowerCase()===word).sort((a,b)=>a.syllableIndex-b.syllableIndex);
-      if(group.length){
+      const occurrences=[...new Set(melody.filter(note=>note.word.toLowerCase()===word).map(note=>note.phraseIndex))];
+      for(const phraseIndex of occurrences){
+        const group=melody.filter(note=>note.phraseIndex===phraseIndex&&note.word.toLowerCase()===word).sort((a,b)=>a.syllableIndex-b.syllableIndex);
         assert.equal(group[stressIndex].stressed,true,word+" primary stress position");
         assert.ok(group[stressIndex].durationBeats>Math.max(...group.filter(note=>note.syllableIndex!==stressIndex).map(note=>note.durationBeats)),word+" stressed syllable should receive more time");
       }
