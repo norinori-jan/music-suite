@@ -1957,6 +1957,7 @@ test("TL-126 raw Web Audio test is independent from Tone.js availability", async
 
 test("TL-127 each A B C candidate can be handed to BEAT LAB for full accompaniment generation", async () => {
   const html=await readFile(canvasPath,"utf8");
+  const beatLab=await readFile(beatLabPath,"utf8");
   const start=html.indexOf("function sendHarmonyCandidateToBeatLab(candidateId){");
   const end=html.indexOf("function sendToBeatLab(){",start);
   assert.ok(start>=0&&end>start);
@@ -1965,5 +1966,5 @@ test("TL-127 each A B C candidate can be handed to BEAT LAB for full accompanime
   assert.match(body,/goCompositionStage\('arrange'\)/);
   assert.match(body,/sendToBeatLab\(\)/);
   assert.match(html,/project\.chords=project\.generatedMusic\?\.chords/);
-  assert.match(html,/function buildBassNotesFromChords/);
+  assert.match(beatLab,/function buildBassNotesFromChords/);
 });
