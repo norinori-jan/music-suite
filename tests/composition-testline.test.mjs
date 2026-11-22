@@ -1975,3 +1975,15 @@ test("TL-128 manual per-bar chord edits refresh the selected candidate score and
   assert.match(body,/renderHarmonyBarEditor\(\)/);
   assert.match(body,/manualOverride:true/);
 });
+
+test("TL-129 saved compositions restore A B C candidates and the selected bar-edit timeline", async () => {
+  const html=await readFile(canvasPath,"utf8");
+  const start=html.indexOf("function restoreChordProgressionInput(sketch){");
+  const end=html.indexOf("function applyChordProgression()",start);
+  assert.ok(start>=0&&end>start);
+  const body=html.slice(start,end);
+  assert.match(body,/sketch\?\.harmonyCandidates/);
+  assert.match(body,/renderHarmonyCandidates\(sketch\.harmonyCandidates,sketch\.selectedHarmonyCandidate\|\|null\)/);
+  assert.match(body,/renderHarmonyBarEditor\(\)/);
+  assert.match(body,/updateGeneratedChordTimelineOutputs\(\)/);
+});
