@@ -442,17 +442,17 @@ test("TL-36 imported composition sketch restores section labels, chord section d
 });
 
 
-test("TL-37 all generated chord sections are visible inside the panel and have two complete copy formats", async () => {
+test("TL-37 generated chord sections are visible and copy controls use the active full-song timeline", async () => {
   const html=await readFile(canvasPath,"utf8");
   assert.match(html,/id="lyric-generated-chord-sections-output"/);
   assert.match(html,/onclick="copyAllGeneratedChordSections\(\)"/);
   assert.match(html,/区間名付き・全コード進行/);
-  assert.match(html,/const labeled=\(chordSections\|\|\[\]\)\.map\(section=>/);
+  assert.match(html,/function formatChordTimelineSections\(sketch=/);
+  assert.match(html,/function updateGeneratedChordTimelineOutputs\(\)/);
   assert.match(html,/function copyAllGeneratedChordSections\(\)/);
   assert.match(html,/function renderGeneratedChordSections\(chordSections\)/);
   assert.match(html,/card\.style\.cssText='min-width:0;width:100%/);
 });
-
 test("TL-38 melody sketch export reads authoritative note card datasets", async () => {
   const html=await readFile(canvasPath,"utf8");
   const start=html.indexOf("function buildCompositionSketchPackage()");
@@ -467,17 +467,18 @@ test("TL-38 melody sketch export reads authoritative note card datasets", async 
 });
 
 
-test("TL-39 chord refinement button records visible steps and preserves section identities", async () => {
+test("TL-39 chord refinement button regenerates visible scored A B C candidates", async () => {
   const html=await readFile(canvasPath,"utf8");
   assert.match(html,/onclick="refineGeneratedChordProgressions\(\)"/);
   assert.match(html,/id="chord-refine-progress"/);
   assert.match(html,/id="chord-refine-status"/);
   assert.match(html,/function refineGeneratedChordProgressions\(\)/);
-  assert.match(html,/window\.__lyricMusicSketch=\{\.\.\.sketch,chordSections:next,chords,refineCount:current\+1/);
-  assert.match(html,/renderGeneratedChordSections\(next\)/);
-  assert.match(html,/歌詞・メロディ音符は保持/);
+  assert.match(html,/generateHarmonyCandidates\(/);
+  assert.match(html,/expandHarmonySectionsToTimeline\(/);
+  assert.match(html,/renderGeneratedChordSections\(selected\.sections\)/);
+  assert.match(html,/renderHarmonyCandidates\(harmonyCandidates,'A'\)/);
+  assert.match(html,/selectedHarmonyCandidate:'A'/);
 });
-
 test("TL-40 refined chord progressions use varied chord durations rather than four beats for every chord", async () => {
   const html=await readFile(canvasPath,"utf8");
   assert.match(html,/const rhythmPatterns=\[\[4,4,4,4\],\[2,2,4,4\],\[4,2,2,4\],\[6,2,2,2\],\[3,3,2,4\],\[2,4,2,4\]\]/);
@@ -487,33 +488,27 @@ test("TL-40 refined chord progressions use varied chord durations rather than fo
 });
 
 
-test("TL-41 all-section chord copy serializes the current source data, including every section and beat count", async () => {
+test("TL-41 section chord copy serializes the currently selected full-song timeline", async () => {
   const html=await readFile(canvasPath,"utf8");
   const start=html.indexOf("async function copyAllGeneratedChordSections()");
-  const end=html.indexOf("\nfunction buildCompositionSketchPackage()",start);
+  const end=html.indexOf(String.fromCharCode(10)+"function buildCompositionSketchPackage()",start);
   const body=html.slice(start,end);
-  assert.match(body,/window\.__lyricMusicSketch\?\.chordSections/);
-  assert.match(body,/sections\.map\(section=>/);
-  assert.match(body,/section\.label/);
-  assert.match(body,/item\.chord/);
-  assert.match(body,/item\.beats/);
-  assert.match(body,/await copyChordText\(value/);
-  assert.match(body,/output\.select\(\)/);
-  assert.match(body,/全区間を選択済み/);
+  assert.ok(body.includes("getCurrentChordTimeline(sketch)"));
+  assert.ok(body.includes("formatChordTimelineSections(sketch)"));
+  assert.ok(body.includes("await copyChordText(value"));
+  assert.ok(body.includes("output.select()"));
+  assert.ok(html.includes("function formatChordTimelineSections(sketch="));
 });
-
-test("TL-42 flat chord copy is rebuilt from current section source data, not a potentially stale textarea", async () => {
+test("TL-42 flat chord copy is rebuilt from the selected full-song timeline, not a stale textarea", async () => {
   const html=await readFile(canvasPath,"utf8");
   const start=html.indexOf("async function copyAllGeneratedChords()");
-  const end=html.indexOf("\nfunction selectAllGeneratedChordSections()",start);
+  const end=html.indexOf(String.fromCharCode(10)+"function selectAllGeneratedChordSections()",start);
   const body=html.slice(start,end);
-  assert.match(body,/window\.__lyricMusicSketch\?\.chordSections/);
-  assert.match(body,/sections\.flatMap\(section=>section\.progression\|\|\[\]\)/);
-  assert.match(body,/await copyChordText\(value/);
-  assert.match(body,/output\.select\(\)/);
+  assert.ok(body.includes("getCurrentChordTimeline(sketch)"));
+  assert.ok(body.includes("timeline.map(item=>item.chord)"));
+  assert.ok(body.includes("await copyChordText(value"));
+  assert.ok(html.includes("function updateGeneratedChordTimelineOutputs()"));
 });
-
-
 test("TL-43 all melody cards copy note, role, lyric, and section in displayed order", async () => {
   const html=await readFile(canvasPath,"utf8");
   assert.match(html,/id="melody-card-copy-output"/);
@@ -1478,14 +1473,14 @@ test("TL-90 all inline JavaScript in composition, BEAT//LAB and score editor pag
   }
 });
 
-test("TL-90 melody playback requires the sampled violin source instead of silently using a synth", async () => {
+test("TL-90 sampled violin is preferred but synth fallback keeps melody playable", async () => {
   const html = await readFile(beatLabPath, "utf8");
   assert.match(html, /function getMelodySampler\(\)/);
-  assert.match(html, /TONEJS_SAMPLE_ROOT\+'violin\/'/);
+  assert.ok(html.includes("baseUrl:TONEJS_SAMPLE_ROOT+'violin/'"));
   assert.match(html, /async function ensureMelodySamplerReady\(\)/);
-  assert.match(html, /await ensureMelodySamplerReady\(\)/);
   assert.match(html, /if\(melodySamplerReady&&melodySampler\)melodySampler\.triggerAttackRelease/);
-  assert.doesNotMatch(html, /getMelodySynth\(\)\.triggerAttackRelease/);
+  assert.match(html, /else getMelodySynth\(\)\.triggerAttackRelease/);
+  assert.match(html, /内蔵シンセで再生します/);
   const credits = await readFile(path.join(here, "..", "SOUND-CREDITS.md"), "utf8");
   assert.match(credits, /Melody \(sampled violin\)/);
   assert.match(credits, /VSO2/);
@@ -1844,4 +1839,153 @@ test("TL-97 real lyric-to-melody workflow creates linked notes and section harmo
   assert.ok(cards.every(card=>card.dataset.lyricId&&card.dataset.lyricSection),"rendered cards must retain lyric links for later handoff");
 });
 
+test("TL-120 melody sample loading never blocks drum and accompaniment playback", async () => {
+  const beatLab = await readFile(beatLabPath, "utf8");
+  const toggle = beatLab.slice(beatLab.indexOf("async function togglePlay()"), beatLab.indexOf("function stopPlay()"));
+  assert.match(toggle, /getMelodySampler\(\)/);
+  assert.doesNotMatch(toggle, /await ensureMelodySamplerReady\(\)/);
+  assert.match(toggle, /内蔵シンセで再生します/);
+  assert.match(toggle, /Tone\.context\?\.state/);
+  assert.match(toggle, /setStatus\('err'/);
+  assert.match(toggle, /else getMelodySynth\(\)\.triggerAttackRelease/);
+});
 
+test("TL-121 raw Web Audio and Tone.js output tests isolate browser output from the instrument library", async () => {
+  const html = await readFile(beatLabPath, "utf8");
+  assert.match(html, /id="audio-output-test"/);
+  assert.match(html, /async function testAudioOutput\(\)/);
+  assert.match(html, /window\.AudioContext\|\|window\.webkitAudioContext/);
+  assert.match(html, /gain\.connect\(ctx\.destination\)/);
+  assert.match(html, /osc\.start\(start\)/);
+  assert.match(html, /Web Audio基礎テスト信号/);
+  assert.match(html, /id="tone-output-test"/);
+  assert.match(html, /async function testToneAudioOutput\(\)/);
+  assert.match(html, /await Tone\.start\(\)/);
+  assert.match(html, /new Tone\.Synth\([\s\S]*?\)\.toDestination\(\)/);
+  assert.match(html, /Tone\.jsテスト信号/);
+});
+
+test("TL-122 playback reports per-track scheduled events and catches voice scheduling errors", async () => {
+  const html = await readFile(beatLabPath, "utf8");
+  assert.match(html, /const playbackDiagnostics=\{drums:0,melody:0,bass:0,piano:0,guitar:0,errors:\[\]\}/);
+  assert.match(html, /function scheduleVoice\(track,action\)/);
+  for (const track of ["drums", "melody", "bass", "piano", "guitar"]) {
+    assert.ok(html.includes("scheduleVoice('" + track + "'"), track + " must be counted independently");
+  }
+  assert.match(html, /発音処理数 D:/);
+  assert.match(html, /1秒間に発音イベントがありません/);
+});
+
+test("TL-123 melody-aware harmony engine creates three distinct scored 32-bar candidates", async () => {
+  const html = await readFile(canvasPath, "utf8");
+  const constantsStart = html.indexOf("const LYRIC_NOTE_NAMES=");
+  const helpersStart = html.indexOf("function expandHarmonySectionsToTimeline");
+  const helpersEnd = html.indexOf("function resolveMelodyChordDegree(chordSections", helpersStart);
+  assert.ok(constantsStart >= 0 && helpersStart > constantsStart && helpersEnd > helpersStart);
+  const engineSource = html.slice(constantsStart, helpersStart) + html.slice(helpersStart, helpersEnd);
+  const engine = new Function(engineSource + "\nreturn {buildSectionChordProgressions,generateHarmonyCandidates,expandHarmonySectionsToTimeline};")();
+  const sections = [
+    {role:"A",label:"Mia / A verse",text:"I walk alone"},
+    {role:"B",label:"Ken / B verse",text:"I hear your voice"},
+    {role:"DUET",label:"Chorus",text:"We will be alright"},
+    {role:"DUET",label:"Bridge",text:"Beyond the night"}
+  ];
+  const styles = {"Mia / A verse":"warm","Ken / B verse":"sad","Chorus":"pop","Bridge":"surprise"};
+  const base = engine.buildSectionChordProgressions("C",sections,"pop",styles);
+  const melody = Array.from({length:16},(_,i)=>({pitch:[60,64,67,69,71,72,67,65][i%8],startBeat:i*2,durationBeats:1,section:sections[Math.min(3,Math.floor(i/4))].label,stressed:i%2===0,phraseEnd:i%4===3}));
+  const candidates = engine.generateHarmonyCandidates({key:"C",mood:"bittersweet",sections,chordSections:base,melody,progression:"pop",sectionStyles:styles,bars:32});
+  assert.deepEqual(candidates.map(item=>item.id),["A","B","C"]);
+  assert.equal(new Set(candidates.map(item=>item.sections.flatMap(section=>section.progression.map(chord=>chord.chord)).join("|"))).size,3);
+  candidates.forEach(candidate=>{
+    assert.ok(candidate.score>=0&&candidate.score<=100);
+    assert.equal(candidate.metrics.noteCount,16);
+    assert.ok(candidate.reasons.length>=3);
+    const timeline=engine.expandHarmonySectionsToTimeline(candidate.sections,32,4);
+    assert.ok(timeline.length>=32);
+    assert.equal(timeline.reduce((sum,chord)=>sum+chord.beats,0),128);
+    assert.equal(timeline.at(-1).bar,32);
+  });
+  assert.match(html,/function selectHarmonyCandidate\(candidateId\)/);
+  assert.match(html,/function previewHarmonyCandidate\(candidateId\)/);
+  assert.match(html,/同じメロディで試聴/);
+});
+
+test("TL-124 refining harmony regenerates candidate scores and synchronized chord timeline", async () => {
+  const html = await readFile(canvasPath, "utf8");
+  const start = html.indexOf("function refineGeneratedChordProgressions(){");
+  const end = html.indexOf("function copyChordPrompt()",start);
+  assert.ok(start>=0&&end>start);
+  const refine=html.slice(start,end);
+  assert.match(refine,/generateHarmonyCandidates\(/);
+  assert.match(refine,/expandHarmonySectionsToTimeline\(/);
+  assert.match(refine,/renderHarmonyCandidates\(harmonyCandidates,'A'\)/);
+  assert.match(refine,/selectedHarmonyCandidate:'A'/);
+  assert.ok(html.includes("chordSections:sections,chords,selectedHarmonyCandidate:candidateId"));
+});
+
+test("TL-125 six guided composition stages and per-bar chord editor are connected", async () => {
+  const html=await readFile(canvasPath,"utf8");
+  for(const stage of ["lyrics","harmony","compare","select","melody","arrange"]){
+    assert.ok(html.includes("data-composition-stage=\"" + stage + "\""),stage+" stage button must exist");
+    assert.ok(html.includes("goCompositionStage('" + stage + "')"),stage+" stage navigation must work");
+  }
+  assert.match(html,/function renderHarmonyBarEditor\(\)/);
+  assert.match(html,/function updateHarmonyBarChord\(index,degree\)/);
+  assert.match(html,/id="harmony-bar-editor"/);
+  assert.match(html,/sourceId:item\.id\|\|'chord'/);
+  assert.match(html,/manualOverride:true/);
+  assert.match(html,/selectHarmonyCandidate\(candidateId\)/);
+  assert.match(html,/project\.chords=project\.generatedMusic\?\.chords/);
+});
+
+test("TL-126 raw Web Audio test is independent from Tone.js availability", async () => {
+  const html=await readFile(beatLabPath,"utf8");
+  const start=html.indexOf("async function testAudioOutput(){");
+  const end=html.indexOf("async function testToneAudioOutput()",start);
+  assert.ok(start>=0&&end>start);
+  const raw=html.slice(start,end);
+  assert.match(raw,/window\.AudioContext\|\|window\.webkitAudioContext/);
+  assert.match(raw,/gain\.connect\(ctx\.destination\)/);
+  assert.doesNotMatch(raw,/Tone\.start|Tone\.Synth/);
+});
+
+test("TL-127 each A B C candidate can be handed to BEAT LAB for full accompaniment generation", async () => {
+  const html=await readFile(canvasPath,"utf8");
+  const beatLab=await readFile(beatLabPath,"utf8");
+  const start=html.indexOf("function sendHarmonyCandidateToBeatLab(candidateId){");
+  const end=html.indexOf("function sendToBeatLab(){",start);
+  assert.ok(start>=0&&end>start);
+  const body=html.slice(start,end);
+  assert.match(body,/selectHarmonyCandidate\(candidateId\)/);
+  assert.match(body,/goCompositionStage\('arrange'\)/);
+  assert.match(body,/sendToBeatLab\(\)/);
+  assert.match(html,/project\.chords=project\.generatedMusic\?\.chords/);
+  assert.match(beatLab,/function buildBassNotesFromChords/);
+});
+
+test("TL-128 manual per-bar chord edits refresh the selected candidate score and editor view", async () => {
+  const html=await readFile(canvasPath,"utf8");
+  const start=html.indexOf("function updateHarmonyBarChord(index,degree){");
+  const end=html.indexOf("let harmonyPreviewContext",start);
+  assert.ok(start>=0&&end>start);
+  const body=html.slice(start,end);
+  assert.match(body,/scoreHarmonyCandidate\(/);
+  assert.match(body,/manualChordEdits:true/);
+  assert.match(body,/renderHarmonyCandidates\(harmonyCandidates,sketch\.selectedHarmonyCandidate\)/);
+  assert.match(body,/renderHarmonyBarEditor\(\)/);
+  assert.match(body,/manualOverride:true/);
+  assert.match(html,/sketch\.manualChordEdits/);
+  assert.match(html,/displaySections\.map\(section=>/);
+});
+
+test("TL-129 saved compositions restore A B C candidates and the selected bar-edit timeline", async () => {
+  const html=await readFile(canvasPath,"utf8");
+  const start=html.indexOf("function restoreChordProgressionInput(sketch){");
+  const end=html.indexOf("function applyChordProgression()",start);
+  assert.ok(start>=0&&end>start);
+  const body=html.slice(start,end);
+  assert.match(body,/sketch\?\.harmonyCandidates/);
+  assert.match(body,/renderHarmonyCandidates\(sketch\.harmonyCandidates,sketch\.selectedHarmonyCandidate\|\|null\)/);
+  assert.match(body,/renderHarmonyBarEditor\(\)/);
+  assert.match(body,/updateGeneratedChordTimelineOutputs\(\)/);
+});
