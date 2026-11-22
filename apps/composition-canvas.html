@@ -100,11 +100,13 @@
   style="display:none">
 
 <section id="lyric-panel">
-  <nav id="composition-workflow-nav" aria-label="作曲の手順" style="position:sticky;top:0;z-index:8;display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:6px;padding:8px 0;background:#171525">
+  <nav id="composition-workflow-nav" aria-label="作曲の手順" style="position:sticky;top:0;z-index:8;display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:6px;padding:8px 0;background:#171525">
     <button type="button" data-composition-stage="lyrics" onclick="goCompositionStage('lyrics')" aria-current="step">① 歌詞</button>
     <button type="button" data-composition-stage="harmony" onclick="goCompositionStage('harmony')">② 和声</button>
-    <button type="button" data-composition-stage="melody" onclick="goCompositionStage('melody')">③ メロディ</button>
-    <button type="button" data-composition-stage="arrange" onclick="goCompositionStage('arrange')">④ 編曲</button>
+    <button type="button" data-composition-stage="compare" onclick="goCompositionStage('compare')">③ 比較</button>
+    <button type="button" data-composition-stage="select" onclick="goCompositionStage('select')">④ 選択</button>
+    <button type="button" data-composition-stage="melody" onclick="goCompositionStage('melody')">⑤ メロディ</button>
+    <button type="button" data-composition-stage="arrange" onclick="goCompositionStage('arrange')">⑥ 編曲</button>
   </nav>
   <p id="composition-stage-status" aria-live="polite" style="font-size:11px;opacity:.82;margin:2px 0 10px">歌詞を入力し、次に和声候補を比較します。</p>
   <h3>✍️ 英語歌詞 × メロディ</h3>
@@ -1055,14 +1057,16 @@ async function previewHarmonyCandidate(candidateId){
 function goCompositionStage(stage){
   const targets={
     lyrics:'single-lyric-editor',
-    harmony:'harmony-candidate-panel',
+    harmony:'lyric-progression',
+    compare:'harmony-candidate-panel',
+    select:'harmony-bar-editor',
     melody:'canvas',
     arrange:'send-to-beatlab-button'
   };
-  const names={lyrics:'歌詞を入力します',harmony:'A・B・Cの和声を比較します',melody:'音符と歌詞の対応を確認します',arrange:'伴奏トラックへ展開します'};
+  const names={lyrics:'歌詞を入力します',harmony:'キーと雰囲気を設定します',compare:'A・B・Cを同じメロディで聴き比べます',select:'採用案を選び、小節ごとにコードを調整します',melody:'音符と歌詞の対応を確認します',arrange:'伴奏トラックへ展開します'};
   const targetId=targets[stage]||targets.lyrics;
   let target=document.getElementById(targetId);
-  if(stage==='harmony'&&(!target||!window.__lyricMusicSketch?.harmonyCandidates?.length))target=document.getElementById('lyric-progression');
+  if((stage==='compare'||stage==='select')&&!window.__lyricMusicSketch?.harmonyCandidates?.length)target=document.getElementById('lyric-progression');
   if(stage==='lyrics'&&document.getElementById('duet-editors')?.style.display!=='none')target=document.getElementById('duet-editors');
   document.querySelectorAll('#composition-workflow-nav [data-composition-stage]').forEach(button=>{
     const active=button.dataset.compositionStage===stage;
@@ -1105,6 +1109,7 @@ function selectHarmonyCandidate(candidateId){
   const panel=document.getElementById('lyric-generated-chord-panel');if(panel)panel.style.display='block';
   renderHarmonyCandidates(sketch.harmonyCandidates,candidateId);
   renderHarmonyBarEditor();
+  goCompositionStage('select');
   const status=document.getElementById('chord-progression-status');if(status)status.textContent=candidateId+'案「'+candidate.name+'」を採用しました。メロディは保持し、和声だけを切り替えました。';
   const result=document.getElementById('lyric-music-result');if(result)result.innerHTML='<strong>'+escapeHtmlCanvas(candidate.id+'案 · '+candidate.name)+'を採用しました</strong><p>メロディ音符と歌詞の対応は維持し、コード進行を切り替えました。BEAT//LABへ送ると、この和声が伴奏展開の基準になります。</p>';
   return true;
@@ -1478,7 +1483,7 @@ function generateLyricMusicSketch(){
   window.__lyricMusicSketch.selectedHarmonyCandidate='A';
   renderHarmonyCandidates(harmonyCandidates,'A');
   renderHarmonyBarEditor();
-  goCompositionStage('harmony');
+  goCompositionStage('compare');
   document.getElementById('lyric-music-result').innerHTML='<strong>生成した候補</strong><p>Key: '+escapeHtmlCanvas(key)+' / '+escapeHtmlCanvas(mood)+' / '+chordNames.map(escapeHtmlCanvas).join(' – ')+'</p><p>'+notes.length+'音のメロディ候補を配置しました。強勢音節・フレーズの呼吸・コード構成音への着地を反映しています。音符カードをクリックして調整できます。</p><small>英語の強勢は推定です。歌詞の発音・自然なアクセント・歌いやすさは実際に再生して確認してください。</small>';
   showToast('歌詞からメロディ・コードの初期案を生成しました');
 }
