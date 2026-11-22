@@ -491,7 +491,7 @@ test("TL-40 refined chord progressions use varied chord durations rather than fo
 test("TL-41 section chord copy serializes the currently selected full-song timeline", async () => {
   const html=await readFile(canvasPath,"utf8");
   const start=html.indexOf("async function copyAllGeneratedChordSections()");
-  const end=html.indexOf("\\nfunction buildCompositionSketchPackage()",start);
+  const end=html.indexOf(String.fromCharCode(10)+"function buildCompositionSketchPackage()",start);
   const body=html.slice(start,end);
   assert.ok(body.includes("getCurrentChordTimeline(sketch)"));
   assert.ok(body.includes("formatChordTimelineSections(sketch)"));
@@ -502,7 +502,7 @@ test("TL-41 section chord copy serializes the currently selected full-song timel
 test("TL-42 flat chord copy is rebuilt from the selected full-song timeline, not a stale textarea", async () => {
   const html=await readFile(canvasPath,"utf8");
   const start=html.indexOf("async function copyAllGeneratedChords()");
-  const end=html.indexOf("\\nfunction selectAllGeneratedChordSections()",start);
+  const end=html.indexOf(String.fromCharCode(10)+"function selectAllGeneratedChordSections()",start);
   const body=html.slice(start,end);
   assert.ok(body.includes("getCurrentChordTimeline(sketch)"));
   assert.ok(body.includes("timeline.map(item=>item.chord)"));
