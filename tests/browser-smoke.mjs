@@ -45,6 +45,10 @@ try {
   const consoleErrors = [];
   const sampleFailures = [];
   const sampleHttpErrors = [];
+  const sampleRequests = [];
+  page.on("request", request => {
+    if (/tonejs-instruments|salamander/i.test(request.url())) sampleRequests.push({ url: request.url(), method: request.method() });
+  });
   page.on("requestfailed", request => {
     if (/tonejs-instruments|salamander|Tone\.js/i.test(request.url())) sampleFailures.push({ url: request.url(), error: request.failure()?.errorText });
   });
@@ -114,7 +118,8 @@ try {
   await page.locator("#guitar-volume").evaluate(el => { el.value = "55"; el.dispatchEvent(new Event("input", { bubbles: true })); });
   const volumeCheck = await page.evaluate(() => ({ guitar: document.getElementById("guitar-volume").value, mixStatus: document.getElementById("arrangement-mix-status")?.textContent || "" }));
   assert.equal(volumeCheck.guitar, "55", "guitar volume fader must accept live input");
-  await page.waitForTimeout(9000);
+  await page.evaluate(() => { getPianoSampler(); getGuitarSampler(); getElectricGuitarSampler(); getBassSampler(); });
+  await page.waitForTimeout(20000);
   const samplerStatus = await page.evaluate(() => ({
     piano: !!pianoSamplerReady,
     acousticGuitar: !!guitarSamplerReady,
@@ -123,7 +128,7 @@ try {
   }));
 
   assert.deepEqual(runtimeErrors, [], "Browser runtime errors detected:\n" + runtimeErrors.join("\n\n"));
-  console.log("BROWSER_SMOKE_OK " + JSON.stringify({ toneOnBeatLab, trackReport, playedVariants, volumeCheck, samplerStatus, sampleFailures, sampleHttpErrors, runtimeErrors: runtimeErrors.length, consoleErrors }));
+  console.log("BROWSER_SMOKE_OK " + JSON.stringify({ toneOnBeatLab, trackReport, playedVariants, volumeCheck, samplerStatus, sampleRequests: sampleRequests.length, sampleFailures, sampleHttpErrors, runtimeErrors: runtimeErrors.length, consoleErrors }));
 } finally {
   if (browser) await browser.close();
   if (serverListening) await new Promise(resolve => server.close(resolve));
