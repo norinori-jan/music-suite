@@ -1664,6 +1664,11 @@ async function togglePlay(){
   const guitarEventCount=chordEvents.guitar.length;
   const drumEventCount=APP.sections?.reduce((sum,section)=>sum+Object.values(section.pattern||{}).filter(Boolean).length,0)||Object.values(APP.pattern||{}).filter(Boolean).length;
   setStatus('gen','再生開始 · AudioContext='+Tone.context.state+' · 音符 M:'+melodyEventCount+' B:'+bassEventCount+' P:'+pianoEventCount+' G:'+guitarEventCount+' / ドラム:'+drumEventCount);
+  const playbackDiagnostics={drums:0,melody:0,bass:0,piano:0,guitar:0,errors:[]};
+  function scheduleVoice(track,action){
+    try{action();playbackDiagnostics[track]++;}
+    catch(error){playbackDiagnostics.errors.push(track+': '+(error?.message||error));}
+  }
   const bassEnabled=document.getElementById('bass-enabled').checked;
   const pianoEnabled=document.getElementById('piano-enabled').checked;
   const guitarEnabled=document.getElementById('guitar-enabled').checked;
@@ -1679,7 +1684,7 @@ async function togglePlay(){
     const sectionDynamics=getSectionPerformanceDynamics(activeSection,barNumber,chordVariant);
     ROWS.forEach(row=>{
       const k=pk(row.id,sectionStep),baseVel=drumPattern[k],effectVel=drumEffectVelocity(row.id,stepIndex,activeSection,sectionStep),vel=effectVel===null?baseVel:effectVel;
-      if(vel)playHit(row.pitch,Math.max(.05,Math.min(1,vel*sectionDynamics.drums)),audioAt,false);
+      if(vel)scheduleVoice('drums',()=>playHit(row.pitch,Math.max(.05,Math.min(1,vel*sectionDynamics.drums)),audioAt,false));
     });
     // Visual playhead updates at the event's scheduled time, not while
     // queuing future notes inside the look-ahead window.
@@ -1697,15 +1702,15 @@ async function togglePlay(){
       bassNotes.forEach(note=>{
         if(Math.abs(note.startBeat-currentBeat)<bassTolerance){
           const duration=Math.max(.055,note.durationBeats*60/bpm*.9);
-          playBassNote({...note,velocity:Math.max(.05,Math.min(1,note.velocity*sectionDynamics.bass))},duration,audioAt,activeSection,chordVariant);
+          scheduleVoice('bass',()=>playBassNote({...note,velocity:Math.max(.05,Math.min(1,note.velocity*sectionDynamics.bass))},duration,audioAt,activeSection,chordVariant));
         }
       });
     }
     if(pianoEnabled){
-      chordEvents.piano.forEach(event=>{if(Math.abs(event.startBeat-currentBeat)<bassTolerance){const seconds=Math.max(.08,event.durationBeats*60/bpm*.9);playPianoEvent({...event,velocity:Math.max(.05,Math.min(1,event.velocity*sectionDynamics.piano)),durationSeconds:seconds},audioAt);}});
+      chordEvents.piano.forEach(event=>{if(Math.abs(event.startBeat-currentBeat)<bassTolerance){const seconds=Math.max(.08,event.durationBeats*60/bpm*.9);scheduleVoice('piano',()=>playPianoEvent({...event,velocity:Math.max(.05,Math.min(1,event.velocity*sectionDynamics.piano)),durationSeconds:seconds},audioAt));}});
     }
     if(guitarEnabled){
-      chordEvents.guitar.forEach(event=>{if(Math.abs(event.startBeat-currentBeat)<bassTolerance){playGuitarEvent({...event,velocity:Math.max(.05,Math.min(1,event.velocity*sectionDynamics.guitar))},audioAt,bpm);}});
+      chordEvents.guitar.forEach(event=>{if(Math.abs(event.startBeat-currentBeat)<bassTolerance){scheduleVoice('guitar',()=>playGuitarEvent({...event,velocity:Math.max(.05,Math.min(1,event.velocity*sectionDynamics.guitar))},audioAt,bpm));}});
     }
     if(document.getElementById('melody-enabled').checked){
       const bpm=PROJ_BPM();
@@ -1716,8 +1721,10 @@ async function togglePlay(){
             const duration=Math.max(.06,(Number(n.durationBeats)||.25)*60/bpm*.92);
             const velocity=Math.max(.05,Math.min(1,(Number(n.vel)||88)/127*sectionDynamics.melody));
             const noteName=Tone.Frequency(pitch,'midi').toNote();
-            if(melodySamplerReady&&melodySampler)melodySampler.triggerAttackRelease(noteName,duration,audioAt,velocity);
-            else getMelodySynth().triggerAttackRelease(noteName,duration,audioAt,velocity);
+            scheduleVoice('melody',()=>{
+              if(melodySamplerReady&&melodySampler)melodySampler.triggerAttackRelease(noteName,duration,audioAt,velocity);
+              else getMelodySynth().triggerAttackRelease(noteName,duration,audioAt,velocity);
+            });
           }
         }
       });
@@ -1741,6 +1748,14 @@ async function togglePlay(){
   nextStepTime=Tone.now()+0.05;
   scheduleAhead();
   playTimer=setInterval(scheduleAhead,25);
+  setTimeout(()=>{
+    if(!APP.playing||generation!==playbackGeneration)return;
+    const d=playbackDiagnostics;
+    const summary='発音処理数 D:'+d.drums+' M:'+d.melody+' B:'+d.bass+' P:'+d.piano+' G:'+d.guitar;
+    if(d.errors.length)setStatus('err',summary+' · 発音エラー '+d.errors.slice(0,2).join(' / '));
+    else if(!Object.values(d).slice(0,5).some(Boolean))setStatus('err',summary+' · 1秒間に発音イベントがありません。曲データと再生位置を確認してください。');
+    else setStatus('ok',summary+' · AudioContext='+Tone.context.state+'（処理への送信数。実際の聴こえ方は音声テストで確認）');
+  },1000);
 }
 function stopPlay(){
   APP.playing=false;playbackGeneration++;
