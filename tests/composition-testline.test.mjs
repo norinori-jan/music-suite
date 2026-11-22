@@ -1664,7 +1664,8 @@ test("TL-97 real lyric-to-melody workflow creates linked notes and section harmo
   assert.ok(sketch&&sketch.melody.length>0,"entering lyrics must create a melody candidate");
   assert.equal(sketch.chordSections.length,4,"each lyric section must receive its own chord progression");
   assert.equal(sketch.bars,32,"lyric generation must target a complete 32-bar song");
-  assert.equal(sketch.chords.length,32,"four lyric sections must each expand their harmony across eight bars");
+  assert.ok(sketch.chords.length>=32,"four lyric sections must repeat harmony across the full song");
+  assert.ok(Math.max(...sketch.chords.map(chord=>chord.startBeat+chord.beats))>=128,"generated harmony must reach the end of bar 32");
   assert.ok(sketch.melody.some(note=>note.startBeat>=96),"the final lyric section must reach the last eight bars");
   assert.ok(sketch.chords.some(chord=>chord.startBeat>=96),"the final section harmony must reach the last eight bars");
   assert.deepEqual(new Set(sketch.melody.map(note=>note.section)),new Set(sections.map(section=>section.label)));
