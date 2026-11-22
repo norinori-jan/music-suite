@@ -1090,13 +1090,13 @@ function generateLyricMusicSketch(){
     card.classList.add('lyric-linked');
     const label=document.createElement('span');label.className='lyric-assignment';label.textContent=(n.role==='A'?'A':n.role==='B'?'B':'二人')+' · '+n.word;card.appendChild(label);
   });
-  window.__lyricMusicSketch={key,mode:key==='A'||key==='E'?'minor':'major',mood,progression,bars,timeSig:4,chordSections,chords:allSectionChords,melody:notes.map((n,i)=>({id:n.id,lyricId:n.lyricId,pitch:n.note,startBeat:n.startBeat,durationBeats:n.length,word:n.word,lyric:n.lyric,role:n.role,section:n.section})),method:'rule-based-draft-v1',warning:'音節推定と音高選択による作曲スケッチ。発音・アクセント・和声進行は要調整'};
+  window.__lyricMusicSketch={key,mode:key==='A'||key==='E'?'minor':'major',mood,progression,bars,timeSig:4,sourceLyrics:text,chordSections,chords:allSectionChords,melody:notes.map((n,i)=>({id:n.id,lyricId:n.lyricId,pitch:n.note,startBeat:n.startBeat,durationBeats:n.length,word:n.word,lyric:n.lyric,role:n.role,section:n.section})),method:'rule-based-draft-v1',warning:'音節推定と音高選択による作曲スケッチ。発音・アクセント・和声進行は要調整'};
   document.getElementById('lyric-music-result').innerHTML='<strong>生成した候補</strong><p>Key: '+escapeHtmlCanvas(key)+' / '+escapeHtmlCanvas(mood)+' / '+chordNames.map(escapeHtmlCanvas).join(' – ')+'</p><p>'+notes.length+'音のメロディ候補を配置しました。音符カードをクリックして音名・音価を調整できます。</p><small>これは歌詞の音節数を目安にした初期案です。自然な英語の強勢や実際の歌いやすさを自動保証するものではありません。</small>';
   showToast('歌詞からメロディ・コードの初期案を生成しました');
 }
 function saveLyricCanvasProject(){
   const incoming=window.__incomingLyricProject||{},cards=[...document.querySelectorAll('#canvas .card')];
-  const project={version:3,projectId:incoming.projectId||window.__musicProjectId||('song-'+Date.now()),source:'composition-canvas-lyrics',kind:incoming.kind||'single',name:incoming.title||'English lyric composition',title:incoming.title||'English lyric composition',story:incoming.story||'',emotion:incoming.emotion||'neutral',bpm:Number(incoming.bpm)||120,original:incoming.original||'',sourceDialogue:incoming.sourceDialogue||null,sections:lyricSectionsRead(),lyrics:lyricTextRead(),analysis:incoming.analysis||null,translation:incoming.translation||null,generatedMusic:window.__lyricMusicSketch||incoming.generatedMusic||null,rhythm:window.__lastDrumProject||null,melody:window.__lastDrumProject?.melody||null,notes:cards.map((card,index)=>({id:card.dataset.noteId||makeMelodyNoteId(index),lyricId:card.dataset.lyricId||null,startBeat:card.dataset.startBeat!==undefined?Number(card.dataset.startBeat):null,note:card.dataset.note||card.firstChild?.textContent||'',lyric:card.dataset.lyric||'',word:card.dataset.word||'',role:card.dataset.lyricRole||'',section:card.dataset.lyricSection||'',length:Number(card.dataset.length)||4,x:parseInt(card.style.left)||0,y:parseInt(card.style.top)||0,color:card.style.backgroundColor||'#ffffff',index})),updatedAt:new Date().toISOString()};
+  const project={version:3,projectId:incoming.projectId||window.__musicProjectId||('song-'+Date.now()),source:'composition-canvas-lyrics',kind:incoming.kind||'single',name:incoming.title||'English lyric composition',title:incoming.title||'English lyric composition',story:incoming.story||'',emotion:incoming.emotion||'neutral',bpm:Number(incoming.bpm)||120,original:incoming.original||'',sourceDialogue:incoming.sourceDialogue||null,sections:lyricSectionsRead(),lyrics:lyricTextRead(),analysis:incoming.analysis||null,translation:incoming.translation||null,generatedMusic:window.__lyricMusicSketch||incoming.generatedMusic||null,rhythm:window.__lastDrumProject||null,melody:Array.isArray(window.__lyricMusicSketch?.melody)?{notes:window.__lyricMusicSketch.melody}:window.__lastDrumProject?.melody||null,bars:window.__lyricMusicSketch?.bars||window.__lastDrumProject?.bars||32,timeSig:4,notes:cards.map((card,index)=>({id:card.dataset.noteId||makeMelodyNoteId(index),lyricId:card.dataset.lyricId||null,startBeat:card.dataset.startBeat!==undefined?Number(card.dataset.startBeat):null,note:card.dataset.note||card.firstChild?.textContent||'',lyric:card.dataset.lyric||'',word:card.dataset.word||'',role:card.dataset.lyricRole||'',section:card.dataset.lyricSection||'',length:Number(card.dataset.length)||4,x:parseInt(card.style.left)||0,y:parseInt(card.style.top)||0,color:card.style.backgroundColor||'#ffffff',index})),updatedAt:new Date().toISOString()};
   try{localStorage.setItem('compositionLyricProject',JSON.stringify(project));if(typeof msRegister==='function')msRegister(project);window.__savedLyricCanvasProject=project;showToast('A・B・サビ・ブリッジと音符カードの割当を保存しました')}
   catch(e){showToast('保存できませんでした: '+e.message)}
 }
@@ -1353,7 +1353,7 @@ function loadCardPositions() {
 ────────────────────────────── */
 function buildMelodyProject(sourceName) {
   const rhythmProject=window.__lastDrumProject||{};
-  const preservedMelody=rhythmProject.melody||(Array.isArray(window.__lyricMusicSketch?.melody)?{notes:window.__lyricMusicSketch.melody}:null);
+  const preservedMelody=Array.isArray(window.__lyricMusicSketch?.melody)&&window.__lyricMusicSketch.melody.length?{notes:window.__lyricMusicSketch.melody}:(rhythmProject.melody||null);
   const cards=Array.isArray(state.lastNotes)?state.lastNotes:[];
   const byId=new Map(cards.filter(card=>card.id).map(card=>[card.id,card]));
   const cardLyricFields=(card,original={})=>({
@@ -1454,6 +1454,8 @@ function sendToBeatLab(){
     showToast('先にメロディ候補を生成するか、音符カードを読み込んでください');
     return;
   }
+  const currentLyrics=lyricTextRead();
+  if(window.__lyricMusicSketch?.sourceLyrics!==undefined&&window.__lyricMusicSketch.sourceLyrics!==currentLyrics){showToast('歌詞が生成後に変更されています。先に「歌詞から音符・コード候補を生成」をやり直してください');return;}
   try{saveLyricCanvasProject()}catch(e){console.warn('lyric snapshot failed',e)}
   const project=buildMelodyProject('composition-canvas');
   const incoming=window.__incomingLyricProject||{};
