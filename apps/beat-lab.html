@@ -1484,6 +1484,23 @@ function arrangementDrumNotesFromSections(sections,project){
   });
   return notes;
 }
+function getSectionPerformanceDynamics(section,bar=1,variant='A'){
+  const text=[section?.id,section?.label,section?.role,section?.name].filter(Boolean).join(' ').toLowerCase();
+  const chorus=/(chorus|hook|refrain|サビ|大サビ)/.test(text);
+  const bridge=/(bridge|間奏|ブリッジ)/.test(text);
+  const intro=/(intro|前奏|イントロ)/.test(text);
+  const outro=/(outro|ending|終奏|アウトロ)/.test(text);
+  const verse=/(verse|aメロ|bメロ|歌|ヴァース)/.test(text);
+  let dynamics={melody:1,bass:1,drums:1,piano:1,guitar:1};
+  if(chorus)dynamics={melody:1.08,bass:1.12,drums:1.2,piano:.94,guitar:1.14};
+  else if(bridge)dynamics={melody:1.02,bass:.82,drums:.72,piano:1.12,guitar:.78};
+  else if(intro)dynamics={melody:.88,bass:.76,drums:.72,piano:1.08,guitar:.78};
+  else if(outro)dynamics={melody:.92,bass:.78,drums:.68,piano:1.04,guitar:.76};
+  else if(verse)dynamics={melody:1.06,bass:.94,drums:.88,piano:.86,guitar:.84};
+  const v=variant==='C'?{melody:1,bass:1.04,drums:1.06,piano:.94,guitar:1.1}:variant==='B'?{melody:1.02,bass:.94,drums:.9,piano:1.06,guitar:.92}:{};
+  Object.keys(dynamics).forEach(key=>dynamics[key]=Math.max(.55,Math.min(1.3,dynamics[key]*(v[key]||1))));
+  return dynamics;
+}
 function buildArrangementTrackSnapshot(project,variant,sections){
   const id=['A','B','C'].includes(variant)?variant:'A';
   const importedBass=getPlayableBassNotes(project,APP.bars,APP.timeSig);
@@ -1574,9 +1591,11 @@ async function togglePlay(){
     const activeSection=sectionAtStep(stepIndex);
     const sectionStep=activeSection?sectionPatternStep(activeSection,stepIndex):stepIndex;
     const drumPattern=activeSection?.pattern||APP.pattern;
+    const barNumber=Math.floor(stepIndex/(APP.timeSig*stepsPerBeat))+1;
+    const sectionDynamics=getSectionPerformanceDynamics(activeSection,barNumber,chordVariant);
     ROWS.forEach(row=>{
       const k=pk(row.id,sectionStep),baseVel=drumPattern[k],effectVel=drumEffectVelocity(row.id,stepIndex,activeSection,sectionStep),vel=effectVel===null?baseVel:effectVel;
-      if(vel)playHit(row.pitch,vel,audioAt,false);
+      if(vel)playHit(row.pitch,Math.max(.05,Math.min(1,vel*sectionDynamics.drums)),audioAt,false);
     });
     // Visual playhead updates at the event's scheduled time, not while
     // queuing future notes inside the look-ahead window.
@@ -1594,15 +1613,15 @@ async function togglePlay(){
       bassNotes.forEach(note=>{
         if(Math.abs(note.startBeat-currentBeat)<bassTolerance){
           const duration=Math.max(.055,note.durationBeats*60/bpm*.9);
-          playBassNote(note,duration,audioAt,activeSection,chordVariant);
+          playBassNote({...note,velocity:Math.max(.05,Math.min(1,note.velocity*sectionDynamics.bass))},duration,audioAt,activeSection,chordVariant);
         }
       });
     }
     if(pianoEnabled){
-      chordEvents.piano.forEach(event=>{if(Math.abs(event.startBeat-currentBeat)<bassTolerance){const seconds=Math.max(.08,event.durationBeats*60/bpm*.9);playPianoEvent({...event,durationSeconds:seconds},audioAt);}});
+      chordEvents.piano.forEach(event=>{if(Math.abs(event.startBeat-currentBeat)<bassTolerance){const seconds=Math.max(.08,event.durationBeats*60/bpm*.9);playPianoEvent({...event,velocity:Math.max(.05,Math.min(1,event.velocity*sectionDynamics.piano)),durationSeconds:seconds},audioAt);}});
     }
     if(guitarEnabled){
-      chordEvents.guitar.forEach(event=>{if(Math.abs(event.startBeat-currentBeat)<bassTolerance){playGuitarEvent(event,audioAt,bpm);}});
+      chordEvents.guitar.forEach(event=>{if(Math.abs(event.startBeat-currentBeat)<bassTolerance){playGuitarEvent({...event,velocity:Math.max(.05,Math.min(1,event.velocity*sectionDynamics.guitar))},audioAt,bpm);}});
     }
     if(document.getElementById('melody-enabled').checked){
       const bpm=PROJ_BPM();
@@ -1611,7 +1630,7 @@ async function togglePlay(){
           const pitch=Number(n.pitch);
           if(Number.isFinite(pitch)){
             const duration=Math.max(.06,(Number(n.durationBeats)||.25)*60/bpm*.92);
-            const velocity=Math.max(.05,Math.min(1,(Number(n.vel)||88)/127));
+            const velocity=Math.max(.05,Math.min(1,(Number(n.vel)||88)/127*sectionDynamics.melody));
             if(melodySamplerReady&&melodySampler)melodySampler.triggerAttackRelease(Tone.Frequency(pitch,'midi').toNote(),duration,audioAt,velocity);
           }
         }
