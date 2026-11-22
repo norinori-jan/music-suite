@@ -1177,7 +1177,7 @@ test("TL-79 sampled piano loads lazily with synth fallback and distinct electric
   assert.match(html,/new Tone\.Sampler\(\{urls:\{C2:'C2\.mp3',C3:'C3\.mp3',C4:'C4\.mp3',C5:'C5\.mp3',C6:'C6\.mp3'\}/,"piano must load multi-register Salamander piano samples");
   assert.match(html,/baseUrl:'https:\/\/tonejs\.github\.io\/audio\/salamander\//,"piano samples must use the public Salamander sample set");
   assert.match(html,/const sampler=getPianoSampler\(\);[\s\S]*?if\(pianoSamplerReady&&sampler\)sampler\.triggerAttackRelease[\s\S]*?else getPianoSynth\(\)\.triggerAttackRelease/,"piano playback must fall back to the synth while samples load or fail");
-  assert.match(html,/new Tone\.PluckSynth\(\{attackNoise:[\s\S]*?\}\)\.connect\(getGuitarBus\(\)\)/,"acoustic guitar must retain a plucked-string voice");
+  assert.match(html,/function getGuitarSynth\(\)[\s\S]*?new Tone\.PolySynth\(Tone\.Synth,[\s\S]*?attack:\.003,decay:\.34,sustain:0/,"acoustic guitar fallback must be polyphonic with a short plucked-string envelope");
   assert.match(html,/new Tone\.PolySynth\(Tone\.Synth,\{oscillator:\{type:'fatsawtooth',count:3,spread:7\}/,"electric guitar must use a separate sustained voice");
   assert.match(html,/new Tone\.Distortion\(\.12\)/,"electric guitar must have its own mild drive stage");
   assert.match(html,/new Tone\.Chorus\(1\.7,2\.1,\.12\)/,"electric guitar must have a separate modulation stage");
