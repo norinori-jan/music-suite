@@ -1135,6 +1135,22 @@ function resolveMelodyChordDegreeAtBeat(chordSections,label,localBeat){
   for(const chord of progression){const duration=Math.max(.5,Number(chord.beats)||4);if(beat<duration)return chord.degree;beat-=duration;}
   return progression[progression.length-1].degree;
 }
+function getCurrentChordTimeline(sketch=window.__lyricMusicSketch||{}){
+  if(Array.isArray(sketch.chords)&&sketch.chords.length)return sketch.chords;
+  return (sketch.chordSections||[]).flatMap(section=>(section.progression||[]).map(item=>({...item,section:section.label})));
+}
+function formatChordTimelineSections(sketch=window.__lyricMusicSketch||{}){
+  const timeline=getCurrentChordTimeline(sketch),styles=new Map((sketch.chordSections||[]).map(section=>[section.label,section.style||'']));
+  const groups=new Map();
+  timeline.forEach(item=>{const label=item.section||'全体';if(!groups.has(label))groups.set(label,[]);groups.get(label).push(item);});
+  return [...groups.entries()].map(([label,items])=>label+(styles.get(label)?' ['+styles.get(label)+']':'')+'\n'+items.map(item=>'小節'+(item.bar||Math.floor((Number(item.startBeat)||0)/4)+1)+': '+item.chord+' ('+(Number(item.beats)||4)+'拍)').join('  →  ')).join('\n\n');
+}
+function updateGeneratedChordTimelineOutputs(){
+  const sketch=window.__lyricMusicSketch||{},timeline=getCurrentChordTimeline(sketch);
+  const flat=timeline.map(item=>item.chord).join(', ');
+  const output=document.getElementById('lyric-generated-chord-output');if(output)output.value=flat;
+  const sections=document.getElementById('lyric-generated-chord-sections-output');if(sections)sections.value=formatChordTimelineSections(sketch);
+}
 function parseChordProgressionText(raw){
   const source=String(raw||'').replace(/[，、；]/g,',').trim();
   if(!source)throw new Error('コード進行が空です。例：C, G, Am, F');
@@ -1312,22 +1328,6 @@ function importCompositionSketch(){
   lyricRenderPreview();
   if(status)status.textContent='読み込み完了：歌詞 '+data.lyrics.sections.length+'区間・コード '+data.harmony.chords.length+'件・音符 '+data.melody.notes.length+'件を復元しました。';
   return true;
-}
-function getCurrentChordTimeline(sketch=window.__lyricMusicSketch||{}){
-  if(Array.isArray(sketch.chords)&&sketch.chords.length)return sketch.chords;
-  return (sketch.chordSections||[]).flatMap(section=>(section.progression||[]).map(item=>({...item,section:section.label})));
-}
-function formatChordTimelineSections(sketch=window.__lyricMusicSketch||{}){
-  const timeline=getCurrentChordTimeline(sketch),styles=new Map((sketch.chordSections||[]).map(section=>[section.label,section.style||'']));
-  const groups=new Map();
-  timeline.forEach(item=>{const label=item.section||'全体';if(!groups.has(label))groups.set(label,[]);groups.get(label).push(item);});
-  return [...groups.entries()].map(([label,items])=>label+(styles.get(label)?' ['+styles.get(label)+']':'')+'\n'+items.map(item=>'小節'+(item.bar||Math.floor((Number(item.startBeat)||0)/4)+1)+': '+item.chord+' ('+(Number(item.beats)||4)+'拍)').join('  →  ')).join('\n\n');
-}
-function updateGeneratedChordTimelineOutputs(){
-  const sketch=window.__lyricMusicSketch||{},timeline=getCurrentChordTimeline(sketch);
-  const flat=timeline.map(item=>item.chord).join(', ');
-  const output=document.getElementById('lyric-generated-chord-output');if(output)output.value=flat;
-  const sections=document.getElementById('lyric-generated-chord-sections-output');if(sections)sections.value=formatChordTimelineSections(sketch);
 }
 function renderGeneratedChordSections(chordSections){
   const host=document.getElementById('lyric-generated-chord-breakdown');
