@@ -1877,3 +1877,50 @@ test("TL-122 playback reports per-track scheduled events and catches voice sched
   assert.match(html, /発音処理数 D:/);
   assert.match(html, /1秒間に発音イベントがありません/);
 });
+
+test("TL-123 melody-aware harmony engine creates three distinct scored 32-bar candidates", async () => {
+  const html = await readFile(canvasPath, "utf8");
+  const constantsStart = html.indexOf("const LYRIC_NOTE_NAMES=");
+  const helpersStart = html.indexOf("function expandHarmonySectionsToTimeline");
+  const helpersEnd = html.indexOf("function resolveMelodyChordDegree(chordSections", helpersStart);
+  assert.ok(constantsStart >= 0 && helpersStart > constantsStart && helpersEnd > helpersStart);
+  const engineSource = html.slice(constantsStart, helpersStart) + html.slice(helpersStart, helpersEnd);
+  const engine = new Function(engineSource + "\nreturn {buildSectionChordProgressions,generateHarmonyCandidates,expandHarmonySectionsToTimeline};")();
+  const sections = [
+    {role:"A",label:"Mia / A verse",text:"I walk alone"},
+    {role:"B",label:"Ken / B verse",text:"I hear your voice"},
+    {role:"DUET",label:"Chorus",text:"We will be alright"},
+    {role:"DUET",label:"Bridge",text:"Beyond the night"}
+  ];
+  const styles = {"Mia / A verse":"warm","Ken / B verse":"sad","Chorus":"pop","Bridge":"surprise"};
+  const base = engine.buildSectionChordProgressions("C",sections,"pop",styles);
+  const melody = Array.from({length:16},(_,i)=>({pitch:[60,64,67,69,71,72,67,65][i%8],startBeat:i*2,durationBeats:1,section:sections[Math.min(3,Math.floor(i/4))].label,stressed:i%2===0,phraseEnd:i%4===3}));
+  const candidates = engine.generateHarmonyCandidates({key:"C",mood:"bittersweet",sections,chordSections:base,melody,progression:"pop",sectionStyles:styles,bars:32});
+  assert.deepEqual(candidates.map(item=>item.id),["A","B","C"]);
+  assert.equal(new Set(candidates.map(item=>item.sections.flatMap(section=>section.progression.map(chord=>chord.chord)).join("|"))).size,3);
+  candidates.forEach(candidate=>{
+    assert.ok(candidate.score>=0&&candidate.score<=100);
+    assert.equal(candidate.metrics.noteCount,16);
+    assert.ok(candidate.reasons.length>=3);
+    const timeline=engine.expandHarmonySectionsToTimeline(candidate.sections,32,4);
+    assert.equal(timeline.length,32);
+    assert.equal(timeline.reduce((sum,chord)=>sum+chord.beats,0),128);
+    assert.equal(timeline.at(-1).bar,32);
+  });
+  assert.match(html,/function selectHarmonyCandidate\(candidateId\)/);
+  assert.match(html,/function previewHarmonyCandidate\(candidateId\)/);
+  assert.match(html,/同じメロディで試聴/);
+});
+
+test("TL-124 refining harmony regenerates candidate scores and synchronized chord timeline", async () => {
+  const html = await readFile(canvasPath, "utf8");
+  const start = html.indexOf("function refineGeneratedChordProgressions(){");
+  const end = html.indexOf("function copyChordPrompt()",start);
+  assert.ok(start>=0&&end>start);
+  const refine=html.slice(start,end);
+  assert.match(refine,/generateHarmonyCandidates\(/);
+  assert.match(refine,/expandHarmonySectionsToTimeline\(/);
+  assert.match(refine,/renderHarmonyCandidates\(harmonyCandidates,'A'\)/);
+  assert.match(refine,/selectedHarmonyCandidate:'A'/);
+  assert.match(html,/window\.__lyricMusicSketch=\{\.\.\.sketch,chordSections:sections,chords,harmonyCandidates,selectedHarmonyCandidate:candidateId/);
+});
