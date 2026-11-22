@@ -1576,7 +1576,7 @@ test("TL-96 lyric-aware accompaniment, bass pickups and pre-chorus transition ar
 
 test("TL-102 lyric syllable and stress helpers expose phrase-level pronunciation cues", async () => {
   const canvas=await readFile(canvasPath,"utf8");
-  const start=canvas.indexOf("function lyricStressIndex(");
+  const start=canvas.indexOf("const LYRIC_PRONUNCIATION_LEXICON=");
   const end=canvas.indexOf("const LYRIC_NOTE_NAMES=",start);
   assert.ok(start>=0&&end>start);
   const helpers=new Function(canvas.slice(start,end)+";return {lyricStressIndex,lyricIsFunctionWord,lyricEstimateSyllables,lyricBuildSyllables,lyricPhraseWeights};")();
@@ -1647,7 +1647,7 @@ test("TL-99 Composition Canvas handoff carries the full 32-bar lyric and arrange
 
 test("TL-98 lyric edits preserve note identity and update lyric linkage without orphaning notes", async () => {
   const canvas=await readFile(canvasPath,"utf8");
-  const helperStart=canvas.indexOf("function lyricStressIndex(");
+  const helperStart=canvas.indexOf("const LYRIC_PRONUNCIATION_LEXICON=");
   const helperEnd=canvas.indexOf("function parseChordProgressionText",helperStart);
   const start=canvas.indexOf("function generateLyricMusicSketch()");
   const end=canvas.indexOf("\nfunction saveLyricCanvasProject()",start);
@@ -1691,7 +1691,7 @@ test("TL-98 lyric edits preserve note identity and update lyric linkage without 
 
 test("TL-97 real lyric-to-melody workflow creates linked notes and section harmony before arrangement", async () => {
   const canvas=await readFile(canvasPath,"utf8");
-  const helperStart=canvas.indexOf("function lyricStressIndex(");
+  const helperStart=canvas.indexOf("const LYRIC_PRONUNCIATION_LEXICON=");
   const helperEnd=canvas.indexOf("function parseChordProgressionText",helperStart);
   const generatorStart=canvas.indexOf("function generateLyricMusicSketch()");
   const generatorEnd=canvas.indexOf("\nfunction saveLyricCanvasProject()",generatorStart);
