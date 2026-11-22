@@ -82,6 +82,7 @@ try {
     };
   });
   assert.equal(trackReport.imported, true, "Composition Canvas project must reach BEAT//LAB");
+  assert.deepEqual(trackReport.duplicateBassStarts, [], "monophonic bass must not schedule simultaneous attacks");
   for (const track of ["melody", "piano", "guitar", "bass", "drums"]) {
     assert.ok(trackReport[track] > 0, track + " track must contain playable notes; report=" + JSON.stringify(trackReport));
   }
