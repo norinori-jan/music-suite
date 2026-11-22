@@ -40,6 +40,8 @@ function validateFixture(project) {
   });
   const melody = project.melody?.notes || [];
   const drums = project.drums?.notes || [];
+  const chords = project.chords || [];
+  if (chords.length !== 32 || chords.some((chord, index) => chord.bar !== index + 1 || chord.beats !== 4)) errors.push("full-song chord coverage");
   const melodyIds = melody.map(note => note.id);
   const drumIds = drums.map(note => note.id);
   if (melodyIds.some(id => !id) || new Set(melodyIds).size !== melodyIds.length) errors.push("melody IDs");
@@ -1412,4 +1414,16 @@ test("TL-90 melody playback requires the sampled violin source instead of silent
   const credits = await readFile(path.join(here, "..", "SOUND-CREDITS.md"), "utf8");
   assert.match(credits, /Melody \(sampled violin\)/);
   assert.match(credits, /VSO2/);
+});
+
+
+test("TL-91 standard test song supplies harmony across all 32 bars for five-part playback", async () => {
+  const project = JSON.parse(await readFile(fixturePath, "utf8"));
+  assert.equal(project.chords.length, 32);
+  assert.equal(project.chords[0].bar, 1);
+  assert.equal(project.chords.at(-1).bar, 32);
+  assert.equal(project.chords.reduce((sum, chord) => sum + chord.beats, 0), 128);
+  const beatLab = await readFile(beatLabPath, "utf8");
+  assert.match(beatLab, /function buildArrangementTrackSnapshot\(project,variant,sections\)/);
+  assert.match(beatLab, /const chords=getPlayableChordEvents\(project,APP\.bars,APP\.timeSig,id\)/);
 });
