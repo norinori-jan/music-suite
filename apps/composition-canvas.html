@@ -1079,7 +1079,7 @@ function generateLyricMusicSketch(){
     const note=LYRIC_NOTE_NAMES[pitch]+(4+Math.floor((midi-60)/12));
     return {id:makeMelodyNoteId(i),note,length:Math.min(1,Math.max(.5,sectionSpan/sectionCount*.72)),word:item.word,lyric:item.phrase,role:item.role,section:item.label,startBeat:+startBeat.toFixed(4),lyricId:'lyric-'+String(i+1).padStart(4,'0')};
   });
-  state.lastNotes=notes.map(n=>({id:n.id,note:n.note,length:n.length,startBeat:n.startBeat,lyricId:n.lyricId}));
+  state.lastNotes=notes.map(n=>({id:n.id,note:n.note,length:n.length*4,startBeat:n.startBeat,lyricId:n.lyricId,lyric:n.lyric,word:n.word,lyricRole:n.role,lyricSection:n.section}));
   renderNoteCards(state.lastNotes,(window.__incomingLyricProject||{}).title||'Lyric sketch');
   const cards=[...document.querySelectorAll('#canvas .card')];
   cards.forEach((card,i)=>{
@@ -1096,7 +1096,7 @@ function generateLyricMusicSketch(){
 }
 function saveLyricCanvasProject(){
   const incoming=window.__incomingLyricProject||{},cards=[...document.querySelectorAll('#canvas .card')];
-  const project={version:3,projectId:incoming.projectId||window.__musicProjectId||('song-'+Date.now()),source:'composition-canvas-lyrics',kind:incoming.kind||'single',name:incoming.title||'English lyric composition',title:incoming.title||'English lyric composition',story:incoming.story||'',emotion:incoming.emotion||'neutral',bpm:Number(incoming.bpm)||120,original:incoming.original||'',sourceDialogue:incoming.sourceDialogue||null,sections:lyricSectionsRead(),lyrics:lyricTextRead(),analysis:incoming.analysis||null,translation:incoming.translation||null,generatedMusic:window.__lyricMusicSketch||incoming.generatedMusic||null,rhythm:window.__lastDrumProject||null,melody:window.__lastDrumProject?.melody||null,notes:cards.map((card,index)=>({id:card.dataset.noteId||makeMelodyNoteId(index),lyricId:card.dataset.lyricId||null,startBeat:card.dataset.startBeat!==undefined?Number(card.dataset.startBeat):null,note:card.dataset.note||card.firstChild?.textContent||'',lyric:card.dataset.lyric||'',role:card.dataset.lyricRole||'',section:card.dataset.lyricSection||'',length:Number(card.dataset.length)||4,x:parseInt(card.style.left)||0,y:parseInt(card.style.top)||0,color:card.style.backgroundColor||'#ffffff',index})),updatedAt:new Date().toISOString()};
+  const project={version:3,projectId:incoming.projectId||window.__musicProjectId||('song-'+Date.now()),source:'composition-canvas-lyrics',kind:incoming.kind||'single',name:incoming.title||'English lyric composition',title:incoming.title||'English lyric composition',story:incoming.story||'',emotion:incoming.emotion||'neutral',bpm:Number(incoming.bpm)||120,original:incoming.original||'',sourceDialogue:incoming.sourceDialogue||null,sections:lyricSectionsRead(),lyrics:lyricTextRead(),analysis:incoming.analysis||null,translation:incoming.translation||null,generatedMusic:window.__lyricMusicSketch||incoming.generatedMusic||null,rhythm:window.__lastDrumProject||null,melody:window.__lastDrumProject?.melody||null,notes:cards.map((card,index)=>({id:card.dataset.noteId||makeMelodyNoteId(index),lyricId:card.dataset.lyricId||null,startBeat:card.dataset.startBeat!==undefined?Number(card.dataset.startBeat):null,note:card.dataset.note||card.firstChild?.textContent||'',lyric:card.dataset.lyric||'',word:card.dataset.word||'',role:card.dataset.lyricRole||'',section:card.dataset.lyricSection||'',length:Number(card.dataset.length)||4,x:parseInt(card.style.left)||0,y:parseInt(card.style.top)||0,color:card.style.backgroundColor||'#ffffff',index})),updatedAt:new Date().toISOString()};
   try{localStorage.setItem('compositionLyricProject',JSON.stringify(project));if(typeof msRegister==='function')msRegister(project);window.__savedLyricCanvasProject=project;showToast('A・B・サビ・ブリッジと音符カードの割当を保存しました')}
   catch(e){showToast('保存できませんでした: '+e.message)}
 }
@@ -1112,7 +1112,7 @@ function restoreLyricCanvasProject(project){
   window.__lastDrumProject=project.rhythm||window.__lastDrumProject||null;
   if(project.melody&&Array.isArray(project.melody.notes)){window.__lastDrumProject=Object.assign({},window.__lastDrumProject||{},{melody:project.melody});}
   if(Array.isArray(project.notes)&&project.notes.length){
-    renderNoteCards(project.notes.map((item,index)=>({id:item.id||makeMelodyNoteId(index),startBeat:item.startBeat,note:item.note||'C4',length:Number(item.length)||4,lyric:item.lyric||'',lyricRole:item.role||'',lyricSection:item.section||'',lyricId:item.lyricId||null,color:item.color||''})),project.title||project.name||'Saved lyric');
+    renderNoteCards(project.notes.map((item,index)=>({id:item.id||makeMelodyNoteId(index),startBeat:item.startBeat,note:item.note||'C4',length:Number(item.length)||4,lyric:item.lyric||'',word:item.word||'',lyricRole:item.role||'',lyricSection:item.section||'',lyricId:item.lyricId||null,color:item.color||''})),project.title||project.name||'Saved lyric');
     const cards=[...document.querySelectorAll('#canvas .card')];
     project.notes.forEach((item,i)=>{
       const card=cards[i];if(!card)return;
@@ -1122,7 +1122,7 @@ function restoreLyricCanvasProject(project){
       card.dataset.noteId=item.id||makeMelodyNoteId(i);
       if(item.startBeat!==null&&item.startBeat!==undefined)card.dataset.startBeat=String(item.startBeat);
       if(item.lyricId)card.dataset.lyricId=item.lyricId;
-      card.dataset.lyric=item.lyric||'';card.dataset.lyricRole=item.role||'';card.dataset.lyricSection=item.section||'';
+      card.dataset.lyric=item.lyric||'';card.dataset.word=item.word||'';card.dataset.lyricRole=item.role||'';card.dataset.lyricSection=item.section||'';
       if(item.lyric){
         card.classList.add('lyric-linked');
         const label=document.createElement('span');label.className='lyric-assignment';
@@ -1130,7 +1130,7 @@ function restoreLyricCanvasProject(project){
         card.appendChild(label);
       }
     });
-    state.lastNotes=project.notes.map(item=>({note:item.note||'C4',length:Number(item.length)||4}));
+    state.lastNotes=project.notes.map(item=>({id:item.id||null,note:item.note||'C4',length:Number(item.length)||4,startBeat:item.startBeat!==null&&item.startBeat!==undefined?Number(item.startBeat):null,lyricId:item.lyricId||null,lyric:item.lyric||'',word:item.word||'',lyricRole:item.role||'',lyricSection:item.section||''}));
   }
   lyricRenderPreview();return true;
 }
@@ -1266,7 +1266,7 @@ function renderNoteCards(segments, songName) {
     id:seg.id||makeMelodyNoteId(i),
     note:String(seg.note||'C4'),length:Number(seg.length)||4,
     startBeat:Number.isFinite(Number(seg.startBeat))?Number(seg.startBeat):null,
-    lyric:seg.lyric||'',lyricRole:seg.lyricRole||'',lyricSection:seg.lyricSection||'',
+    lyric:seg.lyric||'',word:seg.word||'',lyricRole:seg.lyricRole||'',lyricSection:seg.lyricSection||'',
     lyricId:seg.lyricId||null,color:seg.color||''
   }));
   normalized.forEach((seg,i)=>{
@@ -1277,6 +1277,7 @@ function renderNoteCards(segments, songName) {
     card.dataset.length=String(seg.length);
     if(seg.startBeat!==null)card.dataset.startBeat=String(seg.startBeat);
     card.dataset.lyric=seg.lyric;
+    card.dataset.word=seg.word;
     card.dataset.lyricRole=seg.lyricRole;
     card.dataset.lyricSection=seg.lyricSection;
     if(seg.lyricId)card.dataset.lyricId=seg.lyricId;
@@ -1352,7 +1353,7 @@ function loadCardPositions() {
 ────────────────────────────── */
 function buildMelodyProject(sourceName) {
   const rhythmProject=window.__lastDrumProject||{};
-  const preservedMelody=rhythmProject.melody;
+  const preservedMelody=rhythmProject.melody||(Array.isArray(window.__lyricMusicSketch?.melody)?{notes:window.__lyricMusicSketch.melody}:null);
   const cards=Array.isArray(state.lastNotes)?state.lastNotes:[];
   const byId=new Map(cards.filter(card=>card.id).map(card=>[card.id,card]));
   const cardLyricFields=(card,original={})=>({
