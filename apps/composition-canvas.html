@@ -1268,23 +1268,24 @@ function refineGeneratedChordProgressions(){
     const offset=styles.indexOf(currentStyle);
     nextStyles[section.label]=styles[(Math.max(0,offset)+1+current+index)%styles.length];
   });
-  const status=document.getElementById('chord-refine-status');
-  const log=[];
-  log.push('① 歌詞区間を確認：'+labels.map(x=>x.label).join(' → '));
-  log.push('② 和声の役割を変更：'+labels.map(x=>x.label+'='+nextStyles[x.label]).join(' / '));
-  const rhythmVariant=(current+1)%6;
-  const next=buildSectionChordProgressions(sketch.key||document.getElementById('lyric-key')?.value||'C',labels,sketch.progression||'pop',nextStyles,rhythmVariant);
-  log.push('③ リズムを再設計：全区間4拍固定をやめ、2・3・4・6拍のコード滞在を組み合わせ');
-  log.push('④ 区間のつながりを確認：終わりのコードと次区間の始まりを比較するための候補を更新');
-  const chords=next.flatMap(section=>section.progression);
-  window.__lyricMusicSketch={...sketch,chordSections:next,chords,refineCount:current+1,rhythmVariant,method:'section-harmony-refinement-v1'};
-  renderGeneratedChordSections(next);
+  const key=sketch.key||document.getElementById('lyric-key')?.value||'C';
+  const mood=sketch.mood||document.getElementById('lyric-mood')?.value||'bittersweet';
+  const progression=sketch.progression||document.getElementById('lyric-progression')?.value||'pop';
+  const baseSections=buildSectionChordProgressions(key,labels,progression,nextStyles,(current+1)%6);
+  const melody=Array.isArray(sketch.melody)?sketch.melody:[];
+  const harmonyCandidates=generateHarmonyCandidates({key,mood,sections:labels,chordSections:baseSections,melody,progression,sectionStyles:nextStyles,bars:Number(sketch.bars)||32});
+  const selected=harmonyCandidates[0];
+  const chords=expandHarmonySectionsToTimeline(selected.sections,Number(sketch.bars)||32,Number(sketch.timeSig)||4);
+  window.__lyricMusicSketch={...sketch,chordSections:selected.sections,chords,harmonyCandidates,selectedHarmonyCandidate:'A',refineCount:current+1,rhythmVariant:(current+1)%6,method:'melody-aware-harmony-candidates-v1'};
+  renderGeneratedChordSections(selected.sections);
+  renderHarmonyCandidates(harmonyCandidates,'A');
   const panel=document.getElementById('lyric-generated-chord-panel');if(panel)panel.style.display='block';
   const flat=document.getElementById('lyric-generated-chord-output');if(flat)flat.value=chords.map(x=>x.chord).join(', ');
-  if(status)status.innerHTML=log.map(x=>'<div>'+escapeHtmlCanvas(x)+'</div>').join('')+'<strong>練り直し '+(current+1)+'回目の候補です。コピー前に区間ごとの流れを確認してください。</strong>';
-  const result=document.getElementById('lyric-music-result');
-  if(result)result.innerHTML='<strong>コード進行を練り直しました</strong><p>歌詞・メロディ音符は保持し、区間別の和声スタイルとコードの滞在拍数を変更しました。</p><small>これは候補更新です。実際の歌唱・リズムに合わせて最終判断してください。</small>';
   const input=document.getElementById('chord-progression-input');if(input)input.value=chords.map(x=>x.chord).join(', ');
+  const status=document.getElementById('chord-refine-status');
+  if(status)status.textContent='練り直し '+(current+1)+'回目：歌詞区間・キー・雰囲気・メロディ音を使ってA/B/Cを再評価しました。各案の「同じメロディで試聴」で比較してください。';
+  const result=document.getElementById('lyric-music-result');
+  if(result)result.innerHTML='<strong>和声候補を再生成しました</strong><p>歌詞・メロディ音符は保持しています。A/B/Cの評価と試聴をやり直してください。</p>';
   return true;
 }
 function copyChordPrompt(){
