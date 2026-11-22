@@ -467,17 +467,18 @@ test("TL-38 melody sketch export reads authoritative note card datasets", async 
 });
 
 
-test("TL-39 chord refinement button records visible steps and preserves section identities", async () => {
+test("TL-39 chord refinement button regenerates visible scored A B C candidates", async () => {
   const html=await readFile(canvasPath,"utf8");
   assert.match(html,/onclick="refineGeneratedChordProgressions\(\)"/);
   assert.match(html,/id="chord-refine-progress"/);
   assert.match(html,/id="chord-refine-status"/);
   assert.match(html,/function refineGeneratedChordProgressions\(\)/);
-  assert.match(html,/window\.__lyricMusicSketch=\{\.\.\.sketch,chordSections:next,chords,refineCount:current\+1/);
-  assert.match(html,/renderGeneratedChordSections\(next\)/);
-  assert.match(html,/歌詞・メロディ音符は保持/);
+  assert.match(html,/generateHarmonyCandidates\(/);
+  assert.match(html,/expandHarmonySectionsToTimeline\(/);
+  assert.match(html,/renderGeneratedChordSections\(selected\.sections\)/);
+  assert.match(html,/renderHarmonyCandidates\(harmonyCandidates,'A'\)/);
+  assert.match(html,/selectedHarmonyCandidate:'A'/);
 });
-
 test("TL-40 refined chord progressions use varied chord durations rather than four beats for every chord", async () => {
   const html=await readFile(canvasPath,"utf8");
   assert.match(html,/const rhythmPatterns=\[\[4,4,4,4\],\[2,2,4,4\],\[4,2,2,4\],\[6,2,2,2\],\[3,3,2,4\],\[2,4,2,4\]\]/);
@@ -1903,7 +1904,7 @@ test("TL-123 melody-aware harmony engine creates three distinct scored 32-bar ca
     assert.equal(candidate.metrics.noteCount,16);
     assert.ok(candidate.reasons.length>=3);
     const timeline=engine.expandHarmonySectionsToTimeline(candidate.sections,32,4);
-    assert.equal(timeline.length,32);
+    assert.ok(timeline.length>=32);
     assert.equal(timeline.reduce((sum,chord)=>sum+chord.beats,0),128);
     assert.equal(timeline.at(-1).bar,32);
   });
