@@ -984,11 +984,16 @@ function updateHarmonyBarChord(index,degree){
   if(!item||!(degree==='4b'||(Number.isInteger(degree)&&degree>=1&&degree<=7)))return false;
   const chord=degree==='4b'?buildBorrowedMinorFour(sketch.key||'C'):buildDiatonicTriad(sketch.key||'C',degree);
   timeline[index]={...item,...chord,bar:item.bar,startBeat:item.startBeat,beats:item.beats,section:item.section,role:item.role,sourceId:item.sourceId,manualOverride:true};
-  window.__lyricMusicSketch={...sketch,chords:timeline,manualChordEdits:true};
+  const scoreSections=(sketch.chordSections||[]).map(section=>({...section,progression:timeline.filter(event=>event.section===section.label)}));
+  const metrics=scoreHarmonyCandidate(sketch.key||'C',sketch.mood||'bittersweet',lyricSectionsRead(),scoreSections,sketch.melody||[],Number(sketch.bars)||32);
+  const harmonyCandidates=(sketch.harmonyCandidates||[]).map(candidate=>candidate.id===sketch.selectedHarmonyCandidate?{...candidate,score:metrics.score,fitRate:metrics.fitRate,metrics,reasons:[...candidate.reasons,'小節単位の手動変更を評価に反映']}:candidate);
+  window.__lyricMusicSketch={...sketch,chords:timeline,harmonyCandidates,manualChordEdits:true};
   const flat=timeline.map(chord=>chord.chord).join(', ');
   const input=document.getElementById('chord-progression-input');if(input)input.value=flat;
   const output=document.getElementById('lyric-generated-chord-output');if(output)output.value=flat;
-  const status=document.getElementById('chord-progression-status');if(status)status.textContent='小節 '+(item.bar||index+1)+' を '+chord.chord+' に変更しました。ほかの小節とメロディは維持しています。';
+  renderHarmonyCandidates(harmonyCandidates,sketch.selectedHarmonyCandidate);
+  renderHarmonyBarEditor();
+  const status=document.getElementById('chord-progression-status');if(status)status.textContent='小節 '+(item.bar||index+1)+' を '+chord.chord+' に変更しました。ほかの小節とメロディは維持し、理論評価も更新しました。';
   const stage=document.getElementById('composition-stage-status');if(stage)stage.textContent='小節単位のコード編集を反映しました。試聴で確認してください。';
   return true;
 }
