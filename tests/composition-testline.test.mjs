@@ -1578,7 +1578,7 @@ test("TL-99 Composition Canvas handoff carries the full 32-bar lyric and arrange
   assert.match(beat,/const targetBars=Math\.min\(32,Math\.max\(1,Number\(data\.bars\)\|\|1,requiredBars,Number\(data\.arrangement\?\.bars\)\|\|0\)\)/,"BEAT//LAB must honor the incoming 32-bar timeline");
   assert.match(beat,/melody:\{notes:cloneRhythmData\(project\?\.melody\?\.notes\|\|\[\]\)\}/,"A/B/C arrangement snapshots must retain lyric-generated melody");
   assert.match(beat,/chords: base\.chords\|\|base\.generatedMusic\?\.chords\|\|null/,"export must retain generated chord events");
-  assert.match(beat,/lyrics:project\.lyrics\|\|' '/,"timeline export must retain lyrics");
+  assert.match(beat,/lyrics:project\.lyrics\|\|''/,"timeline export must retain lyrics");
   assert.match(beat,/sections:project\.sections\|\|\[\]/,"timeline export must retain lyric sections");
   assert.match(beat,/arrangements:cloneRhythmData\(APP\.arrangements\|\|\{\}\)/,"export must preserve all A/B/C snapshots");
 });
