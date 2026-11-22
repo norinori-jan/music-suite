@@ -362,6 +362,150 @@
       "bar": 8,
       "chord": "F",
       "beats": 4
+    },
+    {
+      "id": "ch-009",
+      "bar": 9,
+      "chord": "Dm",
+      "beats": 4
+    },
+    {
+      "id": "ch-010",
+      "bar": 10,
+      "chord": "Em",
+      "beats": 4
+    },
+    {
+      "id": "ch-011",
+      "bar": 11,
+      "chord": "F",
+      "beats": 4
+    },
+    {
+      "id": "ch-012",
+      "bar": 12,
+      "chord": "G",
+      "beats": 4
+    },
+    {
+      "id": "ch-013",
+      "bar": 13,
+      "chord": "Dm",
+      "beats": 4
+    },
+    {
+      "id": "ch-014",
+      "bar": 14,
+      "chord": "Em",
+      "beats": 4
+    },
+    {
+      "id": "ch-015",
+      "bar": 15,
+      "chord": "F",
+      "beats": 4
+    },
+    {
+      "id": "ch-016",
+      "bar": 16,
+      "chord": "G",
+      "beats": 4
+    },
+    {
+      "id": "ch-017",
+      "bar": 17,
+      "chord": "C",
+      "beats": 4
+    },
+    {
+      "id": "ch-018",
+      "bar": 18,
+      "chord": "G",
+      "beats": 4
+    },
+    {
+      "id": "ch-019",
+      "bar": 19,
+      "chord": "Am",
+      "beats": 4
+    },
+    {
+      "id": "ch-020",
+      "bar": 20,
+      "chord": "F",
+      "beats": 4
+    },
+    {
+      "id": "ch-021",
+      "bar": 21,
+      "chord": "C",
+      "beats": 4
+    },
+    {
+      "id": "ch-022",
+      "bar": 22,
+      "chord": "G",
+      "beats": 4
+    },
+    {
+      "id": "ch-023",
+      "bar": 23,
+      "chord": "F",
+      "beats": 4
+    },
+    {
+      "id": "ch-024",
+      "bar": 24,
+      "chord": "G",
+      "beats": 4
+    },
+    {
+      "id": "ch-025",
+      "bar": 25,
+      "chord": "Am",
+      "beats": 4
+    },
+    {
+      "id": "ch-026",
+      "bar": 26,
+      "chord": "F",
+      "beats": 4
+    },
+    {
+      "id": "ch-027",
+      "bar": 27,
+      "chord": "C",
+      "beats": 4
+    },
+    {
+      "id": "ch-028",
+      "bar": 28,
+      "chord": "G",
+      "beats": 4
+    },
+    {
+      "id": "ch-029",
+      "bar": 29,
+      "chord": "Am",
+      "beats": 4
+    },
+    {
+      "id": "ch-030",
+      "bar": 30,
+      "chord": "F",
+      "beats": 4
+    },
+    {
+      "id": "ch-031",
+      "bar": 31,
+      "chord": "C",
+      "beats": 4
+    },
+    {
+      "id": "ch-032",
+      "bar": 32,
+      "chord": "G",
+      "beats": 4
     }
   ],
   "arrangement": {
