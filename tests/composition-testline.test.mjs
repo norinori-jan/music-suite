@@ -373,12 +373,14 @@ test("TL-31 chord sketch is displayed separately for A, B, Chorus and Bridge", a
   assert.match(html,/コード記号だけ（全区間・1行）/);
   assert.match(html,/renderGeneratedChordSections\(restoredSections\)/);
 });
-test("TL-32 generated lyric melody has non-overlapping one-beat note starts", async () => {
+test("TL-32 generated lyric melody follows phrase timing with breathable gaps", async () => {
   const html=await readFile(canvasPath,"utf8");
-  assert.match(html,/return \{id:makeMelodyNoteId\(i\),note,length:Math\.min\(1,Math\.max\(\.5,sectionSpan\/sectionCount\*\.72\)\),[\s\S]*?startBeat:\+startBeat\.toFixed\(4\),/);
+  assert.match(html,/const desiredPhraseSpans=groups\.map\(group=>Math\.min\(8,Math\.max\(2,group\.syllables\.length\*\.72\)\)\)/);
+  assert.match(html,/const timingScale=Math\.min\(1,sectionSpan\/Math\.max\(\.001,desiredTotal\)\)/);
+  assert.match(html,/phraseCursor\+=phraseSpan\+gap/);
+  assert.match(html,/durationBeats:n\.length/);
+  assert.match(html,/phraseEnd:n\.phraseEnd/);
   assert.match(html,/const bars=32/);
-  assert.match(html,/const startBeat=sectionIndex\*sectionSpan\+\(localIndex\/sectionCount\)\*sectionSpan/);
-  assert.match(html,/const chordIndex=Math\.floor\(Math\.max\(0,localIndex\)\/4\)%section\.progression\.length/);
 });
 
 test("TL-33 surprise progression uses a real borrowed minor iv chord", async () => {
@@ -1570,6 +1572,24 @@ test("TL-96 lyric-aware accompaniment, bass pickups and pre-chorus transition ar
 });
 
 
+test("TL-102 lyric syllable and stress helpers expose phrase-level pronunciation cues", async () => {
+  const canvas=await readFile(canvasPath,"utf8");
+  const start=canvas.indexOf("function lyricStressIndex(");
+  const end=canvas.indexOf("const LYRIC_NOTE_NAMES=",start);
+  assert.ok(start>=0&&end>start);
+  const helpers=new Function(canvas.slice(start,end)+";return {lyricStressIndex,lyricEstimateSyllables,lyricBuildSyllables,lyricPhraseWeights};")();
+  assert.equal(helpers.lyricEstimateSyllables("growing"),2);
+  assert.equal(helpers.lyricEstimateSyllables("beautiful"),3);
+  assert.equal(helpers.lyricStressIndex("believe",2),0);
+  const phrase=helpers.lyricBuildSyllables("I believe in you","A","Verse",0);
+  assert.equal(phrase.length,5);
+  assert.ok(phrase.some(item=>item.stressed));
+  assert.ok(phrase.every(item=>item.phrase==="I believe in you"&&item.label==="Verse"));
+  const weights=helpers.lyricPhraseWeights(phrase);
+  assert.ok(weights.at(-1)>weights[1],"the final syllable receives phrase-ending duration weight");
+});
+
+
 test("TL-101 lyric edits mark a saved sketch stale and block handoff until regeneration", async () => {
   const canvas=await readFile(canvasPath,"utf8");
   assert.match(canvas,/sourceLyrics:text/,"generated sketch must remember the exact lyric source used to compose it");
@@ -1696,6 +1716,12 @@ test("TL-97 real lyric-to-melody workflow creates linked notes and section harmo
   assert.ok(sketch.chords.some(chord=>chord.startBeat>=96),"the final section harmony must reach the last eight bars");
   assert.deepEqual(new Set(sketch.melody.map(note=>note.section)),new Set(sections.map(section=>section.label)));
   assert.ok(sketch.melody.every(note=>note.lyricId&&note.word&&note.lyric&&note.role&&note.section),"every generated note must retain its lyric, word, role and section");
+  assert.ok(sketch.melody.some(note=>note.stressed),"generated melody must distinguish stressed syllables");
+  assert.ok(sketch.melody.every(note=>Number.isFinite(note.durationBeats)&&note.durationBeats>0&&note.durationBeats<=2),"short lyric phrases must not be stretched into multi-bar syllables");
+  assert.ok(sketch.melody.every(note=>Number.isFinite(note.phraseIndex)&&Number.isInteger(note.syllableIndex)),"each note must retain its phrase and syllable position");
+  assert.equal(sketch.method,"stress-aware-phrase-melody-v2");
+  assert.equal(sketch.melodyQuality.phraseBreaths,true);
+  assert.ok(sketch.melody.some(note=>note.phraseEnd),"line endings must be represented for phrase breathing");
   assert.equal(state.lastNotes.length,sketch.melody.length,"generated notes must be reflected in the editable note-card state");
   assert.equal(cards.length,sketch.melody.length,"generated notes must render as editable cards");
   assert.ok(cards.every(card=>card.dataset.lyricId&&card.dataset.lyricSection),"rendered cards must retain lyric links for later handoff");
