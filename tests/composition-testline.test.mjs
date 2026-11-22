@@ -1974,6 +1974,8 @@ test("TL-128 manual per-bar chord edits refresh the selected candidate score and
   assert.match(body,/renderHarmonyCandidates\(harmonyCandidates,sketch\.selectedHarmonyCandidate\)/);
   assert.match(body,/renderHarmonyBarEditor\(\)/);
   assert.match(body,/manualOverride:true/);
+  assert.match(html,/sketch\.manualChordEdits/);
+  assert.match(html,/displaySections\.map\(section=>/);
 });
 
 test("TL-129 saved compositions restore A B C candidates and the selected bar-edit timeline", async () => {
