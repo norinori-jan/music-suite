@@ -1570,13 +1570,23 @@ test("TL-96 lyric-aware accompaniment, bass pickups and pre-chorus transition ar
 });
 
 
+test("TL-101 lyric edits mark a saved sketch stale and block handoff until regeneration", async () => {
+  const canvas=await readFile(canvasPath,"utf8");
+  assert.match(canvas,/sourceLyrics:text/,"generated sketch must remember the exact lyric source used to compose it");
+  assert.match(canvas,/generatedMusicStale:Boolean\(window\.__lyricMusicSketch\?\.sourceLyrics!==undefined&&window\.__lyricMusicSketch\.sourceLyrics!==lyricTextRead\(\)\)/,"save must mark generated music stale when lyrics changed");
+  assert.match(canvas,/if\(window\.__lyricMusicSketch\?\.sourceLyrics!==undefined&&window\.__lyricMusicSketch\.sourceLyrics!==currentLyrics\)\{showToast\([\s\S]*?return;\}/,"stale lyric-to-melody assignments must not be sent to BEAT//LAB");
+  assert.match(canvas,/project\.generatedMusicStale\?' · 歌詞変更あり：再生成が必要':''/,"restored projects must visibly warn when lyrics changed after generation");
+  assert.match(canvas,/const preservedMelody=Array\.isArray\(window\.__lyricMusicSketch\?\.melody\)&&window\.__lyricMusicSketch\.melody\.length/,"the current lyric sketch must be the canonical melody source");
+});
+
+
 test("TL-100 save and reload preserve lyric-linked melody timing and editable card identity", async () => {
   const canvas=await readFile(canvasPath,"utf8");
   assert.match(canvas,/notes:cards\.map\(\(card,index\)=>\(\{id:card\.dataset\.noteId[\s\S]*?word:card\.dataset\.word\|\|''/,"saved note cards must retain stable ID and source word");
   assert.match(canvas,/startBeat:card\.dataset\.startBeat!==undefined\?Number\(card\.dataset\.startBeat\):null/,"save must preserve absolute beat positions");
   assert.match(canvas,/card\.dataset\.word=item\.word\|\|''/,"restore must put source words back on editable cards");
   assert.match(canvas,/state\.lastNotes=project\.notes\.map\(item=>\(\{id:item\.id\|\|null[\s\S]*?startBeat:item\.startBeat!==null&&item\.startBeat!==undefined\?Number\(item\.startBeat\):null/,"restored in-memory notes must keep their timeline and IDs");
-  assert.match(canvas,/const preservedMelody=rhythmProject\.melody\|\|\(Array\.isArray\(window\.__lyricMusicSketch\?\.melody\)\?\{notes:window\.__lyricMusicSketch\.melody\}:null\)/,"handoff must use the generated lyric melody as canonical timing source");
+  assert.match(canvas,/const preservedMelody=Array\.isArray\(window\.__lyricMusicSketch\?\.melody\)&&window\.__lyricMusicSketch\.melody\.length\?\{notes:window\.__lyricMusicSketch\.melody\}:\(rhythmProject\.melody\|\|null\)/,"handoff must prioritize the latest generated lyric melody over an older drum-project melody");
   assert.match(canvas,/const editedDuration=Number\(card\.length\)\/4/,"editable card duration must convert back to beats");
   assert.match(canvas,/state\.lastNotes=notes\.map\(n=>\(\{id:n\.id,note:n\.note,length:n\.length\*4/,"generated note duration must use the card's quarter-beat unit");
 });
