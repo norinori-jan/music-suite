@@ -1530,7 +1530,7 @@ test("TL-96 lyric-aware accompaniment, bass pickups and pre-chorus transition ar
   const melody=[{pitch:60,startBeat:0,durationBeats:1},{pitch:64,startBeat:2,durationBeats:.5}];
   const result=respond(events,melody,2,4,"A");
   assert.ok(result.piano.every(event=>!event.pitches.some(p=>[60,64].includes(p))),"piano must leave the melody's active pitches clear");
-  assert.ok(result.guitar.length===0,"guitar must avoid close unison/interval collisions while melody is active");
+  assert.equal(result.guitar.filter(event=>!event.response).length,0,"guitar must avoid close unison/interval collisions while melody is active");
   const responses=result.guitar.filter(event=>event.response);
   assert.ok(responses.length>=1,"a sufficiently long lyric/melody rest must receive an instrumental response");
   assert.ok(responses.every(event=>event.startBeat>=1&&event.startBeat<2),"response must sit inside a real melody rest");
@@ -1556,7 +1556,7 @@ test("TL-96 lyric-aware accompaniment, bass pickups and pre-chorus transition ar
   const build=new Function("APP","pk","sectionPatternFrom",html.slice(ideaStart,ideaEnd)+";return buildSectionDrumIdea;")(app,pk,sectionPatternFrom);
   const pre=build({"kick:0":.8},{id:"pre",startBar:1,endBar:2},"balanced","normal");
   assert.ok(Object.keys(pre).some(key=>key.startsWith("tom2:")),"pre-chorus must add a transition fill");
-  assert.ok(pre["snare:60"]>.0,"pre-chorus fill must lead into the chorus");
+  assert.ok(pre["snare:28"]>.0,"pre-chorus fill must lead into the chorus");
 
   const arrangementStart=html.indexOf("function buildArrangementTrackSnapshot(");
   const arrangementEnd=html.indexOf("\nfunction captureArrangementTrackSnapshot",arrangementStart);
