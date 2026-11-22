@@ -950,7 +950,7 @@ function generateHarmonyCandidates({key,mood,sections,chordSections,melody,progr
 }
 function renderHarmonyBarEditor(){
   const host=document.getElementById('harmony-bar-editor');
-  if(!host)return;
+  if(!host||typeof host.appendChild!=='function')return;
   host.innerHTML='';
   const sketch=window.__lyricMusicSketch||{},timeline=Array.isArray(sketch.chords)?sketch.chords:[];
   const key=sketch.key||'C';
