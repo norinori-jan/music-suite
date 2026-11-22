@@ -1367,7 +1367,7 @@ function applyMelodyResponsiveAccompaniment(events,melodyNotes,bars,timeSig=4,va
   for(let i=0;i<=notes.length;i++){
     const next=notes[i],gapEnd=next?.start??limit;
     const gap=gapEnd-cursor;
-    if(gap>=.7&&cursor<limit){
+    if(next&&gap>=.7&&cursor<limit){
       const chord=[...piano,...guitar].filter(e=>e.startBeat<=cursor+.001&&e.startBeat+e.durationBeats>cursor+.05)
         .sort((a,b)=>b.startBeat-a.startBeat)[0];
       if(chord){
