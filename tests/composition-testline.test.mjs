@@ -1568,6 +1568,48 @@ test("TL-96 lyric-aware accompaniment, bass pickups and pre-chorus transition ar
 });
 
 
+test("TL-98 lyric edits preserve note identity and update lyric linkage without orphaning notes", async () => {
+  const canvas=await readFile(canvasPath,"utf8");
+  const start=canvas.indexOf("function generateLyricMusicSketch()");
+  const end=canvas.indexOf("\nfunction saveLyricCanvasProject()",start);
+  assert.ok(start>=0&&end>start);
+  const sections=[
+    {role:"A",label:"Verse",text:"I walk alone"},
+    {role:"DUET",label:"Chorus",text:"We reach the sky"}
+  ];
+  const cards=[],elements=new Map();
+  const document={
+    getElementById(id){
+      if(!elements.has(id)){
+        const values={"lyric-key":"C","lyric-mood":"hope","lyric-progression":"pop","lyric-progression-a":"warm","lyric-progression-b":"sad","lyric-progression-chorus":"pop","lyric-progression-bridge":"surprise"};
+        elements.set(id,{value:values[id]||"",style:{},innerHTML:""});
+      }
+      return elements.get(id);
+    },
+    querySelectorAll(){return cards;},
+    createElement(){return {dataset:{},classList:{add(){}},appendChild(){},textContent:""};}
+  };
+  const state={lastNotes:[]},window={__musicProjectId:"lyric-edit-test"};
+  const render=notes=>cards.splice(0,cards.length,...notes.map(n=>({dataset:{noteId:n.id,startBeat:String(n.startBeat),lyricId:n.lyricId,lyric:n.lyric,lyricRole:n.role,lyricSection:n.section,word:n.word},classList:{add(){}},appendChild(){}})));
+  const code=canvas.slice(start,end)+";return generateLyricMusicSketch;";
+  const generate=new Function("document","window","state","lyricTextRead","lyricSectionsRead","renderGeneratedChordSections","renderNoteCards","makeMelodyNoteId","showToast","escapeHtmlCanvas",code)(document,window,state,()=>sections.map(x=>x.text).join("\n"),()=>sections,()=>{},render,i=>"edit-note-"+i,()=>{},x=>x);
+  generate();
+  const first=window.__lyricMusicSketch.melody.map(n=>({...n}));
+  assert.ok(first.length>0);
+  const retained=first[0];
+  sections[0].text="I walk toward the light";
+  generate();
+  const second=window.__lyricMusicSketch.melody;
+  assert.ok(second.length>0);
+  assert.ok(second.every(n=>n.lyricId&&n.word&&n.lyric&&n.section),"edited lyric must regenerate complete lyric links");
+  assert.equal(state.lastNotes.length,second.length);
+  assert.equal(cards.length,second.length);
+  assert.ok(cards.every(card=>card.dataset.lyricId&&card.dataset.lyricSection),"edited note cards must retain lyric metadata");
+  assert.ok(second.some(n=>n.lyric==="I walk toward the light"),"updated lyric text must reach generated melody notes");
+  assert.ok(second.every(n=>Number.isFinite(n.startBeat)&&Number.isFinite(n.durationBeats)&&n.durationBeats>0),"edited melody timeline must remain playable");
+});
+
+
 test("TL-97 real lyric-to-melody workflow creates linked notes and section harmony before arrangement", async () => {
   const canvas=await readFile(canvasPath,"utf8");
   const helperStart=canvas.indexOf("function lyricEstimateSyllables(");
