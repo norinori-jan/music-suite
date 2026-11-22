@@ -1056,6 +1056,35 @@ test("TL-70 piano and guitar accompaniment creates genuinely different A B C cho
 });
 
 
+test("TL-94 generated A B C chord accompaniment uses smooth voice leading without changing chord identity", async () => {
+  const html=await readFile(beatLabPath,"utf8");
+  const start=html.indexOf("function chooseSmoothChordVoicing(");
+  const end=html.indexOf("\nfunction getPlayableChordEvents",start);
+  assert.ok(start>=0&&end>start,"voice-leading helper must be present");
+  const helper=new Function(html.slice(start,end)+";return chooseSmoothChordVoicing;")();
+  const first=helper([60,64,67],[]);
+  const next=helper([65,69,72],first);
+  assert.equal(first.length,3);
+  assert.equal(next.length,3);
+  assert.ok(next.every(p=>p>=48&&p<=84),"generated voicings must stay in a playable piano register");
+  const movement=next.reduce((sum,p,i)=>sum+Math.abs(p-first[i]),0);
+  const rawMovement=[65,69,72].reduce((sum,p,i)=>sum+Math.abs(p-first[i]),0);
+  assert.ok(movement<=rawMovement,"voice leading should not increase total parallel movement");
+  const section=helper([67,71,74],next);
+  assert.equal(section.length,3);
+  assert.ok(section.every(Number.isFinite));
+  const chordStart=html.indexOf("function chordSymbolToPitches(symbol,octave=4)");
+  const chordEnd=html.indexOf("\n\n\n\nfunction buildBassNotesFromChords",chordStart);
+  const chordHelpers=new Function(html.slice(chordStart,chordEnd)+";return {chordSymbolToPitches,getPlayableChordEvents};")();
+  const project={chords:[{chord:"C",beats:4},{chord:"F",beats:4},{chord:"G",beats:4},{chord:"Am7",beats:4}]};
+  for(const variant of ["A","B","C"]){
+    const events=chordHelpers.getPlayableChordEvents(project,4,4,variant);
+    assert.ok(events.piano.length>0&&events.guitar.length>0,variant+" must retain both accompaniment roles");
+    assert.ok(events.piano.every(event=>event.pitches.every(p=>p>=48&&p<=96)),variant+" piano voicings must remain in a usable register");
+  }
+});
+
+
 test("TL-71 bass line has independent A B C groove identities without changing source notes", async () => {
   const html=await readFile(beatLabPath,"utf8");
   const start=html.indexOf("function buildBassVariantNotes(notes,bars,timeSig=4,variant='A')");
