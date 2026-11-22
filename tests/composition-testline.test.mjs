@@ -1478,14 +1478,14 @@ test("TL-90 all inline JavaScript in composition, BEAT//LAB and score editor pag
   }
 });
 
-test("TL-90 melody playback requires the sampled violin source instead of silently using a synth", async () => {
+test("TL-90 sampled violin is preferred but synth fallback keeps melody playable", async () => {
   const html = await readFile(beatLabPath, "utf8");
   assert.match(html, /function getMelodySampler\(\)/);
-  assert.match(html, /TONEJS_SAMPLE_ROOT\+'violin\/'/);
+  assert.match(html, /TONEJS_SAMPLE_ROOT\+'violin\\/'/);
   assert.match(html, /async function ensureMelodySamplerReady\(\)/);
-  assert.match(html, /await ensureMelodySamplerReady\(\)/);
   assert.match(html, /if\(melodySamplerReady&&melodySampler\)melodySampler\.triggerAttackRelease/);
-  assert.doesNotMatch(html, /getMelodySynth\(\)\.triggerAttackRelease/);
+  assert.match(html, /else getMelodySynth\(\)\.triggerAttackRelease/);
+  assert.match(html, /内蔵シンセで再生します/);
   const credits = await readFile(path.join(here, "..", "SOUND-CREDITS.md"), "utf8");
   assert.match(credits, /Melody \(sampled violin\)/);
   assert.match(credits, /VSO2/);
