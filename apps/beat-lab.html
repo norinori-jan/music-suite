@@ -1321,6 +1321,27 @@ function chordSymbolToPitches(symbol,octave=4){
   if(/6/.test(suffix)&&!/16/.test(suffix))intervals=[...intervals,9];
   return intervals.map(n=>60+(octave-4)*12+root+n);
 }
+function chooseSmoothChordVoicing(pitches,previous=[]){
+  const source=(pitches||[]).map(Number).filter(Number.isFinite).sort((a,b)=>a-b);
+  if(!source.length)return [];
+  if(!previous.length)return source.map(p=>Math.max(48,Math.min(84,p)));
+  let best=null,bestScore=Infinity;
+  for(let rotation=0;rotation<source.length;rotation++){
+    const rotated=source.slice(rotation).concat(source.slice(0,rotation).map(p=>p+12));
+    for(let octave=-2;octave<=2;octave++){
+      const candidate=rotated.map(p=>p+octave*12);
+      if(candidate.some(p=>p<48||p>84))continue;
+      const count=Math.max(candidate.length,previous.length);
+      let score=Math.abs(candidate.length-previous.length)*7;
+      for(let i=0;i<count;i++){
+        const a=candidate[Math.min(i,candidate.length-1)],b=previous[Math.min(i,previous.length-1)];
+        score+=Math.abs(a-b);
+      }
+      if(score<bestScore){bestScore=score;best=candidate;}
+    }
+  }
+  return best||source;
+}
 function getPlayableChordEvents(project,bars,timeSig=4,variant='A'){
   if((project?.accompanimentMode==='manual'||project?.source==='score-editor')&&(project?.piano?.notes?.length||project?.guitar?.notes?.length)){
     const fromNotes=track=>(track?.notes||[]).map(note=>({startBeat:Number(note.startBeat),pitches:[Number(note.pitch)],durationBeats:Number(note.durationBeats)||.5,velocity:Math.max(.05,Math.min(1,(Number(note.vel)||80)/127))})).filter(event=>Number.isFinite(event.startBeat)&&Number.isInteger(event.pitches[0]));
@@ -1331,15 +1352,16 @@ function getPlayableChordEvents(project,bars,timeSig=4,variant='A'){
   const sections=Array.isArray(project?.generatedMusic?.chordSections)?project.generatedMusic.chordSections:[];
   const source=direct.length?direct:(generated.length?generated:sections.flatMap(section=>section.progression||[]));
   const limit=Math.max(1,Number(bars)||1)*Math.max(1,Number(timeSig)||4);
-  const piano=[],guitar=[];let cursor=0;
+  const piano=[],guitar=[];let cursor=0,previousVoicing=[];
   const add=(target,startBeat,pitches,durationBeats,velocity)=>{if(startBeat<limit&&pitches.length)target.push({startBeat:+startBeat.toFixed(4),pitches,durationBeats:Math.max(.12,Math.min(durationBeats,limit-startBeat)),velocity});};
   source.forEach((item,index)=>{
     const beats=Math.max(.5,Math.min(16,Number(item?.beats)||4));
     const start=Number.isFinite(Number(item?.startBeat))?Number(item.startBeat):cursor;
     cursor=Math.max(cursor,start+beats);
     if(start>=limit)return;
-    const pitches=chordSymbolToPitches(typeof item==='string'?item:(item?.chord||item?.name),4);
-    if(!pitches.length)return;
+    const rawPitches=chordSymbolToPitches(typeof item==='string'?item:(item?.chord||item?.name),4);
+    if(!rawPitches.length)return;
+    const pitches=chooseSmoothChordVoicing(rawPitches,previousVoicing);previousVoicing=pitches.slice();
     const duration=Math.min(beats,limit-start);
     if(variant==='B'){
       const count=Math.min(4,pitches.length),step=Math.min(.75,duration/Math.max(2,count));
