@@ -993,6 +993,7 @@ function updateHarmonyBarChord(index,degree){
   const output=document.getElementById('lyric-generated-chord-output');if(output)output.value=flat;
   renderHarmonyCandidates(harmonyCandidates,sketch.selectedHarmonyCandidate);
   renderHarmonyBarEditor();
+  updateGeneratedChordTimelineOutputs();
   const status=document.getElementById('chord-progression-status');if(status)status.textContent='小節 '+(item.bar||index+1)+' を '+chord.chord+' に変更しました。ほかの小節とメロディは維持し、理論評価も更新しました。';
   const stage=document.getElementById('composition-stage-status');if(stage)stage.textContent='小節単位のコード編集を反映しました。試聴で確認してください。';
   return true;
@@ -1114,6 +1115,7 @@ function selectHarmonyCandidate(candidateId){
   const panel=document.getElementById('lyric-generated-chord-panel');if(panel)panel.style.display='block';
   renderHarmonyCandidates(sketch.harmonyCandidates,candidateId);
   renderHarmonyBarEditor();
+  updateGeneratedChordTimelineOutputs();
   goCompositionStage('select');
   const status=document.getElementById('chord-progression-status');if(status)status.textContent=candidateId+'案「'+candidate.name+'」を採用しました。メロディは保持し、和声だけを切り替えました。';
   const result=document.getElementById('lyric-music-result');if(result)result.innerHTML='<strong>'+escapeHtmlCanvas(candidate.id+'案 · '+candidate.name)+'を採用しました</strong><p>メロディ音符と歌詞の対応は維持し、コード進行を切り替えました。BEAT//LABへ送ると、この和声が伴奏展開の基準になります。</p>';
@@ -1202,9 +1204,9 @@ function selectAllGeneratedChords(){
   return true;
 }
 async function copyAllGeneratedChords(){
-  const sections=window.__lyricMusicSketch?.chordSections;
+  const sketch=window.__lyricMusicSketch||{},timeline=getCurrentChordTimeline(sketch);
   const output=document.getElementById('lyric-generated-chord-output');
-  const value=Array.isArray(sections)?sections.flatMap(section=>section.progression||[]).map(item=>item.chord).join(', '):'';
+  const value=timeline.map(item=>item.chord).join(', ');
   if(!value){const status=document.getElementById('chord-progression-status');if(status)status.textContent='先にコード進行を生成してください。';return false;}
   if(output)output.value=value;
   const copied=await copyChordText(value,'全区間のコード記号を1行でコピーしました。');
@@ -1218,10 +1220,10 @@ function selectAllGeneratedChordSections(){
   const status=document.getElementById('chord-progression-status');if(status)status.textContent='区間名付きコード進行をすべて選択しました。';return true;
 }
 async function copyAllGeneratedChordSections(){
-  const sections=window.__lyricMusicSketch?.chordSections;
+  const sketch=window.__lyricMusicSketch||{},timeline=getCurrentChordTimeline(sketch);
   const output=document.getElementById('lyric-generated-chord-sections-output');
-  if(!Array.isArray(sections)||!sections.length){const status=document.getElementById('chord-progression-status');if(status)status.textContent='先にコード進行を生成してください。';return false;}
-  const value=sections.map(section=>(section.label||'区間')+' ['+(section.style||'style未設定')+']\n'+(section.progression||[]).map(item=>item.chord+' ('+(Number(item.beats)||4)+'拍)').join('  →  ')).join('\n\n');
+  if(!timeline.length){const status=document.getElementById('chord-progression-status');if(status)status.textContent='先にコード進行を生成してください。';return false;}
+  const value=formatChordTimelineSections(sketch);
   if(output)output.value=value;
   const copied=await copyChordText(value,'区間名・コード・滞在拍数を含む全区間をコピーしました。');
   if(!copied&&output){output.focus();output.select();output.setSelectionRange(0,output.value.length);const status=document.getElementById('chord-progression-status');if(status)status.textContent='自動コピーできませんでした。全区間を選択済みです。コピー操作をしてください。';}
@@ -1311,6 +1313,22 @@ function importCompositionSketch(){
   if(status)status.textContent='読み込み完了：歌詞 '+data.lyrics.sections.length+'区間・コード '+data.harmony.chords.length+'件・音符 '+data.melody.notes.length+'件を復元しました。';
   return true;
 }
+function getCurrentChordTimeline(sketch=window.__lyricMusicSketch||{}){
+  if(Array.isArray(sketch.chords)&&sketch.chords.length)return sketch.chords;
+  return (sketch.chordSections||[]).flatMap(section=>(section.progression||[]).map(item=>({...item,section:section.label})));
+}
+function formatChordTimelineSections(sketch=window.__lyricMusicSketch||{}){
+  const timeline=getCurrentChordTimeline(sketch),styles=new Map((sketch.chordSections||[]).map(section=>[section.label,section.style||'']));
+  const groups=new Map();
+  timeline.forEach(item=>{const label=item.section||'全体';if(!groups.has(label))groups.set(label,[]);groups.get(label).push(item);});
+  return [...groups.entries()].map(([label,items])=>label+(styles.get(label)?' ['+styles.get(label)+']':'')+'\n'+items.map(item=>'小節'+(item.bar||Math.floor((Number(item.startBeat)||0)/4)+1)+': '+item.chord+' ('+(Number(item.beats)||4)+'拍)').join('  →  ')).join('\n\n');
+}
+function updateGeneratedChordTimelineOutputs(){
+  const sketch=window.__lyricMusicSketch||{},timeline=getCurrentChordTimeline(sketch);
+  const flat=timeline.map(item=>item.chord).join(', ');
+  const output=document.getElementById('lyric-generated-chord-output');if(output)output.value=flat;
+  const sections=document.getElementById('lyric-generated-chord-sections-output');if(sections)sections.value=formatChordTimelineSections(sketch);
+}
 function renderGeneratedChordSections(chordSections){
   const host=document.getElementById('lyric-generated-chord-breakdown');
   if(!host)return;
@@ -1335,10 +1353,8 @@ function renderGeneratedChordSections(chordSections){
     host.appendChild(card);
   });
   const flat=(chordSections||[]).flatMap(section=>section.progression||[]);
-  const simple=flat.map(item=>item.chord).join(', ');
-  const labeled=(chordSections||[]).map(section=>(section.label||'区間')+' ['+(section.style||'style未設定')+']\n'+(section.progression||[]).map(item=>item.chord+' ('+item.beats+'拍)').join('  →  ')).join('\n\n');
-  const output=document.getElementById('lyric-generated-chord-output');if(output)output.value=simple;
-  const sectionOutput=document.getElementById('lyric-generated-chord-sections-output');if(sectionOutput)sectionOutput.value=labeled;
+  const output=document.getElementById('lyric-generated-chord-output');if(output)output.value=flat.map(item=>item.chord).join(', ');
+  const sectionOutput=document.getElementById('lyric-generated-chord-sections-output');if(sectionOutput)sectionOutput.value=(chordSections||[]).map(section=>(section.label||'区間')+' ['+(section.style||'style未設定')+']\n'+(section.progression||[]).map(item=>item.chord+' ('+item.beats+'拍)').join('  →  ')).join('\n\n');
 }
 function refineGeneratedChordProgressions(){
   const sketch=window.__lyricMusicSketch||{};
@@ -1366,6 +1382,7 @@ function refineGeneratedChordProgressions(){
   renderGeneratedChordSections(selected.sections);
   renderHarmonyCandidates(harmonyCandidates,'A');
   renderHarmonyBarEditor();
+  updateGeneratedChordTimelineOutputs();
   const panel=document.getElementById('lyric-generated-chord-panel');if(panel)panel.style.display='block';
   const flat=document.getElementById('lyric-generated-chord-output');if(flat)flat.value=chords.map(x=>x.chord).join(', ');
   const input=document.getElementById('chord-progression-input');if(input)input.value=chords.map(x=>x.chord).join(', ');
