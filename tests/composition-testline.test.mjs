@@ -1928,3 +1928,29 @@ test("TL-124 refining harmony regenerates candidate scores and synchronized chor
   assert.match(refine,/selectedHarmonyCandidate:'A'/);
   assert.ok(html.includes("chordSections:sections,chords,selectedHarmonyCandidate:candidateId"));
 });
+
+test("TL-125 guided composition stages and per-bar chord editor are connected to the selected harmony", async () => {
+  const html=await readFile(canvasPath,"utf8");
+  for(const stage of ["lyrics","harmony","melody","arrange"]){
+    assert.ok(html.includes("data-composition-stage=\"" + stage + "\""),stage+" stage button must exist");
+    assert.ok(html.includes("goCompositionStage('" + stage + "')"),stage+" stage navigation must work");
+  }
+  assert.match(html,/function renderHarmonyBarEditor\(\)/);
+  assert.match(html,/function updateHarmonyBarChord\(index,degree\)/);
+  assert.match(html,/id="harmony-bar-editor"/);
+  assert.match(html,/sourceId:item\.id\|\|'chord'/);
+  assert.match(html,/manualOverride:true/);
+  assert.match(html,/selectHarmonyCandidate\(candidateId\)/);
+  assert.match(html,/project\.chords=project\.generatedMusic\?\.chords/);
+});
+
+test("TL-126 raw Web Audio test is independent from Tone.js availability", async () => {
+  const html=await readFile(beatLabPath,"utf8");
+  const start=html.indexOf("async function testAudioOutput(){");
+  const end=html.indexOf("async function testToneAudioOutput()",start);
+  assert.ok(start>=0&&end>start);
+  const raw=html.slice(start,end);
+  assert.match(raw,/window\.AudioContext\|\|window\.webkitAudioContext/);
+  assert.match(raw,/gain\.connect\(ctx\.destination\)/);
+  assert.doesNotMatch(raw,/Tone\.start|Tone\.Synth/);
+});
