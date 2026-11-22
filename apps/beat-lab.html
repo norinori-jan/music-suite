@@ -283,7 +283,8 @@ body{padding-bottom:env(safe-area-inset-bottom)}
 <div id="statusbar">
   <div class="sdot" id="sdot"></div>
   <span id="smsg">BEAT//LAB 起動完了 — STEP からパターンを作成してください</span>
-  <button class="btn" id="audio-output-test" type="button" onclick="testAudioOutput()" style="margin-left:auto;padding:3px 8px">♪ 音声テスト</button>
+  <button class="btn" id="audio-output-test" type="button" onclick="testAudioOutput()" style="margin-left:auto;padding:3px 8px">♪ Web Audio</button>
+  <button class="btn" id="tone-output-test" type="button" onclick="testToneAudioOutput()" style="padding:3px 8px">♪ Tone.js</button>
 </div>
 
 <div id="mixbar" style="display:flex;align-items:center;gap:12px;flex-wrap:wrap;padding:7px 12px;background:var(--s1);border-bottom:1px solid var(--bd);font-size:10px">
@@ -723,24 +724,41 @@ function restoreRhythmVariations(items){
 // ════════════════════════════════════════════════════════
 function pk(rowId,step){return rowId+':'+step}
 function setStatus(t,m){document.getElementById('sdot').className='sdot'+(t?' '+t:'');document.getElementById('smsg').textContent=m}
+let audioOutputTestContext=null;
 async function testAudioOutput(){
   const button=document.getElementById('audio-output-test');
-  if(button){button.disabled=true;button.textContent='♪ 音声確認中';}
+  if(button){button.disabled=true;button.textContent='♪ 確認中';}
+  try{
+    const AudioContextClass=window.AudioContext||window.webkitAudioContext;
+    if(!AudioContextClass)throw new Error('このブラウザはWeb Audio APIに対応していません。');
+    if(!audioOutputTestContext||audioOutputTestContext.state==='closed')audioOutputTestContext=new AudioContextClass();
+    const ctx=audioOutputTestContext;
+    await ctx.resume();
+    if(ctx.state!=='running')throw new Error('AudioContextがrunningではありません（'+ctx.state+'）。ブラウザの音声設定を確認してください。');
+    const osc=ctx.createOscillator(),gain=ctx.createGain(),start=ctx.currentTime+.03,duration=.65;
+    osc.type='sine';osc.frequency.setValueAtTime(440,start);
+    gain.gain.setValueAtTime(.0001,start);gain.gain.linearRampToValueAtTime(.22,start+.025);
+    gain.gain.setValueAtTime(.22,start+duration-.08);gain.gain.linearRampToValueAtTime(.0001,start+duration);
+    osc.connect(gain);gain.connect(ctx.destination);osc.start(start);osc.stop(start+duration+.02);
+    setStatus('ok','Web Audio基礎テスト信号を出しました（A4 / 440Hz）。Tone.js・編曲バスを通さない直接出力です。');
+  }catch(error){setStatus('err','Web Audioテスト失敗：'+(error?.message||error));}
+  finally{setTimeout(()=>{if(button){button.disabled=false;button.textContent='♪ Web Audio';}},800);}
+}
+async function testToneAudioOutput(){
+  const button=document.getElementById('tone-output-test');
+  if(button){button.disabled=true;button.textContent='♪ 確認中';}
   let testSynth=null;
   try{
     if(typeof Tone==='undefined'||!Tone.Synth)throw new Error('Tone.jsを読み込めていません。CDNへの接続を確認してください。');
     await Tone.start();
     const contextState=Tone.context?.state||'unknown';
-    if(contextState!=='running')throw new Error('AudioContextがrunningではありません（'+contextState+'）。ブラウザの音声出力を確認してください。');
+    if(contextState!=='running')throw new Error('Tone.js AudioContextがrunningではありません（'+contextState+'）。');
     testSynth=new Tone.Synth({oscillator:{type:'sine'},envelope:{attack:.012,decay:.08,sustain:.7,release:.12}}).toDestination();
     testSynth.volume.value=-8;
     testSynth.triggerAttackRelease('A4','4n');
-    setStatus('ok','音声テスト信号を出しました（A4 / 440Hz）。聞こえない場合はブラウザ・端末の出力経路を確認してください。');
-  }catch(error){
-    setStatus('err','音声テスト失敗：'+(error?.message||error));
-  }finally{
-    setTimeout(()=>{try{testSynth?.dispose();}catch(e){}if(button){button.disabled=false;button.textContent='♪ 音声テスト';}},900);
-  }
+    setStatus('ok','Tone.jsテスト信号を出しました（A4 / 440Hz）。Web Audio基礎テストとの違いを確認してください。');
+  }catch(error){setStatus('err','Tone.jsテスト失敗：'+(error?.message||error));}
+  finally{setTimeout(()=>{try{testSynth?.dispose();}catch(e){}if(button){button.disabled=false;button.textContent='♪ Tone.js';}},900);}
 }
 function totalSteps(){return APP.bars*APP.timeSig*(APP.div/4)}
 function esc(s){return String(s||'').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;')}
