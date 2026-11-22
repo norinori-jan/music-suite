@@ -63,7 +63,7 @@ try {
   });
 
   await page.goto("http://127.0.0.1:4173/apps/composition-canvas.html", { waitUntil: "domcontentloaded" });
-  await page.locator("#canvas-lyrics").fill(["We rise above the quiet night","Your light is calling me","We find a brighter way"].join("\\n"));
+  await page.locator("#canvas-lyrics").fill(["We rise above the quiet night","Your light is calling me","We find a brighter way"].join(String.fromCharCode(10)));
   await page.evaluate(() => {
     document.getElementById("lyric-key").value = "C";
     document.getElementById("lyric-mood").value = "bittersweet";
