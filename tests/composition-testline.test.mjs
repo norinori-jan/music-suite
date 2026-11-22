@@ -1582,7 +1582,6 @@ test("TL-102 lyric syllable and stress helpers expose phrase-level pronunciation
   const helpers=new Function(canvas.slice(start,end)+";return {lyricStressIndex,lyricIsFunctionWord,lyricEstimateSyllables,lyricBuildSyllables,lyricPhraseWeights};")();
   assert.equal(helpers.lyricEstimateSyllables("growing"),2);
   assert.equal(helpers.lyricEstimateSyllables("beautiful"),3);
-  assert.equal(helpers.lyricStressIndex("believe",2),0);
   assert.equal(helpers.lyricStressIndex("believe",2),1);
   assert.equal(helpers.lyricStressIndex("alone",2),1);
   assert.equal(helpers.lyricIsFunctionWord("I"),true);
