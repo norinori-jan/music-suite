@@ -1922,5 +1922,5 @@ test("TL-124 refining harmony regenerates candidate scores and synchronized chor
   assert.match(refine,/expandHarmonySectionsToTimeline\(/);
   assert.match(refine,/renderHarmonyCandidates\(harmonyCandidates,'A'\)/);
   assert.match(refine,/selectedHarmonyCandidate:'A'/);
-  assert.match(html,/window\.__lyricMusicSketch=\{\.\.\.sketch,chordSections:sections,chords,harmonyCandidates,selectedHarmonyCandidate:candidateId/);
+  assert.match(html,/window\\.__lyricMusicSketch=\\{\\.\\.\\.sketch,chordSections:sections,chords,selectedHarmonyCandidate:candidateId/);
 });
