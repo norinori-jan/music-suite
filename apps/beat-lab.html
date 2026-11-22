@@ -1160,7 +1160,7 @@ const TONEJS_SAMPLE_ROOT='https://raw.githubusercontent.com/nbrosowsky/tonejs-in
 function createInstrumentSampler(folder,urls,output,ready){
   if(!Tone.Sampler)return null;
   try{return new Tone.Sampler({urls,baseUrl:TONEJS_SAMPLE_ROOT+folder+'/',release:.7,onload:()=>ready(true)}).connect(output);}
-  catch(error){ready(false);return null;}
+  catch(error){ready(false);console.warn('[music-suite] sampler init failed ('+folder+')',error);return null;}
 }
 function getBassSampler(){if(!bassSampler)bassSampler=createInstrumentSampler('bass-electric',{Cs1:'Cs1.mp3',E1:'E1.mp3',G1:'G1.mp3',As1:'As1.mp3',Cs2:'Cs2.mp3',E2:'E2.mp3',G2:'G2.mp3',As2:'As2.mp3',Cs3:'Cs3.mp3',E3:'E3.mp3',G3:'G3.mp3',As3:'As3.mp3',Cs4:'Cs4.mp3'},getBassSamplerFilter(),v=>bassSamplerReady=v);return bassSampler;}
 function getGuitarSynth(){if(!guitarSynth){guitarSynth=new Tone.PolySynth(Tone.Synth,{oscillator:{type:'triangle'},envelope:{attack:.003,decay:.34,sustain:0,release:.12}}).connect(getGuitarBus());guitarSynth.volume.value=-11;}return guitarSynth;}
