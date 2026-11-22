@@ -1173,7 +1173,13 @@ function restoreChordProgressionInput(sketch){
   if(input&&chords.length){
     input.value=chords.map(item=>typeof item==='string'?item:item.chord).filter(Boolean).join(', ');
     const restoredSections=Array.isArray(sketch?.chordSections)?sketch.chordSections:sections;
-    if(restoredSections.length){renderGeneratedChordSections(restoredSections);const panel=document.getElementById('lyric-generated-chord-panel');if(panel)panel.style.display='block';}
+    if(restoredSections.length){
+      renderGeneratedChordSections(restoredSections);
+      const panel=document.getElementById('lyric-generated-chord-panel');if(panel)panel.style.display='block';
+      if(Array.isArray(sketch?.harmonyCandidates))renderHarmonyCandidates(sketch.harmonyCandidates,sketch.selectedHarmonyCandidate||null);
+      renderHarmonyBarEditor();
+      updateGeneratedChordTimelineOutputs();
+    }
     const status=document.getElementById('chord-progression-status');
     if(status)status.textContent='外部アプリからコード進行 '+chords.length+'件を受信しました。内容を確認して「コード進行を反映」を押してください。';
   }
