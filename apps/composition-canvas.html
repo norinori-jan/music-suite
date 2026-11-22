@@ -1065,7 +1065,7 @@ function goCompositionStage(stage){
   if(stage==='lyrics'&&document.getElementById('duet-editors')?.style.display!=='none')target=document.getElementById('duet-editors');
   document.querySelectorAll('#composition-workflow-nav [data-composition-stage]').forEach(button=>{
     const active=button.dataset.compositionStage===stage;
-    if(active)button.setAttribute('aria-current','step');else button.removeAttribute('aria-current');
+    if(active)button.setAttribute?.('aria-current','step');else button.removeAttribute?.('aria-current');
   });
   const status=document.getElementById('composition-stage-status');if(status)status.textContent=names[stage]||names.lyrics;
   target?.scrollIntoView({behavior:'smooth',block:'start'});
