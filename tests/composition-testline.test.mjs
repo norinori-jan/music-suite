@@ -1617,22 +1617,22 @@ test("TL-103 varied English lyrics generate syllable-linked melodies with singab
   const code=canvas.slice(helperStart,helperEnd)+"\n"+canvas.slice(generatorStart,generatorEnd)+";return generateLyricMusicSketch;";
   const variants=[
     [
-      {role:"A",label:"Mia / A verse",text:"I remember every little moment"},
-      {role:"B",label:"Ken / B verse",text:"The city lights are calling me"},
-      {role:"DUET",label:"Chorus",text:"We are alive tonight, reaching for tomorrow"},
-      {role:"DUET",label:"Bridge",text:"Even when the road is long"}
+      {role:"A",label:"Mia / A verse",text:"I remember every little moment\nThe morning opens wide\nI am finding my way"},
+      {role:"B",label:"Ken / B verse",text:"The city lights are calling me\nA thousand windows shine\nI hear the distant sound"},
+      {role:"DUET",label:"Chorus",text:"We are alive tonight\nReaching for tomorrow\nTogether we can fly"},
+      {role:"DUET",label:"Bridge",text:"Even when the road is long\nWe keep the fire bright\nAnd never let it go"}
     ],
     [
-      {role:"A",label:"Mia / A verse",text:"A quiet river carries all my dreams"},
-      {role:"B",label:"Ken / B verse",text:"I will return before the morning"},
-      {role:"DUET",label:"Chorus",text:"Together we can rise above the shadows"},
-      {role:"DUET",label:"Bridge",text:"And find a place to begin again"}
+      {role:"A",label:"Mia / A verse",text:"A quiet river carries dreams\nAcross the open fields\nI follow where it leads"},
+      {role:"B",label:"Ken / B verse",text:"I will return before the morning\nThe stars are fading now\nI hear you call my name"},
+      {role:"DUET",label:"Chorus",text:"Together we can rise\nAbove the shadows\nInto the light again"},
+      {role:"DUET",label:"Bridge",text:"And find a place to begin\nA new day waits for us\nWe start again"}
     ],
     [
-      {role:"A",label:"Mia / A verse",text:"Fire in the distance"},
-      {role:"B",label:"Ken / B verse",text:"Every heartbeat tells a story"},
-      {role:"DUET",label:"Chorus",text:"Remember who we are, remember why we sing"},
-      {role:"DUET",label:"Bridge",text:"The stars are listening"}
+      {role:"A",label:"Mia / A verse",text:"Fire in the distance\nA signal in the dark\nA promise in the sky"},
+      {role:"B",label:"Ken / B verse",text:"Every heartbeat tells a story\nThe rhythm in our hands\nIt brings us back to life"},
+      {role:"DUET",label:"Chorus",text:"Remember who we are\nRemember why we sing\nOur voices rising high"},
+      {role:"DUET",label:"Bridge",text:"The stars are listening\nThe night is opening\nThe world is wide awake"}
     ]
   ];
   const pitchToMidi=pitch=>{
