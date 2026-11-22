@@ -997,7 +997,7 @@ test("TL-68 look-ahead scheduling keeps visual playhead aligned and rejects stal
 });
 
 
-test("TL-90 kick and snare add restrained transient definition without changing the sequencer clock", async () => {
+test("TL-93 kick and snare add restrained transient definition without changing the sequencer clock", async () => {
   const html=await readFile(beatLabPath,"utf8");
   assert.match(html,/function getKickClick\(\)[\s\S]*?new Tone\.NoiseSynth[\s\S]*?decay:\.018[\s\S]*?volume\.value=-27/,"kick click must be a short, quiet high-frequency transient");
   assert.match(html,/function getKick\(\)[\s\S]*?new Tone\.MembraneSynth[\s\S]*?pitchDecay:\.055/,"kick body must retain a tuned low-frequency membrane voice");
