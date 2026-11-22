@@ -1,8 +1,8 @@
 {
   "schemaVersion": "composition-testline-v1",
-  "projectId": "composition-testline-v1",
-  "source": "composition-testline-fixture",
-  "name": "Composition Test Line v1",
+  "projectId": "composition-testline-v2",
+  "source": "composition-testline-fixture-v2",
+  "name": "Composition Test Line v2 — Full Arrangement",
   "bpm": 100,
   "timeSig": 4,
   "div": 16,
@@ -63,118 +63,838 @@
         "pitch": 60,
         "startBeat": 0,
         "durationBeats": 1,
-        "vel": 88,
+        "vel": 84,
         "lyricId": "lyric-intro"
       },
       {
         "id": "mel-002",
         "pitch": 64,
-        "startBeat": 1,
+        "startBeat": 1.5,
         "durationBeats": 0.5,
-        "vel": 82,
+        "vel": 78,
         "lyricId": "lyric-intro"
       },
       {
         "id": "mel-003",
         "pitch": 67,
         "startBeat": 2,
-        "durationBeats": 2,
-        "vel": 90,
+        "durationBeats": 1.5,
+        "vel": 88,
         "lyricId": "lyric-intro"
       },
       {
         "id": "mel-004",
-        "pitch": 67,
-        "startBeat": 5,
-        "durationBeats": 1,
-        "vel": 78,
-        "lyricId": "lyric-verse"
+        "pitch": 62,
+        "startBeat": 4,
+        "durationBeats": 0.75,
+        "vel": 80,
+        "lyricId": "lyric-intro"
       },
       {
         "id": "mel-005",
-        "pitch": 72,
-        "startBeat": 7,
-        "durationBeats": 0.5,
-        "vel": 92,
-        "lyricId": "lyric-verse"
+        "pitch": 64,
+        "startBeat": 5,
+        "durationBeats": 0.75,
+        "vel": 82,
+        "lyricId": "lyric-intro"
       },
       {
         "id": "mel-006",
         "pitch": 69,
-        "startBeat": 10,
-        "durationBeats": 2,
+        "startBeat": 6.5,
+        "durationBeats": 1,
         "vel": 86,
-        "lyricId": "lyric-verse"
+        "lyricId": "lyric-intro"
       },
       {
         "id": "mel-007",
-        "pitch": 65,
-        "startBeat": 16,
+        "pitch": 69,
+        "startBeat": 8,
         "durationBeats": 1,
-        "vel": 84,
-        "lyricId": "lyric-pre"
+        "vel": 88,
+        "lyricId": "lyric-intro"
       },
       {
         "id": "mel-008",
-        "pitch": 71,
-        "startBeat": 18,
+        "pitch": 67,
+        "startBeat": 9.5,
         "durationBeats": 0.5,
-        "vel": 96,
-        "lyricId": "lyric-pre"
+        "vel": 80,
+        "lyricId": "lyric-intro"
       },
       {
         "id": "mel-009",
-        "pitch": 74,
-        "startBeat": 21,
-        "durationBeats": 2,
-        "vel": 98,
-        "lyricId": "lyric-pre"
+        "pitch": 64,
+        "startBeat": 10,
+        "durationBeats": 1.5,
+        "vel": 82,
+        "lyricId": "lyric-intro"
       },
       {
         "id": "mel-010",
-        "pitch": 72,
-        "startBeat": 32,
+        "pitch": 62,
+        "startBeat": 12,
         "durationBeats": 1,
-        "vel": 100,
-        "lyricId": "lyric-chorus"
+        "vel": 78,
+        "lyricId": "lyric-intro"
       },
       {
         "id": "mel-011",
-        "pitch": 76,
-        "startBeat": 33,
-        "durationBeats": 1,
-        "vel": 104,
-        "lyricId": "lyric-chorus"
+        "pitch": 67,
+        "startBeat": 13,
+        "durationBeats": 0.75,
+        "vel": 84,
+        "lyricId": "lyric-intro"
       },
       {
         "id": "mel-012",
-        "pitch": 79,
-        "startBeat": 35,
-        "durationBeats": 3,
-        "vel": 110,
-        "lyricId": "lyric-chorus"
+        "pitch": 69,
+        "startBeat": 14.5,
+        "durationBeats": 1,
+        "vel": 88,
+        "lyricId": "lyric-intro"
       },
       {
         "id": "mel-013",
-        "pitch": 79,
-        "startBeat": 48,
-        "durationBeats": 0.5,
-        "vel": 98,
-        "lyricId": "lyric-final"
+        "pitch": 67,
+        "startBeat": 16,
+        "durationBeats": 0.75,
+        "vel": 82,
+        "lyricId": "lyric-verse"
       },
       {
         "id": "mel-014",
-        "pitch": 76,
-        "startBeat": 50,
-        "durationBeats": 1.5,
-        "vel": 90,
-        "lyricId": "lyric-final"
+        "pitch": 69,
+        "startBeat": 17,
+        "durationBeats": 0.75,
+        "vel": 84,
+        "lyricId": "lyric-verse"
       },
       {
         "id": "mel-015",
         "pitch": 72,
+        "startBeat": 18.5,
+        "durationBeats": 1,
+        "vel": 88,
+        "lyricId": "lyric-verse"
+      },
+      {
+        "id": "mel-016",
+        "pitch": 71,
+        "startBeat": 20,
+        "durationBeats": 1,
+        "vel": 86,
+        "lyricId": "lyric-verse"
+      },
+      {
+        "id": "mel-017",
+        "pitch": 69,
+        "startBeat": 21.5,
+        "durationBeats": 0.5,
+        "vel": 80,
+        "lyricId": "lyric-verse"
+      },
+      {
+        "id": "mel-018",
+        "pitch": 67,
+        "startBeat": 22,
+        "durationBeats": 1.25,
+        "vel": 82,
+        "lyricId": "lyric-verse"
+      },
+      {
+        "id": "mel-019",
+        "pitch": 65,
+        "startBeat": 24,
+        "durationBeats": 1,
+        "vel": 80,
+        "lyricId": "lyric-verse"
+      },
+      {
+        "id": "mel-020",
+        "pitch": 67,
+        "startBeat": 25.25,
+        "durationBeats": 0.5,
+        "vel": 82,
+        "lyricId": "lyric-verse"
+      },
+      {
+        "id": "mel-021",
+        "pitch": 69,
+        "startBeat": 26,
+        "durationBeats": 1.5,
+        "vel": 86,
+        "lyricId": "lyric-verse"
+      },
+      {
+        "id": "mel-022",
+        "pitch": 67,
+        "startBeat": 28,
+        "durationBeats": 1.25,
+        "vel": 84,
+        "lyricId": "lyric-verse"
+      },
+      {
+        "id": "mel-023",
+        "pitch": 64,
+        "startBeat": 29.5,
+        "durationBeats": 0.5,
+        "vel": 78,
+        "lyricId": "lyric-verse"
+      },
+      {
+        "id": "mel-024",
+        "pitch": 62,
+        "startBeat": 30.5,
+        "durationBeats": 1,
+        "vel": 76,
+        "lyricId": "lyric-verse"
+      },
+      {
+        "id": "mel-025",
+        "pitch": 67,
+        "startBeat": 32,
+        "durationBeats": 0.5,
+        "vel": 80,
+        "lyricId": "lyric-verse"
+      },
+      {
+        "id": "mel-026",
+        "pitch": 69,
+        "startBeat": 32.75,
+        "durationBeats": 0.5,
+        "vel": 82,
+        "lyricId": "lyric-verse"
+      },
+      {
+        "id": "mel-027",
+        "pitch": 72,
+        "startBeat": 34,
+        "durationBeats": 1,
+        "vel": 90,
+        "lyricId": "lyric-verse"
+      },
+      {
+        "id": "mel-028",
+        "pitch": 71,
+        "startBeat": 35.25,
+        "durationBeats": 0.5,
+        "vel": 84,
+        "lyricId": "lyric-verse"
+      },
+      {
+        "id": "mel-029",
+        "pitch": 69,
+        "startBeat": 36,
+        "durationBeats": 1,
+        "vel": 86,
+        "lyricId": "lyric-verse"
+      },
+      {
+        "id": "mel-030",
+        "pitch": 67,
+        "startBeat": 37.5,
+        "durationBeats": 0.5,
+        "vel": 82,
+        "lyricId": "lyric-verse"
+      },
+      {
+        "id": "mel-031",
+        "pitch": 64,
+        "startBeat": 38,
+        "durationBeats": 1.5,
+        "vel": 78,
+        "lyricId": "lyric-verse"
+      },
+      {
+        "id": "mel-032",
+        "pitch": 65,
+        "startBeat": 40,
+        "durationBeats": 1,
+        "vel": 80,
+        "lyricId": "lyric-verse"
+      },
+      {
+        "id": "mel-033",
+        "pitch": 67,
+        "startBeat": 41.5,
+        "durationBeats": 0.5,
+        "vel": 82,
+        "lyricId": "lyric-verse"
+      },
+      {
+        "id": "mel-034",
+        "pitch": 69,
+        "startBeat": 42,
+        "durationBeats": 1.25,
+        "vel": 86,
+        "lyricId": "lyric-verse"
+      },
+      {
+        "id": "mel-035",
+        "pitch": 71,
+        "startBeat": 44,
+        "durationBeats": 1,
+        "vel": 88,
+        "lyricId": "lyric-verse"
+      },
+      {
+        "id": "mel-036",
+        "pitch": 69,
+        "startBeat": 45.5,
+        "durationBeats": 0.5,
+        "vel": 82,
+        "lyricId": "lyric-verse"
+      },
+      {
+        "id": "mel-037",
+        "pitch": 67,
+        "startBeat": 46,
+        "durationBeats": 1.5,
+        "vel": 84,
+        "lyricId": "lyric-verse"
+      },
+      {
+        "id": "mel-038",
+        "pitch": 65,
+        "startBeat": 48,
+        "durationBeats": 0.75,
+        "vel": 82,
+        "lyricId": "lyric-pre"
+      },
+      {
+        "id": "mel-039",
+        "pitch": 69,
+        "startBeat": 49,
+        "durationBeats": 0.75,
+        "vel": 86,
+        "lyricId": "lyric-pre"
+      },
+      {
+        "id": "mel-040",
+        "pitch": 72,
+        "startBeat": 50,
+        "durationBeats": 1.25,
+        "vel": 90,
+        "lyricId": "lyric-pre"
+      },
+      {
+        "id": "mel-041",
+        "pitch": 74,
+        "startBeat": 52,
+        "durationBeats": 1,
+        "vel": 92,
+        "lyricId": "lyric-pre"
+      },
+      {
+        "id": "mel-042",
+        "pitch": 72,
+        "startBeat": 53.5,
+        "durationBeats": 0.5,
+        "vel": 86,
+        "lyricId": "lyric-pre"
+      },
+      {
+        "id": "mel-043",
+        "pitch": 69,
         "startBeat": 54,
-        "durationBeats": 4,
+        "durationBeats": 1.25,
+        "vel": 84,
+        "lyricId": "lyric-pre"
+      },
+      {
+        "id": "mel-044",
+        "pitch": 67,
+        "startBeat": 56,
+        "durationBeats": 0.75,
+        "vel": 84,
+        "lyricId": "lyric-pre"
+      },
+      {
+        "id": "mel-045",
+        "pitch": 71,
+        "startBeat": 57,
+        "durationBeats": 0.75,
+        "vel": 88,
+        "lyricId": "lyric-pre"
+      },
+      {
+        "id": "mel-046",
+        "pitch": 74,
+        "startBeat": 58.5,
+        "durationBeats": 1,
+        "vel": 92,
+        "lyricId": "lyric-pre"
+      },
+      {
+        "id": "mel-047",
+        "pitch": 72,
+        "startBeat": 60,
+        "durationBeats": 1,
+        "vel": 90,
+        "lyricId": "lyric-pre"
+      },
+      {
+        "id": "mel-048",
+        "pitch": 74,
+        "startBeat": 61.5,
+        "durationBeats": 0.5,
+        "vel": 92,
+        "lyricId": "lyric-pre"
+      },
+      {
+        "id": "mel-049",
+        "pitch": 76,
+        "startBeat": 62,
+        "durationBeats": 1.5,
+        "vel": 96,
+        "lyricId": "lyric-pre"
+      },
+      {
+        "id": "mel-050",
+        "pitch": 69,
+        "startBeat": 64,
+        "durationBeats": 0.75,
+        "vel": 86,
+        "lyricId": "lyric-pre"
+      },
+      {
+        "id": "mel-051",
+        "pitch": 72,
+        "startBeat": 65,
+        "durationBeats": 0.75,
+        "vel": 90,
+        "lyricId": "lyric-pre"
+      },
+      {
+        "id": "mel-052",
+        "pitch": 76,
+        "startBeat": 66.5,
+        "durationBeats": 1,
+        "vel": 98,
+        "lyricId": "lyric-pre"
+      },
+      {
+        "id": "mel-053",
+        "pitch": 74,
+        "startBeat": 68,
+        "durationBeats": 1,
+        "vel": 96,
+        "lyricId": "lyric-pre"
+      },
+      {
+        "id": "mel-054",
+        "pitch": 72,
+        "startBeat": 69.5,
+        "durationBeats": 0.5,
+        "vel": 88,
+        "lyricId": "lyric-pre"
+      },
+      {
+        "id": "mel-055",
+        "pitch": 71,
+        "startBeat": 70,
+        "durationBeats": 1.5,
+        "vel": 86,
+        "lyricId": "lyric-pre"
+      },
+      {
+        "id": "mel-056",
+        "pitch": 67,
+        "startBeat": 72,
+        "durationBeats": 0.75,
+        "vel": 84,
+        "lyricId": "lyric-pre"
+      },
+      {
+        "id": "mel-057",
+        "pitch": 71,
+        "startBeat": 73,
+        "durationBeats": 0.75,
+        "vel": 90,
+        "lyricId": "lyric-pre"
+      },
+      {
+        "id": "mel-058",
+        "pitch": 74,
+        "startBeat": 74.5,
+        "durationBeats": 1,
+        "vel": 94,
+        "lyricId": "lyric-pre"
+      },
+      {
+        "id": "mel-059",
+        "pitch": 72,
+        "startBeat": 76,
+        "durationBeats": 0.75,
+        "vel": 92,
+        "lyricId": "lyric-pre"
+      },
+      {
+        "id": "mel-060",
+        "pitch": 76,
+        "startBeat": 77,
+        "durationBeats": 0.75,
+        "vel": 98,
+        "lyricId": "lyric-pre"
+      },
+      {
+        "id": "mel-061",
+        "pitch": 77,
+        "startBeat": 78.5,
+        "durationBeats": 1,
+        "vel": 102,
+        "lyricId": "lyric-pre"
+      },
+      {
+        "id": "mel-062",
+        "pitch": 72,
+        "startBeat": 80,
+        "durationBeats": 0.75,
+        "vel": 100,
+        "lyricId": "lyric-chorus"
+      },
+      {
+        "id": "mel-063",
+        "pitch": 76,
+        "startBeat": 81,
+        "durationBeats": 0.75,
+        "vel": 104,
+        "lyricId": "lyric-chorus"
+      },
+      {
+        "id": "mel-064",
+        "pitch": 79,
+        "startBeat": 82,
+        "durationBeats": 1,
+        "vel": 112,
+        "lyricId": "lyric-chorus"
+      },
+      {
+        "id": "mel-065",
+        "pitch": 76,
+        "startBeat": 83.25,
+        "durationBeats": 0.5,
+        "vel": 98,
+        "lyricId": "lyric-chorus"
+      },
+      {
+        "id": "mel-066",
+        "pitch": 74,
+        "startBeat": 84,
+        "durationBeats": 0.75,
+        "vel": 98,
+        "lyricId": "lyric-chorus"
+      },
+      {
+        "id": "mel-067",
+        "pitch": 79,
+        "startBeat": 85,
+        "durationBeats": 0.75,
+        "vel": 108,
+        "lyricId": "lyric-chorus"
+      },
+      {
+        "id": "mel-068",
+        "pitch": 81,
+        "startBeat": 86,
+        "durationBeats": 1,
+        "vel": 114,
+        "lyricId": "lyric-chorus"
+      },
+      {
+        "id": "mel-069",
+        "pitch": 79,
+        "startBeat": 87.25,
+        "durationBeats": 0.5,
+        "vel": 102,
+        "lyricId": "lyric-chorus"
+      },
+      {
+        "id": "mel-070",
+        "pitch": 76,
+        "startBeat": 88,
+        "durationBeats": 0.75,
+        "vel": 102,
+        "lyricId": "lyric-chorus"
+      },
+      {
+        "id": "mel-071",
+        "pitch": 79,
+        "startBeat": 89,
+        "durationBeats": 0.75,
+        "vel": 110,
+        "lyricId": "lyric-chorus"
+      },
+      {
+        "id": "mel-072",
+        "pitch": 84,
+        "startBeat": 90,
+        "durationBeats": 1,
+        "vel": 118,
+        "lyricId": "lyric-chorus"
+      },
+      {
+        "id": "mel-073",
+        "pitch": 81,
+        "startBeat": 91.25,
+        "durationBeats": 0.5,
+        "vel": 106,
+        "lyricId": "lyric-chorus"
+      },
+      {
+        "id": "mel-074",
+        "pitch": 79,
+        "startBeat": 92,
+        "durationBeats": 1,
+        "vel": 112,
+        "lyricId": "lyric-chorus"
+      },
+      {
+        "id": "mel-075",
+        "pitch": 76,
+        "startBeat": 93.5,
+        "durationBeats": 0.5,
+        "vel": 100,
+        "lyricId": "lyric-chorus"
+      },
+      {
+        "id": "mel-076",
+        "pitch": 74,
+        "startBeat": 94,
+        "durationBeats": 0.75,
+        "vel": 96,
+        "lyricId": "lyric-chorus"
+      },
+      {
+        "id": "mel-077",
+        "pitch": 76,
+        "startBeat": 95,
+        "durationBeats": 0.75,
+        "vel": 104,
+        "lyricId": "lyric-chorus"
+      },
+      {
+        "id": "mel-078",
+        "pitch": 72,
+        "startBeat": 96,
+        "durationBeats": 0.75,
+        "vel": 100,
+        "lyricId": "lyric-chorus"
+      },
+      {
+        "id": "mel-079",
+        "pitch": 76,
+        "startBeat": 97,
+        "durationBeats": 0.75,
+        "vel": 106,
+        "lyricId": "lyric-chorus"
+      },
+      {
+        "id": "mel-080",
+        "pitch": 79,
+        "startBeat": 98,
+        "durationBeats": 0.75,
+        "vel": 112,
+        "lyricId": "lyric-chorus"
+      },
+      {
+        "id": "mel-081",
+        "pitch": 81,
+        "startBeat": 99,
+        "durationBeats": 0.75,
+        "vel": 116,
+        "lyricId": "lyric-chorus"
+      },
+      {
+        "id": "mel-082",
+        "pitch": 84,
+        "startBeat": 100,
+        "durationBeats": 1,
+        "vel": 120,
+        "lyricId": "lyric-chorus"
+      },
+      {
+        "id": "mel-083",
+        "pitch": 81,
+        "startBeat": 101.5,
+        "durationBeats": 0.5,
+        "vel": 108,
+        "lyricId": "lyric-chorus"
+      },
+      {
+        "id": "mel-084",
+        "pitch": 79,
+        "startBeat": 102,
+        "durationBeats": 0.75,
+        "vel": 110,
+        "lyricId": "lyric-chorus"
+      },
+      {
+        "id": "mel-085",
+        "pitch": 76,
+        "startBeat": 103,
+        "durationBeats": 0.75,
+        "vel": 102,
+        "lyricId": "lyric-chorus"
+      },
+      {
+        "id": "mel-086",
+        "pitch": 74,
+        "startBeat": 104,
+        "durationBeats": 0.75,
+        "vel": 100,
+        "lyricId": "lyric-chorus"
+      },
+      {
+        "id": "mel-087",
+        "pitch": 79,
+        "startBeat": 105,
+        "durationBeats": 0.75,
+        "vel": 110,
+        "lyricId": "lyric-chorus"
+      },
+      {
+        "id": "mel-088",
+        "pitch": 81,
+        "startBeat": 106,
+        "durationBeats": 0.75,
+        "vel": 116,
+        "lyricId": "lyric-chorus"
+      },
+      {
+        "id": "mel-089",
+        "pitch": 84,
+        "startBeat": 107,
+        "durationBeats": 0.75,
+        "vel": 122,
+        "lyricId": "lyric-chorus"
+      },
+      {
+        "id": "mel-090",
+        "pitch": 79,
+        "startBeat": 108,
+        "durationBeats": 1,
+        "vel": 114,
+        "lyricId": "lyric-chorus"
+      },
+      {
+        "id": "mel-091",
+        "pitch": 76,
+        "startBeat": 109.5,
+        "durationBeats": 0.5,
+        "vel": 102,
+        "lyricId": "lyric-chorus"
+      },
+      {
+        "id": "mel-092",
+        "pitch": 74,
+        "startBeat": 110,
+        "durationBeats": 0.75,
+        "vel": 98,
+        "lyricId": "lyric-chorus"
+      },
+      {
+        "id": "mel-093",
+        "pitch": 72,
+        "startBeat": 111,
+        "durationBeats": 0.75,
+        "vel": 104,
+        "lyricId": "lyric-chorus"
+      },
+      {
+        "id": "mel-094",
+        "pitch": 76,
+        "startBeat": 112,
+        "durationBeats": 1,
+        "vel": 98,
+        "lyricId": "lyric-final"
+      },
+      {
+        "id": "mel-095",
+        "pitch": 79,
+        "startBeat": 113.5,
+        "durationBeats": 0.5,
+        "vel": 104,
+        "lyricId": "lyric-final"
+      },
+      {
+        "id": "mel-096",
+        "pitch": 81,
+        "startBeat": 114,
+        "durationBeats": 1.5,
+        "vel": 110,
+        "lyricId": "lyric-final"
+      },
+      {
+        "id": "mel-097",
+        "pitch": 79,
+        "startBeat": 116,
+        "durationBeats": 1,
+        "vel": 108,
+        "lyricId": "lyric-final"
+      },
+      {
+        "id": "mel-098",
+        "pitch": 76,
+        "startBeat": 117.5,
+        "durationBeats": 0.5,
+        "vel": 98,
+        "lyricId": "lyric-final"
+      },
+      {
+        "id": "mel-099",
+        "pitch": 74,
+        "startBeat": 118,
+        "durationBeats": 1.5,
+        "vel": 94,
+        "lyricId": "lyric-final"
+      },
+      {
+        "id": "mel-100",
+        "pitch": 72,
+        "startBeat": 120,
+        "durationBeats": 1,
+        "vel": 92,
+        "lyricId": "lyric-final"
+      },
+      {
+        "id": "mel-101",
+        "pitch": 76,
+        "startBeat": 121.5,
+        "durationBeats": 0.5,
+        "vel": 100,
+        "lyricId": "lyric-final"
+      },
+      {
+        "id": "mel-102",
+        "pitch": 79,
+        "startBeat": 122,
+        "durationBeats": 1.5,
+        "vel": 106,
+        "lyricId": "lyric-final"
+      },
+      {
+        "id": "mel-103",
+        "pitch": 76,
+        "startBeat": 124,
+        "durationBeats": 1,
+        "vel": 96,
+        "lyricId": "lyric-final"
+      },
+      {
+        "id": "mel-104",
+        "pitch": 74,
+        "startBeat": 125.5,
+        "durationBeats": 0.5,
+        "vel": 90,
+        "lyricId": "lyric-final"
+      },
+      {
+        "id": "mel-105",
+        "pitch": 72,
+        "startBeat": 126,
+        "durationBeats": 2,
         "vel": 84,
         "lyricId": "lyric-final"
       }
@@ -186,131 +906,3049 @@
         "id": "dr-001",
         "pitch": 36,
         "startBeat": 0,
-        "durationBeats": 0.9,
-        "vel": 105,
+        "durationBeats": 0.225,
+        "vel": 103,
         "sectionId": "intro"
       },
       {
         "id": "dr-002",
-        "pitch": 42,
-        "startBeat": 1,
-        "durationBeats": 0.9,
-        "vel": 68,
+        "pitch": 36,
+        "startBeat": 2,
+        "durationBeats": 0.225,
+        "vel": 79,
         "sectionId": "intro"
       },
       {
         "id": "dr-003",
-        "pitch": 38,
-        "startBeat": 4,
-        "durationBeats": 0.9,
-        "vel": 100,
-        "sectionId": "verse"
+        "pitch": 42,
+        "startBeat": 0.5,
+        "durationBeats": 0.225,
+        "vel": 70,
+        "sectionId": "intro"
       },
       {
         "id": "dr-004",
         "pitch": 42,
-        "startBeat": 5,
-        "durationBeats": 0.9,
-        "vel": 72,
-        "sectionId": "verse"
+        "startBeat": 1.5,
+        "durationBeats": 0.225,
+        "vel": 70,
+        "sectionId": "intro"
       },
       {
         "id": "dr-005",
-        "pitch": 36,
-        "startBeat": 8,
-        "durationBeats": 0.9,
-        "vel": 104,
-        "sectionId": "verse"
+        "pitch": 42,
+        "startBeat": 2.5,
+        "durationBeats": 0.225,
+        "vel": 73,
+        "sectionId": "intro"
       },
       {
         "id": "dr-006",
-        "pitch": 38,
-        "startBeat": 10,
-        "durationBeats": 0.9,
-        "vel": 104,
-        "sectionId": "verse"
+        "pitch": 42,
+        "startBeat": 3.5,
+        "durationBeats": 0.225,
+        "vel": 77,
+        "sectionId": "intro"
       },
       {
         "id": "dr-007",
-        "pitch": 42,
-        "startBeat": 12,
-        "durationBeats": 0.9,
-        "vel": 75,
-        "sectionId": "verse"
+        "pitch": 49,
+        "startBeat": 0,
+        "durationBeats": 0.225,
+        "vel": 88,
+        "sectionId": "intro"
       },
       {
         "id": "dr-008",
         "pitch": 36,
-        "startBeat": 16,
-        "durationBeats": 0.9,
-        "vel": 108,
-        "sectionId": "pre"
+        "startBeat": 4,
+        "durationBeats": 0.225,
+        "vel": 103,
+        "sectionId": "intro"
       },
       {
         "id": "dr-009",
-        "pitch": 38,
-        "startBeat": 18,
-        "durationBeats": 0.9,
-        "vel": 106,
-        "sectionId": "pre"
+        "pitch": 36,
+        "startBeat": 6,
+        "durationBeats": 0.225,
+        "vel": 79,
+        "sectionId": "intro"
       },
       {
         "id": "dr-010",
-        "pitch": 50,
-        "startBeat": 30,
-        "durationBeats": 0.9,
-        "vel": 88,
-        "sectionId": "pre",
-        "effect": "fill"
+        "pitch": 42,
+        "startBeat": 4.5,
+        "durationBeats": 0.225,
+        "vel": 70,
+        "sectionId": "intro"
       },
       {
         "id": "dr-011",
-        "pitch": 36,
-        "startBeat": 32,
-        "durationBeats": 0.9,
-        "vel": 116,
-        "sectionId": "chorus"
+        "pitch": 42,
+        "startBeat": 5.5,
+        "durationBeats": 0.225,
+        "vel": 70,
+        "sectionId": "intro"
       },
       {
         "id": "dr-012",
-        "pitch": 38,
-        "startBeat": 34,
-        "durationBeats": 0.9,
-        "vel": 112,
-        "sectionId": "chorus"
+        "pitch": 42,
+        "startBeat": 6.5,
+        "durationBeats": 0.225,
+        "vel": 73,
+        "sectionId": "intro"
       },
       {
         "id": "dr-013",
-        "pitch": 49,
-        "startBeat": 35,
-        "durationBeats": 0.9,
-        "vel": 120,
-        "sectionId": "chorus"
+        "pitch": 42,
+        "startBeat": 7.5,
+        "durationBeats": 0.225,
+        "vel": 77,
+        "sectionId": "intro"
       },
       {
         "id": "dr-014",
         "pitch": 36,
-        "startBeat": 48,
-        "durationBeats": 0.9,
-        "vel": 108,
-        "sectionId": "final"
+        "startBeat": 8,
+        "durationBeats": 0.225,
+        "vel": 103,
+        "sectionId": "intro"
       },
       {
         "id": "dr-015",
-        "pitch": 38,
-        "startBeat": 54,
-        "durationBeats": 0.9,
-        "vel": 112,
-        "sectionId": "final"
+        "pitch": 36,
+        "startBeat": 10,
+        "durationBeats": 0.225,
+        "vel": 79,
+        "sectionId": "intro"
       },
       {
         "id": "dr-016",
-        "pitch": 49,
+        "pitch": 42,
+        "startBeat": 8.5,
+        "durationBeats": 0.225,
+        "vel": 70,
+        "sectionId": "intro"
+      },
+      {
+        "id": "dr-017",
+        "pitch": 42,
+        "startBeat": 9.5,
+        "durationBeats": 0.225,
+        "vel": 70,
+        "sectionId": "intro"
+      },
+      {
+        "id": "dr-018",
+        "pitch": 42,
+        "startBeat": 10.5,
+        "durationBeats": 0.225,
+        "vel": 73,
+        "sectionId": "intro"
+      },
+      {
+        "id": "dr-019",
+        "pitch": 42,
+        "startBeat": 11.5,
+        "durationBeats": 0.225,
+        "vel": 77,
+        "sectionId": "intro"
+      },
+      {
+        "id": "dr-020",
+        "pitch": 36,
+        "startBeat": 12,
+        "durationBeats": 0.225,
+        "vel": 103,
+        "sectionId": "intro"
+      },
+      {
+        "id": "dr-021",
+        "pitch": 36,
+        "startBeat": 14,
+        "durationBeats": 0.225,
+        "vel": 79,
+        "sectionId": "intro"
+      },
+      {
+        "id": "dr-022",
+        "pitch": 42,
+        "startBeat": 12.5,
+        "durationBeats": 0.225,
+        "vel": 70,
+        "sectionId": "intro"
+      },
+      {
+        "id": "dr-023",
+        "pitch": 42,
+        "startBeat": 13.5,
+        "durationBeats": 0.225,
+        "vel": 70,
+        "sectionId": "intro"
+      },
+      {
+        "id": "dr-024",
+        "pitch": 42,
+        "startBeat": 14.5,
+        "durationBeats": 0.225,
+        "vel": 73,
+        "sectionId": "intro"
+      },
+      {
+        "id": "dr-025",
+        "pitch": 42,
+        "startBeat": 15.5,
+        "durationBeats": 0.225,
+        "vel": 77,
+        "sectionId": "intro"
+      },
+      {
+        "id": "dr-026",
+        "pitch": 36,
+        "startBeat": 16,
+        "durationBeats": 0.225,
+        "vel": 111,
+        "sectionId": "verse"
+      },
+      {
+        "id": "dr-027",
+        "pitch": 36,
+        "startBeat": 18,
+        "durationBeats": 0.225,
+        "vel": 99,
+        "sectionId": "verse"
+      },
+      {
+        "id": "dr-028",
+        "pitch": 38,
+        "startBeat": 17,
+        "durationBeats": 0.225,
+        "vel": 103,
+        "sectionId": "verse"
+      },
+      {
+        "id": "dr-029",
+        "pitch": 38,
+        "startBeat": 19,
+        "durationBeats": 0.225,
+        "vel": 108,
+        "sectionId": "verse"
+      },
+      {
+        "id": "dr-030",
+        "pitch": 42,
+        "startBeat": 16.5,
+        "durationBeats": 0.225,
+        "vel": 77,
+        "sectionId": "verse"
+      },
+      {
+        "id": "dr-031",
+        "pitch": 42,
+        "startBeat": 17.5,
+        "durationBeats": 0.225,
+        "vel": 77,
+        "sectionId": "verse"
+      },
+      {
+        "id": "dr-032",
+        "pitch": 42,
+        "startBeat": 18.5,
+        "durationBeats": 0.225,
+        "vel": 80,
+        "sectionId": "verse"
+      },
+      {
+        "id": "dr-033",
+        "pitch": 42,
+        "startBeat": 19.5,
+        "durationBeats": 0.225,
+        "vel": 82,
+        "sectionId": "verse"
+      },
+      {
+        "id": "dr-034",
+        "pitch": 36,
+        "startBeat": 20,
+        "durationBeats": 0.225,
+        "vel": 111,
+        "sectionId": "verse"
+      },
+      {
+        "id": "dr-035",
+        "pitch": 36,
+        "startBeat": 22,
+        "durationBeats": 0.225,
+        "vel": 99,
+        "sectionId": "verse"
+      },
+      {
+        "id": "dr-036",
+        "pitch": 38,
+        "startBeat": 21,
+        "durationBeats": 0.225,
+        "vel": 103,
+        "sectionId": "verse"
+      },
+      {
+        "id": "dr-037",
+        "pitch": 38,
+        "startBeat": 23,
+        "durationBeats": 0.225,
+        "vel": 108,
+        "sectionId": "verse"
+      },
+      {
+        "id": "dr-038",
+        "pitch": 42,
+        "startBeat": 20.5,
+        "durationBeats": 0.225,
+        "vel": 77,
+        "sectionId": "verse"
+      },
+      {
+        "id": "dr-039",
+        "pitch": 42,
+        "startBeat": 21.5,
+        "durationBeats": 0.225,
+        "vel": 77,
+        "sectionId": "verse"
+      },
+      {
+        "id": "dr-040",
+        "pitch": 42,
+        "startBeat": 22.5,
+        "durationBeats": 0.225,
+        "vel": 80,
+        "sectionId": "verse"
+      },
+      {
+        "id": "dr-041",
+        "pitch": 42,
+        "startBeat": 23.5,
+        "durationBeats": 0.225,
+        "vel": 82,
+        "sectionId": "verse"
+      },
+      {
+        "id": "dr-042",
+        "pitch": 36,
+        "startBeat": 24,
+        "durationBeats": 0.225,
+        "vel": 111,
+        "sectionId": "verse"
+      },
+      {
+        "id": "dr-043",
+        "pitch": 36,
+        "startBeat": 26,
+        "durationBeats": 0.225,
+        "vel": 99,
+        "sectionId": "verse"
+      },
+      {
+        "id": "dr-044",
+        "pitch": 38,
+        "startBeat": 25,
+        "durationBeats": 0.225,
+        "vel": 103,
+        "sectionId": "verse"
+      },
+      {
+        "id": "dr-045",
+        "pitch": 38,
+        "startBeat": 27,
+        "durationBeats": 0.225,
+        "vel": 108,
+        "sectionId": "verse"
+      },
+      {
+        "id": "dr-046",
+        "pitch": 42,
+        "startBeat": 24.5,
+        "durationBeats": 0.225,
+        "vel": 77,
+        "sectionId": "verse"
+      },
+      {
+        "id": "dr-047",
+        "pitch": 42,
+        "startBeat": 25.5,
+        "durationBeats": 0.225,
+        "vel": 77,
+        "sectionId": "verse"
+      },
+      {
+        "id": "dr-048",
+        "pitch": 42,
+        "startBeat": 26.5,
+        "durationBeats": 0.225,
+        "vel": 80,
+        "sectionId": "verse"
+      },
+      {
+        "id": "dr-049",
+        "pitch": 42,
+        "startBeat": 27.5,
+        "durationBeats": 0.225,
+        "vel": 82,
+        "sectionId": "verse"
+      },
+      {
+        "id": "dr-050",
+        "pitch": 36,
+        "startBeat": 28,
+        "durationBeats": 0.225,
+        "vel": 111,
+        "sectionId": "verse"
+      },
+      {
+        "id": "dr-051",
+        "pitch": 36,
+        "startBeat": 30,
+        "durationBeats": 0.225,
+        "vel": 99,
+        "sectionId": "verse"
+      },
+      {
+        "id": "dr-052",
+        "pitch": 38,
+        "startBeat": 29,
+        "durationBeats": 0.225,
+        "vel": 103,
+        "sectionId": "verse"
+      },
+      {
+        "id": "dr-053",
+        "pitch": 38,
+        "startBeat": 31,
+        "durationBeats": 0.225,
+        "vel": 108,
+        "sectionId": "verse"
+      },
+      {
+        "id": "dr-054",
+        "pitch": 42,
+        "startBeat": 28.5,
+        "durationBeats": 0.225,
+        "vel": 77,
+        "sectionId": "verse"
+      },
+      {
+        "id": "dr-055",
+        "pitch": 42,
+        "startBeat": 29.5,
+        "durationBeats": 0.225,
+        "vel": 77,
+        "sectionId": "verse"
+      },
+      {
+        "id": "dr-056",
+        "pitch": 42,
+        "startBeat": 30.5,
+        "durationBeats": 0.225,
+        "vel": 80,
+        "sectionId": "verse"
+      },
+      {
+        "id": "dr-057",
+        "pitch": 42,
+        "startBeat": 31.5,
+        "durationBeats": 0.225,
+        "vel": 82,
+        "sectionId": "verse"
+      },
+      {
+        "id": "dr-058",
+        "pitch": 36,
+        "startBeat": 32,
+        "durationBeats": 0.225,
+        "vel": 111,
+        "sectionId": "verse"
+      },
+      {
+        "id": "dr-059",
+        "pitch": 36,
+        "startBeat": 34,
+        "durationBeats": 0.225,
+        "vel": 99,
+        "sectionId": "verse"
+      },
+      {
+        "id": "dr-060",
+        "pitch": 38,
+        "startBeat": 33,
+        "durationBeats": 0.225,
+        "vel": 103,
+        "sectionId": "verse"
+      },
+      {
+        "id": "dr-061",
+        "pitch": 38,
+        "startBeat": 35,
+        "durationBeats": 0.225,
+        "vel": 108,
+        "sectionId": "verse"
+      },
+      {
+        "id": "dr-062",
+        "pitch": 42,
+        "startBeat": 32.5,
+        "durationBeats": 0.225,
+        "vel": 77,
+        "sectionId": "verse"
+      },
+      {
+        "id": "dr-063",
+        "pitch": 42,
+        "startBeat": 33.5,
+        "durationBeats": 0.225,
+        "vel": 77,
+        "sectionId": "verse"
+      },
+      {
+        "id": "dr-064",
+        "pitch": 42,
+        "startBeat": 34.5,
+        "durationBeats": 0.225,
+        "vel": 80,
+        "sectionId": "verse"
+      },
+      {
+        "id": "dr-065",
+        "pitch": 42,
+        "startBeat": 35.5,
+        "durationBeats": 0.225,
+        "vel": 82,
+        "sectionId": "verse"
+      },
+      {
+        "id": "dr-066",
+        "pitch": 36,
+        "startBeat": 36,
+        "durationBeats": 0.225,
+        "vel": 111,
+        "sectionId": "verse"
+      },
+      {
+        "id": "dr-067",
+        "pitch": 36,
+        "startBeat": 38,
+        "durationBeats": 0.225,
+        "vel": 99,
+        "sectionId": "verse"
+      },
+      {
+        "id": "dr-068",
+        "pitch": 38,
+        "startBeat": 37,
+        "durationBeats": 0.225,
+        "vel": 103,
+        "sectionId": "verse"
+      },
+      {
+        "id": "dr-069",
+        "pitch": 38,
+        "startBeat": 39,
+        "durationBeats": 0.225,
+        "vel": 108,
+        "sectionId": "verse"
+      },
+      {
+        "id": "dr-070",
+        "pitch": 42,
+        "startBeat": 36.5,
+        "durationBeats": 0.225,
+        "vel": 77,
+        "sectionId": "verse"
+      },
+      {
+        "id": "dr-071",
+        "pitch": 42,
+        "startBeat": 37.5,
+        "durationBeats": 0.225,
+        "vel": 77,
+        "sectionId": "verse"
+      },
+      {
+        "id": "dr-072",
+        "pitch": 42,
+        "startBeat": 38.5,
+        "durationBeats": 0.225,
+        "vel": 80,
+        "sectionId": "verse"
+      },
+      {
+        "id": "dr-073",
+        "pitch": 42,
+        "startBeat": 39.5,
+        "durationBeats": 0.225,
+        "vel": 82,
+        "sectionId": "verse"
+      },
+      {
+        "id": "dr-074",
+        "pitch": 36,
+        "startBeat": 40,
+        "durationBeats": 0.225,
+        "vel": 111,
+        "sectionId": "verse"
+      },
+      {
+        "id": "dr-075",
+        "pitch": 36,
+        "startBeat": 42,
+        "durationBeats": 0.225,
+        "vel": 99,
+        "sectionId": "verse"
+      },
+      {
+        "id": "dr-076",
+        "pitch": 38,
+        "startBeat": 41,
+        "durationBeats": 0.225,
+        "vel": 103,
+        "sectionId": "verse"
+      },
+      {
+        "id": "dr-077",
+        "pitch": 38,
+        "startBeat": 43,
+        "durationBeats": 0.225,
+        "vel": 108,
+        "sectionId": "verse"
+      },
+      {
+        "id": "dr-078",
+        "pitch": 42,
+        "startBeat": 40.5,
+        "durationBeats": 0.225,
+        "vel": 77,
+        "sectionId": "verse"
+      },
+      {
+        "id": "dr-079",
+        "pitch": 42,
+        "startBeat": 41.5,
+        "durationBeats": 0.225,
+        "vel": 77,
+        "sectionId": "verse"
+      },
+      {
+        "id": "dr-080",
+        "pitch": 42,
+        "startBeat": 42.5,
+        "durationBeats": 0.225,
+        "vel": 80,
+        "sectionId": "verse"
+      },
+      {
+        "id": "dr-081",
+        "pitch": 42,
+        "startBeat": 43.5,
+        "durationBeats": 0.225,
+        "vel": 82,
+        "sectionId": "verse"
+      },
+      {
+        "id": "dr-082",
+        "pitch": 36,
+        "startBeat": 44,
+        "durationBeats": 0.225,
+        "vel": 111,
+        "sectionId": "verse"
+      },
+      {
+        "id": "dr-083",
+        "pitch": 36,
+        "startBeat": 46,
+        "durationBeats": 0.225,
+        "vel": 99,
+        "sectionId": "verse"
+      },
+      {
+        "id": "dr-084",
+        "pitch": 38,
+        "startBeat": 45,
+        "durationBeats": 0.225,
+        "vel": 103,
+        "sectionId": "verse"
+      },
+      {
+        "id": "dr-085",
+        "pitch": 38,
+        "startBeat": 47,
+        "durationBeats": 0.225,
+        "vel": 108,
+        "sectionId": "verse"
+      },
+      {
+        "id": "dr-086",
+        "pitch": 42,
+        "startBeat": 44.5,
+        "durationBeats": 0.225,
+        "vel": 77,
+        "sectionId": "verse"
+      },
+      {
+        "id": "dr-087",
+        "pitch": 42,
+        "startBeat": 45.5,
+        "durationBeats": 0.225,
+        "vel": 77,
+        "sectionId": "verse"
+      },
+      {
+        "id": "dr-088",
+        "pitch": 42,
+        "startBeat": 46.5,
+        "durationBeats": 0.225,
+        "vel": 80,
+        "sectionId": "verse"
+      },
+      {
+        "id": "dr-089",
+        "pitch": 42,
+        "startBeat": 47.5,
+        "durationBeats": 0.225,
+        "vel": 82,
+        "sectionId": "verse"
+      },
+      {
+        "id": "dr-090",
+        "pitch": 36,
+        "startBeat": 48,
+        "durationBeats": 0.225,
+        "vel": 113,
+        "sectionId": "pre"
+      },
+      {
+        "id": "dr-091",
+        "pitch": 36,
+        "startBeat": 49.5,
+        "durationBeats": 0.225,
+        "vel": 84,
+        "sectionId": "pre"
+      },
+      {
+        "id": "dr-092",
+        "pitch": 36,
+        "startBeat": 50,
+        "durationBeats": 0.225,
+        "vel": 108,
+        "sectionId": "pre"
+      },
+      {
+        "id": "dr-093",
+        "pitch": 36,
+        "startBeat": 51.5,
+        "durationBeats": 0.225,
+        "vel": 90,
+        "sectionId": "pre"
+      },
+      {
+        "id": "dr-094",
+        "pitch": 38,
+        "startBeat": 49,
+        "durationBeats": 0.225,
+        "vel": 106,
+        "sectionId": "pre"
+      },
+      {
+        "id": "dr-095",
+        "pitch": 38,
+        "startBeat": 51,
+        "durationBeats": 0.225,
+        "vel": 113,
+        "sectionId": "pre"
+      },
+      {
+        "id": "dr-096",
+        "pitch": 42,
+        "startBeat": 48,
+        "durationBeats": 0.225,
+        "vel": 73,
+        "sectionId": "pre"
+      },
+      {
+        "id": "dr-097",
+        "pitch": 42,
+        "startBeat": 48.5,
+        "durationBeats": 0.225,
+        "vel": 78,
+        "sectionId": "pre"
+      },
+      {
+        "id": "dr-098",
+        "pitch": 42,
+        "startBeat": 49,
+        "durationBeats": 0.225,
+        "vel": 75,
+        "sectionId": "pre"
+      },
+      {
+        "id": "dr-099",
+        "pitch": 42,
+        "startBeat": 49.5,
+        "durationBeats": 0.225,
+        "vel": 80,
+        "sectionId": "pre"
+      },
+      {
+        "id": "dr-100",
+        "pitch": 42,
+        "startBeat": 50,
+        "durationBeats": 0.225,
+        "vel": 77,
+        "sectionId": "pre"
+      },
+      {
+        "id": "dr-101",
+        "pitch": 42,
+        "startBeat": 50.5,
+        "durationBeats": 0.225,
+        "vel": 82,
+        "sectionId": "pre"
+      },
+      {
+        "id": "dr-102",
+        "pitch": 42,
+        "startBeat": 51,
+        "durationBeats": 0.225,
+        "vel": 78,
+        "sectionId": "pre"
+      },
+      {
+        "id": "dr-103",
+        "pitch": 42,
+        "startBeat": 51.5,
+        "durationBeats": 0.225,
+        "vel": 84,
+        "sectionId": "pre"
+      },
+      {
+        "id": "dr-104",
+        "pitch": 36,
+        "startBeat": 52,
+        "durationBeats": 0.225,
+        "vel": 113,
+        "sectionId": "pre"
+      },
+      {
+        "id": "dr-105",
+        "pitch": 36,
+        "startBeat": 53.5,
+        "durationBeats": 0.225,
+        "vel": 84,
+        "sectionId": "pre"
+      },
+      {
+        "id": "dr-106",
+        "pitch": 36,
+        "startBeat": 54,
+        "durationBeats": 0.225,
+        "vel": 108,
+        "sectionId": "pre"
+      },
+      {
+        "id": "dr-107",
+        "pitch": 36,
+        "startBeat": 55.5,
+        "durationBeats": 0.225,
+        "vel": 90,
+        "sectionId": "pre"
+      },
+      {
+        "id": "dr-108",
+        "pitch": 38,
+        "startBeat": 53,
+        "durationBeats": 0.225,
+        "vel": 106,
+        "sectionId": "pre"
+      },
+      {
+        "id": "dr-109",
+        "pitch": 38,
+        "startBeat": 55,
+        "durationBeats": 0.225,
+        "vel": 113,
+        "sectionId": "pre"
+      },
+      {
+        "id": "dr-110",
+        "pitch": 42,
+        "startBeat": 52,
+        "durationBeats": 0.225,
+        "vel": 73,
+        "sectionId": "pre"
+      },
+      {
+        "id": "dr-111",
+        "pitch": 42,
+        "startBeat": 52.5,
+        "durationBeats": 0.225,
+        "vel": 78,
+        "sectionId": "pre"
+      },
+      {
+        "id": "dr-112",
+        "pitch": 42,
+        "startBeat": 53,
+        "durationBeats": 0.225,
+        "vel": 75,
+        "sectionId": "pre"
+      },
+      {
+        "id": "dr-113",
+        "pitch": 42,
+        "startBeat": 53.5,
+        "durationBeats": 0.225,
+        "vel": 80,
+        "sectionId": "pre"
+      },
+      {
+        "id": "dr-114",
+        "pitch": 42,
+        "startBeat": 54,
+        "durationBeats": 0.225,
+        "vel": 77,
+        "sectionId": "pre"
+      },
+      {
+        "id": "dr-115",
+        "pitch": 42,
+        "startBeat": 54.5,
+        "durationBeats": 0.225,
+        "vel": 82,
+        "sectionId": "pre"
+      },
+      {
+        "id": "dr-116",
+        "pitch": 42,
+        "startBeat": 55,
+        "durationBeats": 0.225,
+        "vel": 78,
+        "sectionId": "pre"
+      },
+      {
+        "id": "dr-117",
+        "pitch": 42,
+        "startBeat": 55.5,
+        "durationBeats": 0.225,
+        "vel": 84,
+        "sectionId": "pre"
+      },
+      {
+        "id": "dr-118",
+        "pitch": 36,
+        "startBeat": 56,
+        "durationBeats": 0.225,
+        "vel": 113,
+        "sectionId": "pre"
+      },
+      {
+        "id": "dr-119",
+        "pitch": 36,
+        "startBeat": 57.5,
+        "durationBeats": 0.225,
+        "vel": 84,
+        "sectionId": "pre"
+      },
+      {
+        "id": "dr-120",
+        "pitch": 36,
+        "startBeat": 58,
+        "durationBeats": 0.225,
+        "vel": 108,
+        "sectionId": "pre"
+      },
+      {
+        "id": "dr-121",
+        "pitch": 36,
+        "startBeat": 59.5,
+        "durationBeats": 0.225,
+        "vel": 90,
+        "sectionId": "pre"
+      },
+      {
+        "id": "dr-122",
+        "pitch": 38,
+        "startBeat": 57,
+        "durationBeats": 0.225,
+        "vel": 106,
+        "sectionId": "pre"
+      },
+      {
+        "id": "dr-123",
+        "pitch": 38,
+        "startBeat": 59,
+        "durationBeats": 0.225,
+        "vel": 113,
+        "sectionId": "pre"
+      },
+      {
+        "id": "dr-124",
+        "pitch": 42,
+        "startBeat": 56,
+        "durationBeats": 0.225,
+        "vel": 73,
+        "sectionId": "pre"
+      },
+      {
+        "id": "dr-125",
+        "pitch": 42,
+        "startBeat": 56.5,
+        "durationBeats": 0.225,
+        "vel": 78,
+        "sectionId": "pre"
+      },
+      {
+        "id": "dr-126",
+        "pitch": 42,
+        "startBeat": 57,
+        "durationBeats": 0.225,
+        "vel": 75,
+        "sectionId": "pre"
+      },
+      {
+        "id": "dr-127",
+        "pitch": 42,
+        "startBeat": 57.5,
+        "durationBeats": 0.225,
+        "vel": 80,
+        "sectionId": "pre"
+      },
+      {
+        "id": "dr-128",
+        "pitch": 42,
+        "startBeat": 58,
+        "durationBeats": 0.225,
+        "vel": 77,
+        "sectionId": "pre"
+      },
+      {
+        "id": "dr-129",
+        "pitch": 42,
+        "startBeat": 58.5,
+        "durationBeats": 0.225,
+        "vel": 82,
+        "sectionId": "pre"
+      },
+      {
+        "id": "dr-130",
+        "pitch": 42,
+        "startBeat": 59,
+        "durationBeats": 0.225,
+        "vel": 78,
+        "sectionId": "pre"
+      },
+      {
+        "id": "dr-131",
+        "pitch": 42,
+        "startBeat": 59.5,
+        "durationBeats": 0.225,
+        "vel": 84,
+        "sectionId": "pre"
+      },
+      {
+        "id": "dr-132",
+        "pitch": 36,
+        "startBeat": 60,
+        "durationBeats": 0.225,
+        "vel": 113,
+        "sectionId": "pre"
+      },
+      {
+        "id": "dr-133",
+        "pitch": 36,
+        "startBeat": 61.5,
+        "durationBeats": 0.225,
+        "vel": 84,
+        "sectionId": "pre"
+      },
+      {
+        "id": "dr-134",
+        "pitch": 36,
+        "startBeat": 62,
+        "durationBeats": 0.225,
+        "vel": 108,
+        "sectionId": "pre"
+      },
+      {
+        "id": "dr-135",
+        "pitch": 36,
+        "startBeat": 63.5,
+        "durationBeats": 0.225,
+        "vel": 90,
+        "sectionId": "pre"
+      },
+      {
+        "id": "dr-136",
+        "pitch": 38,
+        "startBeat": 61,
+        "durationBeats": 0.225,
+        "vel": 106,
+        "sectionId": "pre"
+      },
+      {
+        "id": "dr-137",
+        "pitch": 38,
         "startBeat": 63,
-        "durationBeats": 0.9,
-        "vel": 127,
-        "sectionId": "final",
-        "effect": "ending"
+        "durationBeats": 0.225,
+        "vel": 113,
+        "sectionId": "pre"
+      },
+      {
+        "id": "dr-138",
+        "pitch": 42,
+        "startBeat": 60,
+        "durationBeats": 0.225,
+        "vel": 73,
+        "sectionId": "pre"
+      },
+      {
+        "id": "dr-139",
+        "pitch": 42,
+        "startBeat": 60.5,
+        "durationBeats": 0.225,
+        "vel": 78,
+        "sectionId": "pre"
+      },
+      {
+        "id": "dr-140",
+        "pitch": 42,
+        "startBeat": 61,
+        "durationBeats": 0.225,
+        "vel": 75,
+        "sectionId": "pre"
+      },
+      {
+        "id": "dr-141",
+        "pitch": 42,
+        "startBeat": 61.5,
+        "durationBeats": 0.225,
+        "vel": 80,
+        "sectionId": "pre"
+      },
+      {
+        "id": "dr-142",
+        "pitch": 42,
+        "startBeat": 62,
+        "durationBeats": 0.225,
+        "vel": 77,
+        "sectionId": "pre"
+      },
+      {
+        "id": "dr-143",
+        "pitch": 42,
+        "startBeat": 62.5,
+        "durationBeats": 0.225,
+        "vel": 82,
+        "sectionId": "pre"
+      },
+      {
+        "id": "dr-144",
+        "pitch": 42,
+        "startBeat": 63,
+        "durationBeats": 0.225,
+        "vel": 78,
+        "sectionId": "pre"
+      },
+      {
+        "id": "dr-145",
+        "pitch": 42,
+        "startBeat": 63.5,
+        "durationBeats": 0.225,
+        "vel": 84,
+        "sectionId": "pre"
+      },
+      {
+        "id": "dr-146",
+        "pitch": 36,
+        "startBeat": 64,
+        "durationBeats": 0.225,
+        "vel": 113,
+        "sectionId": "pre"
+      },
+      {
+        "id": "dr-147",
+        "pitch": 36,
+        "startBeat": 65.5,
+        "durationBeats": 0.225,
+        "vel": 84,
+        "sectionId": "pre"
+      },
+      {
+        "id": "dr-148",
+        "pitch": 36,
+        "startBeat": 66,
+        "durationBeats": 0.225,
+        "vel": 108,
+        "sectionId": "pre"
+      },
+      {
+        "id": "dr-149",
+        "pitch": 36,
+        "startBeat": 67.5,
+        "durationBeats": 0.225,
+        "vel": 90,
+        "sectionId": "pre"
+      },
+      {
+        "id": "dr-150",
+        "pitch": 38,
+        "startBeat": 65,
+        "durationBeats": 0.225,
+        "vel": 106,
+        "sectionId": "pre"
+      },
+      {
+        "id": "dr-151",
+        "pitch": 38,
+        "startBeat": 67,
+        "durationBeats": 0.225,
+        "vel": 113,
+        "sectionId": "pre"
+      },
+      {
+        "id": "dr-152",
+        "pitch": 42,
+        "startBeat": 64,
+        "durationBeats": 0.225,
+        "vel": 73,
+        "sectionId": "pre"
+      },
+      {
+        "id": "dr-153",
+        "pitch": 42,
+        "startBeat": 64.5,
+        "durationBeats": 0.225,
+        "vel": 78,
+        "sectionId": "pre"
+      },
+      {
+        "id": "dr-154",
+        "pitch": 42,
+        "startBeat": 65,
+        "durationBeats": 0.225,
+        "vel": 75,
+        "sectionId": "pre"
+      },
+      {
+        "id": "dr-155",
+        "pitch": 42,
+        "startBeat": 65.5,
+        "durationBeats": 0.225,
+        "vel": 80,
+        "sectionId": "pre"
+      },
+      {
+        "id": "dr-156",
+        "pitch": 42,
+        "startBeat": 66,
+        "durationBeats": 0.225,
+        "vel": 77,
+        "sectionId": "pre"
+      },
+      {
+        "id": "dr-157",
+        "pitch": 42,
+        "startBeat": 66.5,
+        "durationBeats": 0.225,
+        "vel": 82,
+        "sectionId": "pre"
+      },
+      {
+        "id": "dr-158",
+        "pitch": 42,
+        "startBeat": 67,
+        "durationBeats": 0.225,
+        "vel": 78,
+        "sectionId": "pre"
+      },
+      {
+        "id": "dr-159",
+        "pitch": 42,
+        "startBeat": 67.5,
+        "durationBeats": 0.225,
+        "vel": 84,
+        "sectionId": "pre"
+      },
+      {
+        "id": "dr-160",
+        "pitch": 36,
+        "startBeat": 68,
+        "durationBeats": 0.225,
+        "vel": 113,
+        "sectionId": "pre"
+      },
+      {
+        "id": "dr-161",
+        "pitch": 36,
+        "startBeat": 69.5,
+        "durationBeats": 0.225,
+        "vel": 84,
+        "sectionId": "pre"
+      },
+      {
+        "id": "dr-162",
+        "pitch": 36,
+        "startBeat": 70,
+        "durationBeats": 0.225,
+        "vel": 108,
+        "sectionId": "pre"
+      },
+      {
+        "id": "dr-163",
+        "pitch": 36,
+        "startBeat": 71.5,
+        "durationBeats": 0.225,
+        "vel": 90,
+        "sectionId": "pre"
+      },
+      {
+        "id": "dr-164",
+        "pitch": 38,
+        "startBeat": 69,
+        "durationBeats": 0.225,
+        "vel": 106,
+        "sectionId": "pre"
+      },
+      {
+        "id": "dr-165",
+        "pitch": 38,
+        "startBeat": 71,
+        "durationBeats": 0.225,
+        "vel": 113,
+        "sectionId": "pre"
+      },
+      {
+        "id": "dr-166",
+        "pitch": 42,
+        "startBeat": 68,
+        "durationBeats": 0.225,
+        "vel": 73,
+        "sectionId": "pre"
+      },
+      {
+        "id": "dr-167",
+        "pitch": 42,
+        "startBeat": 68.5,
+        "durationBeats": 0.225,
+        "vel": 78,
+        "sectionId": "pre"
+      },
+      {
+        "id": "dr-168",
+        "pitch": 42,
+        "startBeat": 69,
+        "durationBeats": 0.225,
+        "vel": 75,
+        "sectionId": "pre"
+      },
+      {
+        "id": "dr-169",
+        "pitch": 42,
+        "startBeat": 69.5,
+        "durationBeats": 0.225,
+        "vel": 80,
+        "sectionId": "pre"
+      },
+      {
+        "id": "dr-170",
+        "pitch": 42,
+        "startBeat": 70,
+        "durationBeats": 0.225,
+        "vel": 77,
+        "sectionId": "pre"
+      },
+      {
+        "id": "dr-171",
+        "pitch": 42,
+        "startBeat": 70.5,
+        "durationBeats": 0.225,
+        "vel": 82,
+        "sectionId": "pre"
+      },
+      {
+        "id": "dr-172",
+        "pitch": 42,
+        "startBeat": 71,
+        "durationBeats": 0.225,
+        "vel": 78,
+        "sectionId": "pre"
+      },
+      {
+        "id": "dr-173",
+        "pitch": 42,
+        "startBeat": 71.5,
+        "durationBeats": 0.225,
+        "vel": 84,
+        "sectionId": "pre"
+      },
+      {
+        "id": "dr-174",
+        "pitch": 36,
+        "startBeat": 72,
+        "durationBeats": 0.225,
+        "vel": 113,
+        "sectionId": "pre"
+      },
+      {
+        "id": "dr-175",
+        "pitch": 36,
+        "startBeat": 73.5,
+        "durationBeats": 0.225,
+        "vel": 84,
+        "sectionId": "pre"
+      },
+      {
+        "id": "dr-176",
+        "pitch": 36,
+        "startBeat": 74,
+        "durationBeats": 0.225,
+        "vel": 108,
+        "sectionId": "pre"
+      },
+      {
+        "id": "dr-177",
+        "pitch": 36,
+        "startBeat": 75.5,
+        "durationBeats": 0.225,
+        "vel": 90,
+        "sectionId": "pre"
+      },
+      {
+        "id": "dr-178",
+        "pitch": 38,
+        "startBeat": 73,
+        "durationBeats": 0.225,
+        "vel": 106,
+        "sectionId": "pre"
+      },
+      {
+        "id": "dr-179",
+        "pitch": 38,
+        "startBeat": 75,
+        "durationBeats": 0.225,
+        "vel": 113,
+        "sectionId": "pre"
+      },
+      {
+        "id": "dr-180",
+        "pitch": 42,
+        "startBeat": 72,
+        "durationBeats": 0.225,
+        "vel": 73,
+        "sectionId": "pre"
+      },
+      {
+        "id": "dr-181",
+        "pitch": 42,
+        "startBeat": 72.5,
+        "durationBeats": 0.225,
+        "vel": 78,
+        "sectionId": "pre"
+      },
+      {
+        "id": "dr-182",
+        "pitch": 42,
+        "startBeat": 73,
+        "durationBeats": 0.225,
+        "vel": 75,
+        "sectionId": "pre"
+      },
+      {
+        "id": "dr-183",
+        "pitch": 42,
+        "startBeat": 73.5,
+        "durationBeats": 0.225,
+        "vel": 80,
+        "sectionId": "pre"
+      },
+      {
+        "id": "dr-184",
+        "pitch": 42,
+        "startBeat": 74,
+        "durationBeats": 0.225,
+        "vel": 77,
+        "sectionId": "pre"
+      },
+      {
+        "id": "dr-185",
+        "pitch": 42,
+        "startBeat": 74.5,
+        "durationBeats": 0.225,
+        "vel": 82,
+        "sectionId": "pre"
+      },
+      {
+        "id": "dr-186",
+        "pitch": 42,
+        "startBeat": 75,
+        "durationBeats": 0.225,
+        "vel": 78,
+        "sectionId": "pre"
+      },
+      {
+        "id": "dr-187",
+        "pitch": 42,
+        "startBeat": 75.5,
+        "durationBeats": 0.225,
+        "vel": 84,
+        "sectionId": "pre"
+      },
+      {
+        "id": "dr-188",
+        "pitch": 36,
+        "startBeat": 76,
+        "durationBeats": 0.225,
+        "vel": 113,
+        "sectionId": "pre"
+      },
+      {
+        "id": "dr-189",
+        "pitch": 36,
+        "startBeat": 77.5,
+        "durationBeats": 0.225,
+        "vel": 84,
+        "sectionId": "pre"
+      },
+      {
+        "id": "dr-190",
+        "pitch": 36,
+        "startBeat": 78,
+        "durationBeats": 0.225,
+        "vel": 108,
+        "sectionId": "pre"
+      },
+      {
+        "id": "dr-191",
+        "pitch": 36,
+        "startBeat": 79.5,
+        "durationBeats": 0.225,
+        "vel": 90,
+        "sectionId": "pre"
+      },
+      {
+        "id": "dr-192",
+        "pitch": 38,
+        "startBeat": 77,
+        "durationBeats": 0.225,
+        "vel": 106,
+        "sectionId": "pre"
+      },
+      {
+        "id": "dr-193",
+        "pitch": 38,
+        "startBeat": 79,
+        "durationBeats": 0.225,
+        "vel": 113,
+        "sectionId": "pre"
+      },
+      {
+        "id": "dr-194",
+        "pitch": 42,
+        "startBeat": 76,
+        "durationBeats": 0.225,
+        "vel": 73,
+        "sectionId": "pre"
+      },
+      {
+        "id": "dr-195",
+        "pitch": 42,
+        "startBeat": 76.5,
+        "durationBeats": 0.225,
+        "vel": 78,
+        "sectionId": "pre"
+      },
+      {
+        "id": "dr-196",
+        "pitch": 42,
+        "startBeat": 77,
+        "durationBeats": 0.225,
+        "vel": 75,
+        "sectionId": "pre"
+      },
+      {
+        "id": "dr-197",
+        "pitch": 42,
+        "startBeat": 77.5,
+        "durationBeats": 0.225,
+        "vel": 80,
+        "sectionId": "pre"
+      },
+      {
+        "id": "dr-198",
+        "pitch": 42,
+        "startBeat": 78,
+        "durationBeats": 0.225,
+        "vel": 77,
+        "sectionId": "pre"
+      },
+      {
+        "id": "dr-199",
+        "pitch": 42,
+        "startBeat": 78.5,
+        "durationBeats": 0.225,
+        "vel": 82,
+        "sectionId": "pre"
+      },
+      {
+        "id": "dr-200",
+        "pitch": 42,
+        "startBeat": 79,
+        "durationBeats": 0.225,
+        "vel": 78,
+        "sectionId": "pre"
+      },
+      {
+        "id": "dr-201",
+        "pitch": 42,
+        "startBeat": 79.5,
+        "durationBeats": 0.225,
+        "vel": 84,
+        "sectionId": "pre"
+      },
+      {
+        "id": "dr-202",
+        "pitch": 50,
+        "startBeat": 79.5,
+        "durationBeats": 0.225,
+        "vel": 79,
+        "sectionId": "pre"
+      },
+      {
+        "id": "dr-203",
+        "pitch": 36,
+        "startBeat": 80,
+        "durationBeats": 0.225,
+        "vel": 124,
+        "sectionId": "chorus"
+      },
+      {
+        "id": "dr-204",
+        "pitch": 36,
+        "startBeat": 81.5,
+        "durationBeats": 0.225,
+        "vel": 90,
+        "sectionId": "chorus"
+      },
+      {
+        "id": "dr-205",
+        "pitch": 36,
+        "startBeat": 82,
+        "durationBeats": 0.225,
+        "vel": 118,
+        "sectionId": "chorus"
+      },
+      {
+        "id": "dr-206",
+        "pitch": 36,
+        "startBeat": 83.5,
+        "durationBeats": 0.225,
+        "vel": 96,
+        "sectionId": "chorus"
+      },
+      {
+        "id": "dr-207",
+        "pitch": 38,
+        "startBeat": 81,
+        "durationBeats": 0.225,
+        "vel": 118,
+        "sectionId": "chorus"
+      },
+      {
+        "id": "dr-208",
+        "pitch": 38,
+        "startBeat": 83,
+        "durationBeats": 0.225,
+        "vel": 124,
+        "sectionId": "chorus"
+      },
+      {
+        "id": "dr-209",
+        "pitch": 42,
+        "startBeat": 80,
+        "durationBeats": 0.225,
+        "vel": 85,
+        "sectionId": "chorus"
+      },
+      {
+        "id": "dr-210",
+        "pitch": 42,
+        "startBeat": 80.5,
+        "durationBeats": 0.225,
+        "vel": 90,
+        "sectionId": "chorus"
+      },
+      {
+        "id": "dr-211",
+        "pitch": 42,
+        "startBeat": 81,
+        "durationBeats": 0.225,
+        "vel": 87,
+        "sectionId": "chorus"
+      },
+      {
+        "id": "dr-212",
+        "pitch": 42,
+        "startBeat": 81.5,
+        "durationBeats": 0.225,
+        "vel": 92,
+        "sectionId": "chorus"
+      },
+      {
+        "id": "dr-213",
+        "pitch": 42,
+        "startBeat": 82,
+        "durationBeats": 0.225,
+        "vel": 89,
+        "sectionId": "chorus"
+      },
+      {
+        "id": "dr-214",
+        "pitch": 42,
+        "startBeat": 82.5,
+        "durationBeats": 0.225,
+        "vel": 94,
+        "sectionId": "chorus"
+      },
+      {
+        "id": "dr-215",
+        "pitch": 42,
+        "startBeat": 83,
+        "durationBeats": 0.225,
+        "vel": 90,
+        "sectionId": "chorus"
+      },
+      {
+        "id": "dr-216",
+        "pitch": 42,
+        "startBeat": 83.5,
+        "durationBeats": 0.225,
+        "vel": 97,
+        "sectionId": "chorus"
+      },
+      {
+        "id": "dr-217",
+        "pitch": 51,
+        "startBeat": 80,
+        "durationBeats": 0.225,
+        "vel": 82,
+        "sectionId": "chorus"
+      },
+      {
+        "id": "dr-218",
+        "pitch": 51,
+        "startBeat": 81,
+        "durationBeats": 0.225,
+        "vel": 84,
+        "sectionId": "chorus"
+      },
+      {
+        "id": "dr-219",
+        "pitch": 51,
+        "startBeat": 82,
+        "durationBeats": 0.225,
+        "vel": 87,
+        "sectionId": "chorus"
+      },
+      {
+        "id": "dr-220",
+        "pitch": 51,
+        "startBeat": 83,
+        "durationBeats": 0.225,
+        "vel": 89,
+        "sectionId": "chorus"
+      },
+      {
+        "id": "dr-221",
+        "pitch": 49,
+        "startBeat": 80,
+        "durationBeats": 0.225,
+        "vel": 115,
+        "sectionId": "chorus"
+      },
+      {
+        "id": "dr-222",
+        "pitch": 36,
+        "startBeat": 84,
+        "durationBeats": 0.225,
+        "vel": 124,
+        "sectionId": "chorus"
+      },
+      {
+        "id": "dr-223",
+        "pitch": 36,
+        "startBeat": 85.5,
+        "durationBeats": 0.225,
+        "vel": 90,
+        "sectionId": "chorus"
+      },
+      {
+        "id": "dr-224",
+        "pitch": 36,
+        "startBeat": 86,
+        "durationBeats": 0.225,
+        "vel": 118,
+        "sectionId": "chorus"
+      },
+      {
+        "id": "dr-225",
+        "pitch": 36,
+        "startBeat": 87.5,
+        "durationBeats": 0.225,
+        "vel": 96,
+        "sectionId": "chorus"
+      },
+      {
+        "id": "dr-226",
+        "pitch": 38,
+        "startBeat": 85,
+        "durationBeats": 0.225,
+        "vel": 118,
+        "sectionId": "chorus"
+      },
+      {
+        "id": "dr-227",
+        "pitch": 38,
+        "startBeat": 87,
+        "durationBeats": 0.225,
+        "vel": 124,
+        "sectionId": "chorus"
+      },
+      {
+        "id": "dr-228",
+        "pitch": 42,
+        "startBeat": 84,
+        "durationBeats": 0.225,
+        "vel": 85,
+        "sectionId": "chorus"
+      },
+      {
+        "id": "dr-229",
+        "pitch": 42,
+        "startBeat": 84.5,
+        "durationBeats": 0.225,
+        "vel": 90,
+        "sectionId": "chorus"
+      },
+      {
+        "id": "dr-230",
+        "pitch": 42,
+        "startBeat": 85,
+        "durationBeats": 0.225,
+        "vel": 87,
+        "sectionId": "chorus"
+      },
+      {
+        "id": "dr-231",
+        "pitch": 42,
+        "startBeat": 85.5,
+        "durationBeats": 0.225,
+        "vel": 92,
+        "sectionId": "chorus"
+      },
+      {
+        "id": "dr-232",
+        "pitch": 42,
+        "startBeat": 86,
+        "durationBeats": 0.225,
+        "vel": 89,
+        "sectionId": "chorus"
+      },
+      {
+        "id": "dr-233",
+        "pitch": 42,
+        "startBeat": 86.5,
+        "durationBeats": 0.225,
+        "vel": 94,
+        "sectionId": "chorus"
+      },
+      {
+        "id": "dr-234",
+        "pitch": 42,
+        "startBeat": 87,
+        "durationBeats": 0.225,
+        "vel": 90,
+        "sectionId": "chorus"
+      },
+      {
+        "id": "dr-235",
+        "pitch": 42,
+        "startBeat": 87.5,
+        "durationBeats": 0.225,
+        "vel": 97,
+        "sectionId": "chorus"
+      },
+      {
+        "id": "dr-236",
+        "pitch": 51,
+        "startBeat": 84,
+        "durationBeats": 0.225,
+        "vel": 82,
+        "sectionId": "chorus"
+      },
+      {
+        "id": "dr-237",
+        "pitch": 51,
+        "startBeat": 85,
+        "durationBeats": 0.225,
+        "vel": 84,
+        "sectionId": "chorus"
+      },
+      {
+        "id": "dr-238",
+        "pitch": 51,
+        "startBeat": 86,
+        "durationBeats": 0.225,
+        "vel": 87,
+        "sectionId": "chorus"
+      },
+      {
+        "id": "dr-239",
+        "pitch": 51,
+        "startBeat": 87,
+        "durationBeats": 0.225,
+        "vel": 89,
+        "sectionId": "chorus"
+      },
+      {
+        "id": "dr-240",
+        "pitch": 36,
+        "startBeat": 88,
+        "durationBeats": 0.225,
+        "vel": 124,
+        "sectionId": "chorus"
+      },
+      {
+        "id": "dr-241",
+        "pitch": 36,
+        "startBeat": 89.5,
+        "durationBeats": 0.225,
+        "vel": 90,
+        "sectionId": "chorus"
+      },
+      {
+        "id": "dr-242",
+        "pitch": 36,
+        "startBeat": 90,
+        "durationBeats": 0.225,
+        "vel": 118,
+        "sectionId": "chorus"
+      },
+      {
+        "id": "dr-243",
+        "pitch": 36,
+        "startBeat": 91.5,
+        "durationBeats": 0.225,
+        "vel": 96,
+        "sectionId": "chorus"
+      },
+      {
+        "id": "dr-244",
+        "pitch": 38,
+        "startBeat": 89,
+        "durationBeats": 0.225,
+        "vel": 118,
+        "sectionId": "chorus"
+      },
+      {
+        "id": "dr-245",
+        "pitch": 38,
+        "startBeat": 91,
+        "durationBeats": 0.225,
+        "vel": 124,
+        "sectionId": "chorus"
+      },
+      {
+        "id": "dr-246",
+        "pitch": 42,
+        "startBeat": 88,
+        "durationBeats": 0.225,
+        "vel": 85,
+        "sectionId": "chorus"
+      },
+      {
+        "id": "dr-247",
+        "pitch": 42,
+        "startBeat": 88.5,
+        "durationBeats": 0.225,
+        "vel": 90,
+        "sectionId": "chorus"
+      },
+      {
+        "id": "dr-248",
+        "pitch": 42,
+        "startBeat": 89,
+        "durationBeats": 0.225,
+        "vel": 87,
+        "sectionId": "chorus"
+      },
+      {
+        "id": "dr-249",
+        "pitch": 42,
+        "startBeat": 89.5,
+        "durationBeats": 0.225,
+        "vel": 92,
+        "sectionId": "chorus"
+      },
+      {
+        "id": "dr-250",
+        "pitch": 42,
+        "startBeat": 90,
+        "durationBeats": 0.225,
+        "vel": 89,
+        "sectionId": "chorus"
+      },
+      {
+        "id": "dr-251",
+        "pitch": 42,
+        "startBeat": 90.5,
+        "durationBeats": 0.225,
+        "vel": 94,
+        "sectionId": "chorus"
+      },
+      {
+        "id": "dr-252",
+        "pitch": 42,
+        "startBeat": 91,
+        "durationBeats": 0.225,
+        "vel": 90,
+        "sectionId": "chorus"
+      },
+      {
+        "id": "dr-253",
+        "pitch": 42,
+        "startBeat": 91.5,
+        "durationBeats": 0.225,
+        "vel": 97,
+        "sectionId": "chorus"
+      },
+      {
+        "id": "dr-254",
+        "pitch": 51,
+        "startBeat": 88,
+        "durationBeats": 0.225,
+        "vel": 82,
+        "sectionId": "chorus"
+      },
+      {
+        "id": "dr-255",
+        "pitch": 51,
+        "startBeat": 89,
+        "durationBeats": 0.225,
+        "vel": 84,
+        "sectionId": "chorus"
+      },
+      {
+        "id": "dr-256",
+        "pitch": 51,
+        "startBeat": 90,
+        "durationBeats": 0.225,
+        "vel": 87,
+        "sectionId": "chorus"
+      },
+      {
+        "id": "dr-257",
+        "pitch": 51,
+        "startBeat": 91,
+        "durationBeats": 0.225,
+        "vel": 89,
+        "sectionId": "chorus"
+      },
+      {
+        "id": "dr-258",
+        "pitch": 36,
+        "startBeat": 92,
+        "durationBeats": 0.225,
+        "vel": 124,
+        "sectionId": "chorus"
+      },
+      {
+        "id": "dr-259",
+        "pitch": 36,
+        "startBeat": 93.5,
+        "durationBeats": 0.225,
+        "vel": 90,
+        "sectionId": "chorus"
+      },
+      {
+        "id": "dr-260",
+        "pitch": 36,
+        "startBeat": 94,
+        "durationBeats": 0.225,
+        "vel": 118,
+        "sectionId": "chorus"
+      },
+      {
+        "id": "dr-261",
+        "pitch": 36,
+        "startBeat": 95.5,
+        "durationBeats": 0.225,
+        "vel": 96,
+        "sectionId": "chorus"
+      },
+      {
+        "id": "dr-262",
+        "pitch": 38,
+        "startBeat": 93,
+        "durationBeats": 0.225,
+        "vel": 118,
+        "sectionId": "chorus"
+      },
+      {
+        "id": "dr-263",
+        "pitch": 38,
+        "startBeat": 95,
+        "durationBeats": 0.225,
+        "vel": 124,
+        "sectionId": "chorus"
+      },
+      {
+        "id": "dr-264",
+        "pitch": 42,
+        "startBeat": 92,
+        "durationBeats": 0.225,
+        "vel": 85,
+        "sectionId": "chorus"
+      },
+      {
+        "id": "dr-265",
+        "pitch": 42,
+        "startBeat": 92.5,
+        "durationBeats": 0.225,
+        "vel": 90,
+        "sectionId": "chorus"
+      },
+      {
+        "id": "dr-266",
+        "pitch": 42,
+        "startBeat": 93,
+        "durationBeats": 0.225,
+        "vel": 87,
+        "sectionId": "chorus"
+      },
+      {
+        "id": "dr-267",
+        "pitch": 42,
+        "startBeat": 93.5,
+        "durationBeats": 0.225,
+        "vel": 92,
+        "sectionId": "chorus"
+      },
+      {
+        "id": "dr-268",
+        "pitch": 42,
+        "startBeat": 94,
+        "durationBeats": 0.225,
+        "vel": 89,
+        "sectionId": "chorus"
+      },
+      {
+        "id": "dr-269",
+        "pitch": 42,
+        "startBeat": 94.5,
+        "durationBeats": 0.225,
+        "vel": 94,
+        "sectionId": "chorus"
+      },
+      {
+        "id": "dr-270",
+        "pitch": 42,
+        "startBeat": 95,
+        "durationBeats": 0.225,
+        "vel": 90,
+        "sectionId": "chorus"
+      },
+      {
+        "id": "dr-271",
+        "pitch": 42,
+        "startBeat": 95.5,
+        "durationBeats": 0.225,
+        "vel": 97,
+        "sectionId": "chorus"
+      },
+      {
+        "id": "dr-272",
+        "pitch": 51,
+        "startBeat": 92,
+        "durationBeats": 0.225,
+        "vel": 82,
+        "sectionId": "chorus"
+      },
+      {
+        "id": "dr-273",
+        "pitch": 51,
+        "startBeat": 93,
+        "durationBeats": 0.225,
+        "vel": 84,
+        "sectionId": "chorus"
+      },
+      {
+        "id": "dr-274",
+        "pitch": 51,
+        "startBeat": 94,
+        "durationBeats": 0.225,
+        "vel": 87,
+        "sectionId": "chorus"
+      },
+      {
+        "id": "dr-275",
+        "pitch": 51,
+        "startBeat": 95,
+        "durationBeats": 0.225,
+        "vel": 89,
+        "sectionId": "chorus"
+      },
+      {
+        "id": "dr-276",
+        "pitch": 36,
+        "startBeat": 96,
+        "durationBeats": 0.225,
+        "vel": 124,
+        "sectionId": "chorus"
+      },
+      {
+        "id": "dr-277",
+        "pitch": 36,
+        "startBeat": 97.5,
+        "durationBeats": 0.225,
+        "vel": 90,
+        "sectionId": "chorus"
+      },
+      {
+        "id": "dr-278",
+        "pitch": 36,
+        "startBeat": 98,
+        "durationBeats": 0.225,
+        "vel": 118,
+        "sectionId": "chorus"
+      },
+      {
+        "id": "dr-279",
+        "pitch": 36,
+        "startBeat": 99.5,
+        "durationBeats": 0.225,
+        "vel": 96,
+        "sectionId": "chorus"
+      },
+      {
+        "id": "dr-280",
+        "pitch": 38,
+        "startBeat": 97,
+        "durationBeats": 0.225,
+        "vel": 118,
+        "sectionId": "chorus"
+      },
+      {
+        "id": "dr-281",
+        "pitch": 38,
+        "startBeat": 99,
+        "durationBeats": 0.225,
+        "vel": 124,
+        "sectionId": "chorus"
+      },
+      {
+        "id": "dr-282",
+        "pitch": 42,
+        "startBeat": 96,
+        "durationBeats": 0.225,
+        "vel": 85,
+        "sectionId": "chorus"
+      },
+      {
+        "id": "dr-283",
+        "pitch": 42,
+        "startBeat": 96.5,
+        "durationBeats": 0.225,
+        "vel": 90,
+        "sectionId": "chorus"
+      },
+      {
+        "id": "dr-284",
+        "pitch": 42,
+        "startBeat": 97,
+        "durationBeats": 0.225,
+        "vel": 87,
+        "sectionId": "chorus"
+      },
+      {
+        "id": "dr-285",
+        "pitch": 42,
+        "startBeat": 97.5,
+        "durationBeats": 0.225,
+        "vel": 92,
+        "sectionId": "chorus"
+      },
+      {
+        "id": "dr-286",
+        "pitch": 42,
+        "startBeat": 98,
+        "durationBeats": 0.225,
+        "vel": 89,
+        "sectionId": "chorus"
+      },
+      {
+        "id": "dr-287",
+        "pitch": 42,
+        "startBeat": 98.5,
+        "durationBeats": 0.225,
+        "vel": 94,
+        "sectionId": "chorus"
+      },
+      {
+        "id": "dr-288",
+        "pitch": 42,
+        "startBeat": 99,
+        "durationBeats": 0.225,
+        "vel": 90,
+        "sectionId": "chorus"
+      },
+      {
+        "id": "dr-289",
+        "pitch": 42,
+        "startBeat": 99.5,
+        "durationBeats": 0.225,
+        "vel": 97,
+        "sectionId": "chorus"
+      },
+      {
+        "id": "dr-290",
+        "pitch": 51,
+        "startBeat": 96,
+        "durationBeats": 0.225,
+        "vel": 82,
+        "sectionId": "chorus"
+      },
+      {
+        "id": "dr-291",
+        "pitch": 51,
+        "startBeat": 97,
+        "durationBeats": 0.225,
+        "vel": 84,
+        "sectionId": "chorus"
+      },
+      {
+        "id": "dr-292",
+        "pitch": 51,
+        "startBeat": 98,
+        "durationBeats": 0.225,
+        "vel": 87,
+        "sectionId": "chorus"
+      },
+      {
+        "id": "dr-293",
+        "pitch": 51,
+        "startBeat": 99,
+        "durationBeats": 0.225,
+        "vel": 89,
+        "sectionId": "chorus"
+      },
+      {
+        "id": "dr-294",
+        "pitch": 36,
+        "startBeat": 100,
+        "durationBeats": 0.225,
+        "vel": 124,
+        "sectionId": "chorus"
+      },
+      {
+        "id": "dr-295",
+        "pitch": 36,
+        "startBeat": 101.5,
+        "durationBeats": 0.225,
+        "vel": 90,
+        "sectionId": "chorus"
+      },
+      {
+        "id": "dr-296",
+        "pitch": 36,
+        "startBeat": 102,
+        "durationBeats": 0.225,
+        "vel": 118,
+        "sectionId": "chorus"
+      },
+      {
+        "id": "dr-297",
+        "pitch": 36,
+        "startBeat": 103.5,
+        "durationBeats": 0.225,
+        "vel": 96,
+        "sectionId": "chorus"
+      },
+      {
+        "id": "dr-298",
+        "pitch": 38,
+        "startBeat": 101,
+        "durationBeats": 0.225,
+        "vel": 118,
+        "sectionId": "chorus"
+      },
+      {
+        "id": "dr-299",
+        "pitch": 38,
+        "startBeat": 103,
+        "durationBeats": 0.225,
+        "vel": 124,
+        "sectionId": "chorus"
+      },
+      {
+        "id": "dr-300",
+        "pitch": 42,
+        "startBeat": 100,
+        "durationBeats": 0.225,
+        "vel": 85,
+        "sectionId": "chorus"
+      },
+      {
+        "id": "dr-301",
+        "pitch": 42,
+        "startBeat": 100.5,
+        "durationBeats": 0.225,
+        "vel": 90,
+        "sectionId": "chorus"
+      },
+      {
+        "id": "dr-302",
+        "pitch": 42,
+        "startBeat": 101,
+        "durationBeats": 0.225,
+        "vel": 87,
+        "sectionId": "chorus"
+      },
+      {
+        "id": "dr-303",
+        "pitch": 42,
+        "startBeat": 101.5,
+        "durationBeats": 0.225,
+        "vel": 92,
+        "sectionId": "chorus"
+      },
+      {
+        "id": "dr-304",
+        "pitch": 42,
+        "startBeat": 102,
+        "durationBeats": 0.225,
+        "vel": 89,
+        "sectionId": "chorus"
+      },
+      {
+        "id": "dr-305",
+        "pitch": 42,
+        "startBeat": 102.5,
+        "durationBeats": 0.225,
+        "vel": 94,
+        "sectionId": "chorus"
+      },
+      {
+        "id": "dr-306",
+        "pitch": 42,
+        "startBeat": 103,
+        "durationBeats": 0.225,
+        "vel": 90,
+        "sectionId": "chorus"
+      },
+      {
+        "id": "dr-307",
+        "pitch": 42,
+        "startBeat": 103.5,
+        "durationBeats": 0.225,
+        "vel": 97,
+        "sectionId": "chorus"
+      },
+      {
+        "id": "dr-308",
+        "pitch": 51,
+        "startBeat": 100,
+        "durationBeats": 0.225,
+        "vel": 82,
+        "sectionId": "chorus"
+      },
+      {
+        "id": "dr-309",
+        "pitch": 51,
+        "startBeat": 101,
+        "durationBeats": 0.225,
+        "vel": 84,
+        "sectionId": "chorus"
+      },
+      {
+        "id": "dr-310",
+        "pitch": 51,
+        "startBeat": 102,
+        "durationBeats": 0.225,
+        "vel": 87,
+        "sectionId": "chorus"
+      },
+      {
+        "id": "dr-311",
+        "pitch": 51,
+        "startBeat": 103,
+        "durationBeats": 0.225,
+        "vel": 89,
+        "sectionId": "chorus"
+      },
+      {
+        "id": "dr-312",
+        "pitch": 36,
+        "startBeat": 104,
+        "durationBeats": 0.225,
+        "vel": 124,
+        "sectionId": "chorus"
+      },
+      {
+        "id": "dr-313",
+        "pitch": 36,
+        "startBeat": 105.5,
+        "durationBeats": 0.225,
+        "vel": 90,
+        "sectionId": "chorus"
+      },
+      {
+        "id": "dr-314",
+        "pitch": 36,
+        "startBeat": 106,
+        "durationBeats": 0.225,
+        "vel": 118,
+        "sectionId": "chorus"
+      },
+      {
+        "id": "dr-315",
+        "pitch": 36,
+        "startBeat": 107.5,
+        "durationBeats": 0.225,
+        "vel": 96,
+        "sectionId": "chorus"
+      },
+      {
+        "id": "dr-316",
+        "pitch": 38,
+        "startBeat": 105,
+        "durationBeats": 0.225,
+        "vel": 118,
+        "sectionId": "chorus"
+      },
+      {
+        "id": "dr-317",
+        "pitch": 38,
+        "startBeat": 107,
+        "durationBeats": 0.225,
+        "vel": 124,
+        "sectionId": "chorus"
+      },
+      {
+        "id": "dr-318",
+        "pitch": 42,
+        "startBeat": 104,
+        "durationBeats": 0.225,
+        "vel": 85,
+        "sectionId": "chorus"
+      },
+      {
+        "id": "dr-319",
+        "pitch": 42,
+        "startBeat": 104.5,
+        "durationBeats": 0.225,
+        "vel": 90,
+        "sectionId": "chorus"
+      },
+      {
+        "id": "dr-320",
+        "pitch": 42,
+        "startBeat": 105,
+        "durationBeats": 0.225,
+        "vel": 87,
+        "sectionId": "chorus"
+      },
+      {
+        "id": "dr-321",
+        "pitch": 42,
+        "startBeat": 105.5,
+        "durationBeats": 0.225,
+        "vel": 92,
+        "sectionId": "chorus"
+      },
+      {
+        "id": "dr-322",
+        "pitch": 42,
+        "startBeat": 106,
+        "durationBeats": 0.225,
+        "vel": 89,
+        "sectionId": "chorus"
+      },
+      {
+        "id": "dr-323",
+        "pitch": 42,
+        "startBeat": 106.5,
+        "durationBeats": 0.225,
+        "vel": 94,
+        "sectionId": "chorus"
+      },
+      {
+        "id": "dr-324",
+        "pitch": 42,
+        "startBeat": 107,
+        "durationBeats": 0.225,
+        "vel": 90,
+        "sectionId": "chorus"
+      },
+      {
+        "id": "dr-325",
+        "pitch": 42,
+        "startBeat": 107.5,
+        "durationBeats": 0.225,
+        "vel": 97,
+        "sectionId": "chorus"
+      },
+      {
+        "id": "dr-326",
+        "pitch": 51,
+        "startBeat": 104,
+        "durationBeats": 0.225,
+        "vel": 82,
+        "sectionId": "chorus"
+      },
+      {
+        "id": "dr-327",
+        "pitch": 51,
+        "startBeat": 105,
+        "durationBeats": 0.225,
+        "vel": 84,
+        "sectionId": "chorus"
+      },
+      {
+        "id": "dr-328",
+        "pitch": 51,
+        "startBeat": 106,
+        "durationBeats": 0.225,
+        "vel": 87,
+        "sectionId": "chorus"
+      },
+      {
+        "id": "dr-329",
+        "pitch": 51,
+        "startBeat": 107,
+        "durationBeats": 0.225,
+        "vel": 89,
+        "sectionId": "chorus"
+      },
+      {
+        "id": "dr-330",
+        "pitch": 36,
+        "startBeat": 108,
+        "durationBeats": 0.225,
+        "vel": 124,
+        "sectionId": "chorus"
+      },
+      {
+        "id": "dr-331",
+        "pitch": 36,
+        "startBeat": 109.5,
+        "durationBeats": 0.225,
+        "vel": 90,
+        "sectionId": "chorus"
+      },
+      {
+        "id": "dr-332",
+        "pitch": 36,
+        "startBeat": 110,
+        "durationBeats": 0.225,
+        "vel": 118,
+        "sectionId": "chorus"
+      },
+      {
+        "id": "dr-333",
+        "pitch": 36,
+        "startBeat": 111.5,
+        "durationBeats": 0.225,
+        "vel": 96,
+        "sectionId": "chorus"
+      },
+      {
+        "id": "dr-334",
+        "pitch": 38,
+        "startBeat": 109,
+        "durationBeats": 0.225,
+        "vel": 118,
+        "sectionId": "chorus"
+      },
+      {
+        "id": "dr-335",
+        "pitch": 38,
+        "startBeat": 111,
+        "durationBeats": 0.225,
+        "vel": 124,
+        "sectionId": "chorus"
+      },
+      {
+        "id": "dr-336",
+        "pitch": 42,
+        "startBeat": 108,
+        "durationBeats": 0.225,
+        "vel": 85,
+        "sectionId": "chorus"
+      },
+      {
+        "id": "dr-337",
+        "pitch": 42,
+        "startBeat": 108.5,
+        "durationBeats": 0.225,
+        "vel": 90,
+        "sectionId": "chorus"
+      },
+      {
+        "id": "dr-338",
+        "pitch": 42,
+        "startBeat": 109,
+        "durationBeats": 0.225,
+        "vel": 87,
+        "sectionId": "chorus"
+      },
+      {
+        "id": "dr-339",
+        "pitch": 42,
+        "startBeat": 109.5,
+        "durationBeats": 0.225,
+        "vel": 92,
+        "sectionId": "chorus"
+      },
+      {
+        "id": "dr-340",
+        "pitch": 42,
+        "startBeat": 110,
+        "durationBeats": 0.225,
+        "vel": 89,
+        "sectionId": "chorus"
+      },
+      {
+        "id": "dr-341",
+        "pitch": 42,
+        "startBeat": 110.5,
+        "durationBeats": 0.225,
+        "vel": 94,
+        "sectionId": "chorus"
+      },
+      {
+        "id": "dr-342",
+        "pitch": 42,
+        "startBeat": 111,
+        "durationBeats": 0.225,
+        "vel": 90,
+        "sectionId": "chorus"
+      },
+      {
+        "id": "dr-343",
+        "pitch": 42,
+        "startBeat": 111.5,
+        "durationBeats": 0.225,
+        "vel": 97,
+        "sectionId": "chorus"
+      },
+      {
+        "id": "dr-344",
+        "pitch": 51,
+        "startBeat": 108,
+        "durationBeats": 0.225,
+        "vel": 82,
+        "sectionId": "chorus"
+      },
+      {
+        "id": "dr-345",
+        "pitch": 51,
+        "startBeat": 109,
+        "durationBeats": 0.225,
+        "vel": 84,
+        "sectionId": "chorus"
+      },
+      {
+        "id": "dr-346",
+        "pitch": 51,
+        "startBeat": 110,
+        "durationBeats": 0.225,
+        "vel": 87,
+        "sectionId": "chorus"
+      },
+      {
+        "id": "dr-347",
+        "pitch": 51,
+        "startBeat": 111,
+        "durationBeats": 0.225,
+        "vel": 89,
+        "sectionId": "chorus"
+      },
+      {
+        "id": "dr-348",
+        "pitch": 36,
+        "startBeat": 112,
+        "durationBeats": 0.225,
+        "vel": 118,
+        "sectionId": "final"
+      },
+      {
+        "id": "dr-349",
+        "pitch": 36,
+        "startBeat": 114,
+        "durationBeats": 0.225,
+        "vel": 111,
+        "sectionId": "final"
+      },
+      {
+        "id": "dr-350",
+        "pitch": 38,
+        "startBeat": 113,
+        "durationBeats": 0.225,
+        "vel": 115,
+        "sectionId": "final"
+      },
+      {
+        "id": "dr-351",
+        "pitch": 38,
+        "startBeat": 115,
+        "durationBeats": 0.225,
+        "vel": 118,
+        "sectionId": "final"
+      },
+      {
+        "id": "dr-352",
+        "pitch": 42,
+        "startBeat": 112.5,
+        "durationBeats": 0.225,
+        "vel": 82,
+        "sectionId": "final"
+      },
+      {
+        "id": "dr-353",
+        "pitch": 42,
+        "startBeat": 113.5,
+        "durationBeats": 0.225,
+        "vel": 84,
+        "sectionId": "final"
+      },
+      {
+        "id": "dr-354",
+        "pitch": 42,
+        "startBeat": 114.5,
+        "durationBeats": 0.225,
+        "vel": 85,
+        "sectionId": "final"
+      },
+      {
+        "id": "dr-355",
+        "pitch": 42,
+        "startBeat": 115.5,
+        "durationBeats": 0.225,
+        "vel": 89,
+        "sectionId": "final"
+      },
+      {
+        "id": "dr-356",
+        "pitch": 49,
+        "startBeat": 112,
+        "durationBeats": 0.225,
+        "vel": 118,
+        "sectionId": "final"
+      },
+      {
+        "id": "dr-357",
+        "pitch": 36,
+        "startBeat": 116,
+        "durationBeats": 0.225,
+        "vel": 118,
+        "sectionId": "final"
+      },
+      {
+        "id": "dr-358",
+        "pitch": 36,
+        "startBeat": 118,
+        "durationBeats": 0.225,
+        "vel": 111,
+        "sectionId": "final"
+      },
+      {
+        "id": "dr-359",
+        "pitch": 38,
+        "startBeat": 117,
+        "durationBeats": 0.225,
+        "vel": 115,
+        "sectionId": "final"
+      },
+      {
+        "id": "dr-360",
+        "pitch": 38,
+        "startBeat": 119,
+        "durationBeats": 0.225,
+        "vel": 118,
+        "sectionId": "final"
+      },
+      {
+        "id": "dr-361",
+        "pitch": 42,
+        "startBeat": 116.5,
+        "durationBeats": 0.225,
+        "vel": 82,
+        "sectionId": "final"
+      },
+      {
+        "id": "dr-362",
+        "pitch": 42,
+        "startBeat": 117.5,
+        "durationBeats": 0.225,
+        "vel": 84,
+        "sectionId": "final"
+      },
+      {
+        "id": "dr-363",
+        "pitch": 42,
+        "startBeat": 118.5,
+        "durationBeats": 0.225,
+        "vel": 85,
+        "sectionId": "final"
+      },
+      {
+        "id": "dr-364",
+        "pitch": 42,
+        "startBeat": 119.5,
+        "durationBeats": 0.225,
+        "vel": 89,
+        "sectionId": "final"
+      },
+      {
+        "id": "dr-365",
+        "pitch": 36,
+        "startBeat": 120,
+        "durationBeats": 0.225,
+        "vel": 118,
+        "sectionId": "final"
+      },
+      {
+        "id": "dr-366",
+        "pitch": 36,
+        "startBeat": 122,
+        "durationBeats": 0.225,
+        "vel": 111,
+        "sectionId": "final"
+      },
+      {
+        "id": "dr-367",
+        "pitch": 38,
+        "startBeat": 121,
+        "durationBeats": 0.225,
+        "vel": 115,
+        "sectionId": "final"
+      },
+      {
+        "id": "dr-368",
+        "pitch": 38,
+        "startBeat": 123,
+        "durationBeats": 0.225,
+        "vel": 118,
+        "sectionId": "final"
+      },
+      {
+        "id": "dr-369",
+        "pitch": 42,
+        "startBeat": 120.5,
+        "durationBeats": 0.225,
+        "vel": 82,
+        "sectionId": "final"
+      },
+      {
+        "id": "dr-370",
+        "pitch": 42,
+        "startBeat": 121.5,
+        "durationBeats": 0.225,
+        "vel": 84,
+        "sectionId": "final"
+      },
+      {
+        "id": "dr-371",
+        "pitch": 42,
+        "startBeat": 122.5,
+        "durationBeats": 0.225,
+        "vel": 85,
+        "sectionId": "final"
+      },
+      {
+        "id": "dr-372",
+        "pitch": 42,
+        "startBeat": 123.5,
+        "durationBeats": 0.225,
+        "vel": 89,
+        "sectionId": "final"
+      },
+      {
+        "id": "dr-373",
+        "pitch": 36,
+        "startBeat": 124,
+        "durationBeats": 0.225,
+        "vel": 118,
+        "sectionId": "final"
+      },
+      {
+        "id": "dr-374",
+        "pitch": 36,
+        "startBeat": 126,
+        "durationBeats": 0.225,
+        "vel": 111,
+        "sectionId": "final"
+      },
+      {
+        "id": "dr-375",
+        "pitch": 38,
+        "startBeat": 125,
+        "durationBeats": 0.225,
+        "vel": 115,
+        "sectionId": "final"
+      },
+      {
+        "id": "dr-376",
+        "pitch": 38,
+        "startBeat": 127,
+        "durationBeats": 0.225,
+        "vel": 118,
+        "sectionId": "final"
+      },
+      {
+        "id": "dr-377",
+        "pitch": 42,
+        "startBeat": 124.5,
+        "durationBeats": 0.225,
+        "vel": 82,
+        "sectionId": "final"
+      },
+      {
+        "id": "dr-378",
+        "pitch": 42,
+        "startBeat": 125.5,
+        "durationBeats": 0.225,
+        "vel": 84,
+        "sectionId": "final"
+      },
+      {
+        "id": "dr-379",
+        "pitch": 42,
+        "startBeat": 126.5,
+        "durationBeats": 0.225,
+        "vel": 85,
+        "sectionId": "final"
+      },
+      {
+        "id": "dr-380",
+        "pitch": 42,
+        "startBeat": 127.5,
+        "durationBeats": 0.225,
+        "vel": 89,
+        "sectionId": "final"
+      },
+      {
+        "id": "dr-381",
+        "pitch": 50,
+        "startBeat": 127.75,
+        "durationBeats": 0.225,
+        "vel": 90,
+        "sectionId": "final"
       }
     ]
   },
@@ -362,6 +4000,150 @@
       "bar": 8,
       "chord": "F",
       "beats": 4
+    },
+    {
+      "id": "ch-009",
+      "bar": 9,
+      "chord": "Dm",
+      "beats": 4
+    },
+    {
+      "id": "ch-010",
+      "bar": 10,
+      "chord": "Em",
+      "beats": 4
+    },
+    {
+      "id": "ch-011",
+      "bar": 11,
+      "chord": "F",
+      "beats": 4
+    },
+    {
+      "id": "ch-012",
+      "bar": 12,
+      "chord": "G",
+      "beats": 4
+    },
+    {
+      "id": "ch-013",
+      "bar": 13,
+      "chord": "Dm",
+      "beats": 4
+    },
+    {
+      "id": "ch-014",
+      "bar": 14,
+      "chord": "Em",
+      "beats": 4
+    },
+    {
+      "id": "ch-015",
+      "bar": 15,
+      "chord": "F",
+      "beats": 4
+    },
+    {
+      "id": "ch-016",
+      "bar": 16,
+      "chord": "G",
+      "beats": 4
+    },
+    {
+      "id": "ch-017",
+      "bar": 17,
+      "chord": "C",
+      "beats": 4
+    },
+    {
+      "id": "ch-018",
+      "bar": 18,
+      "chord": "G",
+      "beats": 4
+    },
+    {
+      "id": "ch-019",
+      "bar": 19,
+      "chord": "Am",
+      "beats": 4
+    },
+    {
+      "id": "ch-020",
+      "bar": 20,
+      "chord": "F",
+      "beats": 4
+    },
+    {
+      "id": "ch-021",
+      "bar": 21,
+      "chord": "C",
+      "beats": 4
+    },
+    {
+      "id": "ch-022",
+      "bar": 22,
+      "chord": "G",
+      "beats": 4
+    },
+    {
+      "id": "ch-023",
+      "bar": 23,
+      "chord": "F",
+      "beats": 4
+    },
+    {
+      "id": "ch-024",
+      "bar": 24,
+      "chord": "G",
+      "beats": 4
+    },
+    {
+      "id": "ch-025",
+      "bar": 25,
+      "chord": "Am",
+      "beats": 4
+    },
+    {
+      "id": "ch-026",
+      "bar": 26,
+      "chord": "F",
+      "beats": 4
+    },
+    {
+      "id": "ch-027",
+      "bar": 27,
+      "chord": "C",
+      "beats": 4
+    },
+    {
+      "id": "ch-028",
+      "bar": 28,
+      "chord": "G",
+      "beats": 4
+    },
+    {
+      "id": "ch-029",
+      "bar": 29,
+      "chord": "Am",
+      "beats": 4
+    },
+    {
+      "id": "ch-030",
+      "bar": 30,
+      "chord": "F",
+      "beats": 4
+    },
+    {
+      "id": "ch-031",
+      "bar": 31,
+      "chord": "C",
+      "beats": 4
+    },
+    {
+      "id": "ch-032",
+      "bar": 32,
+      "chord": "G",
+      "beats": 4
     }
   ],
   "arrangement": {
@@ -384,8 +4166,31 @@
         "startBar": 1,
         "endBar": 4,
         "pattern": {
-          "kick:0": 0.7,
-          "hat:2": 0.4
+          "kick:0": 0.72,
+          "kick:8": 0.45,
+          "hat:2": 0.35,
+          "hat:6": 0.35,
+          "hat:10": 0.38,
+          "hat:14": 0.42,
+          "crash:0": 0.55,
+          "kick:16": 0.72,
+          "kick:24": 0.45,
+          "hat:18": 0.35,
+          "hat:22": 0.35,
+          "hat:26": 0.38,
+          "hat:30": 0.42,
+          "kick:32": 0.72,
+          "kick:40": 0.45,
+          "hat:34": 0.35,
+          "hat:38": 0.35,
+          "hat:42": 0.38,
+          "hat:46": 0.42,
+          "kick:48": 0.72,
+          "kick:56": 0.45,
+          "hat:50": 0.35,
+          "hat:54": 0.35,
+          "hat:58": 0.38,
+          "hat:62": 0.42
         },
         "effects": {}
       },
@@ -395,9 +4200,70 @@
         "startBar": 5,
         "endBar": 12,
         "pattern": {
-          "kick:0": 0.8,
-          "snare:4": 0.75,
-          "hat:2": 0.5
+          "kick:0": 0.82,
+          "kick:8": 0.68,
+          "snare:4": 0.72,
+          "snare:12": 0.78,
+          "hat:2": 0.42,
+          "hat:6": 0.42,
+          "hat:10": 0.46,
+          "hat:14": 0.48,
+          "kick:16": 0.82,
+          "kick:24": 0.68,
+          "snare:20": 0.72,
+          "snare:28": 0.78,
+          "hat:18": 0.42,
+          "hat:22": 0.42,
+          "hat:26": 0.46,
+          "hat:30": 0.48,
+          "kick:32": 0.82,
+          "kick:40": 0.68,
+          "snare:36": 0.72,
+          "snare:44": 0.78,
+          "hat:34": 0.42,
+          "hat:38": 0.42,
+          "hat:42": 0.46,
+          "hat:46": 0.48,
+          "kick:48": 0.82,
+          "kick:56": 0.68,
+          "snare:52": 0.72,
+          "snare:60": 0.78,
+          "hat:50": 0.42,
+          "hat:54": 0.42,
+          "hat:58": 0.46,
+          "hat:62": 0.48,
+          "kick:64": 0.82,
+          "kick:72": 0.68,
+          "snare:68": 0.72,
+          "snare:76": 0.78,
+          "hat:66": 0.42,
+          "hat:70": 0.42,
+          "hat:74": 0.46,
+          "hat:78": 0.48,
+          "kick:80": 0.82,
+          "kick:88": 0.68,
+          "snare:84": 0.72,
+          "snare:92": 0.78,
+          "hat:82": 0.42,
+          "hat:86": 0.42,
+          "hat:90": 0.46,
+          "hat:94": 0.48,
+          "kick:96": 0.82,
+          "kick:104": 0.68,
+          "snare:100": 0.72,
+          "snare:108": 0.78,
+          "hat:98": 0.42,
+          "hat:102": 0.42,
+          "hat:106": 0.46,
+          "hat:110": 0.48,
+          "kick:112": 0.82,
+          "kick:120": 0.68,
+          "snare:116": 0.72,
+          "snare:124": 0.78,
+          "hat:114": 0.42,
+          "hat:118": 0.42,
+          "hat:122": 0.46,
+          "hat:126": 0.48
         },
         "effects": {
           "breakBars": [
@@ -411,9 +4277,119 @@
         "startBar": 13,
         "endBar": 20,
         "pattern": {
-          "kick:0": 0.85,
-          "snare:4": 0.8,
-          "hat:1": 0.6
+          "kick:0": 0.84,
+          "kick:6": 0.5,
+          "kick:8": 0.78,
+          "kick:14": 0.58,
+          "snare:4": 0.76,
+          "snare:12": 0.84,
+          "hat:0": 0.38,
+          "hat:2": 0.44,
+          "hat:4": 0.4,
+          "hat:6": 0.46,
+          "hat:8": 0.42,
+          "hat:10": 0.48,
+          "hat:12": 0.44,
+          "hat:14": 0.5,
+          "kick:16": 0.84,
+          "kick:22": 0.5,
+          "kick:24": 0.78,
+          "kick:30": 0.58,
+          "snare:20": 0.76,
+          "snare:28": 0.84,
+          "hat:16": 0.38,
+          "hat:18": 0.44,
+          "hat:20": 0.4,
+          "hat:22": 0.46,
+          "hat:24": 0.42,
+          "hat:26": 0.48,
+          "hat:28": 0.44,
+          "hat:30": 0.5,
+          "kick:32": 0.84,
+          "kick:38": 0.5,
+          "kick:40": 0.78,
+          "kick:46": 0.58,
+          "snare:36": 0.76,
+          "snare:44": 0.84,
+          "hat:32": 0.38,
+          "hat:34": 0.44,
+          "hat:36": 0.4,
+          "hat:38": 0.46,
+          "hat:40": 0.42,
+          "hat:42": 0.48,
+          "hat:44": 0.44,
+          "hat:46": 0.5,
+          "kick:48": 0.84,
+          "kick:54": 0.5,
+          "kick:56": 0.78,
+          "kick:62": 0.58,
+          "snare:52": 0.76,
+          "snare:60": 0.84,
+          "hat:48": 0.38,
+          "hat:50": 0.44,
+          "hat:52": 0.4,
+          "hat:54": 0.46,
+          "hat:56": 0.42,
+          "hat:58": 0.48,
+          "hat:60": 0.44,
+          "hat:62": 0.5,
+          "kick:64": 0.84,
+          "kick:70": 0.5,
+          "kick:72": 0.78,
+          "kick:78": 0.58,
+          "snare:68": 0.76,
+          "snare:76": 0.84,
+          "hat:64": 0.38,
+          "hat:66": 0.44,
+          "hat:68": 0.4,
+          "hat:70": 0.46,
+          "hat:72": 0.42,
+          "hat:74": 0.48,
+          "hat:76": 0.44,
+          "hat:78": 0.5,
+          "kick:80": 0.84,
+          "kick:86": 0.5,
+          "kick:88": 0.78,
+          "kick:94": 0.58,
+          "snare:84": 0.76,
+          "snare:92": 0.84,
+          "hat:80": 0.38,
+          "hat:82": 0.44,
+          "hat:84": 0.4,
+          "hat:86": 0.46,
+          "hat:88": 0.42,
+          "hat:90": 0.48,
+          "hat:92": 0.44,
+          "hat:94": 0.5,
+          "kick:96": 0.84,
+          "kick:102": 0.5,
+          "kick:104": 0.78,
+          "kick:110": 0.58,
+          "snare:100": 0.76,
+          "snare:108": 0.84,
+          "hat:96": 0.38,
+          "hat:98": 0.44,
+          "hat:100": 0.4,
+          "hat:102": 0.46,
+          "hat:104": 0.42,
+          "hat:106": 0.48,
+          "hat:108": 0.44,
+          "hat:110": 0.5,
+          "kick:112": 0.84,
+          "kick:118": 0.5,
+          "kick:120": 0.78,
+          "kick:126": 0.58,
+          "snare:116": 0.76,
+          "snare:124": 0.84,
+          "hat:112": 0.38,
+          "hat:114": 0.44,
+          "hat:116": 0.4,
+          "hat:118": 0.46,
+          "hat:120": 0.42,
+          "hat:122": 0.48,
+          "hat:124": 0.44,
+          "hat:126": 0.5,
+          "tom1:126": 0.45
         },
         "effects": {
           "fillBeforeChorus": true
@@ -425,9 +4401,151 @@
         "startBar": 21,
         "endBar": 28,
         "pattern": {
-          "kick:0": 1,
+          "kick:0": 0.96,
+          "kick:6": 0.58,
+          "kick:8": 0.9,
+          "kick:14": 0.64,
           "snare:4": 0.9,
-          "hat:1": 0.75
+          "snare:12": 0.96,
+          "hat:0": 0.52,
+          "hat:2": 0.58,
+          "hat:4": 0.54,
+          "hat:6": 0.6,
+          "hat:8": 0.56,
+          "hat:10": 0.62,
+          "hat:12": 0.58,
+          "hat:14": 0.66,
+          "ride:0": 0.48,
+          "ride:4": 0.5,
+          "ride:8": 0.54,
+          "ride:12": 0.56,
+          "crash:0": 0.86,
+          "kick:16": 0.96,
+          "kick:22": 0.58,
+          "kick:24": 0.9,
+          "kick:30": 0.64,
+          "snare:20": 0.9,
+          "snare:28": 0.96,
+          "hat:16": 0.52,
+          "hat:18": 0.58,
+          "hat:20": 0.54,
+          "hat:22": 0.6,
+          "hat:24": 0.56,
+          "hat:26": 0.62,
+          "hat:28": 0.58,
+          "hat:30": 0.66,
+          "ride:16": 0.48,
+          "ride:20": 0.5,
+          "ride:24": 0.54,
+          "ride:28": 0.56,
+          "kick:32": 0.96,
+          "kick:38": 0.58,
+          "kick:40": 0.9,
+          "kick:46": 0.64,
+          "snare:36": 0.9,
+          "snare:44": 0.96,
+          "hat:32": 0.52,
+          "hat:34": 0.58,
+          "hat:36": 0.54,
+          "hat:38": 0.6,
+          "hat:40": 0.56,
+          "hat:42": 0.62,
+          "hat:44": 0.58,
+          "hat:46": 0.66,
+          "ride:32": 0.48,
+          "ride:36": 0.5,
+          "ride:40": 0.54,
+          "ride:44": 0.56,
+          "kick:48": 0.96,
+          "kick:54": 0.58,
+          "kick:56": 0.9,
+          "kick:62": 0.64,
+          "snare:52": 0.9,
+          "snare:60": 0.96,
+          "hat:48": 0.52,
+          "hat:50": 0.58,
+          "hat:52": 0.54,
+          "hat:54": 0.6,
+          "hat:56": 0.56,
+          "hat:58": 0.62,
+          "hat:60": 0.58,
+          "hat:62": 0.66,
+          "ride:48": 0.48,
+          "ride:52": 0.5,
+          "ride:56": 0.54,
+          "ride:60": 0.56,
+          "kick:64": 0.96,
+          "kick:70": 0.58,
+          "kick:72": 0.9,
+          "kick:78": 0.64,
+          "snare:68": 0.9,
+          "snare:76": 0.96,
+          "hat:64": 0.52,
+          "hat:66": 0.58,
+          "hat:68": 0.54,
+          "hat:70": 0.6,
+          "hat:72": 0.56,
+          "hat:74": 0.62,
+          "hat:76": 0.58,
+          "hat:78": 0.66,
+          "ride:64": 0.48,
+          "ride:68": 0.5,
+          "ride:72": 0.54,
+          "ride:76": 0.56,
+          "kick:80": 0.96,
+          "kick:86": 0.58,
+          "kick:88": 0.9,
+          "kick:94": 0.64,
+          "snare:84": 0.9,
+          "snare:92": 0.96,
+          "hat:80": 0.52,
+          "hat:82": 0.58,
+          "hat:84": 0.54,
+          "hat:86": 0.6,
+          "hat:88": 0.56,
+          "hat:90": 0.62,
+          "hat:92": 0.58,
+          "hat:94": 0.66,
+          "ride:80": 0.48,
+          "ride:84": 0.5,
+          "ride:88": 0.54,
+          "ride:92": 0.56,
+          "kick:96": 0.96,
+          "kick:102": 0.58,
+          "kick:104": 0.9,
+          "kick:110": 0.64,
+          "snare:100": 0.9,
+          "snare:108": 0.96,
+          "hat:96": 0.52,
+          "hat:98": 0.58,
+          "hat:100": 0.54,
+          "hat:102": 0.6,
+          "hat:104": 0.56,
+          "hat:106": 0.62,
+          "hat:108": 0.58,
+          "hat:110": 0.66,
+          "ride:96": 0.48,
+          "ride:100": 0.5,
+          "ride:104": 0.54,
+          "ride:108": 0.56,
+          "kick:112": 0.96,
+          "kick:118": 0.58,
+          "kick:120": 0.9,
+          "kick:126": 0.64,
+          "snare:116": 0.9,
+          "snare:124": 0.96,
+          "hat:112": 0.52,
+          "hat:114": 0.58,
+          "hat:116": 0.54,
+          "hat:118": 0.6,
+          "hat:120": 0.56,
+          "hat:122": 0.62,
+          "hat:124": 0.58,
+          "hat:126": 0.66,
+          "ride:112": 0.48,
+          "ride:116": 0.5,
+          "ride:120": 0.54,
+          "ride:124": 0.56
         },
         "effects": {}
       },
@@ -438,8 +4556,39 @@
         "endBar": 32,
         "pattern": {
           "kick:0": 0.9,
-          "snare:4": 0.85,
-          "crash:0": 1
+          "kick:8": 0.82,
+          "snare:4": 0.86,
+          "snare:12": 0.9,
+          "hat:2": 0.48,
+          "hat:6": 0.5,
+          "hat:10": 0.52,
+          "hat:14": 0.56,
+          "crash:0": 0.9,
+          "kick:16": 0.9,
+          "kick:24": 0.82,
+          "snare:20": 0.86,
+          "snare:28": 0.9,
+          "hat:18": 0.48,
+          "hat:22": 0.5,
+          "hat:26": 0.52,
+          "hat:30": 0.56,
+          "kick:32": 0.9,
+          "kick:40": 0.82,
+          "snare:36": 0.86,
+          "snare:44": 0.9,
+          "hat:34": 0.48,
+          "hat:38": 0.5,
+          "hat:42": 0.52,
+          "hat:46": 0.56,
+          "kick:48": 0.9,
+          "kick:56": 0.82,
+          "snare:52": 0.86,
+          "snare:60": 0.9,
+          "hat:50": 0.48,
+          "hat:54": 0.5,
+          "hat:58": 0.52,
+          "hat:62": 0.56,
+          "tom1:63": 0.58
         },
         "effects": {
           "finalVariation": true,
@@ -454,6 +4603,9 @@
     "containsRepeatedPitch": true,
     "containsMelodicLeaps": true,
     "containsJapaneseAndEnglishLyrics": true,
-    "containsSectionBreak": true
+    "containsSectionBreak": true,
+    "coversAll32Bars": true,
+    "containsIntroVersePreChorusChorusFinal": true,
+    "containsFullSongDrumTimeline": true
   }
 }

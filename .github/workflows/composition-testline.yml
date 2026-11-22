@@ -27,3 +27,10 @@ jobs:
           node-version: 22
       - name: Run composition regression tests
         run: node --test tests/composition-testline.test.mjs
+      - name: Install Playwright and Chromium
+        run: |
+          npm init -y
+          npm install --no-save playwright
+          npx playwright install --with-deps chromium
+      - name: Run browser smoke test
+        run: node tests/browser-smoke.mjs
