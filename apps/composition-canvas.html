@@ -706,9 +706,12 @@ function lyricStressIndex(word,count){
   const w=String(word||'').toLowerCase().replace(/[^a-z']/g,'');
   if(count<=1)return 0;
   if(/(tion|sion|ic|ical|ity|graphy|logy|ious|eous)$/.test(w))return Math.max(0,count-2);
-  if(/(ee|ese|ique|oon|eer)$/.test(w))return count-1;
+  if(/(ee|ese|ique|oon|eer|ieve|one)$/.test(w))return count-1;
   if(/(ing|ed|ly|er|est)$/.test(w)&&count>=2)return 0;
   return 0;
+}
+function lyricIsFunctionWord(word){
+  return /^(a|an|the|and|or|but|if|in|on|at|to|of|for|from|with|by|as|is|am|are|was|were|be|been|being|do|does|did|have|has|had|can|could|will|would|shall|should|may|might|must|i|you|he|she|it|we|they|me|him|her|us|them|my|your|our|their|this|that|these|those)$/.test(String(word||'').toLowerCase());
 }
 function lyricEstimateSyllables(word){
   const w=String(word||'').toLowerCase().replace(/[^a-z']/g,'');
@@ -726,8 +729,8 @@ function lyricBuildSyllables(phrase,role,label,phraseIndex){
   return words.flatMap((word,wordIndex)=>{
     const count=lyricEstimateSyllables(word),stress=lyricStressIndex(word,count);
     return Array.from({length:count},(_,syllableIndex)=>({
-      word,wordIndex,syllableIndex,wordSyllables:count,stressed:syllableIndex===stress,
-      role,label,phrase,phraseIndex
+      word,wordIndex,syllableIndex,wordSyllables:count,stressed:count===1?!lyricIsFunctionWord(word):syllableIndex===stress,
+      functionWord:lyricIsFunctionWord(word),role,label,phrase,phraseIndex
     }));
   });
 }
