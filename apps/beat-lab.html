@@ -833,6 +833,10 @@ function buildSectionDrumIdea(basePattern,section,style,variation='normal'){
       for(let i=0;i<Math.max(1,stepsPerBeat);i++)put(i%2===0?'snare':(i<stepsPerBeat/2?'tom1':'tom2'),fillStart+i,.58+i*.09);
     }
   }
+  if(/^(pre|pre-chorus|prechorus|pre_chorus)$/i.test(String(section.id||''))&&variation!=='light'){
+    const leadIn=(bars-1)*stepsPerBar+Math.max(0,stepsPerBar-stepsPerBeat);
+    put('snare',leadIn,.72);put('tom1',leadIn+Math.max(0,stepsPerBeat-2),.66);put('tom2',leadIn+Math.max(0,stepsPerBeat-1),.84);
+  }
   if(section.id==='chorus'||section.id==='final')put('crash',0,1);
   if(section.id==='final'&&variation==='bold')put('crash',Math.max(0,total-1),.92);
   return out;
@@ -1342,6 +1346,41 @@ function chooseSmoothChordVoicing(pitches,previous=[]){
   }
   return best||source;
 }
+function applyMelodyResponsiveAccompaniment(events,melodyNotes,bars,timeSig=4,variant='A'){
+  const limit=Math.max(1,Number(bars)||1)*Math.max(1,Number(timeSig)||4);
+  const notes=(melodyNotes||[]).map(n=>({start:Number(n.startBeat),end:Number(n.startBeat)+Number(n.durationBeats),pitch:Number(n.pitch)}))
+    .filter(n=>Number.isFinite(n.start)&&Number.isFinite(n.end)&&n.end>n.start&&Number.isInteger(n.pitch)&&n.start>=0&&n.start<limit)
+    .sort((a,b)=>a.start-b.start);
+  if(!notes.length)return events;
+  const overlaps=(start,end)=>notes.filter(n=>n.start<end-.04&&n.end>start+.04);
+  const piano=(events.piano||[]).map(event=>{
+    const active=overlaps(event.startBeat,event.startBeat+event.durationBeats);
+    const pitches=(event.pitches||[]).filter(p=>!active.some(n=>Math.abs(n.pitch-p)<=2));
+    return {...event,pitches};
+  }).filter(event=>event.pitches.length);
+  const guitar=(events.guitar||[]).filter(event=>{
+    const active=overlaps(event.startBeat,event.startBeat+event.durationBeats);
+    return !active.some(n=>(event.pitches||[]).some(p=>Math.abs(n.pitch-p)<=7));
+  });
+  const responses=[];
+  let cursor=0;
+  for(let i=0;i<=notes.length;i++){
+    const next=notes[i],gapEnd=next?.start??limit;
+    const gap=gapEnd-cursor;
+    if(gap>=.7&&cursor<limit){
+      const chord=[...piano,...guitar].filter(e=>e.startBeat<=cursor+.001&&e.startBeat+e.durationBeats>cursor+.05)
+        .sort((a,b)=>b.startBeat-a.startBeat)[0];
+      if(chord){
+        const pitches=(chord.pitches||[]).slice().sort((a,b)=>a-b);
+        const pitch=variant==='B'?(pitches[0]||60)+12:(pitches.at(-1)||72);
+        responses.push({startBeat:+(cursor+.08).toFixed(4),pitches:[pitch],durationBeats:Math.min(.28,gap-.12),velocity:variant==='C'?.46:.38,instrument:variant==='C'?'electric':'acoustic',response:true});
+      }
+    }
+    if(next)cursor=Math.max(cursor,next.end);
+  }
+  guitar.push(...responses.filter((_,i)=>variant!=='B'||i%2===0));
+  return {piano,guitar:guitar.sort((a,b)=>a.startBeat-b.startBeat)};
+}
 function getPlayableChordEvents(project,bars,timeSig=4,variant='A'){
   if((project?.accompanimentMode==='manual'||project?.source==='score-editor')&&(project?.piano?.notes?.length||project?.guitar?.notes?.length)){
     const fromNotes=track=>(track?.notes||[]).map(note=>({startBeat:Number(note.startBeat),pitches:[Number(note.pitch)],durationBeats:Number(note.durationBeats)||.5,velocity:Math.max(.05,Math.min(1,(Number(note.vel)||80)/127))})).filter(event=>Number.isFinite(event.startBeat)&&Number.isInteger(event.pitches[0]));
@@ -1377,7 +1416,7 @@ function getPlayableChordEvents(project,bars,timeSig=4,variant='A'){
     }
   });
   const sort=(a,b)=>a.startBeat-b.startBeat;
-  return {piano:piano.sort(sort),guitar:guitar.sort(sort)};
+  return applyMelodyResponsiveAccompaniment({piano:piano.sort(sort),guitar:guitar.sort(sort)},project?.melody?.notes||[],bars,timeSig,variant);
 }
 
 
@@ -1400,6 +1439,7 @@ function buildBassNotesFromChords(project,bars,timeSig=4){
     const tones=chordSymbolToPitches(typeof item==='string'?item:(item?.chord||item?.name),1);
     if(!tones.length)return;
     notes.push({id:'chord-bass-'+index+'-root',pitch:tones[0],startBeat:start,durationBeats:Math.min(1.8,Math.max(.65,beats*.42)),velocity:.72});
+    if(index>0&&start-cursor+beats>=2&&start>=.5){const previous=chordSymbolToPitches(typeof source[index-1]==='string'?source[index-1]:(source[index-1]?.chord||source[index-1]?.name),1);const previousRoot=previous[0]||tones[0];const direction=((tones[0]-previousRoot+12)%12)<=6?-1:1;notes.push({id:'chord-bass-'+index+'-approach',pitch:tones[0]+direction,startBeat:start-.5,durationBeats:.32,velocity:.44});}
     if(beats>=3&&start+2<limit)notes.push({id:'chord-bass-'+index+'-fifth',pitch:tones[2]||tones[0]+7,startBeat:start+2,durationBeats:.72,velocity:.58});
   });
   return notes.sort((a,b)=>a.startBeat-b.startBeat);
