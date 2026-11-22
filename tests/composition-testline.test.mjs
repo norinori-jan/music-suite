@@ -1968,3 +1968,16 @@ test("TL-127 each A B C candidate can be handed to BEAT LAB for full accompanime
   assert.match(html,/project\.chords=project\.generatedMusic\?\.chords/);
   assert.match(beatLab,/function buildBassNotesFromChords/);
 });
+
+test("TL-128 manual per-bar chord edits refresh the selected candidate score and editor view", async () => {
+  const html=await readFile(canvasPath,"utf8");
+  const start=html.indexOf("function updateHarmonyBarChord(index,degree){");
+  const end=html.indexOf("let harmonyPreviewContext",start);
+  assert.ok(start>=0&&end>start);
+  const body=html.slice(start,end);
+  assert.match(body,/scoreHarmonyCandidate\(/);
+  assert.match(body,/manualChordEdits:true/);
+  assert.match(body,/renderHarmonyCandidates\(harmonyCandidates,sketch\.selectedHarmonyCandidate\)/);
+  assert.match(body,/renderHarmonyBarEditor\(\)/);
+  assert.match(body,/manualOverride:true/);
+});
