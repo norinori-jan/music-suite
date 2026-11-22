@@ -1096,12 +1096,13 @@ function generateLyricMusicSketch(){
   Object.entries(sectionGroups).forEach(([sectionKey,groups])=>{
     const sectionIndex=Math.max(0,chordSections.findIndex(section=>section.label===sectionKey));
     const sectionStart=sectionIndex*beatsPerSection,sectionSpan=beatsPerSection;
-    const gap=Math.min(1.25,sectionSpan*.045),usableSpan=Math.max(1,sectionSpan-gap*Math.max(0,groups.length-1));
-    const phraseWeights=groups.map(group=>Math.max(1,group.syllables.length));
-    const totalPhraseWeight=phraseWeights.reduce((sum,value)=>sum+value,0);
+    const gap=Math.min(1.5,Math.max(.75,sectionSpan*.04));
+    const desiredPhraseSpans=groups.map(group=>Math.min(8,Math.max(2,group.syllables.length*.72)));
+    const desiredTotal=desiredPhraseSpans.reduce((sum,value)=>sum+value,0)+gap*Math.max(0,groups.length-1);
+    const timingScale=Math.min(1,sectionSpan/Math.max(.001,desiredTotal));
     let phraseCursor=sectionStart;
     groups.forEach((group,groupIndex)=>{
-      const phraseSpan=usableSpan*phraseWeights[groupIndex]/totalPhraseWeight;
+      const phraseSpan=desiredPhraseSpans[groupIndex]*timingScale;
       const syllablesForPhrase=group.syllables.slice(0,Math.max(0,maxNotes-notes.length));
       const weights=lyricPhraseWeights(syllablesForPhrase),totalWeight=weights.reduce((sum,value)=>sum+value,0);
       let localCursor=0,previousScaleIndex=null;
