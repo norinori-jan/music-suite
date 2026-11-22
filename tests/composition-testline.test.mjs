@@ -42,6 +42,11 @@ function validateFixture(project) {
   const drums = project.drums?.notes || [];
   const chords = project.chords || [];
   if (chords.length !== 32 || chords.some((chord, index) => chord.bar !== index + 1 || chord.beats !== 4)) errors.push("full-song chord coverage");
+  const melodyBars = new Set(melody.map(note => Math.floor(note.startBeat / project.timeSig) + 1));
+  if (melodyBars.size !== project.bars) errors.push("melody coverage across all bars");
+  for (let bar = 1; bar <= project.bars; bar++) {
+    if (melody.filter(note => Math.floor(note.startBeat / project.timeSig) + 1 === bar).length < 2) errors.push("melody density bar " + bar);
+  }
   const melodyIds = melody.map(note => note.id);
   const drumIds = drums.map(note => note.id);
   if (melodyIds.some(id => !id) || new Set(melodyIds).size !== melodyIds.length) errors.push("melody IDs");
@@ -80,8 +85,8 @@ test("TL-13 final-bar events remain within the 32-bar boundary", async () => {
   const project = JSON.parse(await readFile(fixturePath, "utf8"));
   const lastMelody = project.melody.notes.at(-1);
   const lastDrum = project.drums.notes.at(-1);
-  assert.equal(lastMelody.startBeat + lastMelody.durationBeats, 58);
-  assert.equal(lastDrum.startBeat + lastDrum.durationBeats, 63.9);
+  assert.equal(lastMelody.startBeat + lastMelody.durationBeats, 128);
+  assert.equal(lastDrum.startBeat + lastDrum.durationBeats, 127.975);
   assert.ok(lastMelody.startBeat + lastMelody.durationBeats <= 128);
   assert.ok(lastDrum.startBeat + lastDrum.durationBeats <= 128);
 });
@@ -1416,6 +1421,24 @@ test("TL-90 melody playback requires the sampled violin source instead of silent
   assert.match(credits, /VSO2/);
 });
 
+
+test("TL-92 standard test song has a playable melody and drum timeline across every section", async () => {
+  const project = JSON.parse(await readFile(fixturePath, "utf8"));
+  const melody = project.melody.notes;
+  const drums = project.drums.notes;
+  assert.ok(melody.length >= 100, "the test melody must be long enough to evaluate phrasing");
+  assert.equal(new Set(melody.map(note => Math.floor(note.startBeat / 4) + 1)).size, 32);
+  for (let bar = 1; bar <= 32; bar++) {
+    assert.ok(melody.filter(note => Math.floor(note.startBeat / 4) + 1 === bar).length >= 2, "bar " + bar + " needs melodic material");
+  }
+  assert.ok(melody.some(note => note.durationBeats <= 0.5), "short articulations must be represented");
+  assert.ok(melody.some(note => note.durationBeats >= 1.5), "sustained notes must be represented");
+  assert.ok(drums.length >= 200, "the drum timeline must cover the full song");
+  assert.equal(Math.floor(Math.max(...drums.map(note => note.startBeat)) / 4) + 1, 32);
+  for (const section of project.arrangement.sections) {
+    assert.ok(Object.keys(section.pattern).length >= 8, section.id + " must have a meaningful groove");
+  }
+});
 
 test("TL-91 standard test song supplies harmony across all 32 bars for five-part playback", async () => {
   const project = JSON.parse(await readFile(fixturePath, "utf8"));
