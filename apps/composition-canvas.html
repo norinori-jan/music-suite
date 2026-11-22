@@ -962,20 +962,24 @@ function renderHarmonyBarEditor(){
     caption.textContent='小節 '+(item.bar||Math.floor((Number(item.startBeat)||0)/4)+1)+' · '+(item.chord||'コード');
     const select=document.createElement('select');
     select.style.cssText='min-width:82px;max-width:120px;padding:5px;background:#203e39;color:#fff;border:1px solid #5a887e;border-radius:5px';
+    if(item.borrowed){
+      const borrowed=buildBorrowedMinorFour(key),option=document.createElement('option');
+      option.value='4b';option.textContent='iv · '+borrowed.chord;option.selected=true;select.appendChild(option);
+    }
     for(let degree=1;degree<=7;degree++){
       const chord=buildDiatonicTriad(key,degree),option=document.createElement('option');
       option.value=String(degree);option.textContent=['I','ii','iii','IV','V','vi','vii°'][degree-1]+' · '+chord.chord;
-      option.selected=Number(item.degree)===degree;
+      option.selected=!item.borrowed&&Number(item.degree)===degree;
       select.appendChild(option);
     }
-    select.addEventListener('change',()=>updateHarmonyBarChord(index,Number(select.value)));
+    select.addEventListener('change',()=>updateHarmonyBarChord(index,select.value==='4b'?'4b':Number(select.value)));
     row.appendChild(caption);row.appendChild(select);host.appendChild(row);
   });
 }
 function updateHarmonyBarChord(index,degree){
   const sketch=window.__lyricMusicSketch||{},timeline=Array.isArray(sketch.chords)?sketch.chords.map(item=>({...item})):[],item=timeline[index];
-  if(!item||!Number.isInteger(degree)||degree<1||degree>7)return false;
-  const chord=buildDiatonicTriad(sketch.key||'C',degree);
+  if(!item||!(degree==='4b'||(Number.isInteger(degree)&&degree>=1&&degree<=7)))return false;
+  const chord=degree==='4b'?buildBorrowedMinorFour(sketch.key||'C'):buildDiatonicTriad(sketch.key||'C',degree);
   timeline[index]={...item,...chord,bar:item.bar,startBeat:item.startBeat,beats:item.beats,section:item.section,role:item.role,sourceId:item.sourceId,manualOverride:true};
   window.__lyricMusicSketch={...sketch,chords:timeline,manualChordEdits:true};
   const flat=timeline.map(chord=>chord.chord).join(', ');
