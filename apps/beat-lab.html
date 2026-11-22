@@ -1439,7 +1439,7 @@ function buildBassNotesFromChords(project,bars,timeSig=4){
     const tones=chordSymbolToPitches(typeof item==='string'?item:(item?.chord||item?.name),1);
     if(!tones.length)return;
     notes.push({id:'chord-bass-'+index+'-root',pitch:tones[0],startBeat:start,durationBeats:Math.min(1.8,Math.max(.65,beats*.42)),velocity:.72});
-    if(index>0&&start>=.5){const previousItem=source[index-1],previousBeats=Math.max(.5,Math.min(16,Number(previousItem?.beats)||4)),previousStart=Number.isFinite(Number(previousItem?.startBeat))?Number(previousItem.startBeat):Math.max(0,start-previousBeats),previousEnd=previousStart+previousBeats;if(Math.abs(previousEnd-start)<.001){notes.push({id:'chord-bass-'+index+'-approach',pitch:tones[0]-1,startBeat:start-.5,durationBeats:.32,velocity:.44});}}
+    if(index>0&&start>=.5){const previousItem=source[index-1],previousBeats=Math.max(.5,Math.min(16,Number(previousItem?.beats)||4)),previousStart=Number.isFinite(Number(previousItem?.startBeat))?Number(previousItem.startBeat):Math.max(0,start-previousBeats),previousEnd=previousStart+previousBeats;if(Math.abs(previousEnd-start)<.001){notes.push({id:'chord-bass-'+index+'-approach',pitch:tones[0]>24?tones[0]-1:tones[0]+1,startBeat:start-.5,durationBeats:.32,velocity:.44});}}
     if(beats>=3&&start+2<limit)notes.push({id:'chord-bass-'+index+'-fifth',pitch:tones[2]||tones[0]+7,startBeat:start+2,durationBeats:.72,velocity:.58});
   });
   return notes.sort((a,b)=>a.startBeat-b.startBeat);
