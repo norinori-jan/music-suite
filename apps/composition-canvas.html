@@ -1879,7 +1879,7 @@ function sendHarmonyCandidateToBeatLab(candidateId){
   if(!state.lastNotes||!state.lastNotes.length){showToast('先に歌詞からメロディを生成してください');return false;}
   const currentLyrics=lyricTextRead();
   if(window.__lyricMusicSketch?.sourceLyrics!==undefined&&window.__lyricMusicSketch.sourceLyrics!==currentLyrics){showToast('歌詞が生成後に変更されています。先にメロディを再生成してください');return false;}
-  if(!selectHarmonyCandidate(candidateId))return false;
+  if(window.__lyricMusicSketch?.selectedHarmonyCandidate!==candidateId&&!selectHarmonyCandidate(candidateId))return false;
   goCompositionStage('arrange');
   const status=document.getElementById('composition-stage-status');if(status)status.textContent=candidateId+'案を選択しました。BEAT//LABでベース・ドラム・ピアノ・ギターへ展開します。';
   sendToBeatLab();
