@@ -144,6 +144,11 @@
     </div>
     <div id="lyric-music-result" aria-live="polite" style="display:block;width:100%;max-width:100%;min-width:0;box-sizing:border-box;overflow-wrap:anywhere;word-break:break-word;white-space:normal;overflow-x:hidden;font-size:13px"></div>
     <div id="lyric-generated-chord-panel" style="display:none;margin-top:12px;padding:12px;border:2px solid #38a3a5;border-radius:9px;background:#10252b;color:#e8fbff">
+      <section id="harmony-candidate-panel" style="margin:0 0 14px;padding:12px;border:1px solid #70a99b;border-radius:9px;background:#102d2a;color:#e8fbff">
+        <strong>🎼 メロディ適合で比較する3つの和声案</strong>
+        <p style="font-size:12px;line-height:1.7;margin:6px 0">A・B・Cは同じメロディに対する別のコード進行です。強勢音節・フレーズ終端のコード構成音適合、和声の流れ、選択した雰囲気を理論評価します。AIによる歌詞意味の自動理解ではありません。</p>
+        <div id="harmony-candidate-list" style="display:grid;grid-template-columns:repeat(auto-fit,minmax(min(100%,250px),1fr));gap:9px"></div>
+      </section>
       <strong>生成されたコード進行（全件）</strong>
       <p style="font-size:12px;margin:5px 0 8px">ここに出たコードがコピー対象です。欄外に出さず、この枠内で全文を確認できます。</p>
       <div id="lyric-generated-chord-breakdown" style="display:grid;grid-template-columns:repeat(auto-fit,minmax(min(100%,220px),1fr));gap:8px;margin:10px 0" aria-live="polite"></div>
@@ -801,6 +806,167 @@ function buildSectionChordProgressions(key,sections,defaultStyle,sectionStyles={
     })};
   });
 }
+function expandHarmonySectionsToTimeline(chordSections,bars=32,beatsPerBar=4){
+  const source=Array.isArray(chordSections)?chordSections:[];
+  const beatsPerSection=bars*beatsPerBar/Math.max(1,source.length);
+  return source.flatMap((section,sectionIndex)=>{
+    const progression=Array.isArray(section.progression)?section.progression:[];
+    const sectionBeats=progression.reduce((sum,item)=>sum+Math.max(.5,Number(item.beats)||4),0);
+    if(!sectionBeats)return [];
+    const repetitions=Math.max(1,Math.ceil(beatsPerSection/sectionBeats));
+    const expanded=[];
+    for(let repeat=0;repeat<repetitions;repeat++){
+      let repeatBeat=0;
+      progression.forEach((item,chordIndex)=>{
+        const chordBeats=Math.max(.5,Number(item.beats)||4);
+        const startBeat=sectionIndex*beatsPerSection+repeat*sectionBeats+repeatBeat;
+        if(startBeat<(sectionIndex+1)*beatsPerSection-.001){
+          expanded.push({...item,id:(item.id||'chord')+'-r'+(repeat+1),section:section.label,role:section.role,startBeat:+startBeat.toFixed(4),beats:Math.min(chordBeats,(sectionIndex+1)*beatsPerSection-startBeat),bar:Math.floor(startBeat/beatsPerBar)+1});
+        }
+        repeatBeat+=chordBeats;
+      });
+    }
+    return expanded;
+  });
+}
+function harmonyNoteMidi(note){
+  if(Number.isFinite(Number(note?.pitch)))return Number(note.pitch);
+  const match=String(note?.pitch||note?.note||'').match(/^([A-G]#?)(-?\d+)$/);
+  if(!match)return null;
+  const pitchClass={C:0,'C#':1,D:2,'D#':3,E:4,F:5,'F#':6,G:7,'G#':8,A:9,'A#':10,B:11}[match[1]];
+  return pitchClass+(Number(match[2])+1)*12;
+}
+function scoreHarmonyCandidate(key,mood,sections,chordSections,melody,bars=32){
+  const source=Array.isArray(sections)&&sections.length?sections:[{label:'Full song',role:'LEAD',text:''}];
+  const notes=Array.isArray(melody)?melody:[];
+  const beatsPerSection=bars*4/Math.max(1,chordSections.length);
+  const scale=LYRIC_SCALES[key]||LYRIC_SCALES.C,root=LYRIC_ROOTS[key]||0;
+  let weightedFit=0,totalWeight=0,strongFit=0,strongWeight=0,chordToneHits=0;
+  notes.forEach(note=>{
+    const midi=harmonyNoteMidi(note);
+    if(!Number.isFinite(midi))return;
+    let sectionIndex=chordSections.findIndex(section=>section.label===(note.section||note.lyricSection));
+    if(sectionIndex<0)sectionIndex=Math.min(chordSections.length-1,Math.max(0,Math.floor((Number(note.startBeat)||0)/Math.max(1,beatsPerSection))));
+    const section=chordSections[sectionIndex];
+    if(!section?.progression?.length)return;
+    const localBeat=Math.max(0,(Number(note.startBeat)||0)-sectionIndex*beatsPerSection);
+    const total=section.progression.reduce((sum,item)=>sum+Math.max(.5,Number(item.beats)||4),0);
+    let cursor=((localBeat%total)+total)%total,chord=section.progression[section.progression.length-1];
+    for(const item of section.progression){const duration=Math.max(.5,Number(item.beats)||4);if(cursor<duration){chord=item;break;}cursor-=duration;}
+    const pc=((Math.round(midi)%12)+12)%12;
+    const inChord=(chord.tones||[]).some(tone=>((Number(tone)%12)+12)%12===pc);
+    const inKey=scale.includes(((pc-root+12)%12));
+    const accented=Boolean(note.stressed)||Boolean(note.phraseEnd);
+    const weight=(note.stressed?1.8:1)*(note.phraseEnd?1.25:1)*(Math.abs(localBeat%4)<.001?1.2:1);
+    weightedFit+=(inChord?1:inKey?.48:-.35)*weight;
+    totalWeight+=weight;
+    if(inChord)chordToneHits++;
+    if(accented){strongWeight+=weight;strongFit+=(inChord?1:inKey?.4:-.5)*weight;}
+  });
+  let functionScore=0,moodScore=0,transitionCount=0;
+  chordSections.forEach((section,index)=>{
+    const progression=section.progression||[];
+    progression.forEach((chord,chordIndex)=>{
+      const next=progression[chordIndex+1];
+      if(next){
+        const a=Number(chord.degree),b=Number(next.degree);
+        if(a===5&&b===1)functionScore+=1.5;
+        else if(a===2&&b===5)functionScore+=1.1;
+        else if(a===4&&b===5)functionScore+=.8;
+        else if(a===b)functionScore-=.18;
+        transitionCount++;
+      }
+      const degree=Number(chord.degree);
+      if(mood==='hope'||mood==='bright')moodScore+=([1,4,5].includes(degree)? .28:([6,2].includes(degree)?-.08:0));
+      else if(mood==='bittersweet')moodScore+=([6,4,2].includes(degree)? .3:([1,5].includes(degree)? .08:0));
+      else if(mood==='calm')moodScore+=([1,2,4].includes(degree)? .24:([5,7].includes(degree)?-.06:0));
+    });
+    const label=String(section.label||'').toLowerCase();
+    if(label.includes('chorus')&&progression.length){
+      if([1,4].includes(Number(progression[0].degree)))functionScore+=.65;
+      if([1,5].includes(Number(progression[progression.length-1].degree)))functionScore+=.65;
+    }
+    if(label.includes('bridge')&&progression.some(item=>[2,4,5].includes(Number(item.degree))))functionScore+=.35;
+  });
+  const fitRate=totalWeight?weightedFit/totalWeight:0;
+  const strongFitRate=strongWeight?strongFit/strongWeight:fitRate;
+  const normalizedFunction=transitionCount?functionScore/transitionCount:0;
+  const normalizedMood=chordSections.reduce((sum,section)=>sum+(section.progression||[]).length,0)?moodScore/chordSections.reduce((sum,section)=>sum+(section.progression||[]).length,0):0;
+  const score=Math.max(0,Math.min(100,Math.round(50+fitRate*24+strongFitRate*14+normalizedFunction*5+normalizedMood*12)));
+  return {score,fitRate:Math.round(Math.max(0,Math.min(1,fitRate))*100),strongFitRate:Math.round(Math.max(0,Math.min(1,strongFitRate))*100),chordToneHits,noteCount:notes.filter(note=>harmonyNoteMidi(note)!==null).length};
+}
+function harmonyStyleForProfile(section,profile,mood,baseStyles,defaultStyle){
+  if(profile==='A')return baseStyles[section.label]||defaultStyle;
+  const label=String(section.label||'').toLowerCase();
+  const chorus=label.includes('chorus')||label.includes('サビ');
+  const bridge=label.includes('bridge')||label.includes('ブリッジ');
+  const prechorus=label.includes('b verse')||label.includes('pre')||label.includes('bメロ');
+  if(profile==='B'){
+    if(chorus)return mood==='hope'||mood==='bright'?'pop':mood==='calm'?'simple':'warm';
+    if(bridge)return mood==='calm'?'jazz':'surprise';
+    if(prechorus)return mood==='bright'?'rock':'jazz';
+    return mood==='bittersweet'?'sad':mood==='calm'?'warm':'pop';
+  }
+  if(chorus)return 'rock';
+  if(bridge)return 'jazz';
+  if(prechorus)return 'rb';
+  return 'loop';
+}
+function generateHarmonyCandidates({key,mood,sections,chordSections,melody,progression,sectionStyles,bars=32}){
+  const source=Array.isArray(sections)&&sections.length?sections:[{role:'LEAD',label:'Full song',text:''}];
+  const profiles=[
+    {id:'A',name:'メロディ優先',description:'現在の基本方針を土台に、強勢音節とメロディの着地点を重視'},
+    {id:'B',name:'感情の流れ',description:'選択した雰囲気とAメロからサビへの展開を重視'},
+    {id:'C',name:'展開・彩り',description:'セクションごとの対比と和声の変化を重視'}
+  ];
+  return profiles.map((profile,index)=>{
+    const styles={};
+    source.forEach(section=>{styles[section.label]=harmonyStyleForProfile(section,profile.id,mood,sectionStyles||{},progression||'pop');});
+    const candidateSections=profile.id==='A'
+      ?chordSections.map(section=>({...section,progression:section.progression.map(item=>({...item,tones:[...(item.tones||[])]}))}))
+      :buildSectionChordProgressions(key,source,progression||'pop',styles,index===0?0:index===1?2:4);
+    const metrics=scoreHarmonyCandidate(key,mood,source,candidateSections,melody,bars);
+    const fit=metrics.fitRate;
+    const reasons=[
+      'メロディのコード構成音一致 '+metrics.chordToneHits+'/'+Math.max(1,metrics.noteCount)+'音',
+      '強勢・フレーズ終端の適合 '+metrics.strongFitRate+'%',
+      profile.id==='B'?'選択した雰囲気「'+mood+'」に沿う区間配分':profile.id==='C'?'区間ごとに和声スタイルを変えて展開':'現在の区間別スタイルを維持して比較'
+    ];
+    return {...profile,styles,sections:candidateSections,score:metrics.score,fitRate:fit,reasons,metrics};
+  });
+}
+function renderHarmonyCandidates(candidates,selectedId){
+  const host=document.getElementById('harmony-candidate-list');
+  if(!host)return;
+  host.replaceChildren();
+  (candidates||[]).forEach(candidate=>{
+    const card=document.createElement('article');
+    card.style.cssText='min-width:0;padding:12px;border:1px solid '+(candidate.id===selectedId?'#70d6b0':'#47727a')+';border-radius:9px;background:'+(candidate.id===selectedId?'#173b37':'#142b31')+';color:#e8fbff';
+    const title=document.createElement('strong');title.textContent=candidate.id+'案 · '+candidate.name;card.appendChild(title);
+    const score=document.createElement('div');score.style.cssText='font-size:13px;margin:5px 0;color:#9fe3d1';score.textContent='理論評価 '+candidate.score+'/100 · メロディ適合 '+candidate.fitRate+'%';card.appendChild(score);
+    const progression=document.createElement('div');progression.style.cssText='font-size:14px;font-weight:700;line-height:1.7;overflow-wrap:anywhere';progression.textContent=candidate.sections.map(section=>(section.label||'区間')+': '+section.progression.map(item=>item.chord).join(' – ')).join(' ／ ');card.appendChild(progression);
+    const reasons=document.createElement('ul');reasons.style.cssText='font-size:11px;line-height:1.7;padding-left:18px;margin:7px 0';candidate.reasons.forEach(reason=>{const li=document.createElement('li');li.textContent=reason;reasons.appendChild(li);});card.appendChild(reasons);
+    const button=document.createElement('button');button.type='button';button.className='primary';button.textContent=candidate.id===selectedId?'選択中':'この案を採用';button.disabled=candidate.id===selectedId;button.addEventListener('click',()=>selectHarmonyCandidate(candidate.id));card.appendChild(button);
+    host.appendChild(card);
+  });
+}
+function selectHarmonyCandidate(candidateId){
+  const sketch=window.__lyricMusicSketch||{};
+  const candidate=(sketch.harmonyCandidates||[]).find(item=>item.id===candidateId);
+  if(!candidate){showToast('候補が見つかりません。歌詞から候補を再生成してください');return false;}
+  const sections=candidate.sections.map(section=>({...section,progression:section.progression.map(item=>({...item,tones:[...(item.tones||[])]}))}));
+  const bars=Number(sketch.bars)||32;
+  const timeline=expandHarmonySectionsToTimeline(sections,bars,Number(sketch.timeSig)||4);
+  const chords=timeline.map(item=>({...item}));
+  window.__lyricMusicSketch={...sketch,chordSections:sections,chords,selectedHarmonyCandidate:candidateId,method:'melody-aware-harmony-candidates-v1'};
+  renderGeneratedChordSections(sections);
+  const input=document.getElementById('chord-progression-input');if(input)input.value=chords.map(item=>item.chord).join(', ');
+  const panel=document.getElementById('lyric-generated-chord-panel');if(panel)panel.style.display='block';
+  renderHarmonyCandidates(sketch.harmonyCandidates,candidateId);
+  const status=document.getElementById('chord-progression-status');if(status)status.textContent=candidateId+'案「'+candidate.name+'」を採用しました。メロディは保持し、和声だけを切り替えました。';
+  const result=document.getElementById('lyric-music-result');if(result)result.innerHTML='<strong>'+escapeHtmlCanvas(candidate.id+'案 · '+candidate.name)+'を採用しました</strong><p>メロディ音符と歌詞の対応は維持し、コード進行を切り替えました。BEAT//LABへ送ると、この和声が伴奏展開の基準になります。</p>';
+  return true;
+}
 function resolveMelodyChordDegree(chordSections,label,localIndex){
   const section=(chordSections||[]).find(item=>item.label===label)||(chordSections||[])[0];
   if(!section||!Array.isArray(section.progression)||!section.progression.length)throw new Error('メロディに対応するコード進行がありません。');
@@ -1163,6 +1329,10 @@ function generateLyricMusicSketch(){
     const label=document.createElement('span');label.className='lyric-assignment';label.textContent=(n.role==='A'?'A':n.role==='B'?'B':'二人')+' · '+n.word;card.appendChild(label);
   });
   window.__lyricMusicSketch={key,mode:key==='A'||key==='E'?'minor':'major',mood,progression,bars,timeSig:4,sourceLyrics:text,chordSections,chords:allSectionChords,melody:notes.map((n,i)=>({id:n.id,lyricId:n.lyricId,pitch:n.note,startBeat:n.startBeat,durationBeats:n.length,word:n.word,lyric:n.lyric,role:n.role,section:n.section,syllableIndex:n.syllableIndex,wordSyllables:n.wordSyllables,stressed:n.stressed,phraseIndex:n.phraseIndex,phraseEnd:n.phraseEnd})),method:'stress-aware-phrase-melody-v2',melodyQuality:{stressAware:true,phraseBreaths:true,chordToneLandings:true,stepwiseContour:true},warning:'英語の音節・強勢推定に基づく作曲案。実際の発音と歌いやすさは試聴して調整してください'};
+  const harmonyCandidates=generateHarmonyCandidates({key,mood,sections,chordSections,melody:notes,progression,sectionStyles,bars});
+  window.__lyricMusicSketch.harmonyCandidates=harmonyCandidates;
+  window.__lyricMusicSketch.selectedHarmonyCandidate='A';
+  renderHarmonyCandidates(harmonyCandidates,'A');
   document.getElementById('lyric-music-result').innerHTML='<strong>生成した候補</strong><p>Key: '+escapeHtmlCanvas(key)+' / '+escapeHtmlCanvas(mood)+' / '+chordNames.map(escapeHtmlCanvas).join(' – ')+'</p><p>'+notes.length+'音のメロディ候補を配置しました。強勢音節・フレーズの呼吸・コード構成音への着地を反映しています。音符カードをクリックして調整できます。</p><small>英語の強勢は推定です。歌詞の発音・自然なアクセント・歌いやすさは実際に再生して確認してください。</small>';
   showToast('歌詞からメロディ・コードの初期案を生成しました');
 }
