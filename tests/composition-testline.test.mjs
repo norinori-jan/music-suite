@@ -1229,10 +1229,10 @@ test("TL-82 acoustic guitar, electric guitar and bass use real sample maps with 
   assert.match(html,/createInstrumentSampler\('guitar-electric'/);
   assert.match(html,/createInstrumentSampler\('bass-electric'/);
   assert.match(html,/D2:'D2\.mp3'[\s\S]*?C5:'C5\.mp3'/,"acoustic guitar sampler should map notes across its playable range");
-  assert.match(html,/Cs2:'Cs2\.mp3'[\s\S]*?C6:'C6\.mp3'/,"electric guitar sampler should map notes across its playable range");
-  assert.match(html,/Cs1:'Cs1\.mp3'[\s\S]*?Cs4:'Cs4\.mp3'/,"bass sampler should map the low register");
+  assert.match(html,/'C#2':'Cs2\.mp3'[\s\S]*?C6:'C6\.mp3'/,"electric guitar sampler must use Tone.js sharp-note keys");
+  assert.match(html,/'C#1':'Cs1\.mp3'[\s\S]*?'C#4':'Cs4\.mp3'/,"bass sampler must use Tone.js sharp-note keys across the low register");
   assert.match(html,/if\(electricGuitarSamplerReady&&sampler\)sampler\.triggerAttackRelease[\s\S]*?else getElectricGuitarSynth\(\)\.triggerAttackRelease/);
-  assert.match(html,/if\(guitarSamplerReady&&sampler\)sampler\.triggerAttackRelease[\s\S]*?else getGuitarSynth\(\)\.triggerAttack/);
+  assert.match(html,/if\(guitarSamplerReady&&sampler\)sampler\.triggerAttackRelease[\s\S]*?else getGuitarSynth\(\)\.triggerAttackRelease/);
   assert.match(html,/if\(bassSamplerReady&&sampler\)sampler\.triggerAttackRelease[\s\S]*?else body\.triggerAttackRelease/);
   assert.match(html,/if\(bassSampler\)bassSampler\.releaseAll\(\)/);
   assert.match(html,/if\(guitarSampler\)guitarSampler\.releaseAll\(\)/);
