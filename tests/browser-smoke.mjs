@@ -84,7 +84,10 @@ try {
     panelDisplay: document.getElementById("lyric-generated-chord-panel")?.style.display || "missing",
     hostHtml: document.getElementById("harmony-candidate-list")?.innerHTML || "missing",
     articleCount: document.querySelectorAll("#harmony-candidate-list article").length,
-    resultExists: !!document.getElementById("lyric-music-result")
+    resultExists: !!document.getElementById("lyric-music-result"),
+    lyricPanelExists: !!document.getElementById("lyric-panel"),
+    lyricPanelTail: document.getElementById("lyric-panel")?.innerHTML.slice(-2200) || "missing",
+    lastIds: [...document.querySelectorAll("[id]")].map(el => el.id).slice(-25)
   }));
   console.log("HARMONY_DOM_DEBUG " + JSON.stringify(harmonyDomDebug));
   if (harmonyDomDebug.hostExists && harmonyDomDebug.articleCount === 0) {
