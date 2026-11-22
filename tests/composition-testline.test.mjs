@@ -1866,3 +1866,14 @@ test("TL-121 direct audio output test bypasses arrangement buses and reports bro
   assert.match(html, /音声テスト失敗/);
   assert.match(html, /再生開始 · AudioContext=/);
 });
+
+test("TL-122 playback reports per-track scheduled events and catches voice scheduling errors", async () => {
+  const html = await readFile(beatLabPath, "utf8");
+  assert.match(html, /const playbackDiagnostics=\{drums:0,melody:0,bass:0,piano:0,guitar:0,errors:\[\]\}/);
+  assert.match(html, /function scheduleVoice\(track,action\)/);
+  for (const track of ["drums", "melody", "bass", "piano", "guitar"]) {
+    assert.ok(html.includes("scheduleVoice('" + track + "'"), track + " must be counted independently");
+  }
+  assert.match(html, /発音処理数 D:/);
+  assert.match(html, /1秒間に発音イベントがありません/);
+});
