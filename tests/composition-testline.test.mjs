@@ -1929,9 +1929,9 @@ test("TL-124 refining harmony regenerates candidate scores and synchronized chor
   assert.ok(html.includes("chordSections:sections,chords,selectedHarmonyCandidate:candidateId"));
 });
 
-test("TL-125 guided composition stages and per-bar chord editor are connected to the selected harmony", async () => {
+test("TL-125 six guided composition stages and per-bar chord editor are connected", async () => {
   const html=await readFile(canvasPath,"utf8");
-  for(const stage of ["lyrics","harmony","melody","arrange"]){
+  for(const stage of ["lyrics","harmony","compare","select","melody","arrange"]){
     assert.ok(html.includes("data-composition-stage=\"" + stage + "\""),stage+" stage button must exist");
     assert.ok(html.includes("goCompositionStage('" + stage + "')"),stage+" stage navigation must work");
   }
