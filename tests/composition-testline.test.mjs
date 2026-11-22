@@ -1607,6 +1607,90 @@ test("TL-102 lyric syllable and stress helpers expose phrase-level pronunciation
 });
 
 
+test("TL-103 varied English lyrics generate syllable-linked melodies with singable range and phrase breathing", async () => {
+  const canvas=await readFile(canvasPath,"utf8");
+  const helperStart=canvas.indexOf("const LYRIC_PRONUNCIATION_LEXICON=");
+  const helperEnd=canvas.indexOf("function parseChordProgressionText",helperStart);
+  const generatorStart=canvas.indexOf("function generateLyricMusicSketch()");
+  const generatorEnd=canvas.indexOf("\nfunction saveLyricCanvasProject()",generatorStart);
+  assert.ok(helperStart>=0&&helperEnd>helperStart&&generatorStart>=0&&generatorEnd>generatorStart);
+  const code=canvas.slice(helperStart,helperEnd)+"\n"+canvas.slice(generatorStart,generatorEnd)+";return generateLyricMusicSketch;";
+  const variants=[
+    [
+      {role:"A",label:"Mia / A verse",text:"I remember every little moment"},
+      {role:"B",label:"Ken / B verse",text:"The city lights are calling me"},
+      {role:"DUET",label:"Chorus",text:"We are alive tonight, reaching for tomorrow"},
+      {role:"DUET",label:"Bridge",text:"Even when the road is long"}
+    ],
+    [
+      {role:"A",label:"Mia / A verse",text:"A quiet river carries all my dreams"},
+      {role:"B",label:"Ken / B verse",text:"I will return before the morning"},
+      {role:"DUET",label:"Chorus",text:"Together we can rise above the shadows"},
+      {role:"DUET",label:"Bridge",text:"And find a place to begin again"}
+    ],
+    [
+      {role:"A",label:"Mia / A verse",text:"Fire in the distance"},
+      {role:"B",label:"Ken / B verse",text:"Every heartbeat tells a story"},
+      {role:"DUET",label:"Chorus",text:"Remember who we are, remember why we sing"},
+      {role:"DUET",label:"Bridge",text:"The stars are listening"}
+    ]
+  ];
+  const pitchToMidi=pitch=>{
+    const match=String(pitch).match(/^([A-G])([#b]?)(-?\\d+)$/);
+    assert.ok(match,"generated pitch must be a named note: "+pitch);
+    const semitones={C:0,D:2,E:4,F:5,G:7,A:9,B:11};
+    const accidental=match[2]==="#"?1:match[2]==="b"?-1:0;
+    return (Number(match[3])+1)*12+semitones[match[1]]+accidental;
+  };
+  for(let variantIndex=0;variantIndex<variants.length;variantIndex++){
+    const sections=variants[variantIndex],cards=[],elements=new Map();
+    const document={
+      getElementById(id){
+        if(!elements.has(id)){
+          const values={"lyric-key":"C","lyric-mood":"hope","lyric-progression":"pop","lyric-progression-a":"warm","lyric-progression-b":"sad","lyric-progression-chorus":"pop","lyric-progression-bridge":"surprise"};
+          elements.set(id,{value:values[id]||"",style:{},innerHTML:""});
+        }
+        return elements.get(id);
+      },
+      querySelectorAll(){return cards;},
+      createElement(){return {dataset:{},classList:{add(){}},appendChild(){},textContent:""};}
+    };
+    const state={lastNotes:[]},window={__musicProjectId:"lyric-variation-"+variantIndex};
+    const renderNoteCards=notes=>cards.splice(0,cards.length,...notes.map(note=>({dataset:{noteId:note.id,startBeat:String(note.startBeat),lyricId:note.lyricId,lyric:note.lyric,lyricRole:note.role,lyricSection:note.section,word:note.word},classList:{add(){}},appendChild(){}})));
+    const generate=new Function("document","window","state","lyricTextRead","lyricSectionsRead","renderGeneratedChordSections","renderNoteCards","makeMelodyNoteId","showToast","escapeHtmlCanvas",code)(
+      document,window,state,()=>sections.map(section=>section.text).join("\n"),()=>sections,()=>{},renderNoteCards,index=>"variant-"+variantIndex+"-note-"+index,()=>{},value=>value
+    );
+    generate();
+    const sketch=window.__lyricMusicSketch,melody=sketch?.melody||[];
+    assert.ok(melody.length>0,"variant "+variantIndex+" must produce melody notes");
+    assert.equal(sketch.bars,32);
+    assert.ok(sketch.chords.some(chord=>chord.startBeat+chord.beats>=128),"harmony must cover all 32 bars");
+    assert.ok(melody.some(note=>note.startBeat>=96),"final section must reach bars 25-32");
+    assert.deepEqual(new Set(melody.map(note=>note.section)),new Set(sections.map(section=>section.label)));
+    assert.ok(melody.every(note=>note.lyricId&&note.word&&note.lyric&&Number.isInteger(note.syllableIndex)),"every note must retain its source syllable");
+    assert.ok(melody.every(note=>note.durationBeats>0&&note.durationBeats<=2),"note durations must remain singable, not multi-bar");
+    const midi=melody.map(note=>pitchToMidi(note.pitch));
+    assert.ok(Math.min(...midi)>=55&&Math.max(...midi)<=84,"melody register must stay within G3-C6 for this vocal-range baseline");
+    assert.ok(Math.max(...midi)-Math.min(...midi)<=24,"melody span must not exceed two octaves");
+    assert.ok(melody.some(note=>note.stressed),"lexical stress must affect generated notes");
+    const phrases=new Map();
+    melody.forEach(note=>{const list=phrases.get(note.phraseIndex)||[];list.push(note);phrases.set(note.phraseIndex,list);});
+    const ordered=[...phrases.values()].sort((a,b)=>a[0].startBeat-b[0].startBeat);
+    let verifiedBreaths=0;
+    for(let i=0;i<ordered.length-1;i++){
+      const current=ordered[i].slice().sort((a,b)=>a.startBeat-b.startBeat);
+      const next=ordered[i+1].slice().sort((a,b)=>a.startBeat-b.startBeat);
+      const gap=next[0].startBeat-(current[current.length-1].startBeat+current[current.length-1].durationBeats);
+      assert.ok(gap>=0.7,"distinct lyric phrases need a breathing gap; got "+gap);
+      verifiedBreaths++;
+    }
+    assert.ok(verifiedBreaths>=8,"multiple lyric lines across all sections must preserve phrase breaths");
+    assert.equal(state.lastNotes.length,melody.length);
+    assert.equal(cards.length,melody.length);
+  }
+});
+
+
 test("TL-101 lyric edits mark a saved sketch stale and block handoff until regeneration", async () => {
   const canvas=await readFile(canvasPath,"utf8");
   assert.match(canvas,/sourceLyrics:text/,"generated sketch must remember the exact lyric source used to compose it");
