@@ -158,7 +158,7 @@
         <div style="margin-top:12px">
           <strong>小節ごとのコード編集</strong>
           <p style="font-size:11px;line-height:1.6;margin:5px 0">選んだ候補の各コードを小節単位で変更できます。変更した小節だけを伴奏データへ渡します。</p>
-          <div id="harmony-bar-editor" style="display:grid;grid-template-columns:repeat(auto-fit,minmax(min(100%,230px),1fr));gap:6px"></div>
+          <div id="harmony-bar-editor" style="display:grid;grid-template-columns:repeat(auto-fit,minmax(min(100%,230px),1fr));gap:6px;max-height:360px;overflow:auto;padding:6px;border:1px solid #365b58;border-radius:7px"></div>
         </div>
         <div style="display:flex;gap:8px;align-items:center;margin-top:8px"><button type="button" onclick="stopHarmonyPreview()">■ 試聴停止</button><span id="harmony-preview-status" aria-live="polite" style="font-size:11px">A・B・Cを同じメロディで試聴して比較できます。</span></div>
       </section>
@@ -968,7 +968,8 @@ function renderHarmonyBarEditor(){
     }
     for(let degree=1;degree<=7;degree++){
       const chord=buildDiatonicTriad(key,degree),option=document.createElement('option');
-      option.value=String(degree);option.textContent=['I','ii','iii','IV','V','vi','vii°'][degree-1]+' · '+chord.chord;
+      const roman=['I','II','III','IV','V','VI','VII'][degree-1],label=chord.quality==='m'?roman.toLowerCase():chord.quality==='dim'?roman.toLowerCase()+'°':roman;
+      option.value=String(degree);option.textContent=label+' · '+chord.chord;
       option.selected=!item.borrowed&&Number(item.degree)===degree;
       select.appendChild(option);
     }
