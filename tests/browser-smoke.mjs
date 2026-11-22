@@ -43,6 +43,7 @@ try {
   const page = await browser.newPage({ viewport: { width: 1440, height: 1000 } });
   const runtimeErrors = [];
   const consoleErrors = [];
+  const consoleWarnings = [];
   const sampleFailures = [];
   const sampleHttpErrors = [];
   const sampleRequests = [];
@@ -58,6 +59,7 @@ try {
   page.on("pageerror", error => runtimeErrors.push(error.stack || error.message));
   page.on("console", message => {
     if (message.type() === "error") consoleErrors.push(message.text());
+    if (message.type() === "warning" && message.text().includes("[music-suite]")) consoleWarnings.push(message.text());
   });
 
   await page.goto("http://127.0.0.1:4173/apps/composition-canvas.html", { waitUntil: "domcontentloaded" });
@@ -128,7 +130,7 @@ try {
   }));
 
   assert.deepEqual(runtimeErrors, [], "Browser runtime errors detected:\n" + runtimeErrors.join("\n\n"));
-  console.log("BROWSER_SMOKE_OK " + JSON.stringify({ toneOnBeatLab, trackReport, playedVariants, volumeCheck, samplerStatus, sampleRequests: sampleRequests.length, sampleFailures, sampleHttpErrors, runtimeErrors: runtimeErrors.length, consoleErrors }));
+  console.log("BROWSER_SMOKE_OK " + JSON.stringify({ toneOnBeatLab, trackReport, playedVariants, volumeCheck, samplerStatus, sampleRequests: sampleRequests.length, sampleFailures, sampleHttpErrors, runtimeErrors: runtimeErrors.length, consoleErrors, consoleWarnings }));
 } finally {
   if (browser) await browser.close();
   if (serverListening) await new Promise(resolve => server.close(resolve));
