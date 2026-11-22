@@ -1084,6 +1084,7 @@ function renderHarmonyCandidates(candidates,selectedId){
     const reasons=document.createElement('ul');reasons.style.cssText='font-size:11px;line-height:1.7;padding-left:18px;margin:7px 0';candidate.reasons.forEach(reason=>{const li=document.createElement('li');li.textContent=reason;reasons.appendChild(li);});card.appendChild(reasons);
     const actions=document.createElement('div');actions.style.cssText='display:flex;gap:7px;flex-wrap:wrap;margin-top:8px';
     const preview=document.createElement('button');preview.type='button';preview.textContent='▶ 同じメロディで試聴';preview.addEventListener('click',()=>previewHarmonyCandidate(candidate.id));actions.appendChild(preview);
+    const fullPreview=document.createElement('button');fullPreview.type='button';fullPreview.textContent='🎛 伴奏を作って試聴';fullPreview.addEventListener('click',()=>sendHarmonyCandidateToBeatLab(candidate.id));actions.appendChild(fullPreview);
     const button=document.createElement('button');button.type='button';button.className='primary';button.textContent=candidate.id===selectedId?'選択中':'この案を採用';button.disabled=candidate.id===selectedId;button.addEventListener('click',()=>selectHarmonyCandidate(candidate.id));actions.appendChild(button);
     card.appendChild(actions);
     host.appendChild(card);
@@ -1835,6 +1836,16 @@ async function openStandardTestSongInBeatLab(){
   }
 }
 
+function sendHarmonyCandidateToBeatLab(candidateId){
+  if(!state.lastNotes||!state.lastNotes.length){showToast('先に歌詞からメロディを生成してください');return false;}
+  const currentLyrics=lyricTextRead();
+  if(window.__lyricMusicSketch?.sourceLyrics!==undefined&&window.__lyricMusicSketch.sourceLyrics!==currentLyrics){showToast('歌詞が生成後に変更されています。先にメロディを再生成してください');return false;}
+  if(!selectHarmonyCandidate(candidateId))return false;
+  goCompositionStage('arrange');
+  const status=document.getElementById('composition-stage-status');if(status)status.textContent=candidateId+'案を選択しました。BEAT//LABでベース・ドラム・ピアノ・ギターへ展開します。';
+  sendToBeatLab();
+  return true;
+}
 function sendToBeatLab(){
   if(!state.lastNotes||!state.lastNotes.length){
     showToast('先にメロディ候補を生成するか、音符カードを読み込んでください');
