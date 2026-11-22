@@ -720,6 +720,15 @@ test("TL-57 BEAT//LAB plays imported bass notes in sync with melody and drums", 
   assert.equal(notes[0].velocity,100/127);
   assert.equal(notes[1].pitch,43);
   assert.equal(notes[1].velocity,0.5);
+  const simultaneous=helper({bass:{notes:[
+    {id:"high",pitch:43,startBeat:0,durationBeats:1,vel:80},
+    {id:"root",pitch:36,startBeat:0,durationBeats:1.5,vel:90},
+    {id:"same-pitch-stronger",pitch:36,startBeat:0,durationBeats:1.2,vel:110},
+    {id:"next",pitch:40,startBeat:1,durationBeats:1,vel:90}
+  ]}},2,4);
+  assert.equal(simultaneous.length,2,"monophonic bass must collapse simultaneous starts");
+  assert.deepEqual(simultaneous.map(n=>n.id),["same-pitch-stronger","next"],"lowest pitch wins; same pitch uses stronger velocity");
+  assert.equal(new Set(simultaneous.map(n=>n.startBeat)).size,simultaneous.length,"bass attacks must have unique start times");
   const playStart=html.indexOf("async function togglePlay()");
   const playEnd=html.indexOf("\nfunction stopPlay()",playStart);
   const play=html.slice(playStart,playEnd);
@@ -1001,7 +1010,7 @@ test("TL-70 piano and guitar accompaniment creates genuinely different A B C cho
   const html=await readFile(beatLabPath,"utf8");
   for(const id of ["piano-enabled","piano-volume","guitar-enabled","guitar-volume"])assert.match(html,new RegExp('id="'+id+'"'),id+" control must exist");
   assert.match(html,/function getPianoSynth\(\)[\s\S]*?new Tone\.PolySynth/,"piano must have its own polyphonic voice");
-  assert.match(html,/function getGuitarSynth\(\)[\s\S]*?new Tone\.PluckSynth/,"guitar must have a plucked voice");
+  assert.match(html,/function getGuitarSynth\(\)[\s\S]*?new Tone\.PolySynth/,"guitar fallback must support chord voicings");
   assert.match(html,/const gains=\{drum:drumBus,melody:melodyBus,bass:bassBus,piano:pianoBus,guitar:guitarBus\}/,"piano and guitar must have independent mix controls");
   assert.match(html,/Object\.entries\(gains\)\.forEach\(\(\[name,bus\]\)=>\{if\(bus\)mixRamp\(bus\.gain/,"each instrument bus must keep an independently adjustable gain");
   const start=html.indexOf("function chordSymbolToPitches(symbol,octave=4)");
@@ -1025,7 +1034,7 @@ test("TL-70 piano and guitar accompaniment creates genuinely different A B C cho
   assert.match(html,/activeTracks\.piano\?\.notes/);
   assert.match(html,/activeTracks\.guitar\?\.notes/);
   assert.match(html,/getPianoSynth\(\)\.triggerAttackRelease/,"piano chord events must be played");
-  assert.match(html,/getGuitarSynth\(\)\.triggerAttack/,"guitar plucks must be played");
+  assert.match(html,/getGuitarSynth\(\)\.triggerAttackRelease\(notes,duration,when,velocity\)/,"guitar fallback must play single notes and chord voicings with timed releases");
 });
 
 
