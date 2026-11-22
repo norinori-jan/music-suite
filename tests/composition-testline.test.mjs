@@ -1481,7 +1481,7 @@ test("TL-90 all inline JavaScript in composition, BEAT//LAB and score editor pag
 test("TL-90 sampled violin is preferred but synth fallback keeps melody playable", async () => {
   const html = await readFile(beatLabPath, "utf8");
   assert.match(html, /function getMelodySampler\(\)/);
-  assert.match(html, /TONEJS_SAMPLE_ROOT\+'violin\\/'/);
+  assert.ok(html.includes("baseUrl:TONEJS_SAMPLE_ROOT+'violin/'"));
   assert.match(html, /async function ensureMelodySamplerReady\(\)/);
   assert.match(html, /if\(melodySamplerReady&&melodySampler\)melodySampler\.triggerAttackRelease/);
   assert.match(html, /else getMelodySynth\(\)\.triggerAttackRelease/);
