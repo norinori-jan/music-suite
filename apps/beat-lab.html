@@ -1346,15 +1346,16 @@ async function runToneEngineDiagnostic(){
 }
 async function runTrackAudioDiagnostic(){
   try{
-    await Tone.start();const at=Tone.now()+.08,bpm=PROJ_BPM();
+    await Tone.start();const bpm=PROJ_BPM();
     const tests=[
-      ['メロディ',()=>{const note='E5';if(melodySamplerReady&&melodySampler)melodySampler.triggerAttackRelease(note,.28,at,.75);else getMelodySynth().triggerAttackRelease(note,.28,at,.75);}],
-      ['ピアノ',()=>playPianoEvent({pitches:[60,64,67],durationSeconds:.42,velocity:.7},at)],
-      ['ギター',()=>playGuitarEvent({pitches:[55,59,62],durationBeats:.5,velocity:.65,instrument:'acoustic'},at,bpm)],
-      ['ベース',()=>playBassNote({pitch:36,velocity:.75},.35,at,null,APP.activeDrumVariant||'A')],
-      ['ドラム',()=>playHit(36,.8,at,false)]
+      ['メロディ',when=>{const note='E5';if(melodySamplerReady&&melodySampler)melodySampler.triggerAttackRelease(note,.28,when,.75);else getMelodySynth().triggerAttackRelease(note,.28,when,.75);}],
+      ['ピアノ',when=>playPianoEvent({pitches:[60,64,67],durationSeconds:.42,velocity:.7},when)],
+      ['ギター',when=>playGuitarEvent({pitches:[55,59,62],durationBeats:.5,velocity:.65,instrument:'acoustic'},when,bpm)],
+      ['ベース',when=>playBassNote({pitch:36,velocity:.75},.35,when,null,APP.activeDrumVariant||'A')],
+      ['ドラム',when=>playHit(36,.8,when,false)]
     ];
-    tests.forEach((item,index)=>setTimeout(()=>{try{item[1]();}catch(error){console.error('[music-suite] track diagnostic '+item[0],error);}},index*420));
+    const firstAt=Tone.now()+.08;
+    tests.forEach((item,index)=>{const when=firstAt+index*.42;try{item[1](when);}catch(error){console.error('[music-suite] track diagnostic '+item[0],error);}});
     setAudioDiagnosticStatus('5パート個別テスト送信中: メロディ → ピアノ → ギター → ベース → ドラム');return tests.map(item=>item[0]);
   }catch(error){setAudioDiagnosticStatus('トラック診断エラー: '+error.message,true);console.error('[music-suite] track diagnostic failed',error);return null;}
 }
