@@ -83,8 +83,8 @@ try {
   assert.equal(audioDiagnosticReport.tone?.rawState, "running", "Tone.js context must be running");
   assert.deepEqual(audioDiagnosticReport.tracks, ["メロディ", "ピアノ", "ギター", "ベース", "ドラム"], "all five track diagnostics must be callable");
   await page.waitForTimeout(2300);
-  const ensembleDiagnosticReport = await page.evaluate(() => {
-    const result = runSimultaneousAudioDiagnostic();
+  const ensembleDiagnosticReport = await page.evaluate(async () => {
+    const result = await runSimultaneousAudioDiagnostic();
     return { available: typeof runSimultaneousAudioDiagnostic === "function", meterAvailable: !!masterMeter, result };
   });
   assert.equal(ensembleDiagnosticReport.available, true, "five-track ensemble diagnostic must be available");
