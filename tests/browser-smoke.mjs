@@ -83,6 +83,16 @@ try {
   assert.equal(audioDiagnosticReport.tone?.rawState, "running", "Tone.js context must be running");
   assert.deepEqual(audioDiagnosticReport.tracks, ["メロディ", "ピアノ", "ギター", "ベース", "ドラム"], "all five track diagnostics must be callable");
   await page.waitForTimeout(2300);
+  const ensembleDiagnosticReport = await page.evaluate(() => {
+    const result = runSimultaneousAudioDiagnostic();
+    return { available: typeof runSimultaneousAudioDiagnostic === "function", meterAvailable: !!masterMeter, result };
+  });
+  assert.equal(ensembleDiagnosticReport.available, true, "five-track ensemble diagnostic must be available");
+  assert.equal(ensembleDiagnosticReport.meterAvailable, true, "master output meter must be initialized");
+  assert.deepEqual(ensembleDiagnosticReport.result?.tracks, ["メロディ", "ピアノ", "ギター", "ベース", "ドラム"], "ensemble diagnostic must schedule all five tracks");
+  await page.waitForTimeout(5200);
+  const audioStateAfterEnsemble = await page.evaluate(() => getAudioPlaybackDiagnostics());
+  assert.equal(audioStateAfterEnsemble.meterMonitoring, false, "master meter monitor must stop after ensemble audition");
 
   const trackReport = await page.evaluate(() => {
     const arrangement = syncActiveArrangementTrackSnapshot();
@@ -145,7 +155,7 @@ try {
   assert.deepEqual(sampleFailures, [], "Instrument sample requests failed:\n" + JSON.stringify(sampleFailures));
   assert.deepEqual(sampleHttpErrors, [], "Instrument samples returned HTTP errors:\n" + JSON.stringify(sampleHttpErrors));
   assert.deepEqual(samplerStatus, { piano: true, acousticGuitar: true, electricGuitar: true, bass: true }, "all four sample instruments must finish loading");
-  console.log("BROWSER_SMOKE_OK " + JSON.stringify({ toneOnBeatLab, audioDiagnosticReport, trackReport, playedVariants, volumeCheck, samplerStatus, sampleRequests: sampleRequests.length, sampleFailures, sampleHttpErrors, runtimeErrors: runtimeErrors.length, consoleErrors, consoleWarnings }));
+  console.log("BROWSER_SMOKE_OK " + JSON.stringify({ toneOnBeatLab, audioDiagnosticReport, ensembleDiagnosticReport, audioStateAfterEnsemble, trackReport, playedVariants, volumeCheck, samplerStatus, sampleRequests: sampleRequests.length, sampleFailures, sampleHttpErrors, runtimeErrors: runtimeErrors.length, consoleErrors, consoleWarnings }));
 } finally {
   if (browser) await browser.close();
   if (serverListening) await new Promise(resolve => server.close(resolve));
