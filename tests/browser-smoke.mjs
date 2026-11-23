@@ -73,6 +73,17 @@ try {
   assert.equal(toneOnBeatLab, true, "Tone.js must load on BEAT//LAB");
   await page.waitForFunction(() => document.getElementById("test-route-intro")?.textContent.includes("標準テスト曲を受信"), null, { timeout: 10000 });
 
+  const audioDiagnosticReport = await page.evaluate(async () => {
+    const output = await runAudioOutputDiagnostic();
+    const tone = await runToneEngineDiagnostic();
+    const tracks = await runTrackAudioDiagnostic();
+    return { output, tone, tracks, status: document.getElementById("audio-diagnostic-status")?.textContent || "" };
+  });
+  assert.equal(audioDiagnosticReport.output?.rawState, "running", "Web Audio output context must be running");
+  assert.equal(audioDiagnosticReport.tone?.rawState, "running", "Tone.js context must be running");
+  assert.deepEqual(audioDiagnosticReport.tracks, ["メロディ", "ピアノ", "ギター", "ベース", "ドラム"], "all five track diagnostics must be callable");
+  await page.waitForTimeout(2300);
+
   const trackReport = await page.evaluate(() => {
     const arrangement = syncActiveArrangementTrackSnapshot();
     const tracks = arrangement?.tracks || {};
@@ -134,7 +145,7 @@ try {
   assert.deepEqual(sampleFailures, [], "Instrument sample requests failed:\n" + JSON.stringify(sampleFailures));
   assert.deepEqual(sampleHttpErrors, [], "Instrument samples returned HTTP errors:\n" + JSON.stringify(sampleHttpErrors));
   assert.deepEqual(samplerStatus, { piano: true, acousticGuitar: true, electricGuitar: true, bass: true }, "all four sample instruments must finish loading");
-  console.log("BROWSER_SMOKE_OK " + JSON.stringify({ toneOnBeatLab, trackReport, playedVariants, volumeCheck, samplerStatus, sampleRequests: sampleRequests.length, sampleFailures, sampleHttpErrors, runtimeErrors: runtimeErrors.length, consoleErrors, consoleWarnings }));
+  console.log("BROWSER_SMOKE_OK " + JSON.stringify({ toneOnBeatLab, audioDiagnosticReport, trackReport, playedVariants, volumeCheck, samplerStatus, sampleRequests: sampleRequests.length, sampleFailures, sampleHttpErrors, runtimeErrors: runtimeErrors.length, consoleErrors, consoleWarnings }));
 } finally {
   if (browser) await browser.close();
   if (serverListening) await new Promise(resolve => server.close(resolve));
