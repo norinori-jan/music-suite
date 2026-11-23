@@ -284,6 +284,13 @@ body{padding-bottom:env(safe-area-inset-bottom)}
   <div class="sdot" id="sdot"></div>
   <span id="smsg">BEAT//LAB 起動完了 — STEP からパターンを作成してください</span>
 </div>
+<div id="audio-diagnostic-panel" style="display:flex;align-items:center;gap:8px;flex-wrap:wrap;padding:8px 12px;background:var(--s2);border-bottom:1px solid var(--bd);font-size:10px">
+  <strong style="color:var(--acc)">🔊 AUDIO CHECK</strong>
+  <button class="btn" type="button" onclick="runAudioOutputDiagnostic()">① 出力経路テスト</button>
+  <button class="btn" type="button" onclick="runToneEngineDiagnostic()">② Tone.jsテスト</button>
+  <button class="btn" type="button" onclick="runTrackAudioDiagnostic()">③ 5パート個別テスト</button>
+  <span id="audio-diagnostic-status" role="status" aria-live="polite" style="color:var(--mu)">未診断 — ボタンを押して音声出力を確認できます</span>
+</div>
 
 <div id="mixbar" style="display:flex;align-items:center;gap:12px;flex-wrap:wrap;padding:7px 12px;background:var(--s1);border-bottom:1px solid var(--bd);font-size:10px">
   <label style="display:flex;align-items:center;gap:5px"><input type="checkbox" id="melody-enabled" checked> 🎹 メロディ</label>
@@ -1303,7 +1310,54 @@ function playHit(pitch, vel=1, when, ensureAudio=true){
 }
 
 let playTimer=null,nextStepTime=0,playbackGeneration=0;
-
+function setAudioDiagnosticStatus(message,isError=false){
+  const el=document.getElementById('audio-diagnostic-status');
+  if(el){el.textContent=message;el.style.color=isError?'#ff7777':'var(--mu)';}
+}
+function getAudioContextDiagnostics(){
+  const tc=typeof Tone!=='undefined'&&typeof Tone.getContext==='function'?Tone.getContext():null;
+  const raw=tc?.rawContext||tc?._context||null;
+  return {toneState:tc?.state||'unknown',rawState:raw?.state||'unavailable',sampleRate:raw?.sampleRate||null,channels:raw?.destination?.maxChannelCount||null};
+}
+async function runAudioOutputDiagnostic(){
+  try{
+    if(typeof Tone==='undefined')throw new Error('Tone.jsが読み込まれていません');
+    await Tone.start();
+    const info=getAudioContextDiagnostics(),tc=Tone.getContext(),raw=tc?.rawContext||tc?._context;
+    if(!raw||raw.state!=='running')throw new Error('AudioContextがrunningではありません: '+(raw?.state||'取得不可'));
+    const osc=raw.createOscillator(),gain=raw.createGain();
+    osc.type='sine';osc.frequency.setValueAtTime(660,raw.currentTime);
+    gain.gain.setValueAtTime(.0001,raw.currentTime);gain.gain.exponentialRampToValueAtTime(.12,raw.currentTime+.025);gain.gain.setValueAtTime(.12,raw.currentTime+.18);gain.gain.exponentialRampToValueAtTime(.0001,raw.currentTime+.24);
+    osc.connect(gain);gain.connect(raw.destination);osc.start(raw.currentTime+.01);osc.stop(raw.currentTime+.26);
+    osc.onended=()=>{try{osc.disconnect();gain.disconnect();}catch(e){}};
+    setAudioDiagnosticStatus('Web Audio出力テスト送信: '+info.rawState+' / '+info.sampleRate+'Hz。音が聞こえるか確認してください');return info;
+  }catch(error){setAudioDiagnosticStatus('出力経路エラー: '+error.message,true);console.error('[music-suite] output diagnostic failed',error);return null;}
+}
+async function runToneEngineDiagnostic(){
+  let synth=null;
+  try{
+    if(typeof Tone==='undefined')throw new Error('Tone.jsが読み込まれていません');
+    await Tone.start();const info=getAudioContextDiagnostics();
+    synth=new Tone.Synth({oscillator:{type:'sine'},envelope:{attack:.01,decay:.08,sustain:.18,release:.08}});
+    synth.connect(getMasterBus());synth.volume.value=-12;synth.triggerAttackRelease('E5','8n',Tone.now()+.04,.8);
+    setAudioDiagnosticStatus('Tone.jsテスト音をマスターバスへ送信: '+info.toneState+' / '+info.rawState);return info;
+  }catch(error){setAudioDiagnosticStatus('Tone.jsテストエラー: '+error.message,true);console.error('[music-suite] Tone diagnostic failed',error);return null;}
+  finally{if(synth)setTimeout(()=>{try{synth.dispose();}catch(e){}},500);}
+}
+async function runTrackAudioDiagnostic(){
+  try{
+    await Tone.start();const at=Tone.now()+.08,bpm=PROJ_BPM();
+    const tests=[
+      ['メロディ',()=>{const note='E5';if(melodySamplerReady&&melodySampler)melodySampler.triggerAttackRelease(note,.28,at,.75);else getMelodySynth().triggerAttackRelease(note,.28,at,.75);}],
+      ['ピアノ',()=>playPianoEvent({pitches:[60,64,67],durationSeconds:.42,velocity:.7},at)],
+      ['ギター',()=>playGuitarEvent({pitches:[55,59,62],durationBeats:.5,velocity:.65,instrument:'acoustic'},at,bpm)],
+      ['ベース',()=>playBassNote({pitch:36,velocity:.75},.35,at,null,APP.activeDrumVariant||'A')],
+      ['ドラム',()=>playHit(36,.8,at,false)]
+    ];
+    tests.forEach((item,index)=>setTimeout(()=>{try{item[1]();}catch(error){console.error('[music-suite] track diagnostic '+item[0],error);}},index*420));
+    setAudioDiagnosticStatus('5パート個別テスト送信中: メロディ → ピアノ → ギター → ベース → ドラム');return tests.map(item=>item[0]);
+  }catch(error){setAudioDiagnosticStatus('トラック診断エラー: '+error.message,true);console.error('[music-suite] track diagnostic failed',error);return null;}
+}
 function chordSymbolToPitches(symbol,octave=4){
   const text=String(symbol||'').trim().replace(/\s+/g,'');
   const match=text.match(/^([A-G])([#b]?)(.*)$/i);
@@ -1601,9 +1655,8 @@ async function togglePlay(){
   if(APP.playing){ stopPlay(); return; }
   const melodyControl=document.getElementById('melody-enabled');
   if(melodyControl?.checked){
-    setStatus('gen','メロディ用バイオリン音源を読み込んでいます…');
-    try{await ensureMelodySamplerReady();}
-    catch(error){setStatus('err','メロディ音源を読み込めません。電子音へ代替せず再生を停止しました：'+error.message);return;}
+    // Load remote violin samples in the background; use local synth until ready or on failure.
+    try{getMelodySampler();}catch(error){console.warn('[music-suite] violin sampler unavailable; synth fallback will be used',error);}
   }
   APP.playing=true;
   const generation=++playbackGeneration;
@@ -1672,6 +1725,7 @@ async function togglePlay(){
             const duration=Math.max(.06,(Number(n.durationBeats)||.25)*60/bpm*.92);
             const velocity=Math.max(.05,Math.min(1,(Number(n.vel)||88)/127*sectionDynamics.melody));
             if(melodySamplerReady&&melodySampler)melodySampler.triggerAttackRelease(Tone.Frequency(pitch,'midi').toNote(),duration,audioAt,velocity);
+            else getMelodySynth().triggerAttackRelease(Tone.Frequency(pitch,'midi').toNote(),duration,audioAt,velocity);
           }
         }
       });
