@@ -289,7 +289,9 @@ body{padding-bottom:env(safe-area-inset-bottom)}
   <button class="btn" type="button" onclick="runAudioOutputDiagnostic()">① 出力経路テスト</button>
   <button class="btn" type="button" onclick="runToneEngineDiagnostic()">② Tone.jsテスト</button>
   <button class="btn" type="button" onclick="runTrackAudioDiagnostic()">③ 5パート個別テスト</button>
-  <span id="audio-diagnostic-status" role="status" aria-live="polite" style="color:var(--mu)">未診断 — ボタンを押して音声出力を確認できます</span>
+  <button class="btn pri" type="button" onclick="runSimultaneousAudioDiagnostic()">④ 5パート同時試聴</button>
+  <label style="display:flex;align-items:center;gap:5px">MASTER <meter id="audio-master-meter" min="-60" max="0" value="-60" style="width:90px;height:9px"></meter><span id="audio-master-level">-- dBFS</span></label>
+  <span id="audio-diagnostic-status" role="status" aria-live="polite" style="color:var(--mu)">未診断 — 出力・楽器・同時再生を順番に確認できます</span>
 </div>
 
 <div id="mixbar" style="display:flex;align-items:center;gap:12px;flex-wrap:wrap;padding:7px 12px;background:var(--s1);border-bottom:1px solid var(--bd);font-size:10px">
@@ -303,6 +305,7 @@ body{padding-bottom:env(safe-area-inset-bottom)}
   <label style="display:flex;align-items:center;gap:5px">音量 <input id="guitar-volume" type="range" min="0" max="100" value="42" style="width:70px"></label>
   <label style="display:flex;align-items:center;gap:5px">🥁 ドラム音量 <input id="drum-volume" type="range" min="0" max="100" value="80" style="width:70px"></label>
   <span id="mix-status" style="color:var(--mu)">メロディ・ベース・ピアノ・ギター・ドラムを同時に試聴できます</span><span id="arrangement-mix-status" style="color:var(--acc);font-weight:700">A MIX · BALANCED</span>
+  <button class="btn" type="button" onclick="resetMixVolumes()">音量を基準値に戻す</button>
   <button class="btn pri" id="ai-mix-preview-btn" onclick="playMelodyDrumPreview()" style="display:none">▶ AI伴奏をメロディと同時試聴</button>
 </div>
 <div id="variationbar" style="display:flex;align-items:center;gap:7px;flex-wrap:wrap;padding:7px 12px;background:var(--s2);border-bottom:1px solid var(--bd);font-size:10px">
@@ -1143,8 +1146,13 @@ function toggleSwing(){
 // ════════════════════════════════════════════════════════
 // PLAYBACK
 // ════════════════════════════════════════════════════════
-let synthKick=null,synthSnare=null,synthSnareBody=null,synthRim=null,synthKickClick=null,synthKickClickFilter=null,synthSnareFilter=null,synthHat=null,synthHatFilter=null,synthOpenHat=null,synthCrash=null,synthRide=null,synthPerc=null,melodySynth=null,melodySampler=null,melodySamplerReady=false,melodySamplerLoadPromise=null,bassSynth=null,bassSampler=null,bassSamplerReady=false,bassSamplerFilter=null,bassSubSynth=null,bassAttackSynth=null,pianoSynth=null,pianoSampler=null,pianoSamplerReady=false,guitarSynth=null,guitarSampler=null,guitarSamplerReady=false,electricGuitarSynth=null,electricGuitarSampler=null,electricGuitarSamplerReady=false,electricGuitarFilter=null,electricGuitarChorus=null,electricGuitarDrive=null,drumBus=null,melodyBus=null,bassBus=null,pianoBus=null,guitarBus=null,pianoToneFilter=null,guitarToneFilter=null,pianoPan=null,guitarPan=null,drumCompressor=null,masterCompressor=null,masterLimiter=null,bassBusEQ=null,bassCompressor=null,guitarCompressor=null;
-function getMasterBus(){if(!masterCompressor){masterLimiter=new Tone.Limiter(-1).toDestination();masterCompressor=new Tone.Compressor({threshold:-15,ratio:1.7,attack:.012,release:.22,knee:10}).connect(masterLimiter);}return masterCompressor;}
+let synthKick=null,synthSnare=null,synthSnareBody=null,synthRim=null,synthKickClick=null,synthKickClickFilter=null,synthSnareFilter=null,synthHat=null,synthHatFilter=null,synthOpenHat=null,synthCrash=null,synthRide=null,synthPerc=null,melodySynth=null,melodySampler=null,melodySamplerReady=false,melodySamplerLoadPromise=null,bassSynth=null,bassSampler=null,bassSamplerReady=false,bassSamplerFilter=null,bassSubSynth=null,bassAttackSynth=null,pianoSynth=null,pianoSampler=null,pianoSamplerReady=false,guitarSynth=null,guitarSampler=null,guitarSamplerReady=false,electricGuitarSynth=null,electricGuitarSampler=null,electricGuitarSamplerReady=false,electricGuitarFilter=null,electricGuitarChorus=null,electricGuitarDrive=null,drumBus=null,melodyBus=null,bassBus=null,pianoBus=null,guitarBus=null,pianoToneFilter=null,guitarToneFilter=null,pianoPan=null,guitarPan=null,drumCompressor=null,masterCompressor=null,masterLimiter=null,masterMeter=null,bassBusEQ=null,bassCompressor=null,guitarCompressor=null,audioMeterTimer=null,audioDiagnosticBusy=false,playbackStarting=false;
+function getMasterBus(){if(!masterCompressor){masterLimiter=new Tone.Limiter(-1);masterMeter=new Tone.Meter({smoothing:.72,normalRange:false});masterCompressor=new Tone.Compressor({threshold:-15,ratio:1.7,attack:.012,release:.22,knee:10});masterCompressor.connect(masterLimiter);masterLimiter.connect(masterMeter);masterMeter.toDestination();}return masterCompressor;}
+function readMasterLevelDb(){if(!masterMeter)return null;try{const raw=masterMeter.getValue();const value=Array.isArray(raw)?Math.max(...raw):Number(raw);return Number.isFinite(value)?value:null;}catch(error){return null;}}
+function updateAudioLevelMeter(){const db=readMasterLevelDb(),meter=document.getElementById('audio-master-meter'),label=document.getElementById('audio-master-level');if(db===null){if(label)label.textContent='-- dBFS';return;}const shown=Math.max(-60,Math.min(0,db));if(meter)meter.value=shown;if(label){label.textContent=db<=-59.5?'無音':db.toFixed(1)+' dBFS';label.style.color=db>-1.5?'#ff7777':db>-6?'#ffd166':'var(--acc)';}}
+function startAudioMeterMonitor(){if(audioMeterTimer)return;updateAudioLevelMeter();audioMeterTimer=setInterval(updateAudioLevelMeter,80);}
+function stopAudioMeterMonitor(){if(audioMeterTimer){clearInterval(audioMeterTimer);audioMeterTimer=null;}updateAudioLevelMeter();}
+function resetMixVolumes(){const defaults={drum:80,melody:65,bass:72,piano:52,guitar:42};Object.entries(defaults).forEach(([name,value])=>{const input=document.getElementById(name+'-volume');if(input)input.value=String(value);});updateMixVolumes();setAudioDiagnosticStatus('5パートの音量を基準値に戻しました。MASTERメーターを見ながら調整してください');}
 function getDrumBus(){if(!drumBus){drumCompressor=new Tone.Compressor({threshold:-19,ratio:2.2,attack:.006,release:.16,knee:10}).connect(getMasterBus());drumBus=new Tone.Gain(Number(document.getElementById('drum-volume')?.value??80)/100).connect(drumCompressor);}return drumBus;}
 function getMelodyBus(){if(!melodyBus)melodyBus=new Tone.Gain(Number(document.getElementById('melody-volume')?.value??65)/100).connect(getMasterBus());return melodyBus;}
 function getBassBus(){if(!bassBus){bassBus=new Tone.Gain(Number(document.getElementById('bass-volume')?.value??72)/100);bassBusEQ=new Tone.EQ3(-1,0,-1.5);bassCompressor=new Tone.Compressor({threshold:-22,ratio:2.3,attack:.012,release:.18,knee:9});bassBus.connect(bassBusEQ);bassBusEQ.connect(bassCompressor);bassCompressor.connect(getMasterBus());}return bassBus;}
@@ -1274,6 +1282,7 @@ function applyArrangementMix(variant=APP.activeDrumVariant||'A',options={}){
   if(masterCompressor){mixRamp(masterCompressor.threshold,profile.master.threshold,seconds);mixRamp(masterCompressor.ratio,profile.master.ratio,seconds);mixRamp(masterCompressor.attack,profile.master.attack,seconds);mixRamp(masterCompressor.release,profile.master.release,seconds);}
   const status=document.getElementById('arrangement-mix-status');
   if(status)status.textContent=key+' MIX · '+profile.label+' — '+profile.description;
+  updateAudioLevelMeter();
   return profile;
 }
 function updateMixVolumes(){applyArrangementMix(APP.activeDrumVariant||'A');}
@@ -1359,6 +1368,36 @@ async function runTrackAudioDiagnostic(){
     setAudioDiagnosticStatus('5パート個別テスト送信中: メロディ → ピアノ → ギター → ベース → ドラム');return tests.map(item=>item[0]);
   }catch(error){setAudioDiagnosticStatus('トラック診断エラー: '+error.message,true);console.error('[music-suite] track diagnostic failed',error);return null;}
 }
+async function runSimultaneousAudioDiagnostic(){
+  if(audioDiagnosticBusy){setAudioDiagnosticStatus('別の音声診断が実行中です。終了後にもう一度お試しください',true);return null;}
+  if(APP.playing){setAudioDiagnosticStatus('曲の再生を停止してから同時試聴してください',true);return null;}
+  audioDiagnosticBusy=true;
+  try{
+    await Tone.start();
+    const bpm=PROJ_BPM(),beatSeconds=60/bpm,firstAt=Tone.now()+.12,variant=APP.activeDrumVariant||'A';
+    applyArrangementMix(variant,{ensure:true,immediate:true});
+    try{getMelodySampler();}catch(error){console.warn('[music-suite] violin sampler unavailable during ensemble audition',error);}
+    const melody=[76,79,81,79,76,74,72,74],bass=[36,36,43,38,41,41,43,38];
+    for(let beat=0;beat<8;beat++){
+      const at=firstAt+beat*beatSeconds;
+      const melodyNote=Tone.Frequency(melody[beat],'midi').toNote();
+      if(melodySamplerReady&&melodySampler)melodySampler.triggerAttackRelease(melodyNote,beatSeconds*.72,at,.72);
+      else getMelodySynth().triggerAttackRelease(melodyNote,beatSeconds*.72,at,.72);
+      if(beat%2===0)playPianoEvent({pitches:beat%4===0?[60,64,67]:[57,60,64],durationSeconds:beatSeconds*1.65,velocity:.58},at);
+      playGuitarEvent({pitches:beat%2===0?[48,55,60]:[50,57,62],durationBeats:.72,velocity:.52,instrument:'acoustic'},at,bpm);
+      playBassNote({pitch:bass[beat],velocity:.68},beatSeconds*.82,at,null,variant);
+      playHit(beat%4===0?36:(beat%4===2?38:42),.62,at,false);
+    }
+    startAudioMeterMonitor();
+    const durationMs=beatSeconds*8*1000+220;
+    setAudioDiagnosticStatus('5パート同時再生を送信しました。約'+(durationMs/1000).toFixed(1)+'秒、音の重なりとMASTERレベルを確認してください');
+    setTimeout(()=>{stopAudioMeterMonitor();audioDiagnosticBusy=false;setAudioDiagnosticStatus('同時試聴終了。音割れ・音量差・途切れがなかったか確認してください');},durationMs);
+    return {scheduledBeats:8,tracks:['メロディ','ピアノ','ギター','ベース','ドラム'],bpm,variant};
+  }catch(error){
+    audioDiagnosticBusy=false;setAudioDiagnosticStatus('同時試聴エラー: '+error.message,true);console.error('[music-suite] ensemble diagnostic failed',error);return null;
+  }
+}
+function getAudioPlaybackDiagnostics(){return {playing:!!APP.playing,timerActive:!!playTimer,meterMonitoring:!!audioMeterTimer,playbackStarting:!!playbackStarting,context:getAudioContextDiagnostics(),masterDb:readMasterLevelDb()};}
 function chordSymbolToPitches(symbol,octave=4){
   const text=String(symbol||'').trim().replace(/\s+/g,'');
   const match=text.match(/^([A-G])([#b]?)(.*)$/i);
@@ -1652,8 +1691,14 @@ function syncActiveArrangementTrackSnapshot(){
   return current;
 }
 async function togglePlay(){
-  await Tone.start();
-  if(APP.playing){ stopPlay(); return; }
+  if(APP.playing){stopPlay();return;}
+  if(playbackStarting)return;
+  playbackStarting=true;
+  try{await Tone.start();}
+  catch(error){playbackStarting=false;setStatus('err','音声エンジンを開始できません: '+error.message);return;}
+  playbackStarting=false;
+  if(APP.playing)return;
+  startAudioMeterMonitor();
   const melodyControl=document.getElementById('melody-enabled');
   if(melodyControl?.checked){
     // Load remote violin samples in the background; use local synth until ready or on failure.
@@ -1756,8 +1801,12 @@ function stopPlay(){
   clearInterval(playTimer); playTimer=null;
   document.querySelectorAll('#play-btn,#play-btn-ex').forEach(b=>{b.textContent='▶';b.classList.remove('active')});
   document.querySelectorAll('.playing-step').forEach(e=>e.classList.remove('playing-step'));
+  stopAudioMeterMonitor();
+  if(melodySynth)melodySynth.releaseAll();
+  if(melodySampler)melodySampler.releaseAll();
   if(bassSynth)bassSynth.triggerRelease();
   if(bassSampler)bassSampler.releaseAll();
+  if(guitarSynth)guitarSynth.releaseAll();
   if(guitarSampler)guitarSampler.releaseAll();
   if(electricGuitarSampler)electricGuitarSampler.releaseAll();
   if(bassSubSynth)bassSubSynth.triggerRelease();
