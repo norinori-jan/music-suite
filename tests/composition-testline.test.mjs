@@ -1319,7 +1319,9 @@ test("TL-82 acoustic guitar, electric guitar and bass use real sample maps with 
 
 test("TL-83 instrument buses feed a shared master compressor and limiter", async () => {
   const html=await readFile(beatLabPath,"utf8");
-  assert.match(html,/masterLimiter=new Tone\.Limiter\(-1\)\.toDestination\(\)/);
+  assert.match(html,/masterLimiter=new Tone\.Limiter\(-1\)/);
+  assert.match(html,/masterMeter=new Tone\.Meter\(\{smoothing:\.72,normalRange:false\}\)/);
+  assert.match(html,/masterCompressor\.connect\(masterLimiter\);masterLimiter\.connect\(masterMeter\);masterMeter\.toDestination\(\)/);
   assert.match(html,/masterCompressor=new Tone\.Compressor\(\{threshold:-15,ratio:1\.7/);
   assert.match(html,/drumCompressor=new Tone\.Compressor\([\s\S]*?\.connect\(getMasterBus\(\)\)/);
   assert.match(html,/bassCompressor\.connect\(getMasterBus\(\)\)/);
@@ -1478,14 +1480,15 @@ test("TL-90 all inline JavaScript in composition, BEAT//LAB and score editor pag
   }
 });
 
-test("TL-90 melody playback requires the sampled violin source instead of silently using a synth", async () => {
+test("TL-90 melody playback falls back to synth while sampled violin loads or fails", async () => {
   const html = await readFile(beatLabPath, "utf8");
   assert.match(html, /function getMelodySampler\(\)/);
   assert.match(html, /TONEJS_SAMPLE_ROOT\+'violin\/'/);
   assert.match(html, /async function ensureMelodySamplerReady\(\)/);
-  assert.match(html, /await ensureMelodySamplerReady\(\)/);
+  assert.doesNotMatch(html, /await ensureMelodySamplerReady\(\)/);
   assert.match(html, /if\(melodySamplerReady&&melodySampler\)melodySampler\.triggerAttackRelease/);
-  assert.doesNotMatch(html, /getMelodySynth\(\)\.triggerAttackRelease/);
+  assert.match(html, /else getMelodySynth\(\)\.triggerAttackRelease/);
+  assert.match(html, /function getMelodySynth\(\)/);
   const credits = await readFile(path.join(here, "..", "SOUND-CREDITS.md"), "utf8");
   assert.match(credits, /Melody \(sampled violin\)/);
   assert.match(credits, /VSO2/);
