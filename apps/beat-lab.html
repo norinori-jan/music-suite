@@ -1692,6 +1692,7 @@ function syncActiveArrangementTrackSnapshot(){
 }
 async function togglePlay(){
   if(APP.playing){stopPlay();return;}
+  if(audioDiagnosticBusy){setAudioDiagnosticStatus('同時試聴テスト中です。終了してから曲を再生してください');return;}
   if(playbackStarting)return;
   playbackStarting=true;
   try{await Tone.start();}
