@@ -7,7 +7,7 @@ import { spawnSync } from 'node:child_process';
 import { dirname, join, resolve } from 'node:path';
 import { fileURLToPath } from 'node:url';
 
-const ROOT = resolve(dirname(fileURLToPath(import.meta.url)), '../..');
+const ROOT = resolve(dirname(fileURLToPath(import.meta.url)), '..');
 const LOCK_PATH = join(ROOT, 'audio/drums/source-lock.json');
 const OUTPUT_DIR = resolve(process.argv.find(x => x.startsWith('--output='))?.slice(9) || join(ROOT, 'audio/drums/samples'));
 const requested = process.argv.find(x => x.startsWith('--format='))?.slice(9) || 'both';
