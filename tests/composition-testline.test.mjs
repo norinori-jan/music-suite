@@ -1485,7 +1485,7 @@ test("TL-90 melody playback falls back to synth while sampled violin loads or fa
   assert.match(html, /function getMelodySampler\(\)/);
   assert.match(html, /TONEJS_SAMPLE_ROOT\+'violin\/'/);
   assert.match(html, /async function ensureMelodySamplerReady\(\)/);
-  assert.doesNotMatch(html, /await ensureMelodySamplerReady\(\)/);
+  assert.match(html, /async function prepareMelodyDiagnosticVoice\(\)[\s\S]*?await ensureMelodySamplerReady\(\)/, "only diagnostic auditions wait for the sample; live playback keeps its immediate synth fallback");
   assert.match(html, /if\(melodySamplerReady&&melodySampler\)melodySampler\.triggerAttackRelease/);
   assert.match(html, /else getMelodySynth\(\)\.triggerAttackRelease/);
   assert.match(html, /function getMelodySynth\(\)/);
