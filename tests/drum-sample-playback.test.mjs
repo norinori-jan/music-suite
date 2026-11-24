@@ -19,6 +19,7 @@ test('BEAT//LAB can load local CC0 drum samples and retain synth fallback', () =
   assert.match(html, /if\(playDrumSample\(pitch,safeVel,at\)\)return/);
   assert.match(html, /getKick\(\)\.triggerAttackRelease/);
   assert.match(html, /window\.__drumSampleKitDiagnostics/);
+  assert.match(html, /Open and closed hats share a choke group/);
 });
 
 test('CC0 drum importer verifies source Git blob IDs and produces 24-bit WAV plus OGG q8', () => {
