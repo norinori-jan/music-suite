@@ -25,6 +25,8 @@ jobs:
         uses: actions/setup-node@v4
         with:
           node-version: 22
+      - name: Check CC0 sample importer syntax
+        run: node --check scripts/import-cc0-drums.mjs
       - name: Run composition regression tests
         run: node --test tests/*.test.mjs
       - name: Install Playwright and Chromium
