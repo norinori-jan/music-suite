@@ -1314,7 +1314,7 @@ const DRUM_SAMPLE_ROLES={
   50:{role:'highTom',gain:.58},45:{role:'lowTom',gain:.62}
 };
 const DRUM_SAMPLE_IDS=['kick-01','kick-02','snare-01','snare-02','hat-closed-01','hat-closed-02','hat-open-01','hat-open-02','crash-01','crash-02','ride-01','ride-02','tom-high-01','tom-low-01'];
-let drumSampleBuffers=new Map(),drumSamplesReady=false,drumSamplesLoading=false,drumSampleRoundRobin={};
+let drumSampleBuffers=new Map(),drumSamplesReady=false,drumSamplesLoading=false,drumSampleRoundRobin={},activeSampleOpenHat=null;
 function drumSampleStatus(message,isError=false){
   const el=document.getElementById('audio-diagnostic-status');
   if(el){el.textContent=message;el.style.color=isError?'#ff7777':'var(--mu)';}
@@ -1378,11 +1378,15 @@ function playDrumSample(pitch,velocity,when){
   const id=available[index%available.length];drumSampleRoundRobin[config.role]=(index+1)%available.length;
   const context=getRawAudioContext(),buffer=drumSampleBuffers.get(id);
   if(!context||!buffer)return false;
-  const source=context.createBufferSource(),gain=context.createGain();
-  source.buffer=buffer;gain.gain.setValueAtTime(config.gain*Math.max(.05,Math.min(1,velocity)),when??context.currentTime);
+  const source=context.createBufferSource(),gain=context.createGain(),at=when??context.currentTime;
+  // Open and closed hats share a choke group, as on an acoustic kit.
+  if(pitch===42&&activeSampleOpenHat){try{activeSampleOpenHat.stop(at);}catch(e){}activeSampleOpenHat=null;}
+  if(pitch===46&&activeSampleOpenHat){try{activeSampleOpenHat.stop(at);}catch(e){}activeSampleOpenHat=null;}
+  source.buffer=buffer;gain.gain.setValueAtTime(config.gain*Math.max(.05,Math.min(1,velocity)),at);
   source.connect(gain);gain.connect(getDrumBus().input||getDrumBus());
-  source.start(when??context.currentTime);
-  source.onended=()=>{try{source.disconnect();gain.disconnect();}catch(e){}};
+  if(pitch===46)activeSampleOpenHat=source;
+  source.start(at);
+  source.onended=()=>{if(activeSampleOpenHat===source)activeSampleOpenHat=null;try{source.disconnect();gain.disconnect();}catch(e){}};
   return true;
 }
 async function previewDrumSampleKit(){
