@@ -1848,3 +1848,16 @@ test("TL-97 real lyric-to-melody workflow creates linked notes and section harmo
 });
 
 
+
+
+test("TL-98 melody diagnostics wait for the violin sampler and report fallback explicitly", async () => {
+  const html=await readFile(beatLabPath,"utf8");
+  assert.match(html,/async function prepareMelodyDiagnosticVoice\(\)[\s\S]*?await ensureMelodySamplerReady\(\)[\s\S]*?source:'violin-sample'[\s\S]*?source:'synth-fallback'/);
+  assert.match(html,/const melodyVoice=await prepareMelodyDiagnosticVoice\(\),bpm=PROJ_BPM\(\)/,"individual track audition must wait for a known melody voice");
+  assert.match(html,/window\.__lastTrackAudioDiagnostic=\{melodySource:melodyVoice\.source,failedTracks\}/);
+  assert.match(html,/const melodyVoice=await prepareMelodyDiagnosticVoice\(\)/,"ensemble audition must wait for melody sampler readiness");
+  assert.match(html,/window\.__lastEnsembleAudioDiagnostic=\{melodySource:melodyVoice\.source,failedTracks\}/);
+  assert.match(html,/melodyBusEQ=new Tone\.EQ3\(-\.3,1\.3,\.6\)/,"melody bus must receive a modest presence lift");
+  assert.match(html,/value="75" style="width:70px"/,"default melody fader must be moved forward");
+  assert.match(html,/const defaults=\{drum:72,melody:75,bass:70,piano:45,guitar:35\}/,"reset levels must match the revised headroom-conscious defaults");
+});
