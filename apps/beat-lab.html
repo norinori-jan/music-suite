@@ -290,6 +290,11 @@ body{padding-bottom:env(safe-area-inset-bottom)}
   <button class="btn" type="button" onclick="runToneEngineDiagnostic()">② Tone.jsテスト</button>
   <button class="btn" type="button" onclick="runTrackAudioDiagnostic()">③ 5パート個別テスト</button>
   <button class="btn pri" type="button" onclick="runSimultaneousAudioDiagnostic()">④ 5パート同時試聴</button>
+  <label style="display:flex;align-items:center;gap:4px">DRUM KIT
+    <select id="drum-sample-format" class="inp" style="font-size:10px;padding:4px"><option value="wav">WAV 24-bit</option><option value="ogg">OGG q8</option></select>
+  </label>
+  <button class="btn" type="button" id="drum-sample-load-btn" onclick="loadDrumSampleKit()">CC0ドラム音源を読み込む</button>
+  <button class="btn" type="button" onclick="previewDrumSampleKit()">🥁 ドラムキット試聴</button>
   <label style="display:flex;align-items:center;gap:5px">MASTER <meter id="audio-master-meter" min="-60" max="0" value="-60" style="width:90px;height:9px"></meter><span id="audio-master-level">-- dBFS</span></label>
   <span id="audio-diagnostic-status" role="status" aria-live="polite" style="color:var(--mu)">未診断 — 出力・楽器・同時再生を順番に確認できます</span>
 </div>
@@ -1291,6 +1296,7 @@ document.getElementById('melody-volume').addEventListener('input',updateMixVolum
 document.getElementById('bass-volume').addEventListener('input',updateMixVolumes);
 document.getElementById('piano-volume').addEventListener('input',updateMixVolumes);
 document.getElementById('guitar-volume').addEventListener('input',updateMixVolumes);
+document.getElementById('drum-sample-format')?.addEventListener('change',unloadDrumSampleKit);
 function getKick(){ if(!synthKick){synthKick=new Tone.MembraneSynth({pitchDecay:.055,octaves:6.5,envelope:{attack:.001,decay:.28,sustain:0,release:.11}}).connect(getDrumBus());synthKick.volume.value=-4;} return synthKick; }
 function getKickClick(){if(!synthKickClick){synthKickClickFilter=new Tone.Filter(2600,'highpass').connect(getDrumBus());synthKickClick=new Tone.NoiseSynth({noise:{type:'white'},envelope:{attack:.001,decay:.018,sustain:0,release:.008}}).connect(synthKickClickFilter);synthKickClick.volume.value=-27;}return synthKickClick;}
 function getSnare(){ if(!synthSnare){synthSnareFilter=new Tone.Filter(1750,'highpass').connect(getDrumBus());synthSnare=new Tone.NoiseSynth({noise:{type:'white'},envelope:{attack:.001,decay:.17,sustain:0,release:.032}}).connect(synthSnareFilter);synthSnare.volume.value=-10;} return synthSnare; }
@@ -1302,12 +1308,97 @@ function getCrash(){if(!synthCrash){synthCrash=new Tone.MetalSynth({frequency:22
 function getRide(){if(!synthRide){synthRide=new Tone.MetalSynth({frequency:520,envelope:{attack:.002,decay:.34,release:.07},harmonicity:7.2,modulationIndex:18,resonance:5200,octaves:1.1}).connect(getDrumBus());synthRide.volume.value=-23;}return synthRide;}
 function getPerc(){ if(!synthPerc){synthPerc=new Tone.MembraneSynth({pitchDecay:.02,octaves:3,envelope:{attack:.001,decay:.1,sustain:0,release:.05}}).connect(getDrumBus());synthPerc.volume.value=-10;} return synthPerc; }
 
+const DRUM_SAMPLE_ROLES={
+  36:{role:'kick',gain:.82},38:{role:'snare',gain:.78},42:{role:'closedHat',gain:.48},
+  46:{role:'openHat',gain:.42},49:{role:'crash',gain:.32},51:{role:'ride',gain:.34},
+  50:{role:'highTom',gain:.58},45:{role:'lowTom',gain:.62}
+};
+const DRUM_SAMPLE_IDS=['kick-01','kick-02','snare-01','snare-02','hat-closed-01','hat-closed-02','hat-open-01','hat-open-02','crash-01','crash-02','ride-01','ride-02','tom-high-01','tom-low-01'];
+let drumSampleBuffers=new Map(),drumSamplesReady=false,drumSamplesLoading=false,drumSampleRoundRobin={};
+function drumSampleStatus(message,isError=false){
+  const el=document.getElementById('audio-diagnostic-status');
+  if(el){el.textContent=message;el.style.color=isError?'#ff7777':'var(--mu)';}
+}
+function getRawAudioContext(){
+  const context=Tone.getContext();
+  return context?.rawContext||context?._context||null;
+}
+function unloadDrumSampleKit(){
+  drumSampleBuffers.clear();drumSamplesReady=false;drumSamplesLoading=false;drumSampleRoundRobin={};
+  drumSampleStatus('ドラム音源を解除しました。WAV/OGGを選んで再読み込みできます');
+}
+async function loadDrumSampleKit(){
+  if(drumSamplesLoading){drumSampleStatus('ドラム音源を読み込み中です');return false;}
+  const context=getRawAudioContext();
+  if(!context)throw new Error('AudioContext unavailable');
+  await Tone.start();
+  drumSamplesLoading=true;drumSamplesReady=false;drumSampleBuffers.clear();
+  const format=document.getElementById('drum-sample-format')?.value==='ogg'?'ogg':'wav';
+  const button=document.getElementById('drum-sample-load-btn');if(button)button.disabled=true;
+  drumSampleStatus('CC0ドラム音源を読み込み中: '+format.toUpperCase()+' / '+DRUM_SAMPLE_IDS.length+'素材');
+  let cursor=0,loaded=0;const failures=[];
+  const worker=async()=>{
+    while(cursor<DRUM_SAMPLE_IDS.length){
+      const id=DRUM_SAMPLE_IDS[cursor++];
+      try{
+        const response=await fetch('../audio/drums/samples/'+id+'.'+format,{cache:'force-cache'});
+        if(!response.ok)throw new Error('HTTP '+response.status);
+        const buffer=await context.decodeAudioData(await response.arrayBuffer());
+        drumSampleBuffers.set(id,buffer);loaded++;
+      }catch(error){failures.push(id+': '+(error?.message||'load failed'));}
+      drumSampleStatus('CC0ドラム音源を読み込み中: '+loaded+'/'+DRUM_SAMPLE_IDS.length+' / '+format.toUpperCase());
+    }
+  };
+  try{
+    await Promise.all([worker(),worker(),worker()]);
+    const required=['kick-01','snare-01','hat-closed-01'];
+    const missing=required.filter(id=>!drumSampleBuffers.has(id));
+    drumSamplesReady=missing.length===0;
+    if(!drumSamplesReady)throw new Error('必須サンプルがありません: '+missing.join(', '));
+    const result={format,loaded,expected:DRUM_SAMPLE_IDS.length,failures};
+    window.__drumSampleKitDiagnostics=result;
+    drumSampleStatus('CC0ドラム音源準備完了: '+loaded+'/'+DRUM_SAMPLE_IDS.length+'素材 / '+format.toUpperCase()+(failures.length?' / 未読込 '+failures.length+'素材':'')+'。合成音ではなく実サンプルを使用します');
+    return result;
+  }catch(error){
+    drumSamplesReady=false;
+    drumSampleStatus('サンプル読込エラー: '+error.message+'。既存の合成ドラムへ自動フォールバックします',true);
+    window.__drumSampleKitDiagnostics={format,loaded,expected:DRUM_SAMPLE_IDS.length,failures,error:error.message};
+    return false;
+  }finally{
+    drumSamplesLoading=false;if(button)button.disabled=false;
+  }
+}
+function playDrumSample(pitch,velocity,when){
+  const config=DRUM_SAMPLE_ROLES[pitch];
+  if(!drumSamplesReady||!config)return false;
+  const candidates=DRUM_SAMPLE_IDS.filter(id=>id.startsWith(config.role==='closedHat'?'hat-closed':config.role==='openHat'?'hat-open':config.role==='highTom'?'tom-high':config.role==='lowTom'?'tom-low':config.role));
+  const available=candidates.filter(id=>drumSampleBuffers.has(id));
+  if(!available.length)return false;
+  const index=drumSampleRoundRobin[config.role]||0;
+  const id=available[index%available.length];drumSampleRoundRobin[config.role]=(index+1)%available.length;
+  const context=getRawAudioContext(),buffer=drumSampleBuffers.get(id);
+  if(!context||!buffer)return false;
+  const source=context.createBufferSource(),gain=context.createGain();
+  source.buffer=buffer;gain.gain.setValueAtTime(config.gain*Math.max(.05,Math.min(1,velocity)),when??context.currentTime);
+  source.connect(gain);gain.connect(getDrumBus().input||getDrumBus());
+  source.start(when??context.currentTime);
+  source.onended=()=>{try{source.disconnect();gain.disconnect();}catch(e){}};
+  return true;
+}
+async function previewDrumSampleKit(){
+  if(!drumSamplesReady){const loaded=await loadDrumSampleKit();if(!loaded)return false;}
+  await Tone.start();
+  const start=Tone.now()+.12,step=.42,sequence=[[36,.9],[42,.5],[38,.82],[42,.35],[46,.58],[50,.62],[45,.68],[49,.78],[51,.55]];
+  sequence.forEach(([pitch,velocity],index)=>playHit(pitch,velocity,start+index*step,false));
+  drumSampleStatus('CC0実ドラムキット試聴中: キック → ハイハット → スネア → オープンハット → タム → クラッシュ → ライド');
+  return true;
+}
 function playHit(pitch, vel=1, when, ensureAudio=true){
   // Direct cell audition starts audio; sequencer playback already started it once.
   if(ensureAudio){try{Tone.start();}catch(e){}}
   const safeVel=Math.max(.05,Math.min(1,Number(vel)||.05)),at=Number.isFinite(when)?when:undefined;
-  // Keep each instrument's base gain fixed. Per-hit velocity is passed to
-  // Tone's voice, avoiding shared-volume races between simultaneous hits.
+  // Use decoded CC0 acoustic one-shots when available; preserve synth fallback otherwise.
+  if(playDrumSample(pitch,safeVel,at))return;
   if(pitch===36){getKick().triggerAttackRelease('C1','8n',at,safeVel);getKickClick().triggerAttackRelease('32n',at,safeVel*.72);}
   else if(pitch===38){getSnare().triggerAttackRelease('16n',at,safeVel);getSnareBody().triggerAttackRelease('D2','16n',at,safeVel*.58);}
   else if(pitch===39)getRim().triggerAttackRelease('D5','32n',at,safeVel);
@@ -1315,6 +1406,7 @@ function playHit(pitch, vel=1, when, ensureAudio=true){
   else if(pitch===46)getOpenHat().triggerAttackRelease('8n',at,safeVel);
   else if(pitch===49)getCrash().triggerAttackRelease('2n',at,safeVel);
   else if(pitch===51)getRide().triggerAttackRelease('8n',at,safeVel);
+  else if(pitch===50||pitch===45){const note=pitch===50?'C3':'G2';getPerc().triggerAttackRelease(note,'8n',at,safeVel);}
   else getPerc().triggerAttackRelease(pitch>50?'C2':'G1','16n',at,safeVel);
 }
 
