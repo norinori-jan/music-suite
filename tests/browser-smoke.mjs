@@ -90,7 +90,7 @@ try {
   assert.equal(ensembleDiagnosticReport.available, true, "five-track ensemble diagnostic must be available");
   assert.equal(ensembleDiagnosticReport.meterAvailable, true, "master output meter must be initialized");
   assert.deepEqual(ensembleDiagnosticReport.result?.tracks, ["メロディ", "ピアノ", "ギター", "ベース", "ドラム"], "ensemble diagnostic must schedule all five tracks");
-  await page.waitForTimeout(5200);
+  await page.waitForFunction(() => !getAudioPlaybackDiagnostics().meterMonitoring, null, { timeout: 10000 });
   const audioStateAfterEnsemble = await page.evaluate(() => getAudioPlaybackDiagnostics());
   assert.equal(audioStateAfterEnsemble.meterMonitoring, false, "master meter monitor must stop after ensemble audition");
 
