@@ -1,0 +1,129 @@
+{
+  "schemaVersion": 1,
+  "source": {
+    "repository": "sfzinstruments/virtuosity_drums",
+    "commit": "9f04cf9a734527edfbb0a4eee1f674e45bbf71bc",
+    "license": "CC0-1.0",
+    "licenseUrl": "https://github.com/sfzinstruments/virtuosity_drums/blob/9f04cf9a734527edfbb0a4eee1f674e45bbf71bc/LICENSE",
+    "attribution": "Virtuosity Drums by Versilian Studios and Karoryfer Samples; recorded at Virtuosity Musical Instruments; selected mic positions noted per sample."
+  },
+  "output": {
+    "wav": "24-bit PCM / 48 kHz / mono",
+    "ogg": "Ogg Vorbis quality 8 / 48 kHz / mono",
+    "normalization": "peak target -3 dBFS"
+  },
+  "samples": [
+    {
+      "id": "kick-01",
+      "role": "kick",
+      "path": "Samples/kickmic/kick/kickmic_kick_snoff_vl2_rr1.flac",
+      "gitBlobSha": "6fb3ead8cca0ccdfb2d763b46adda34193d2fbd8",
+      "bytes": 90094,
+      "notes": "kickmic close mic; snares off; velocity layer 2; round robin 1"
+    },
+    {
+      "id": "kick-02",
+      "role": "kick",
+      "path": "Samples/kickmic/kick/kickmic_kick_snoff_vl2_rr2.flac",
+      "gitBlobSha": "06f1b877ae74723f23ef671af59af405430742a8",
+      "bytes": 88184,
+      "notes": "kickmic close mic; snares off; velocity layer 2; round robin 2"
+    },
+    {
+      "id": "snare-01",
+      "role": "snare",
+      "path": "Samples/snaremic/snare/snaremic_snare_center_vl16.flac",
+      "gitBlobSha": "ed0791390632cff36375a819f090440bd1a5fba5",
+      "bytes": 80031,
+      "notes": "snaremic; center hit; velocity layer 16"
+    },
+    {
+      "id": "snare-02",
+      "role": "snare",
+      "path": "Samples/snaremic/snare/snaremic_snare_center_vl17.flac",
+      "gitBlobSha": "47602abcab0afda27924228d2b89f088d4b73f96",
+      "bytes": 78521,
+      "notes": "snaremic; center hit; velocity layer 17"
+    },
+    {
+      "id": "hat-closed-01",
+      "role": "closedHat",
+      "path": "Samples/mid/hh/mid_hh_closed_vl2_rr1.flac",
+      "gitBlobSha": "14f920b603916c6fa03764d7694c78e6f45d72a0",
+      "bytes": 83468,
+      "notes": "mid mic; closed hi-hat; velocity layer 2; round robin 1"
+    },
+    {
+      "id": "hat-closed-02",
+      "role": "closedHat",
+      "path": "Samples/mid/hh/mid_hh_closed_vl2_rr2.flac",
+      "gitBlobSha": "d1c06d4cf18ab8340b66c1281470bfe25f6b83ef",
+      "bytes": 78372,
+      "notes": "mid mic; closed hi-hat; velocity layer 2; round robin 2"
+    },
+    {
+      "id": "hat-open-01",
+      "role": "openHat",
+      "path": "Samples/mid/hh/mid_hh_open_vl2_rr1.flac",
+      "gitBlobSha": "046ab079de8e26508987404c61647d7d314ef98a",
+      "bytes": 953760,
+      "notes": "mid mic; open hi-hat; velocity layer 2; round robin 1"
+    },
+    {
+      "id": "hat-open-02",
+      "role": "openHat",
+      "path": "Samples/mid/hh/mid_hh_open_vl2_rr2.flac",
+      "gitBlobSha": "736d84da370915191cb5c19d8f737bbdcd229866",
+      "bytes": 881035,
+      "notes": "mid mic; open hi-hat; velocity layer 2; round robin 2"
+    },
+    {
+      "id": "crash-01",
+      "role": "crash",
+      "path": "Samples/mid/crash/mid_crash_crash_vl2_rr1.flac",
+      "gitBlobSha": "af87336019b7ad57dbcad775c2754b592d07968e",
+      "bytes": 1609725,
+      "notes": "mid mic; crash cymbal; velocity layer 2; round robin 1"
+    },
+    {
+      "id": "crash-02",
+      "role": "crash",
+      "path": "Samples/mid/crash/mid_crash_crash_vl2_rr2.flac",
+      "gitBlobSha": "6182958a4cec1803f655f99f420ffe60a08d77a3",
+      "bytes": 1479537,
+      "notes": "mid mic; crash cymbal; velocity layer 2; round robin 2"
+    },
+    {
+      "id": "ride-01",
+      "role": "ride",
+      "path": "Samples/mid/flatride/mid_flatride_ride_vl2_rr1.flac",
+      "gitBlobSha": "21489d6fd99c73ddb5c99bebec34ab18bc525a02",
+      "bytes": 1298176,
+      "notes": "mid mic; flat ride; velocity layer 2; round robin 1"
+    },
+    {
+      "id": "ride-02",
+      "role": "ride",
+      "path": "Samples/mid/flatride/mid_flatride_ride_vl2_rr2.flac",
+      "gitBlobSha": "959cbf5cef8cd4fa71ee81888eda905bedd6f863",
+      "bytes": 1202980,
+      "notes": "mid mic; flat ride; velocity layer 2; round robin 2"
+    },
+    {
+      "id": "tom-high-01",
+      "role": "highTom",
+      "path": "Samples/snaremic/htom/snaremic_htom_center_vl16.flac",
+      "gitBlobSha": "cb9f9ef197b8dda6b424ac50e4f97d0d9f821775",
+      "bytes": 106547,
+      "notes": "snaremic; high tom center hit; velocity layer 16"
+    },
+    {
+      "id": "tom-low-01",
+      "role": "lowTom",
+      "path": "Samples/snaremic/ltom/snaremic_ltom_center_vl16.flac",
+      "gitBlobSha": "306f63ebc78ba90b9149db0a4735252e8b2148d5",
+      "bytes": 185327,
+      "notes": "snaremic; low tom center hit; velocity layer 16"
+    }
+  ]
+}
