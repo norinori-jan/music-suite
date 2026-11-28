@@ -57,7 +57,7 @@ test('invalid, overlapping, gapped, reversed and non-integer ranges are rejected
 });
 
 test('restore reconstructs invalid saved sections and playback/generation guard malformed timelines', () => {
-  assert.match(html, /if\(!valid\)\{[\s\S]*?buildArrangementBarRanges\(APP\.bars\)/);
+  assert.match(html, /if\(valid\)\{[\s\S]*?\}else\{[\s\S]*?buildArrangementBarRanges\(APP\.bars\)/);
   assert.match(html, /function createDrumCandidates\(\)\{\s*if\(!isValidArrangementTimeline\(APP\.sections,APP\.bars\)\)/);
   assert.match(html, /function playDrumCandidateOnly\(\)\{\s*if\(!isValidArrangementTimeline\(APP\.sections,APP\.bars\)\)/);
   assert.match(html, /function applyDrumCandidateState\(id\)\{\s*if\(!\['A','B','C'\]\.includes\(id\)\|\|!isValidArrangementTimeline/);
