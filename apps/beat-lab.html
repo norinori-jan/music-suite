@@ -2865,7 +2865,14 @@ document.addEventListener('keydown',e=>{
   setStatus('ok','BEAT//LAB 起動完了 — STEPでパターン編集、PATTERNSでプリセット選択');
   renderRhythmVariationSelect();
   renderArrangementEffects();
-  if(window.__compositionBaseProject?.arrangement)restoreSongArrangement(window.__compositionBaseProject.arrangement,window.__compositionBaseProject);
+  if(window.__compositionBaseProject?.arrangement){
+    restoreSongArrangement(window.__compositionBaseProject.arrangement,window.__compositionBaseProject);
+  }else{
+    createSongArrangement();
+  }
+  if(isValidArrangementTimeline(APP.sections,APP.bars)&&!APP.drumVariants){
+    createDrumCandidates();
+  }
   renderArrangementControls();
 
 })();
