@@ -183,6 +183,21 @@
     });
 
     // A short instrumental callback closes the song without duplicating lyric assignments.
+    // Reuse the chorus hook as an instrumental intro motif, transposed down for a restrained opening.
+    const introMotif = notes.filter(note => note.sectionRole === "chorus" && note.stressed).slice(0, 4);
+    if (introMotif.length) {
+      introMotif.forEach((note, index) => {
+        notes.push({
+          ...note, id:"melody-" + String(notes.length + 1).padStart(4,"0"),
+          pitch:note.pitch - 12, note:midiName(note.pitch - 12),
+          startBeat:index * 2, length:1.5, lyric:"", word:"", lyricId:null,
+          role:"INTRO", section:"Intro", sectionRole:"intro",
+          motifVariation:"intro-statement", phraseEnd:index === introMotif.length - 1,
+          hookPeak:false
+        });
+      });
+    }
+
     const outroMotif = notes.filter(note => note.sectionRole === "chorus" && note.stressed).slice(0, 4);
     if (outroMotif.length) {
       outroMotif.forEach((note, index) => {
