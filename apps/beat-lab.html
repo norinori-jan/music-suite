@@ -760,6 +760,36 @@ function switchView(v){
 
 function cloneRhythmData(value){return JSON.parse(JSON.stringify(value||{}));}
 function arrangementStatus(message,isError){const el=document.getElementById('arrangement-status');if(el){el.textContent=message;el.style.color=isError?'#ff7777':'var(--mu)';}}
+function normalizeTimelineBars(value,fallback=8,min=1){
+  const n=Number(value),f=Number(fallback);
+  const safe=Number.isInteger(n)&&n>=min&&n<=32?n:Number.isInteger(f)&&f>=min&&f<=32?f:Math.max(min,8);
+  return Math.min(32,Math.max(min,safe));
+}
+function buildArrangementBarRanges(bars){
+  const count=normalizeTimelineBars(bars,8,5),weights=[1,2,2,2,1],ranges=[];
+  let cursor=0;
+  weights.forEach((weight,index)=>{
+    const remaining=weights.length-index-1;
+    const proposed=index===weights.length-1?count-cursor:Math.round(weight*count/8);
+    const length=index===weights.length-1?count-cursor:Math.max(1,Math.min(proposed,count-cursor-remaining));
+    ranges.push({startBar:cursor+1,endBar:cursor+length});
+    cursor+=length;
+  });
+  return ranges;
+}
+function isValidArrangementTimeline(sections,bars){
+  if(!Array.isArray(sections)||sections.length!==5||!Number.isInteger(bars)||bars<5||bars>32)return false;
+  const ids=['intro','verse','chorus','bridge','final'];
+  let expectedStart=1;
+  for(let i=0;i<ids.length;i++){
+    const section=sections[i];
+    if(!section||section.id!==ids[i]||!Number.isInteger(section.startBar)||!Number.isInteger(section.endBar))return false;
+    if(section.startBar!==expectedStart||section.endBar<section.startBar||section.endBar>bars)return false;
+    if(!section.pattern||typeof section.pattern!=='object'||Array.isArray(section.pattern))return false;
+    expectedStart=section.endBar+1;
+  }
+  return expectedStart===bars+1;
+}
 function sectionPatternFrom(base,id){
   const scale={intro:.42,verse:.72,chorus:1,bridge:.38,final:1.08}[id]||1,out={};
   Object.entries(base||{}).forEach(([key,vel])=>{const row=key.split(':')[0];if((id==='intro'||id==='bridge')&&['crash','ride','tom1','tom2','clap'].includes(row))return;if(id==='bridge'&&row==='kick'&&Number(key.split(':')[1])%Math.max(1,APP.div/4)!==0)return;out[key]=Math.max(.2,Math.min(1,Number(vel)*scale));});
@@ -779,14 +809,19 @@ function drumEffectVelocity(rowId,step,section,localStep){const global=ensureArr
 }
 function createSongArrangement(){
   if(APP.playing)stopPlay();
-  APP.drumVariants=null;APP.activeDrumVariant=null;
+  APP.drumVariants=null;APP.activeDrumVariant=null;APP.arrangements={};
   drumPatternEdited=true;
-  const bars=Math.min(32,Math.max(5,APP.bars));APP.bars=bars;document.getElementById('step-bars').value=bars;
-  const defs=[{id:'intro',label:'イントロ',weight:1},{id:'verse',label:'Aメロ',weight:2},{id:'chorus',label:'サビ',weight:2},{id:'bridge',label:'ブリッジ',weight:1},{id:'final',label:'ラスト',weight:2}];
-  let cursor=0;
-  APP.sections=defs.map((d,i)=>{const remaining=defs.length-i-1;const proposed=i===defs.length-1?bars-cursor:Math.round(d.weight*bars/8);const len=i===defs.length-1?bars-cursor:Math.max(1,Math.min(proposed,bars-cursor-remaining));const x={id:d.id,label:d.label,startBar:cursor+1,endBar:cursor+len,pattern:sectionPatternFrom(APP.pattern,d.id),effects:{}};cursor+=len;return x;});
-  APP.arrangementEffects={breakBars:[]};APP.sections.forEach(x=>{x.effects={fillBeforeChorus:x.id==='chorus',fillBars:1,fillDensity:'normal',finalVariation:x.id==='final',finalStyle:'accent'};});renderArrangementEffects();
-  APP.activeSectionId='intro';APP.pattern=cloneRhythmData(APP.sections[0].pattern);renderArrangementControls();renderStepGrid();arrangementStatus('展開を作成しました。区間を選んでリズムを編集してください');
+  const bars=normalizeTimelineBars(document.getElementById('step-bars')?.value,APP.bars,5);
+  APP.bars=bars;
+  const input=document.getElementById('step-bars');if(input)input.value=String(bars);
+  const defs=[{id:'intro',label:'イントロ'},{id:'verse',label:'Aメロ'},{id:'chorus',label:'サビ'},{id:'bridge',label:'ブリッジ'},{id:'final',label:'ラスト'}];
+  const ranges=buildArrangementBarRanges(bars);
+  APP.sections=defs.map((definition,index)=>({...definition,...ranges[index],pattern:sectionPatternFrom(APP.pattern,definition.id),effects:{}}));
+  APP.arrangementEffects={breakBars:[]};
+  APP.sections.forEach(section=>{section.effects={fillBeforeChorus:section.id==='chorus',fillBars:1,fillDensity:'normal',finalVariation:section.id==='final',finalStyle:'accent'};});
+  APP.activeSectionId='intro';APP.pattern=cloneRhythmData(APP.sections[0].pattern);
+  renderArrangementEffects();renderArrangementControls();renderStepGrid();
+  arrangementStatus(isValidArrangementTimeline(APP.sections,APP.bars)?'展開を作成しました。区間を選んでリズムを編集してください':'展開データを作成できませんでした。小節数を確認してください',!isValidArrangementTimeline(APP.sections,APP.bars));
 }
 function renderArrangementControls(){
   const sel=document.getElementById('arrangement-section-select'),save=document.getElementById('section-save-btn');if(!sel)return;
@@ -917,8 +952,8 @@ function applyCandidateCoreGroove(pattern,section,variant){
   return out;
 }
 function createDrumCandidates(){
+  if(!isValidArrangementTimeline(APP.sections,APP.bars)){arrangementStatus('曲の展開データが不正です。「曲の展開を作る」を押して5区間を作り直してください',true);return false;}
   drumPatternEdited=true;
-  if(!Array.isArray(APP.sections)||!APP.sections.length){arrangementStatus('先に「曲の展開を作る」を押してください',true);return false;}
   const current=APP.sections.find(x=>x.id===APP.activeSectionId);if(current)current.pattern=cloneRhythmData(APP.pattern);
   const variation=document.getElementById('drum-variation-level')?.value||'normal';
   const definitions={A:{style:'balanced',label:'王道ポップ'},B:{style:'rock',label:'ハーフタイム'},C:{style:'cinematic',label:'シンコペーション'}};
@@ -937,7 +972,8 @@ function createDrumCandidates(){
   return true;
 }
 function applyDrumCandidateState(id){
-  const variant=APP.drumVariants?.[id];if(!variant)return false;
+  if(!['A','B','C'].includes(id)||!isValidArrangementTimeline(APP.sections,APP.bars)){arrangementStatus('A/B/Cを切り替えられません。曲の展開データを確認してください',true);return false;}
+  const variant=APP.drumVariants?.[id];if(!variant||!isValidArrangementTimeline(variant.sections,APP.bars))return false;
   const canonicalSections=APP.arrangements?.[id]?.sections;
   APP.sections=cloneRhythmData(Array.isArray(canonicalSections)&&canonicalSections.length?canonicalSections:variant.sections);APP.activeDrumVariant=id;
   const active=APP.sections.find(x=>x.id===APP.activeSectionId)||APP.sections[0];APP.activeSectionId=active.id;APP.pattern=cloneRhythmData(active.pattern);
@@ -957,33 +993,49 @@ function selectDrumCandidate(id){
 }
 let drumOnlyMixSnapshot=null;
 function playDrumCandidateOnly(){
-  if(!APP.drumVariants){if(!createDrumCandidates())return;}
-  if(APP.playing){stopPlay();return;}
+  if(!isValidArrangementTimeline(APP.sections,APP.bars)){arrangementStatus('ドラム試聴を開始できません。先に「曲の展開を作る」で正常な5区間を作成してください',true);return false;}
+  if(!APP.drumVariants){if(!createDrumCandidates())return false;}
+  if(!APP.drumVariants?.[APP.activeDrumVariant]||!isValidArrangementTimeline(APP.drumVariants[APP.activeDrumVariant].sections,APP.bars)){arrangementStatus('選択中のA/B/Cデータが不正です。候補を作り直してください',true);return false;}
+  if(APP.playing){stopPlay();return true;}
   drumOnlyMixSnapshot={melody:document.getElementById('melody-enabled').checked,bass:document.getElementById('bass-enabled').checked,piano:document.getElementById('piano-enabled').checked,guitar:document.getElementById('guitar-enabled').checked};
   ['melody-enabled','bass-enabled','piano-enabled','guitar-enabled'].forEach(id=>{const control=document.getElementById(id);if(control)control.checked=false;});
   const status=document.getElementById('mix-status');if(status)status.textContent='ドラム単独試聴中 — 停止するとミックス設定を元に戻します';
   togglePlay();
 }
-function sectionAtStep(step){if(!Array.isArray(APP.sections)||!APP.sections.length)return null;const spb=APP.timeSig*(APP.div/4),bar=Math.floor(step/spb)+1;return APP.sections.find(x=>bar>=x.startBar&&bar<=x.endBar)||null;}
+function sectionAtStep(step){if(!Number.isFinite(step)||!isValidArrangementTimeline(APP.sections,APP.bars))return null;const spb=APP.timeSig*(APP.div/4),bar=Math.floor(step/spb)+1;return APP.sections.find(x=>bar>=x.startBar&&bar<=x.endBar)||null;}
 function sectionPatternStep(section,step){const spb=APP.timeSig*(APP.div/4),start=(section.startBar-1)*spb,len=(section.endBar-section.startBar+1)*spb;return (step-start)%Math.max(1,len);}
 function restoreSongArrangement(data,projectData=null){
   if(projectData?.arrangements&&typeof projectData.arrangements==='object')APP.arrangements=cloneRhythmData(projectData.arrangements);
   else if(data?.arrangements&&typeof data.arrangements==='object')APP.arrangements=cloneRhythmData(data.arrangements);
   if(!data||!Array.isArray(data.sections)||!data.sections.length)return false;
-  APP.sections=cloneRhythmData(data.sections).map(x=>{if(!x.effects){x.effects={fillBeforeChorus:x.id==='chorus',fillBars:1,fillDensity:'normal',finalVariation:x.id==='final',finalStyle:'accent'};}return x;});
+  const rawSections=cloneRhythmData(data.sections);
+  const lastSavedEnd=Number(rawSections.at(-1)?.endBar);
+  const fallbackBars=Number.isInteger(lastSavedEnd)&&lastSavedEnd>=5&&lastSavedEnd<=32?lastSavedEnd:APP.bars;
+  APP.bars=normalizeTimelineBars(data.bars,fallbackBars,5);
+  const input=document.getElementById('step-bars');if(input)input.value=String(APP.bars);
+  const valid=isValidArrangementTimeline(rawSections,APP.bars);
+  if(valid){
+    APP.sections=rawSections.map(section=>({...section,effects:section.effects&&typeof section.effects==='object'?section.effects:{fillBeforeChorus:section.id==='chorus',fillBars:1,fillDensity:'normal',finalVariation:section.id==='final',finalStyle:'accent'}}));
+  }else{
+    const defs=[{id:'intro',label:'イントロ'},{id:'verse',label:'Aメロ'},{id:'chorus',label:'サビ'},{id:'bridge',label:'ブリッジ'},{id:'final',label:'ラスト'}];
+    const ranges=buildArrangementBarRanges(APP.bars);
+    APP.sections=defs.map((definition,index)=>{
+      const saved=rawSections.find(section=>section?.id===definition.id);
+      const pattern=saved?.pattern&&typeof saved.pattern==='object'&&!Array.isArray(saved.pattern)?saved.pattern:sectionPatternFrom(APP.pattern,definition.id);
+      return {...definition,...ranges[index],pattern:cloneRhythmData(pattern),effects:saved?.effects&&typeof saved.effects==='object'?saved.effects:{fillBeforeChorus:definition.id==='chorus',fillBars:1,fillDensity:'normal',finalVariation:definition.id==='final',finalStyle:'accent'}};
+    });
+    arrangementStatus('保存された曲展開の小節範囲に不整合があったため、'+APP.bars+'小節で5区間を修復しました',false);
+  }
   const savedVariants=projectData?.drumVariants||data.drumVariants;
   APP.drumVariants=savedVariants&&typeof savedVariants==='object'?cloneRhythmData(savedVariants):null;
   APP.activeDrumVariant=projectData?.activeDrumVariant||projectData?.activeArrangement||data.activeDrumVariant||data.activeArrangement||null;
-  // The active arrangement is authoritative: retain any last-minute edits made
-  // after the candidate was selected, rather than restoring a stale candidate copy.
   if(APP.drumVariants&&APP.activeDrumVariant&&APP.drumVariants[APP.activeDrumVariant]){
     APP.drumVariants[APP.activeDrumVariant].sections=cloneRhythmData(APP.sections);
+    if(!isValidArrangementTimeline(APP.drumVariants[APP.activeDrumVariant].sections,APP.bars))APP.drumVariants=null;
   }
   APP.arrangementEffects=cloneRhythmData(data.effects||{breakBars:[]});
-  APP.bars=Math.min(32,Math.max(5,Number(data.bars)||APP.bars));
-  document.getElementById('step-bars').value=APP.bars;
   APP.activeSectionId=APP.sections[0].id;APP.pattern=cloneRhythmData(APP.sections[0].pattern);
-  renderArrangementEffects();renderArrangementControls();
+  renderArrangementEffects();renderArrangementControls();renderStepGrid();
   ['A','B','C'].forEach(key=>document.getElementById('drum-candidate-'+key)?.classList.toggle('on',key===APP.activeDrumVariant));
   const status=document.getElementById('drum-candidate-status');
   if(status)status.textContent=APP.drumVariants?(APP.activeDrumVariant||'A')+'案を復元しました。A/B/Cを切り替えて比較できます':'A/B/C候補は未生成です';
@@ -991,9 +1043,13 @@ function restoreSongArrangement(data,projectData=null){
   return true;
 }
 function renderStepGrid(){
-  APP.bars=parseInt(document.getElementById('step-bars').value);
-  APP.div=parseInt(document.getElementById('step-div').value);
-  APP.timeSig=parseInt(document.getElementById('step-timesig').value);
+  const barsInput=document.getElementById('step-bars'),divInput=document.getElementById('step-div'),timeSigInput=document.getElementById('step-timesig');
+  APP.bars=normalizeTimelineBars(barsInput?.value,APP.bars,1);
+  APP.div=[8,16,32].includes(Number(divInput?.value))?Number(divInput.value):16;
+  APP.timeSig=[3,4,6].includes(Number(timeSigInput?.value))?Number(timeSigInput.value):4;
+  if(barsInput)barsInput.value=String(APP.bars);
+  if(divInput)divInput.value=String(APP.div);
+  if(timeSigInput)timeSigInput.value=String(APP.timeSig);
   const stepsPerBeat=APP.div/4;
   const activeSection=APP.sections?.find(x=>x.id===APP.activeSectionId);
   const steps=activeSection?Math.max(1,(activeSection.endBar-activeSection.startBar+1)*APP.timeSig*stepsPerBeat):totalSteps();
