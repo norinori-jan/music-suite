@@ -34,7 +34,8 @@
 
 
   </style>
-<script src="../activity.js"></script></head>
+<script src="../activity.js"></script>
+<script src="lyric-composition-engine.js"></script></head>
 
 <body>
 
@@ -1065,106 +1066,49 @@ function generateLyricMusicSketch(){
   const key=document.getElementById('lyric-key').value;
   const mood=document.getElementById('lyric-mood').value;
   const progression=document.getElementById('lyric-progression').value;
-  const scale=LYRIC_SCALES[key],root=LYRIC_ROOTS[key];
-  const degrees=LYRIC_PROGRESSIONS[progression];
-  if(!scale||!Number.isFinite(root)||!degrees){showToast('キーまたはコード進行の設定が不正です');return}
-  let chordDetails;
-  try{chordDetails=degrees.map(degree=>buildDiatonicTriad(key,degree));}
-  catch(error){showToast('コード構成を作れません: '+error.message);return}
-  const chordNames=chordDetails.map(item=>item.chord);
+  if(!window.LyricCompositionEngine){showToast('作曲エンジンを読み込めませんでした');return}
   const sections=lyricSectionsRead();
-  const sectionProgressionIds={ 'Mia / A verse':'lyric-progression-a','Ken / B verse':'lyric-progression-b','Chorus':'lyric-progression-chorus','Bridge':'lyric-progression-bridge' };
-  const sectionStyles={};
-  Object.entries(sectionProgressionIds).forEach(([label,id])=>{const select=document.getElementById(id);if(select)sectionStyles[label]=select.value;});
-  let chordSections;
-  try{chordSections=buildSectionChordProgressions(key,sections,progression,sectionStyles);}
-  catch(error){showToast('区間別コード進行を作れません: '+error.message);return}
-  const bars=32,beatsPerBar=4,beatsPerSection=bars*beatsPerBar/Math.max(1,chordSections.length);
-  const allSectionChords=chordSections.flatMap((section,sectionIndex)=>{
-    const sectionBeats=section.progression.reduce((sum,item)=>sum+Math.max(.5,Number(item.beats)||4),0);
-    const repetitions=Math.max(1,Math.ceil(beatsPerSection/sectionBeats));
-    const expanded=[];let localBeat=0;
-    for(let repeat=0;repeat<repetitions;repeat++){
-      let repeatBeat=0;
-      section.progression.forEach((item,chordIndex)=>{
-        const chordBeats=Math.max(.5,Number(item.beats)||4);
-        const startBeat=sectionIndex*beatsPerSection+repeat*sectionBeats+repeatBeat;
-        if(startBeat< (sectionIndex+1)*beatsPerSection-.001){
-          expanded.push({...item,id:item.id+'-r'+(repeat+1),section:section.label,role:section.role,startBeat:+startBeat.toFixed(4),beats:Math.min(chordBeats,(sectionIndex+1)*beatsPerSection-startBeat),bar:Math.floor(startBeat/beatsPerBar)+1});
-        }
-        repeatBeat+=chordBeats;
-      });
-      localBeat+=sectionBeats;
-    }
-    return expanded;
-  });
-  const chordText=allSectionChords.map(item=>item.chord).join(', ');
-  const chordInput=document.getElementById('chord-progression-input');
-  if(chordInput)chordInput.value=chordText;
-  const generatedOutput=document.getElementById('lyric-generated-chord-output');
-  const generatedPanel=document.getElementById('lyric-generated-chord-panel');
-  if(generatedOutput)generatedOutput.value=chordText;
-  renderGeneratedChordSections(chordSections);
-  if(generatedPanel)generatedPanel.style.display='block';
-  const transfer=document.getElementById('composition-sketch-transfer');if(transfer)transfer.value='';
-  const sourceLines=sections.length?sections.flatMap(s=>s.text.split(/\n+/).filter(Boolean).map(line=>({role:s.role,label:s.label,text:line.trim()}))):text.split(/\n+/).filter(Boolean).map(line=>({role:'LEAD',label:'Lyric',text:line.replace(/^\[[^\]]+\]\s*/,'').trim()}));
+  const sourceLines=sections.length
+    ?sections.flatMap(section=>section.text.split(/\\n+/).filter(Boolean).map(line=>({role:section.role,label:section.label,text:line.trim()})))
+    :text.split(/\\n+/).filter(Boolean).map(line=>({role:'LEAD',label:'Lyric',text:line.replace(/^\\[[^\\]]+\\]\\s*/,'').trim()}));
   const phraseGroups=sourceLines.map((line,phraseIndex)=>({...line,phraseIndex,syllables:lyricBuildSyllables(line.text,line.role,line.label,phraseIndex)})).filter(line=>line.syllables.length);
   if(!phraseGroups.length){showToast('英語の単語を読み取れませんでした');return}
-  const sectionGroups={};
-  phraseGroups.forEach(group=>(sectionGroups[group.label||'Full song']||(sectionGroups[group.label||'Full song']=[])).push(group));
-  const maxNotes=192,notes=[];
-  Object.entries(sectionGroups).forEach(([sectionKey,groups])=>{
-    const sectionIndex=Math.max(0,chordSections.findIndex(section=>section.label===sectionKey));
-    const sectionStart=sectionIndex*beatsPerSection,sectionSpan=beatsPerSection;
-    const gap=Math.min(1.5,Math.max(.75,sectionSpan*.04));
-    const desiredPhraseSpans=groups.map(group=>Math.min(8,Math.max(2,group.syllables.length*.72)));
-    const desiredTotal=desiredPhraseSpans.reduce((sum,value)=>sum+value,0)+gap*Math.max(0,groups.length-1);
-    const timingScale=Math.min(1,sectionSpan/Math.max(.001,desiredTotal));
-    let phraseCursor=sectionStart;
-    groups.forEach((group,groupIndex)=>{
-      const phraseSpan=desiredPhraseSpans[groupIndex]*timingScale;
-      const syllablesForPhrase=group.syllables.slice(0,Math.max(0,maxNotes-notes.length));
-      const weights=lyricPhraseWeights(syllablesForPhrase),totalWeight=weights.reduce((sum,value)=>sum+value,0);
-      let localCursor=0,previousScaleIndex=null;
-      syllablesForPhrase.forEach((item,syllableIndex)=>{
-        const slot=phraseSpan*weights[syllableIndex]/Math.max(.001,totalWeight);
-        const localBeat=localCursor;
-        const degree=resolveMelodyChordDegreeAtBeat(chordSections,sectionKey,localBeat);
-        let scaleIndex=lyricContourScaleIndex(degree,syllableIndex,item.stressed,syllableIndex===syllablesForPhrase.length-1);
-        if(!item.stressed&&syllableIndex>0&&previousScaleIndex!==null){
-          const delta=((scaleIndex-previousScaleIndex+3.5)%7)-3.5;
-          if(Math.abs(delta)>2)scaleIndex=(previousScaleIndex+Math.sign(delta)*2+7)%7;
-        }
-        previousScaleIndex=scaleIndex;
-        let octave=mood==='bright'?5:4;
-        if(mood==='hope'&&syllableIndex>=Math.ceil(syllablesForPhrase.length*.55))octave=5;
-        if(mood==='calm'||mood==='bittersweet')octave=4;
-        const midi=60+root+scale[scaleIndex]+(octave-4)*12;
-        const pitch=((midi-60)%12+12)%12,note=LYRIC_NOTE_NAMES[pitch]+(4+Math.floor((midi-60)/12));
-        const articulation=item.stressed?1.08:.72;
-        const duration=Math.max(.28,Math.min(slot*.9,item.stressed?1.65:1.05))*articulation;
-        const startBeat=phraseCursor+localBeat;
-        notes.push({id:makeMelodyNoteId(notes.length),note,length:+Math.max(.25,Math.min(duration,slot*.94)).toFixed(4),word:item.word,lyric:group.text,role:item.role,section:item.label,startBeat:+startBeat.toFixed(4),lyricId:'lyric-'+String(notes.length+1).padStart(4,'0'),syllableIndex:item.syllableIndex,wordSyllables:item.wordSyllables,stressed:item.stressed,phraseIndex:group.phraseIndex,phraseEnd:syllableIndex===syllablesForPhrase.length-1});
-        localCursor+=slot;
-      });
-      phraseCursor+=phraseSpan+gap;
-    });
-  });
+  let composition;
+  try{composition=window.LyricCompositionEngine.generate({key,mood,progression,phraseGroups})}
+  catch(error){showToast('作曲エンジンで生成できません: '+error.message);return}
+  const bars=32,beatsPerBar=4;
+  const chordSections=composition.chordSections;
+  const allSectionChords=composition.chords;
+  const notes=composition.melody;
   if(!notes.length){showToast('メロディを作れる英語の音節がありません');return}
-  state.lastNotes=notes.map(n=>({id:n.id,note:n.note,length:n.length*4,startBeat:n.startBeat,lyricId:n.lyricId,lyric:n.lyric,word:n.word,lyricRole:n.role,lyricSection:n.section}));
-  renderNoteCards(state.lastNotes,(window.__incomingLyricProject||{}).title||'Lyric sketch');
+  const chordText=allSectionChords.map(item=>item.chord).join(', ');
+  const chordInput=document.getElementById('chord-progression-input');if(chordInput)chordInput.value=chordText;
+  const generatedOutput=document.getElementById('lyric-generated-chord-output');if(generatedOutput)generatedOutput.value=chordText;
+  renderGeneratedChordSections(chordSections);
+  const generatedPanel=document.getElementById('lyric-generated-chord-panel');if(generatedPanel)generatedPanel.style.display='block';
+  const transfer=document.getElementById('composition-sketch-transfer');if(transfer)transfer.value='';
+  state.lastNotes=notes.map(note=>({id:note.id,note:note.note,length:note.length*4,startBeat:note.startBeat,lyricId:note.lyricId,lyric:note.lyric,word:note.word,lyricRole:note.role,lyricSection:note.section}));
+  renderNoteCards(state.lastNotes,(window.__incomingLyricProject||{}).title||'Lyric composition');
   const cards=[...document.querySelectorAll('#canvas .card')];
-  cards.forEach((card,i)=>{
-    const n=notes[i];if(!n)return;
-    card.dataset.noteId=n.id;card.dataset.startBeat=String(n.startBeat);card.dataset.lyricId=n.lyricId;
-    card.dataset.lyric=n.lyric;card.dataset.lyricRole=n.role;card.dataset.lyricSection=n.section;
-    card.dataset.word=n.word;card.dataset.startBeat=String(n.startBeat);
-    card.classList.add('lyric-linked');
-    const label=document.createElement('span');label.className='lyric-assignment';label.textContent=(n.role==='A'?'A':n.role==='B'?'B':'二人')+' · '+n.word;card.appendChild(label);
+  cards.forEach((card,index)=>{
+    const note=notes[index];if(!note)return;
+    card.dataset.noteId=note.id;card.dataset.startBeat=String(note.startBeat);card.dataset.lyricId=note.lyricId||'';
+    card.dataset.lyric=note.lyric||'';card.dataset.lyricRole=note.role||'';card.dataset.lyricSection=note.section||'';
+    card.dataset.word=note.word||'';card.classList.add('lyric-linked');
+    const label=document.createElement('span');label.className='lyric-assignment';
+    label.textContent=(note.sectionRole==='verseA'?'A':note.sectionRole==='verseB'?'B':note.sectionRole==='chorus'?'サビ':note.sectionRole==='bridge'?'Bridge':'Instrumental')+' · '+(note.word||note.section||'');
+    card.appendChild(label);
   });
-  window.__lyricMusicSketch={key,mode:key==='A'||key==='E'?'minor':'major',mood,progression,bars,timeSig:4,sourceLyrics:text,chordSections,chords:allSectionChords,melody:notes.map((n,i)=>({id:n.id,lyricId:n.lyricId,pitch:n.note,startBeat:n.startBeat,durationBeats:n.length,word:n.word,lyric:n.lyric,role:n.role,section:n.section,syllableIndex:n.syllableIndex,wordSyllables:n.wordSyllables,stressed:n.stressed,phraseIndex:n.phraseIndex,phraseEnd:n.phraseEnd})),method:'stress-aware-phrase-melody-v2',melodyQuality:{stressAware:true,phraseBreaths:true,chordToneLandings:true,stepwiseContour:true},warning:'英語の音節・強勢推定に基づく作曲案。実際の発音と歌いやすさは試聴して調整してください'};
-  document.getElementById('lyric-music-result').innerHTML='<strong>生成した候補</strong><p>Key: '+escapeHtmlCanvas(key)+' / '+escapeHtmlCanvas(mood)+' / '+chordNames.map(escapeHtmlCanvas).join(' – ')+'</p><p>'+notes.length+'音のメロディ候補を配置しました。強勢音節・フレーズの呼吸・コード構成音への着地を反映しています。音符カードをクリックして調整できます。</p><small>英語の強勢は推定です。歌詞の発音・自然なアクセント・歌いやすさは実際に再生して確認してください。</small>';
-  showToast('歌詞からメロディ・コードの初期案を生成しました');
+  window.__lyricMusicSketch={
+    key,mode:composition.mode,mood,progression,bars,timeSig:4,sourceLyrics:text,
+    structure:composition.structure,chordSections,chords:allSectionChords,
+    melody:notes.map(note=>({...note,pitch:note.note,durationBeats:note.length})),
+    method:composition.method,melodyQuality:composition.quality,
+    warning:'32小節の区間構成・和声展開・モチーフ変奏を使った作曲案です。英語の音節と強勢は推定を含むため、歌唱試聴で最終調整してください。'
+  };
+  const structureText=composition.structure.map(section=>section.label+' '+section.startBar+'–'+section.endBar).join(' / ');
+  document.getElementById('lyric-music-result').innerHTML='<strong>32小節の作曲案を生成しました</strong><p>Key: '+escapeHtmlCanvas(key)+' / '+escapeHtmlCanvas(mood)+'</p><p>'+escapeHtmlCanvas(structureText)+'</p><p>'+notes.length+'音のメロディ、'+allSectionChords.length+'小節分の和声を配置しました。プレコーラスで緊張を高め、サビで音域と和声を解放し、サビのモチーフをアウトロに回帰させます。</p><small>歌詞の強勢・重要語・フレーズ終止を反映しています。自然な発音、歌いやすさ、旋律の魅力は実際に再生して調整してください。</small>';
+  showToast('32小節の構成・和声・メロディを生成しました');
 }
 function saveLyricCanvasProject(){
   const incoming=window.__incomingLyricProject||{},cards=[...document.querySelectorAll('#canvas .card')];
