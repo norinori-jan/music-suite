@@ -63,6 +63,15 @@ test('restore reconstructs invalid saved sections and playback/generation guard 
   assert.match(html, /function applyDrumCandidateState\(id\)\{\s*if\(!\['A','B','C'\]\.includes\(id\)\|\|!isValidArrangementTimeline/);
 });
 
+test('fresh BEAT//LAB boot creates a valid arrangement and three drum candidates', () => {
+  const bootStart = html.indexOf('(function boot(){');
+  const bootEnd = html.indexOf('})();', bootStart);
+  assert.ok(bootStart >= 0 && bootEnd > bootStart);
+  const boot = html.slice(bootStart, bootEnd);
+  assert.match(boot, /else\{\s*createSongArrangement\(\);\s*\}/);
+  assert.match(boot, /if\(isValidArrangementTimeline\(APP\.sections,APP\.bars\)&&!APP\.drumVariants\)\{\s*createDrumCandidates\(\);\s*\}/);
+});
+
 test('step-grid rendering sanitizes bars, division and time signature before calculating steps', () => {
   const start = html.indexOf('function renderStepGrid(){');
   const end = html.indexOf('\nfunction cellClick', start);
