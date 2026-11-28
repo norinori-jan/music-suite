@@ -84,3 +84,15 @@ test("LC-06 Composition Canvas loads and calls the separate engine while retaini
 test("LC-07 rejects unsupported keys rather than silently generating invalid harmony", () => {
   assert.throws(()=>engine.generate({key:"F#",phraseGroups:[]}),/Unsupported key/);
 });
+
+test("LC-08 chorus motif is introduced instrumentally and reprised in the outro", () => {
+  const words = ["We","will","find","the","light","tonight"];
+  const groups = [{role:"DUET",label:"Chorus",text:words.join(" "),phraseIndex:0,syllables:syllables(words,"DUET","Chorus")}];
+  const result = engine.generate({key:"C",mood:"bright",progression:"pop",phraseGroups:groups});
+  const intro = result.melody.filter(n=>n.sectionRole==="intro");
+  const outro = result.melody.filter(n=>n.sectionRole==="outro");
+  assert.ok(intro.length>0);
+  assert.ok(outro.length>0);
+  assert.ok(intro.every(n=>n.lyricId===null && n.startBeat<16 && n.motifVariation==="intro-statement"));
+  assert.ok(outro.every(n=>n.lyricId===null && n.startBeat>=112 && n.motifVariation==="outro-callback"));
+});
