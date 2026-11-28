@@ -1319,7 +1319,9 @@ test("TL-82 acoustic guitar, electric guitar and bass use real sample maps with 
 
 test("TL-83 instrument buses feed a shared master compressor and limiter", async () => {
   const html=await readFile(beatLabPath,"utf8");
-  assert.match(html,/masterLimiter=new Tone\.Limiter\(-1\)\.toDestination\(\)/);
+  assert.match(html,/masterLimiter=new Tone\.Limiter\(-1\)/);
+  assert.match(html,/masterMeter=new Tone\.Meter\(\{smoothing:\.72,normalRange:false\}\)/);
+  assert.match(html,/masterCompressor\.connect\(masterLimiter\);masterLimiter\.connect\(masterMeter\);masterMeter\.toDestination\(\)/);
   assert.match(html,/masterCompressor=new Tone\.Compressor\(\{threshold:-15,ratio:1\.7/);
   assert.match(html,/drumCompressor=new Tone\.Compressor\([\s\S]*?\.connect\(getMasterBus\(\)\)/);
   assert.match(html,/bassCompressor\.connect\(getMasterBus\(\)\)/);
@@ -1478,14 +1480,15 @@ test("TL-90 all inline JavaScript in composition, BEAT//LAB and score editor pag
   }
 });
 
-test("TL-90 melody playback requires the sampled violin source instead of silently using a synth", async () => {
+test("TL-90 melody playback falls back to synth while sampled violin loads or fails", async () => {
   const html = await readFile(beatLabPath, "utf8");
   assert.match(html, /function getMelodySampler\(\)/);
   assert.match(html, /TONEJS_SAMPLE_ROOT\+'violin\/'/);
   assert.match(html, /async function ensureMelodySamplerReady\(\)/);
-  assert.match(html, /await ensureMelodySamplerReady\(\)/);
+  assert.match(html, /async function prepareMelodyDiagnosticVoice\(\)[\s\S]*?await ensureMelodySamplerReady\(\)/, "only diagnostic auditions wait for the sample; live playback keeps its immediate synth fallback");
   assert.match(html, /if\(melodySamplerReady&&melodySampler\)melodySampler\.triggerAttackRelease/);
-  assert.doesNotMatch(html, /getMelodySynth\(\)\.triggerAttackRelease/);
+  assert.match(html, /else getMelodySynth\(\)\.triggerAttackRelease/);
+  assert.match(html, /function getMelodySynth\(\)/);
   const credits = await readFile(path.join(here, "..", "SOUND-CREDITS.md"), "utf8");
   assert.match(credits, /Melody \(sampled violin\)/);
   assert.match(credits, /VSO2/);
@@ -1845,3 +1848,16 @@ test("TL-97 real lyric-to-melody workflow creates linked notes and section harmo
 });
 
 
+
+
+test("TL-98 melody diagnostics wait for the violin sampler and report fallback explicitly", async () => {
+  const html=await readFile(beatLabPath,"utf8");
+  assert.match(html,/async function prepareMelodyDiagnosticVoice\(\)[\s\S]*?await ensureMelodySamplerReady\(\)[\s\S]*?source:'violin-sample'[\s\S]*?source:'synth-fallback'/);
+  assert.match(html,/const melodyVoice=await prepareMelodyDiagnosticVoice\(\),bpm=PROJ_BPM\(\)/,"individual track audition must wait for a known melody voice");
+  assert.match(html,/window\.__lastTrackAudioDiagnostic=\{melodySource:melodyVoice\.source,failedTracks\}/);
+  assert.match(html,/const melodyVoice=await prepareMelodyDiagnosticVoice\(\)/,"ensemble audition must wait for melody sampler readiness");
+  assert.match(html,/window\.__lastEnsembleAudioDiagnostic=\{melodySource:melodyVoice\.source,failedTracks\}/);
+  assert.match(html,/melodyBusEQ=new Tone\.EQ3\(-\.3,1\.3,\.6\)/,"melody bus must receive a modest presence lift");
+  assert.match(html,/value="75" style="width:70px"/,"default melody fader must be moved forward");
+  assert.match(html,/const defaults=\{drum:72,melody:75,bass:70,piano:45,guitar:35\}/,"reset levels must match the revised headroom-conscious defaults");
+});
